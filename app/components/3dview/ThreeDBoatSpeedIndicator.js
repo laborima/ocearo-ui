@@ -7,9 +7,9 @@ const ThreeDBoatSpeedIndicator = () => {
 
     // Example speed data; you can replace these values with real SignalK data if available
     const speedTypes = {
-        SOG: getSignalKValue('navigation.speedOverGround') || 107, // Speed over ground
-        VOG: getSignalKValue('navigation.velocityOverGround') || 95, // Velocity over ground
-        STW: getSignalKValue('navigation.speedThroughWater') || 102, // Speed through water
+        SOG: getSignalKValue('navigation.speedOverGround') || 0.0, // Speed over ground
+        VMG: getSignalKValue('performance.velocityMadeGood') || 0.0, // Velocity made good
+        STW: getSignalKValue('navigation.speedThroughWater') || 0.0, // Speed through water
     };
 
     // State to display the current speed
