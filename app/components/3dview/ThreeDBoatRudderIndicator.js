@@ -1,8 +1,10 @@
 import { useThreeDView } from './context/ThreeDViewContext';
+import { useOcearoContext } from '../context/OcearoContext';
 import { useState, useEffect } from 'react';
 
 const ThreeDBoatRudderIndicator = () => {
-    const { getSignalKValue, nightMode } = useThreeDView(); // Access SignalK data and nightMode from context
+    const {nightMode } = useThreeDView(); // Access SignalK data and nightMode from context
+    const {getSignalKValue}  = useOcearoContext();
     const [rudderAngle, setRudderAngle] = useState(0); // Default rudder angle
 
     // Fetch the rudder angle from SignalK when component mounts or data updates

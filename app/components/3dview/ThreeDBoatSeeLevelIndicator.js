@@ -1,8 +1,10 @@
 import { useThreeDView } from './context/ThreeDViewContext';
+import { useOcearoContext } from '../context/OcearoContext';
 import { useState, useEffect } from 'react';
 
 const ThreeDBoatSeeLevelIndicator = () => {
-    const { getSignalKValue, nightMode } = useThreeDView(); // Access SignalK data and nightMode from context
+    const { nightMode } = useThreeDView(); // Access SignalK data and nightMode from context
+    const {getSignalKValue}  = useOcearoContext();
     const [depth, setDepth] = useState(0); // Default depth value
     const [tideLevel, setTideLevel] = useState(0); // Default tide level value
 

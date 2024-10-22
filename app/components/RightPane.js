@@ -1,49 +1,39 @@
-import SvgWindComponent from './3dview/SvgWindComponent';
-
-const RightPane = () => {
-    // Set static values
-    const compassHeading = 45; // Example static value
-    const courseOverGroundAngle = 90; // Example static value
-    const courseOverGroundEnable = true; // Example static value
-    const trueWindAngle = 120; // Example static value
-    const trueWindSpeed = 20; // Example static value
-    const appWindAngle = 60; // Example static value
-    const appWindSpeed = 15; // Example static value
-    const waypointAngle = 270; // Example static value
-    const waypointEnable = true; // Example static value
-    const laylineAngle = 0; // Example static value
-    const closeHauledLineEnable = true; // Example static value
-    const windSectorEnable = true; // Example static value
-    const trueWindMinHistoric = 5; // Example static value
-    const trueWindMidHistoric = 10; // Example static value
-    const trueWindMaxHistoric = 15; // Example static value
-    const sailSetupEnable = true; // Example static value
+const RightPane = ({ view }) => {
+    // Determine what content to display based on the view
+    const iframeSrc = () => {
+        switch (view) {
+            case 'settings':
+                return 'https://example.com/settings'; // Replace with the actual Boat settings URL
+            case 'navigation':
+                return 'https://demo.signalk.org/@signalk/freeboard-sk/';
+            case 'manual':
+                return 'https://example.com/boat-manual.pdf'; // Replace with your boat manual PDF viewer
+            case 'instrument':
+                return 'https://demo.signalk.org/@mxtommy/kip/#/page/0';
+            case 'netflix':
+                return 'https://www.netflix.com';
+            case 'webcam1':
+                return 'https://pv.viewsurf.com/2080/Chatelaillon-Port?i=NzU4Mjp1bmRlZmluZWQ';
+            case 'webcam2':
+                return 'https://pv.viewsurf.com/1478/Chatelaillon-Plage&lt?i=NTkyMDp1bmRlZmluZWQ';
+            default:
+                return null;
+        }
+    };
 
     return (
         <div className="flex flex-col w-full h-full"> {/* Use flex for layout */}
-            <iframe
-                className="flex-grow border-none"
-                src="https://example.com"
-                title="External Application"
-            />
-            <SvgWindComponent
-                compassHeading={compassHeading}
-                courseOverGroundAngle={courseOverGroundAngle}
-                courseOverGroundEnable={courseOverGroundEnable}
-                trueWindAngle={trueWindAngle}
-                trueWindSpeed={trueWindSpeed}
-                appWindAngle={appWindAngle}
-                appWindSpeed={appWindSpeed}
-                waypointAngle={waypointAngle}
-                waypointEnable={waypointEnable}
-                laylineAngle={laylineAngle}              
-                closeHauledLineEnable={closeHauledLineEnable}  
-                windSectorEnable={windSectorEnable}          
-                trueWindMinHistoric={trueWindMinHistoric}    
-                trueWindMidHistoric={trueWindMidHistoric}    
-                trueWindMaxHistoric={trueWindMaxHistoric}    
-                sailSetupEnable={sailSetupEnable}            
-            />
+            {iframeSrc() ? (
+                <iframe
+                    className="flex-grow border-none"
+                    src={iframeSrc()} // Load dynamic content based on the selected view
+                    title="External Application"
+                />
+            ) : (
+                <div className="flex items-center justify-center h-full">
+                    <p className="text-white">Select an app to display in this pane</p>
+                </div>
+            )}
         </div>
     );
 };

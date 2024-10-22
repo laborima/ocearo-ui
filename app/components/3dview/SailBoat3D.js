@@ -19,26 +19,27 @@ import { Rhino3dmLoader } from 'three/addons/loaders/3DMLoader.js';
 
 export default SailBoat3D;*/
 
-export default function SailBoat3D() {
+
+export default function SailBoat3D({ inclination = 0 }) {
   return (
-    <group rotation={[Math.PI / 2, 0, 0]}> {/* Rotate the boat to align with XY plane */}
-        {/* Hull */}
-        <mesh position={[0, 0, -0.5]}>
-          <boxGeometry args={[2, 0.5, 1]} />
-          <meshStandardMaterial color="brown" />
-        </mesh>
+    <group rotation={[inclination, 0, 0]}> {/* Adjust inclination */}
+      {/* Hull */}
+      <mesh position={[0, 0, -0.5]}>
+        <boxGeometry args={[2, 0.5, 1]} />
+        <meshStandardMaterial color="brown" />
+      </mesh>
 
-        {/* Mast */}
-        <mesh position={[0, 1, 0]}>
-          <boxGeometry args={[0.1, 2, 0.1]} />
-          <meshStandardMaterial color="grey" />
-        </mesh>
+      {/* Mast */}
+      <mesh position={[0, 1, 0]}>
+        <boxGeometry args={[0.1, 2, 0.1]} />
+        <meshStandardMaterial color="grey" />
+      </mesh>
 
-        {/* Sail */}
-        <mesh position={[0, 1.5, 0.5]}>
-          <boxGeometry args={[0.1, 1, 0.8]} />
-          <meshStandardMaterial color="white" />
-        </mesh>
-      </group>
+      {/* Sail */}
+      <mesh position={[0, 1.5, 0.5]}>
+        <boxGeometry args={[0.1, 1, 0.8]} />
+        <meshStandardMaterial color="white" />
+      </mesh>
+    </group>
   );
 }

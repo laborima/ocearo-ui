@@ -1,9 +1,11 @@
 import { useThreeDView } from './context/ThreeDViewContext';
+import { useOcearoContext } from '../context/OcearoContext';
 import { useState } from 'react';
 
 const ThreeDBoatThanksIndicator = () => {
-    const { getSignalKValue, nightMode } = useThreeDView(); // Access SignalK data and night mode from context
+    const {  nightMode } = useThreeDView(); // Access SignalK data and night mode from context
     const [displayMode, setDisplayMode] = useState('batteries'); // Default mode is to display batteries
+    const {getSignalKValue}  = useOcearoContext();
 
     // Fetching battery levels from SignalK
     const battery1 = getSignalKValue('electrical.batteries.0.capacity.stateOfCharge') || 22; // Battery 1 percentage

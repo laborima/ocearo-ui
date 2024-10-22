@@ -445,8 +445,8 @@ const SvgWindComponent = ({
                         y2="510.65265"
                     />
                 </defs>
-                {/* sail setup */}
-                <SvgWindSailSetup sailSetupEnable={sailSetupEnable} />
+                {/* sail setup 
+                <SvgWindSailSetup sailSetupEnable={sailSetupEnable} /> */}
                 {/* background 
                 <SvgWindBackground />*/}
                 {/* Laylines */}
@@ -463,7 +463,7 @@ const SvgWindComponent = ({
                     stbdWindSectorPath={stbdWindSectorPath}
                 />
                 {/* Compass */}
-                <SvgWindCompass />
+                <SvgWindCompass ref={compassAnimateRef} />
                 {/* Wind indicator */}
                 <SvgWindIndicator
                     windSpeed={trueWindSpeed}
