@@ -1,0 +1,13 @@
+{
+    "boatScale": 0.01,
+    "waterlineToMastFootHeight": 0.45,
+    "hasMast": true,
+    "hull": {
+        "fileName": "assets/hull.stl",
+        "fileType": "stl"
+    },
+    "mast": {
+        "fileName": "assets/mast.stl",
+        "fileType": "stl"
+    }
+}

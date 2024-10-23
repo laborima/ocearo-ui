@@ -1,7 +1,7 @@
 import React, { Suspense, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
-import Test from './compass/Test'; // Your SVG component
+import SvgWindComponent2 from './compass/SvgWindComponent2'; // Your SVG component
 
 const ThreeDCompassView = ({
   compassHeading,
@@ -68,7 +68,7 @@ const ThreeDCompassView = ({
             trueWindMaxHistoric={trueWindMaxHistoric}    
           />*/}
           
-          <Test  url="./assets/compass.svg" ref={svgLoaderRef} scale={1} color="blue" />
+          <SvgWindComponent2  url="./assets/compass.svg" ref={svgLoaderRef} scale={1} color="blue" />
         </div>
       </Html>
     </mesh>
