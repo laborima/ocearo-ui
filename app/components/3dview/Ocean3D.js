@@ -1,7 +1,6 @@
 import React, { useRef, useMemo } from "react";
 import { extend, useThree, useLoader, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-
 import { Water } from "three/examples/jsm/objects/Water.js";
 
 extend({ Water });
@@ -9,31 +8,39 @@ extend({ Water });
 function Ocean3D() {
   const ref = useRef();
   const gl = useThree((state) => state.gl);
-  const waterNormals = useLoader(
-    THREE.TextureLoader, "./assets/waternormals.jpg"
-  );
+  
+  // Load and memoize waterNormals texture
+  const waterNormals = useLoader(THREE.TextureLoader, "./assets/waternormals.jpg");
+  useMemo(() => {
+    waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping;
+  }, [waterNormals]);
 
+  // Memoize plane geometry and water configuration to avoid unnecessary re-creations
+  const geom = useMemo(() => new THREE.PlaneGeometry(10000, 10000), []); // Reduced plane size
+  const config = useMemo(() => ({
+    textureWidth: 512, // Use smaller textures if possible
+    textureHeight: 512,
+    waterNormals,
+    sunDirection: new THREE.Vector3(),
+    sunColor: 0xeb8934,
+    waterColor: 0x0064b5,
+    distortionScale: 20, // Lower distortion for better performance
+    fog: false,
+    format: gl.encoding,
+  }), [waterNormals, gl.encoding]);
 
-  waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping;
-  const geom = useMemo(() => new THREE.PlaneGeometry(30000, 30000), []);
-  const config = useMemo(
-    () => ({
-      textureWidth: 512,
-      textureHeight: 512,
-      waterNormals,
-      sunDirection: new THREE.Vector3(),
-      sunColor: 0xeb8934,
-      waterColor: 0x0064b5,
-      distortionScale: 40,
-      fog: false,
-      format: gl.encoding,
-    }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [waterNormals]
-  );
-  useFrame(
-    (state, delta) => (ref.current.material.uniforms.time.value += delta)
-  );
+  // Throttled frame update to reduce unnecessary updates
+  let elapsedTime = 0;
+  useFrame((state, delta) => {
+    elapsedTime += delta;
+    if (elapsedTime > 0.05) { // Update every 0.05 seconds
+      if (ref.current) {
+        ref.current.material.uniforms.time.value += elapsedTime;
+      }
+      elapsedTime = 0; // Reset the timer
+    }
+  });
+
   return (
     <water
       ref={ref}

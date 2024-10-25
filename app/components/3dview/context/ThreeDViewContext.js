@@ -6,7 +6,6 @@ const ThreeDViewContext = createContext();
 export const ThreeDViewProvider = ({ children }) => {
     const [nightMode, setNightMode] = useState(false); // Night mode state
     const [states, setStates] = useState({}); // General state object for other toggles (e.g., autopilot, anchorWatch)
-  
  
     // Method to toggle any state (e.g., autopilot, anchorWatch)
     const toggleState = (key) => {

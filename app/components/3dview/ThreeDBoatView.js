@@ -5,6 +5,9 @@ import * as THREE from 'three';
 import SailBoat3D from './SailBoat3D';
 import Ocean3D from './Ocean3D';
 import ThreeDCompassView from './ThreeDCompassView';
+import AISBoatView from './AISBoatView';
+import Sky3D from './Sky3D';
+import { useThreeDView } from './context/ThreeDViewContext';
 
 const ThreeDBoatView = ({
     compassHeading,
@@ -23,17 +26,22 @@ const ThreeDBoatView = ({
     trueWindMidHistoric,
     trueWindMaxHistoric
 }) => {
-    let isOceanLayerVisible = true;
     const cameraRef = useRef();
     const orbitControlsRef = useRef();
     const [isUserInteracting, setIsUserInteracting] = useState(false); // Tracks if user is using controls
     const [resetCamera, setResetCamera] = useState(false); // Whether to trigger camera reset
     const resetDuration = 2; // Duration of camera reset in seconds
-    
-    const isCompassLayerVisible = false;
+    const {states } = useThreeDView();
 
-    const targetPosition = new THREE.Vector3(0, 10, -20); // Target position for the reset view
+    // State to manage visibility of ocean and compass
+
+    const isCompassLayerVisible = false;
+    const isSkyLayerVisible = false;
+
+    const camPosition = new THREE.Vector3(0, 10, 50); // Target position for the reset view
     const targetLookAt = new THREE.Vector3(0, 0, 0); // Where the camera should look at
+
+    const sailBoatRef = useRef();
 
     // Timer to reset camera after inactivity
     useEffect(() => {
@@ -79,18 +87,17 @@ const ThreeDBoatView = ({
             const currentPosition = cameraRef.current.position;
 
             // Linearly interpolate the camera position toward the target position
-            currentPosition.lerp(targetPosition, delta * (1 / resetDuration)); // Adjusting speed based on reset duration
+            currentPosition.lerp(camPosition, delta * (1 / resetDuration)); // Adjusting speed based on reset duration
 
-            // Make the camera look at the target object (boat)
+            // Smooth lookAt interpolation
             const currentLookAt = new THREE.Vector3();
             cameraRef.current.getWorldDirection(currentLookAt);
-            currentLookAt.lerp(targetLookAt, delta * (1 / resetDuration)); // Smooth lookAt interpolation
+            currentLookAt.lerp(targetLookAt, delta * (1 / resetDuration));
 
-            // Apply the lookAt to the camera
-            cameraRef.current.lookAt(targetLookAt);
+            cameraRef.current.lookAt(targetLookAt); // Apply the lookAt
 
             // If the camera is very close to the target position, stop resetting
-            if (currentPosition.distanceTo(targetPosition) < 0.01) {
+            if (currentPosition.distanceTo(camPosition) < 0.01) {
                 setResetCamera(false); // Stop further updates when close enough
             }
         }
@@ -102,34 +109,49 @@ const ThreeDBoatView = ({
                 <OrbitControls ref={orbitControlsRef} enableZoom={true} enableRotate={true} />
 
                 {/* Camera */}
-                <PerspectiveCamera ref={cameraRef} fov={50} position={[0, 5, 10]} makeDefault />
+                <PerspectiveCamera ref={cameraRef} fov={50} position={camPosition} makeDefault />
+                
+                <axesHelper args={[100]} />
 
                 {/* Ambient light for better visibility */}
                 <ambientLight intensity={0.5} />
+                <directionalLight position={[10, 10, 10]} intensity={0.8} castShadow />
+                <directionalLight position={[-10, 10, -10]} intensity={0.5} />
+                <hemisphereLight skyColor={0xffffff} groundColor={0x444444} intensity={0.5} />
+
                 <pointLight position={[10, 10, 10]} />
 
-                {isOceanLayerVisible && <Ocean3D />}
+           
                 
-                <SailBoat3D inclination={Math.PI / 8} />
+                {/* Your central boat */}
+                <SailBoat3D ref={sailBoatRef} />
+                
+                {states.showOcean && <Ocean3D />}
+                {isSkyLayerVisible && <Sky3D inclination={0.3} azimuth={0.2} />}
+
+                 {/* AIS Boats fetched from SignalK */}
+                <AISBoatView sailBoatRef={sailBoatRef} />
 
                 {/* Render the 3D compass and other boat data */}
-                {isCompassLayerVisible &&  <ThreeDCompassView
-                    compassHeading={compassHeading}
-                    courseOverGroundAngle={courseOverGroundAngle}
-                    courseOverGroundEnable={courseOverGroundEnable}
-                    trueWindAngle={trueWindAngle}
-                    trueWindSpeed={trueWindSpeed}
-                    appWindAngle={appWindAngle}
-                    appWindSpeed={appWindSpeed}
-                    waypointAngle={waypointAngle}
-                    waypointEnable={waypointEnable}
-                    laylineAngle={laylineAngle}
-                    closeHauledLineEnable={closeHauledLineEnable}
-                    windSectorEnable={windSectorEnable}
-                    trueWindMinHistoric={trueWindMinHistoric}
-                    trueWindMidHistoric={trueWindMidHistoric}
-                    trueWindMaxHistoric={trueWindMaxHistoric}
-                /> }
+                {isCompassLayerVisible && (
+                    <ThreeDCompassView
+                        compassHeading={compassHeading}
+                        courseOverGroundAngle={courseOverGroundAngle}
+                        courseOverGroundEnable={courseOverGroundEnable}
+                        trueWindAngle={trueWindAngle}
+                        trueWindSpeed={trueWindSpeed}
+                        appWindAngle={appWindAngle}
+                        appWindSpeed={appWindSpeed}
+                        waypointAngle={waypointAngle}
+                        waypointEnable={waypointEnable}
+                        laylineAngle={laylineAngle}
+                        closeHauledLineEnable={closeHauledLineEnable}
+                        windSectorEnable={windSectorEnable}
+                        trueWindMinHistoric={trueWindMinHistoric}
+                        trueWindMidHistoric={trueWindMidHistoric}
+                        trueWindMaxHistoric={trueWindMaxHistoric}
+                    />
+                )}
             </Suspense>
     );
 };

@@ -5,7 +5,8 @@ import { useThreeDView } from './context/ThreeDViewContext';
 
 const ThreeDBoatToolbar = () => {
     const { nightMode, setNightMode, states, toggleState } = useThreeDView();
-  //  const {getSignalKValue}  = useOcearoContext();
+    
+   // const {getSignalKValue}  = useOcearoContext();
 
     // Use SignalK client to get seeState from the SignalK server
    // const seeState = getSignalKValue('navigation.seeState'); // Fetch SignalK value for seeState
@@ -49,8 +50,8 @@ const ThreeDBoatToolbar = () => {
 
             {/* See State - Display real-time seeState from SignalK */}
             <button 
-            onClick={() => toggleState('seeView')}
-            className="p-1 rounded-full bg-gray-800">
+            onClick={() => toggleState('showOcean')}
+            className="p-1 rounded-full  ${states.showOcean ? 'bg-blue-500 shadow-lg shadow-blue-500/50' : 'bg-gray-800'}`">
                 <FontAwesomeIcon icon={faEye} className={textColor + " text-lg"} />
             </button>
         </div>
