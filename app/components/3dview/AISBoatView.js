@@ -13,6 +13,8 @@
         setAisData(formattedAisData);
       }
     };
+    
+    TODO : https://github.com/KEGustafsson/signalk-vessels-to-ais/blob/master/index.js
 
     // Call the fetch function to get AIS data
     fetchAisData();
@@ -64,11 +66,11 @@ const AISBoatView = ({ sailBoatRef }) => {
 
 // AISBoat Component
 const AISBoat = ({ boatData, sailBoatRef, getBoatId, scene }) => {
-  const { lat, lon, length, width, cog, sog } = boatData;
+  const { lat, lon, length, cog, sog } = boatData;
   const boatId = getBoatId(length);
 
   // Load the boat model with `useBoat`
-  const boatMesh = useBoat(boatId, length / 10, width / 10, null, false);
+  const boatMesh = useBoat(boatId, length , null, false);
 
   // Helper to convert lat/lon to relative 3D coordinates
   const latLonToXY = (lat1, lon1, lat2, lon2) => {
@@ -81,7 +83,7 @@ const AISBoat = ({ boatData, sailBoatRef, getBoatId, scene }) => {
   };
 
   // Set boat position and orientation
-  const { x, y } = latLonToXY(37.7749, -122.4194, lat, lon);
+  const { x, y } = latLonToXY(37.7756, -122.4194, lat, lon);
   if (boatMesh) {
     boatMesh.position.set(x, 0, y);
     boatMesh.rotation.y = (-cog * Math.PI) / 180;

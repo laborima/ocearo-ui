@@ -1,0 +1,7 @@
+{
+    "boatScale": 0.01,
+    "modelType": "gltf",
+    "hull": {
+        "fileName": "assets/scene.gltf"
+    }
+}

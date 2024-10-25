@@ -56,11 +56,11 @@ export const OcearoContextProvider = ({ children }) => {
                 */
                 // Listen for delta updates from SignalK server
                 client.on('delta', (delta) => {
-      
+                  
                         delta.updates.forEach((update) => {
                             if(update.values){
                             update.values.forEach((value) => {
-                                
+                                console.log("Update : "+value.path+":"+value.value);
                                 setSignalKData((prevData) => ({
                                     ...prevData,
                                     [value.path]: value.value,

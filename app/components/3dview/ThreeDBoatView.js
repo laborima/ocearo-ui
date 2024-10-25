@@ -8,6 +8,7 @@ import ThreeDCompassView from './ThreeDCompassView';
 import AISBoatView from './AISBoatView';
 import Sky3D from './Sky3D';
 import { useThreeDView } from './context/ThreeDViewContext';
+import VMG3D from './VMG3D';
 
 const ThreeDBoatView = ({
     compassHeading,
@@ -38,7 +39,7 @@ const ThreeDBoatView = ({
     const isCompassLayerVisible = false;
     const isSkyLayerVisible = false;
 
-    const camPosition = new THREE.Vector3(0, 10, 50); // Target position for the reset view
+    const camPosition = new THREE.Vector3(1, 4, 20); // Target position for the reset view
     const targetLookAt = new THREE.Vector3(0, 0, 0); // Where the camera should look at
 
     const sailBoatRef = useRef();
@@ -131,6 +132,8 @@ const ThreeDBoatView = ({
 
                  {/* AIS Boats fetched from SignalK */}
                 <AISBoatView sailBoatRef={sailBoatRef} />
+                
+                <VMG3D/>
 
                 {/* Render the 3D compass and other boat data */}
                 {isCompassLayerVisible && (

@@ -6,13 +6,13 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 const boatAssets = './boats';
 
-export default function useBoat(boatId, length, width, material, useModelMaterial) {
+export default function useBoat(boatId, length, material, useModelMaterial) {
     const [boat, setBoat] = useState(null);
 
     useEffect(() => {
         const loadBoat = async () => {
             if (!boatId) {
-                const geometry = new THREE.BoxGeometry(width, 1, length);
+                const geometry = new THREE.BoxGeometry(length/2, 1, length);
                 setBoat(new THREE.Mesh(geometry, material || getDefaultMaterial()));
                 return;
             }
@@ -31,42 +31,21 @@ export default function useBoat(boatId, length, width, material, useModelMateria
                         hullMesh.traverse((node) => {
                             if (node.isMesh) {
                                 if (!useModelMaterial || !node.material) {
-                                                node.material = meshMaterial;
-                                            }
+                                    node.material = meshMaterial;
+                                }
                                 node.castShadow = true;
                                 node.receiveShadow = true;
                             }
                         });
 
                         boatGroup.add(hullMesh);
-                      //  applyShadowSettings(boatGroup);
-                        boatGroup.scale.set(config.boatScale, config.boatScale, config.boatScale);
-                     //   hullMesh.position.y = config.waterlineToMastFootHeight * 1000;
-
-                        if (config.mast) {
-                            loadMast(loader, config, boatGroup).then(setBoat);
-                        } else {
-                            setBoat(boatGroup);
-                        }
-                    });
-                } else {
-                    loader.load(`${boatAssets}/${boatId}/${config.hull.fileName}`, (hullGeometry) => {
-                        const boatGroup = new THREE.Group();
-                        const hullMesh = createMesh(hullGeometry, meshMaterial, useModelMaterial);
-
-                        hullGeometry.rotateX(-Math.PI / 2);
-                        hullGeometry.rotateY(Math.PI / 2);
-                        boatGroup.scale.set(config.boatScale, config.boatScale, config.boatScale);
-                        hullMesh.position.y = config.waterlineToMastFootHeight * 1000;
-
-                        boatGroup.add(hullMesh);
                         applyShadowSettings(boatGroup);
+                        boatGroup.scale.set(config.boatScale, config.boatScale, config.boatScale);
+                        //   hullMesh.position.y = config.waterlineToMastFootHeight * 1000;
 
-                        if (config.mast) {
-                            loadMast(loader, config, boatGroup).then(setBoat);
-                        } else {
-                            setBoat(boatGroup);
-                        }
+
+                        setBoat(boatGroup);
+
                     });
                 }
             } catch (error) {
@@ -75,7 +54,7 @@ export default function useBoat(boatId, length, width, material, useModelMateria
         };
 
         loadBoat();
-    }, [boatId, length, width, material, useModelMaterial]);
+    }, [boatId, length, material, useModelMaterial]);
 
     return boat;
 }
@@ -86,12 +65,6 @@ async function fetchConfig(boatId) {
 }
 
 function getLoader(modelType) {
-    if (modelType === 'stl') return new STLLoader();
-    if (modelType === '3dm') {
-        const loader = new Rhino3dmLoader();
-        loader.setLibraryPath('https://cdn.jsdelivr.net/npm/rhino3dm@8.9.0/');
-        return loader;
-    }
     if (modelType === 'gltf') return new GLTFLoader();
     throw new Error(`Unsupported model type: ${modelType}`);
 }
@@ -123,21 +96,3 @@ function applyShadowSettings(group) {
     group.receiveShadow = true;
 }
 
-async function loadMast(loader, config, boatGroup) {
-    return new Promise((resolve) => {
-        loader.load(`${boatAssets}/${config.mast.fileName}`, (mastGeometry) => {
-            const mastMaterial = new THREE.MeshStandardMaterial({
-                color: 0xAAAAAA,
-                shininess: 200
-            });
-
-            const mastMesh = new THREE.Mesh(mastGeometry, mastMaterial);
-            mastMesh.position.y = config.waterlineToMastFootHeight * 1000;
-            mastMesh.castShadow = true;
-            mastMesh.receiveShadow = true;
-
-            boatGroup.add(mastMesh);
-            resolve(boatGroup);
-        });
-    });
-}

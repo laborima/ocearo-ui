@@ -9,7 +9,7 @@ import { OcearoContextProvider } from './components/context/OcearoContext';
 
 export default function Home() {
     const [leftView, setLeftView] = useState('boat'); // State for left pane view
-    const [rightView, setRightView] = useState('navigation'); // State for right pane view
+    const [rightView, setRightView] = useState('manual'); // State for right pane view
     const [isLeftPaneFullScreen, setIsLeftPaneFullScreen] = useState(false); // State to track full-screen mode
     const [showAppMenu, setShowAppMenu] = useState(false); // State for App Menu popup
     const [ShowWebcam, setShowWebcam] = useState(false); // State to control showing webcam2 in a draggable pane
