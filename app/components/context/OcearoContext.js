@@ -60,7 +60,7 @@ export const OcearoContextProvider = ({ children }) => {
                         delta.updates.forEach((update) => {
                             if(update.values){
                             update.values.forEach((value) => {
-                                console.log("Update : "+value.path+":"+value.value);
+                    //            console.log("Update : "+value.path+":"+value.value);
                                 setSignalKData((prevData) => ({
                                     ...prevData,
                                     [value.path]: value.value,

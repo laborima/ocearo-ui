@@ -1,78 +1,25 @@
-import React, { Suspense, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
-import SvgWindComponent2 from './compass/SvgWindComponent2'; // Your SVG component
+import React from 'react';
+import CompassDial from './compass/CompassDial';
+import CompassText from './compass/CompassText';
+import LayLines3D from './compass/LayLines3D';
+import WindSector3D from './compass/WindSector3D';
+import { useOcearoContext } from '../context/OcearoContext';
 
-const ThreeDCompassView = ({
-  compassHeading,
-  courseOverGroundAngle,
-  courseOverGroundEnable,
-  trueWindAngle,
-  trueWindSpeed,
-  appWindAngle,
-  appWindSpeed,
-  waypointAngle,
-  waypointEnable,
-  laylineAngle,              
-  closeHauledLineEnable,     
-  windSectorEnable,          
-  trueWindMinHistoric,       
-  trueWindMidHistoric,       
-  trueWindMaxHistoric       
-}) => {
- /* const svgPlaneRef = useRef();
 
-  // Optional animation: Rotate the plane if needed
-  useFrame(({ clock }) => {
-    const elapsedTime = clock.getElapsedTime();
-    svgPlaneRef.current.rotation.y = elapsedTime * 0.1; // Rotate around y-axis slowly
-  });*/
+const ThreeDCompassView = () => {
 
+    
+    const outerRadius = 5.6;
+    const innerRadius = 5;
+    return (
+        <>
+            <CompassDial outerRadius={outerRadius} innerRadius={innerRadius} />
   
-  const svgLoaderRef = useRef();
-
-  const handleChangeColor = () => {
-    if (svgLoaderRef.current) {
-      svgLoaderRef.current.changeColor('red'); // Change color to red
-    }
-  };
-
-  const handleChangeScale = () => {
-    if (svgLoaderRef.current) {
-      svgLoaderRef.current.changeScale(2); // Scale up
-    }
-  };
-  return (
-    <mesh  position={[0, 0, 0]}>
-  
-      {/* Mesh material using Html helper to embed the SVG */}
-
-      <Html position={[0, 0, 0]} rotation-x={-Math.PI / 2} transform>
-        <div style={{ width: '300px', height: '300px' }}>
-          {/* SVG Component */
-        /*  <SvgWindComponent
-            compassHeading={compassHeading}
-            courseOverGroundAngle={courseOverGroundAngle}
-            courseOverGroundEnable={courseOverGroundEnable}
-            trueWindAngle={trueWindAngle}
-            trueWindSpeed={trueWindSpeed}
-            appWindAngle={appWindAngle}
-            appWindSpeed={appWindSpeed}
-            waypointAngle={waypointAngle}
-            waypointEnable={waypointEnable}
-            laylineAngle={laylineAngle}              
-            closeHauledLineEnable={closeHauledLineEnable}  
-            windSectorEnable={windSectorEnable}          
-            trueWindMinHistoric={trueWindMinHistoric}    
-            trueWindMidHistoric={trueWindMidHistoric}    
-            trueWindMaxHistoric={trueWindMaxHistoric}    
-          />*/}
-          
-          <SvgWindComponent2  url="./assets/compass.svg" ref={svgLoaderRef} scale={1} color="blue" />
-        </div>
-      </Html>
-    </mesh>
-  );
+            
+            <WindSector3D  outerRadius={outerRadius+1.1}  />
+            <LayLines3D outerRadius={outerRadius}  />
+        </>
+    );
 };
 
 export default ThreeDCompassView;

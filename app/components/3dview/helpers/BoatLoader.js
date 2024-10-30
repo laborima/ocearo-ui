@@ -1,22 +1,15 @@
 import { useEffect, useState } from 'react';
 import * as THREE from 'three';
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
-import { Rhino3dmLoader } from 'three/examples/jsm/loaders/3DMLoader';
+import { Box3, Vector3 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 const boatAssets = './boats';
 
-export default function useBoat(boatId, length, material, useModelMaterial) {
+export default function useBoat(boatId, desiredLength, material, useModelMaterial) {
     const [boat, setBoat] = useState(null);
 
     useEffect(() => {
         const loadBoat = async () => {
-            if (!boatId) {
-                const geometry = new THREE.BoxGeometry(length/2, 1, length);
-                setBoat(new THREE.Mesh(geometry, material || getDefaultMaterial()));
-                return;
-            }
-
             try {
                 const config = await fetchConfig(boatId);
                 const loader = getLoader(config.modelType);
@@ -39,10 +32,12 @@ export default function useBoat(boatId, length, material, useModelMaterial) {
                         });
 
                         boatGroup.add(hullMesh);
-                        applyShadowSettings(boatGroup);
-                        boatGroup.scale.set(config.boatScale, config.boatScale, config.boatScale);
-                        //   hullMesh.position.y = config.waterlineToMastFootHeight * 1000;
+                        boatGroup.castShadow = true;
+                        boatGroup.receiveShadow = true;
 
+                        rotateModel(boatGroup, config.orientation);
+                        scaleModel(boatGroup, desiredLength, config.waterlineHeight, config.mastToZ);
+                        
 
                         setBoat(boatGroup);
 
@@ -69,6 +64,57 @@ function getLoader(modelType) {
     throw new Error(`Unsupported model type: ${modelType}`);
 }
 
+
+function scaleModel(model, desiredLength, waterlineHeight, mastToZ) {
+    // Compute the model's bounding box
+    const box = new Box3().setFromObject(model);
+
+    // Calculate the size of the bounding box
+    const size = new Vector3();
+    box.getSize(size); // size.x, size.y, and size.z will contain width, height, and depth respectively
+
+    console.log(`Width: ${size.x} meters, Height: ${size.y} meters, Lenght: ${size.z} meters`);
+
+    // Scale the model to fit a desired size (in meters)
+    const scale = desiredLength / size.z;
+    model.scale.set(scale, scale, scale);
+    
+    if (waterlineHeight) {
+        model.position.y =   waterlineHeight * scale;
+    }
+    
+    if (mastToZ) {
+       model.position.z =   mastToZ * scale;
+   }
+}
+
+function rotateModel(model, orientation) {
+    if (orientation) {
+        switch (orientation) {
+            case "rotate-y-right":
+                model.rotation.set(0,  - Math.PI / 2, 0); 
+                break;
+                
+            case "rotate-y-left":
+                 model.rotation.set(0,  Math.PI / 2, 0); 
+                break;
+                
+            case "rotate-y-360":
+               model.rotation.set(0,  Math.PI, 0); 
+                break;
+                
+            case "y-hup-right":
+                // No rotation needed for y-hup-right; model already in correct orientation
+                break;
+                
+            default:
+                console.warn("Unknown orientation specified.");
+        }
+    }
+}
+
+
+
 function getDefaultMaterial() {
     return new THREE.MeshStandardMaterial({
         color: 0xFFFFFF,
@@ -92,7 +138,6 @@ function createMesh(geometry, material, useModelMaterial) {
 }
 
 function applyShadowSettings(group) {
-    group.castShadow = true;
-    group.receiveShadow = true;
+
 }
 

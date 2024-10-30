@@ -40,17 +40,7 @@ const ThreeDMainView = () => {
             {/* 3D Wind Component */}
             <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 w-full h-full">
                 <Canvas style={{ width: '100%', height: '100%' }}>
-                    <ThreeDBoatView
-                        compassHeading={45}
-                        courseOverGroundAngle={90}
-                        courseOverGroundEnable={true}
-                        trueWindAngle={120}
-                        trueWindSpeed={20}
-                        appWindAngle={60}
-                        appWindSpeed={15}
-                        waypointAngle={270}
-                        waypointEnable={true}
-                    />
+                    <ThreeDBoatView />
                 </Canvas>
             </div>
 

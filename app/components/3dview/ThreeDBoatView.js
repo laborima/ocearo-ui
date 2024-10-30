@@ -1,33 +1,16 @@
 import React, { Suspense, useRef, useState, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import SailBoat3D from './SailBoat3D';
 import Ocean3D from './Ocean3D';
-import ThreeDCompassView from './ThreeDCompassView';
 import AISBoatView from './AISBoatView';
 import Sky3D from './Sky3D';
 import { useThreeDView } from './context/ThreeDViewContext';
-import VMG3D from './VMG3D';
+import ThreeDCompassView from './ThreeDCompassView';
+import DebugInfo from './DebugInfo';
 
-const ThreeDBoatView = ({
-    compassHeading,
-    courseOverGroundAngle,
-    courseOverGroundEnable,
-    trueWindAngle,
-    trueWindSpeed,
-    appWindAngle,
-    appWindSpeed,
-    waypointAngle,
-    waypointEnable,
-    laylineAngle,
-    closeHauledLineEnable,
-    windSectorEnable,
-    trueWindMinHistoric,
-    trueWindMidHistoric,
-    trueWindMaxHistoric
-}) => {
-    const cameraRef = useRef();
+const ThreeDBoatView = ({}) => {    const cameraRef = useRef();
     const orbitControlsRef = useRef();
     const [isUserInteracting, setIsUserInteracting] = useState(false); // Tracks if user is using controls
     const [resetCamera, setResetCamera] = useState(false); // Whether to trigger camera reset
@@ -39,7 +22,7 @@ const ThreeDBoatView = ({
     const isCompassLayerVisible = false;
     const isSkyLayerVisible = false;
 
-    const camPosition = new THREE.Vector3(1, 4, 20); // Target position for the reset view
+    const camPosition = new THREE.Vector3(1, 5, 20); // Target position for the reset view
     const targetLookAt = new THREE.Vector3(0, 0, 0); // Where the camera should look at
 
     const sailBoatRef = useRef();
@@ -112,7 +95,6 @@ const ThreeDBoatView = ({
                 {/* Camera */}
                 <PerspectiveCamera ref={cameraRef} fov={50} position={camPosition} makeDefault />
                 
-                <axesHelper args={[100]} />
 
                 {/* Ambient light for better visibility */}
                 <ambientLight intensity={0.5} />
@@ -121,9 +103,8 @@ const ThreeDBoatView = ({
                 <hemisphereLight skyColor={0xffffff} groundColor={0x444444} intensity={0.5} />
 
                 <pointLight position={[10, 10, 10]} />
-
-           
-                
+  
+               {/*  <DebugInfo/> */}
                 {/* Your central boat */}
                 <SailBoat3D ref={sailBoatRef} />
                 
@@ -133,28 +114,8 @@ const ThreeDBoatView = ({
                  {/* AIS Boats fetched from SignalK */}
                 <AISBoatView sailBoatRef={sailBoatRef} />
                 
-                <VMG3D/>
-
-                {/* Render the 3D compass and other boat data */}
-                {isCompassLayerVisible && (
-                    <ThreeDCompassView
-                        compassHeading={compassHeading}
-                        courseOverGroundAngle={courseOverGroundAngle}
-                        courseOverGroundEnable={courseOverGroundEnable}
-                        trueWindAngle={trueWindAngle}
-                        trueWindSpeed={trueWindSpeed}
-                        appWindAngle={appWindAngle}
-                        appWindSpeed={appWindSpeed}
-                        waypointAngle={waypointAngle}
-                        waypointEnable={waypointEnable}
-                        laylineAngle={laylineAngle}
-                        closeHauledLineEnable={closeHauledLineEnable}
-                        windSectorEnable={windSectorEnable}
-                        trueWindMinHistoric={trueWindMinHistoric}
-                        trueWindMidHistoric={trueWindMidHistoric}
-                        trueWindMaxHistoric={trueWindMaxHistoric}
-                    />
-                )}
+                <ThreeDCompassView visible={isCompassLayerVisible}/>
+                
             </Suspense>
     );
 };

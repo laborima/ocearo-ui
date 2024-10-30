@@ -1,11 +1,10 @@
 {
-    "boatScale": 0.001,
-    "waterlineToMastFootHeight": 0.45,
-    "modelType": "stl",
+    "modelType": "gltf",
+    "boatType" : "sailboat",
+    "orientation": "none",
+    "waterlineHeight": 2,
+    "mastToZ": 5,
     "hull": {
-        "fileName": "assets/hull.stl"
-    },
-    "mast": {
-        "fileName": "assets/mast.stl"
+      "fileName": "assets/scene.gltf"
     }
 }
