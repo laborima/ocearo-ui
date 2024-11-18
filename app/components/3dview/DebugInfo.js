@@ -1,10 +1,11 @@
-import React from 'react';
+
+import React, { Suspense, useRef, useState, useEffect } from 'react';
 import { useOcearoContext } from '../context/OcearoContext';
 import { Html } from '@react-three/drei';
 
 const toRadians = (degrees) => (degrees * Math.PI) / 180;
 
-const DebugInfo = () => {
+const DebugInfo = (sampleData = true) => {
     const { getSignalKValue } = useOcearoContext();
 
 
@@ -60,55 +61,57 @@ const DebugInfo = () => {
     const timeStbdDown = getSignalKValue('navigation.racing.timeStbdDown') || 65; // Temps estimé en tribord amure au vent arrière
     const timeStbdUp = getSignalKValue('navigation.racing.timeStbdUp') || 75; // Temps estimé en tribord amure au près
 
+
+
     return (
-      <group>
+        <group>
 
             <axesHelper args={[100]} />
-            
-                <Html position={[5, 5, 0]} style={{ width: '350px', color: 'white', background: 'rgba(0,0,0,0.6)', padding: '10px', borderRadius: '5px' }}>
-                    <div>
-                        <h4>Wind Data</h4>
-                        <p>True Wind Angle: {(trueWindAngle * (180 / Math.PI)).toFixed(2)}°</p>
-                        <p>True Wind Speed: {trueWindSpeed.toFixed(2)} knots</p>
-                        <p>Apparent Wind Angle: {(appWindAngle * (180 / Math.PI)).toFixed(2)}°</p>
-                        <p>Apparent Wind Speed: {appWindSpeed.toFixed(2)} knots</p>
 
-                        <h4>Navigation Performance</h4>
-                        <p>Beat Angle: {(beatAngle * (180 / Math.PI)).toFixed(2)}°</p>
-                        <p>Gybe Angle: {(gybeAngle * (180 / Math.PI)).toFixed(2)}°</p>
-                        <p>VMG Beat: {beatVMG.toFixed(2)} knots</p>
-                        <p>VMG Gybe: {gybeVMG.toFixed(2)} knots</p>
-                        <p>Target TWA: {(targetTWA * (180 / Math.PI)).toFixed(2)}°</p>
-                        <p>Optimal Wind Angle: {(optimalWindAngle * (180 / Math.PI)).toFixed(2)}°</p>
-                        <p>Polar Speed: {polarSpeed.toFixed(2)} knots</p>
-                        <p>Polar Speed Ratio: {polarSpeedRatio.toFixed(2)}</p>
-                        <p>VMG: {velocityMadeGood.toFixed(2)} knots</p>
-                        <p>Speed Through Water: {speedThroughWater.toFixed(2)} knots</p>
-                        <p>Polar VMG: {polarVelocityMadeGood.toFixed(2)} knots</p>
-                        <p>Polar VMG Ratio: {polarVelocityMadeGoodRatio.toFixed(2)}</p>
+            <Html position={[5, 5, 0]} style={{ width: '350px', color: 'white', background: 'rgba(0,0,0,0.6)', padding: '10px', borderRadius: '5px' }}>
+                <div>
+                    <h4>Wind Data</h4>
+                    <p>True Wind Angle: {(trueWindAngle * (180 / Math.PI)).toFixed(2)}°</p>
+                    <p>True Wind Speed: {trueWindSpeed.toFixed(2)} knots</p>
+                    <p>Apparent Wind Angle: {(appWindAngle * (180 / Math.PI)).toFixed(2)}°</p>
+                    <p>Apparent Wind Speed: {appWindSpeed.toFixed(2)} knots</p>
 
-                        <h4>Waypoint and Heading</h4>
-                        <p>True Heading: {(headingTrue * (180 / Math.PI)).toFixed(2)}°</p>
-                        <p>COG Angle: {(courseOverGroundAngle * (180 / Math.PI)).toFixed(2)}°</p>
-                        <p>Next Waypoint Bearing: {(nextWaypointBearing * (180 / Math.PI)).toFixed(2)}°</p>
-                        <p>Layline Angle: {(laylineAngle * (180 / Math.PI)).toFixed(2)}°</p>
+                    <h4>Navigation Performance</h4>
+                    <p>Beat Angle: {(beatAngle * (180 / Math.PI)).toFixed(2)}°</p>
+                    <p>Gybe Angle: {(gybeAngle * (180 / Math.PI)).toFixed(2)}°</p>
+                    <p>VMG Beat: {beatVMG.toFixed(2)} knots</p>
+                    <p>VMG Gybe: {gybeVMG.toFixed(2)} knots</p>
+                    <p>Target TWA: {(targetTWA * (180 / Math.PI)).toFixed(2)}°</p>
+                    <p>Optimal Wind Angle: {(optimalWindAngle * (180 / Math.PI)).toFixed(2)}°</p>
+                    <p>Polar Speed: {polarSpeed.toFixed(2)} knots</p>
+                    <p>Polar Speed Ratio: {polarSpeedRatio.toFixed(2)}</p>
+                    <p>VMG: {velocityMadeGood.toFixed(2)} knots</p>
+                    <p>Speed Through Water: {speedThroughWater.toFixed(2)} knots</p>
+                    <p>Polar VMG: {polarVelocityMadeGood.toFixed(2)} knots</p>
+                    <p>Polar VMG Ratio: {polarVelocityMadeGoodRatio.toFixed(2)}</p>
 
-                        <h4>Layline Data</h4>
-                        <p>Layline Distance: {laylineDistance.toFixed(2)} m</p>
-                        <p>Time to Layline: {laylineTime} s</p>
-                        <p>Opposite Layline Distance: {oppositeLaylineDistance.toFixed(2)} m</p>
-                        <p>Time to Opposite Layline: {oppositeLaylineTime} s</p>
+                    <h4>Waypoint and Heading</h4>
+                    <p>True Heading: {(headingTrue * (180 / Math.PI)).toFixed(2)}°</p>
+                    <p>COG Angle: {(courseOverGroundAngle * (180 / Math.PI)).toFixed(2)}°</p>
+                    <p>Next Waypoint Bearing: {(nextWaypointBearing * (180 / Math.PI)).toFixed(2)}°</p>
+                    <p>Layline Angle: {(laylineAngle * (180 / Math.PI)).toFixed(2)}°</p>
 
-                        <h4>Starting Line Data</h4>
-                        <p>Distance to Startline: {distanceToStartline.toFixed(2)} m</p>
-                        <p>Time to Start: {timeToStart} s</p>
-                        <p>Time Port Downwind: {timePortDown} s</p>
-                        <p>Time Port Upwind: {timePortUp} s</p>
-                        <p>Time Stbd Downwind: {timeStbdDown} s</p>
-                        <p>Time Stbd Upwind: {timeStbdUp} s</p>
-                    </div>
-                </Html>
-        
+                    <h4>Layline Data</h4>
+                    <p>Layline Distance: {laylineDistance.toFixed(2)} m</p>
+                    <p>Time to Layline: {laylineTime} s</p>
+                    <p>Opposite Layline Distance: {oppositeLaylineDistance.toFixed(2)} m</p>
+                    <p>Time to Opposite Layline: {oppositeLaylineTime} s</p>
+
+                    <h4>Starting Line Data</h4>
+                    <p>Distance to Startline: {distanceToStartline.toFixed(2)} m</p>
+                    <p>Time to Start: {timeToStart} s</p>
+                    <p>Time Port Downwind: {timePortDown} s</p>
+                    <p>Time Port Upwind: {timePortUp} s</p>
+                    <p>Time Stbd Downwind: {timeStbdDown} s</p>
+                    <p>Time Stbd Upwind: {timeStbdUp} s</p>
+                </div>
+            </Html>
+
         </group>
     );
 };

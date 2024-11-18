@@ -10,8 +10,19 @@ module.exports = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        leftPaneBg: '#0e0e0e',
+        rightPaneBg: '#1e1e1e',
+        oBlue: '#09bfff',
+        oRed: '#cc000c',
+        oYellow : '#ffbe00',
+        oGreen: '#0fcd4f',
+        oGray: '#989898', 
+        oGray2 : '#424242',
+        oNight : "#ef4444"
+        
       },
     },
   },
   plugins: [],
 };
+

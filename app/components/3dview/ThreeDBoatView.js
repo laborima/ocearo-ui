@@ -3,12 +3,12 @@ import { useFrame } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import SailBoat3D from './SailBoat3D';
-import Ocean3D from './Ocean3D';
-import AISBoatView from './AISBoatView';
-import Sky3D from './Sky3D';
+import Ocean3D from './ocean/Ocean3D';
+import AISView from './ais/AISView';
 import { useThreeDView } from './context/ThreeDViewContext';
 import ThreeDCompassView from './ThreeDCompassView';
 import DebugInfo from './DebugInfo';
+import { AISProvider } from './ais/AISContext';
 
 const ThreeDBoatView = ({}) => {    const cameraRef = useRef();
     const orbitControlsRef = useRef();
@@ -20,7 +20,6 @@ const ThreeDBoatView = ({}) => {    const cameraRef = useRef();
     // State to manage visibility of ocean and compass
 
     const isCompassLayerVisible = false;
-    const isSkyLayerVisible = false;
 
     const camPosition = new THREE.Vector3(1, 5, 20); // Target position for the reset view
     const targetLookAt = new THREE.Vector3(0, 0, 0); // Where the camera should look at
@@ -109,10 +108,11 @@ const ThreeDBoatView = ({}) => {    const cameraRef = useRef();
                 <SailBoat3D ref={sailBoatRef} />
                 
                 {states.showOcean && <Ocean3D />}
-                {isSkyLayerVisible && <Sky3D inclination={0.3} azimuth={0.2} />}
 
                  {/* AIS Boats fetched from SignalK */}
-                <AISBoatView sailBoatRef={sailBoatRef} />
+                 <AISProvider>
+                    <AISView  />
+                 </AISProvider>
                 
                 <ThreeDCompassView visible={isCompassLayerVisible}/>
                 

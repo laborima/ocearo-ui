@@ -5,19 +5,19 @@ const BatteryIndicator = ({batteryLevel, batteryNumber}) => {
 
     const getBatteryColor = () => {
         if (batteryPercentage > 50) {
-            return 'bg-green-400';
+            return 'bg-oGreen';
         } else if (batteryPercentage > 20) {
-            return 'bg-yellow-400';
+            return 'bg-oYellow';
         } else {
-            return 'bg-red-400';
+            return 'bg-oRed';
         }
     };
 
     return (
         <div className="flex items-center space-x-3 my-2">
             <div
-                className="relative w-8 h-4 bg-gray-200 rounded-sm border border-gray-300 flex items-center justify-center">
-                <div className="absolute -right-1 w-1 h-2 bg-gray-300 rounded-sm"></div>
+                className="relative w-8 h-3 bg-oGray rounded-sm border border-oGray flex items-center justify-center">
+                <div className="absolute -right-1 w-1 h-2 bg-oGray rounded-sm"></div>
                 <div
                     className={`absolute left-0 top-0 h-full ${getBatteryColor()} rounded-sm`}
                     style={{width: `${batteryPercentage}%`}}

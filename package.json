@@ -8,7 +8,7 @@
     "signalk-webapp"
   ],
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --experimental-https",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -23,7 +23,6 @@
     "react": "^18",
     "react-dom": "^18",
     "react-draggable": "^4.4.6",
-    "rhino3dm": "^8.9.0",
     "three": "^0.169.0"
   },
   "devDependencies": {

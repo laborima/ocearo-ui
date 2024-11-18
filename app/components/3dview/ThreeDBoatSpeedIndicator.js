@@ -12,7 +12,17 @@ const ThreeDBoatSpeedIndicator = () => {
         SOG: getSignalKValue('navigation.speedOverGround') || 0.0, // Speed over ground
         VMG: getSignalKValue('performance.velocityMadeGood') || 0.0, // Velocity made good
         STW: getSignalKValue('navigation.speedThroughWater') || 0.0, // Speed through water
+        POL : getSignalKValue('performance.polarSpeedRatio') || 8
     };
+    
+  /*  const polarSpeed = getSignalKValue('performance.polarSpeed') || 8; // Vitesse polaire du bateau
+      const polarSpeedRatio = getSignalKValue('performance.polarSpeedRatio') || 0.95; // Ratio de vitesse polaire (Performance polaire)
+      // *** Données de vitesse et de performance ***
+      const velocityMadeGood = getSignalKValue('performance.velocityMadeGood') || 5; // VMG actuel
+      const speedThroughWater = getSignalKValue('navigation.speedThroughWater') || 7; // Vitesse à travers l'eau
+      const polarVelocityMadeGood = getSignalKValue('performance.polarVelocityMadeGood') || 6; // VMG polaire
+      const polarVelocityMadeGoodRatio = getSignalKValue('performance.polarVelocityMadeGoodRatio') || 0.9; // Ratio de VMG polaire*/
+
 
     // State to display the current speed
     const [speed, setSpeed] = useState(speedTypes[speedType]); // Use speed from the current speed type
@@ -29,13 +39,13 @@ const ThreeDBoatSpeedIndicator = () => {
     };
 
     // Define text colors based on night mode
-    const textColor = nightMode ? 'text-red-500' : 'text-white'; // Change to red in night mode
+    const textColor = nightMode ? 'text-oNight' : 'text-oGray'; // Change to red in night mode
 
     return (
         <div className="mt-4">
             {/* Speedometer */}
             <div
-                className={`text-5xl font-bold cursor-pointer ${textColor}`} // Apply night mode text color
+                className={`text-6xl font-bold cursor-pointer text-white`} // Apply night mode text color
                 onClick={toggleSpeedType}
             >
                 {speed} {/* Display current speed */}

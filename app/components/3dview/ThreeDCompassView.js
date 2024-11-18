@@ -17,7 +17,7 @@ const ThreeDCompassView = () => {
   
             
             <WindSector3D  outerRadius={outerRadius+1.1}  />
-            <LayLines3D outerRadius={outerRadius}  />
+          {  /*<LayLines3D outerRadius={outerRadius}  />*/ }
         </>
     );
 };

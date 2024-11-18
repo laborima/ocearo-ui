@@ -3,33 +3,49 @@ import { useOcearoContext } from '../context/OcearoContext';
 import { useState, useEffect } from 'react';
 
 const ThreeDBoatRudderIndicator = () => {
-    const {nightMode } = useThreeDView(); // Access SignalK data and nightMode from context
-    const {getSignalKValue}  = useOcearoContext();
-    const [rudderAngle, setRudderAngle] = useState(0); // Default rudder angle
+    const { nightMode } = useThreeDView();
+    const { getSignalKValue } = useOcearoContext();
 
-    // Fetch the rudder angle from SignalK when component mounts or data updates
-    useEffect(() => {
-        const angle = getSignalKValue('steering.rudderAngle') || 0; // Default to 0 degrees if no data
-        setRudderAngle(angle);
-    }, [getSignalKValue]);
+    const rudderAngle = getSignalKValue('steering.rudderAngle') || 0;
 
-    // Dynamic slider background based on night mode
-    const sliderBgColor = nightMode ? 'bg-red-500' : 'bg-gray-300';
+    // Function to generate graduation markers
+    const renderGraduations = () => {
+        const markers = [];
+        for (let i = -60; i <= 60; i += 10) {
+            const position = (i / 120) * 100; // Convert angle to percentage
+            markers.push(
+                <div
+                    key={i}
+                    className="absolute h-2 w-px bg-oGray" // Graduation style
+                    style={{
+                        left: `${50 + position}%`, // Positioning the marker
+                        transform: 'translateX(-20%)', // Center the marker on the calculated position
+                    }}
+                >
+                    <span
+                        className={`text-xs ${nightMode ? 'text-oNight' : 'text-oGray'}`} // Graduation label color
+                        style={{ transform: 'translateY(-50%)' }} // Position the label above the marker
+                    >
+                        {i}
+                    </span>
+                </div>
+            );
+        }
+        return markers;
+    };
 
     return (
-        <div>
-            {/* Slider displaying rudder angle */}
-            <input
-                type="range"
-                min="-45" // Port
-                max="45"  // Starboard
-                value={rudderAngle} // Dynamic value from SignalK
-                className={`slider ${sliderBgColor} w-64`} // Adjust slider width and color
-                readOnly // Make it read-only since we're just displaying the rudder angle
-            />
-            {/* Display rudder angle in text */}
-            <div className={`text-center mt-2 text-sm ${nightMode ? 'text-red-500' : 'text-white'}`}>
-                Rudder Angle: {rudderAngle}°
+        <div style={{ width: '480px', paddingBottom: '25px' }} className="mx-auto">
+            <div className="w-full bg-oGray h-1 rounded-full relative  mt-2">
+                {renderGraduations()} {/* Render graduation markers */}
+                <div
+                    className={`absolute top-0 h-1 rounded-full transition-all duration-300 ease-in-out ${rudderAngle < 0 ? 'bg-oRed' : 'bg-oGreen'}`}
+                    style={{
+                        width: `${Math.abs(rudderAngle) / 120 * 100}%`, // Scale width to max out at 100% for ±60 degrees
+                        left: '50%', // Start from center
+                        transform: rudderAngle < 0 ? 'translateX(-100%)' : 'translateX(0)' // Move left or right
+                    }}
+                />
             </div>
         </div>
     );

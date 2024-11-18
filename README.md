@@ -27,4 +27,11 @@ This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-opti
 npx create-next-app@latest
  npm install @signalk/client @react-three/fiber @react-three/drei
  npm install @fortawesome/react-fontawesome @fortawesome/free-solid-svg-icons
- npm install rhino3dm
+
+ 
+##  Boat models
+
+All 3D boat models have a waterline length of 10 meters, positioned at 0 on the Y-axis. (Use Blender to change that)
+
+  
+ 

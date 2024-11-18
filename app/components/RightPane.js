@@ -1,3 +1,5 @@
+import PDFList from "./docviewer/PDFList";
+
 const RightPane = ({ view }) => {
     // Determine what content to display based on the view
     const iframeSrc = () => {
@@ -6,8 +8,6 @@ const RightPane = ({ view }) => {
                 return 'https://example.com/settings'; // Replace with the actual Boat settings URL
             case 'navigation':
                 return 'https://demo.signalk.org/@signalk/freeboard-sk/';
-            case 'manual':
-                return 'https://example.com/boat-manual.pdf'; // Replace with your boat manual PDF viewer
             case 'instrument':
                 return 'https://demo.signalk.org/@mxtommy/kip/#/page/0';
             case 'netflix':
@@ -23,17 +23,16 @@ const RightPane = ({ view }) => {
 
     return (
         <div className="flex flex-col w-full h-full"> {/* Use flex for layout */}
+            {view == 'manual' ? ( <PDFList path="boats/dufour310/docs"/>): ""}
+        
+        
             {iframeSrc() ? (
                 <iframe
                     className="flex-grow border-none"
                     src={iframeSrc()} // Load dynamic content based on the selected view
                     title="External Application"
                 />
-            ) : (
-                <div className="flex items-center justify-center h-full">
-                    <p className="text-white">Select an app to display in this pane</p>
-                </div>
-            )}
+            ) :"" }
         </div>
     );
 };

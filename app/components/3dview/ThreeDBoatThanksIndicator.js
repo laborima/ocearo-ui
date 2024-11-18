@@ -23,7 +23,7 @@ const ThreeDBoatThanksIndicator = () => {
     };
 
     // Define text colors based on night mode
-    const textColor = nightMode ? 'text-red-500' : 'text-white';
+    const textColor = nightMode ? 'text-oNight' : 'text-oGray';
 
     return (
         <div className={`${textColor}`} onClick={toggleDisplayMode}>
