@@ -1,9 +1,8 @@
-import { useThreeDView } from './context/ThreeDViewContext';
 import { useOcearoContext } from '../context/OcearoContext';
 import { useState } from 'react';
 
 const ThreeDBoatSpeedIndicator = () => {
-    const { nightMode } = useThreeDView(); // Access global context, including nightMode
+    const { nightMode } = useOcearoContext(); // Access global context, including nightMode
     const [speedType, setSpeedType] = useState('SOG'); // Default speed type: SOG
     const {getSignalKValue}  = useOcearoContext();
 

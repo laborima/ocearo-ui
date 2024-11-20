@@ -1,11 +1,10 @@
 import PDFList from "./docviewer/PDFList";
+import ConfigPage from "./settings/ConfigPage";
 
 const RightPane = ({ view }) => {
     // Determine what content to display based on the view
     const iframeSrc = () => {
         switch (view) {
-            case 'settings':
-                return 'https://example.com/settings'; // Replace with the actual Boat settings URL
             case 'navigation':
                 return 'https://demo.signalk.org/@signalk/freeboard-sk/';
             case 'instrument':
@@ -24,7 +23,7 @@ const RightPane = ({ view }) => {
     return (
         <div className="flex flex-col w-full h-full"> {/* Use flex for layout */}
             {view == 'manual' ? ( <PDFList path="boats/dufour310/docs"/>): ""}
-        
+            {view == 'settings' ? (   <ConfigPage />) : ""}
         
             {iframeSrc() ? (
                 <iframe

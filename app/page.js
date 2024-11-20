@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Draggable from 'react-draggable';
-import LeftPane from './components/LeftPane';
 import RightPane from './components/RightPane';
 import BottomNavigation from './components/BottomNavigation';
 import { OcearoContextProvider } from './components/context/OcearoContext';
@@ -17,9 +16,9 @@ import {
     faVideo, 
     faTachometerAlt 
 } from '@fortawesome/free-solid-svg-icons'
+import ThreeDMainView from './components/3dview/ThreeDMainView';
 
 export default function Home() {
-    const [leftView, setLeftView] = useState('boat');
     const [rightView, setRightView] = useState('manual');
     const [isLeftPaneFullScreen, setIsLeftPaneFullScreen] = useState(false);
     const [showAppMenu, setShowAppMenu] = useState(false);
@@ -43,7 +42,7 @@ export default function Home() {
             <div className="h-screen flex flex-col bg-black relative">
                 <div className="flex flex-1">
                     <div className={`transition-all duration-300 ${isLeftPaneFullScreen ? 'w-full' : 'w-2/5'} bg-leftPaneBg h-full relative`}>
-                        <LeftPane view={leftView} />
+                       <ThreeDMainView />
                     </div>
 
                     {/* Draggable Slider */}
@@ -65,7 +64,6 @@ export default function Home() {
                 
                 <div className="w-full h-16 bg-black flex items-center justify-center">
                     <BottomNavigation
-                        setLeftView={setLeftView}
                         setRightView={setRightView}
                         toggleAppMenu={toggleAppMenu}
                         setShowWebcam={setShowWebcam}
@@ -76,9 +74,6 @@ export default function Home() {
                     <div className="absolute bg-white p-4 rounded-lg shadow-md top-4 left-1/2 transform -translate-x-1/2 z-50">
                     <button onClick={() => setLeftView('boat')} className="flex items-center text-black p-2">
                          <FontAwesomeIcon icon={faShip} className="mr-2" /> Boat View
-                     </button>
-                     <button onClick={() => setLeftView('park')} className="flex items-center text-black p-2">
-                         <FontAwesomeIcon icon={faParking} className="mr-2" /> Park Assist
                      </button>
                      <button onClick={() => setRightView('manual')} className="flex items-center text-black p-2">
                          <FontAwesomeIcon icon={faHandsHelping} className="mr-2" /> Manual

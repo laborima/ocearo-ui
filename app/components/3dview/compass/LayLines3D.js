@@ -1,9 +1,8 @@
 import React, { useMemo,useState } from 'react';
-import { useOcearoContext } from '../../context/OcearoContext';
 import { Vector3 } from 'three';
 import { useThree } from '@react-three/fiber';
 import { Line, Sphere,Html } from '@react-three/drei';
-import { rotateVector, toRadians } from '../context/ThreeDViewContext';
+import { rotateVector, toRadians,useOcearoContext } from '../../context/OcearoContext';
 
 // https://rowlandsmarine.co.uk/content/LightHouse-14-New-features-MFD-EN.pdf?srsltid=AfmBOopyiml7Nf4PGYyXNhgn62p22dUF-u1GnSxFero1xWwljZGYpClX
 

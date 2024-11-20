@@ -1,9 +1,8 @@
-import { useThreeDView } from './context/ThreeDViewContext';
 import { useOcearoContext } from '../context/OcearoContext';
 import { useState, useEffect } from 'react';
 
 const ThreeDBoatRudderIndicator = () => {
-    const { nightMode } = useThreeDView();
+    const { nightMode } = useOcearoContext();
     const { getSignalKValue } = useOcearoContext();
 
     const rudderAngle = getSignalKValue('steering.rudderAngle') || 0;

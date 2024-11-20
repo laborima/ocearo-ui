@@ -1,43 +1,37 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAnchor, faShip, faPersonFalling, faMoon, faWater } from '@fortawesome/free-solid-svg-icons';
-import { useThreeDView } from './context/ThreeDViewContext';
-//import { useOcearoContext } from '../../OcearoContext';
+import { faAnchor, faShip, faPersonFalling, faMoon, faWater, faParking } from '@fortawesome/free-solid-svg-icons';
+import { useOcearoContext } from '../context/OcearoContext';
 
 const ThreeDBoatToolbar = () => {
-    const { nightMode, setNightMode, states, toggleState } = useThreeDView();
-    
-   // const {getSignalKValue}  = useOcearoContext();
-
-    // Use SignalK client to get seeState from the SignalK server
-   // const seeState = getSignalKValue('navigation.seeState'); // Fetch SignalK value for seeState
+    const { nightMode, setNightMode, states, toggleState } = useOcearoContext();
 
     // Dynamic text color based on night mode
     const textColor = nightMode ? 'text-oNight' : 'text-oGray';
 
     return (
-        <div class="text-lg" >
+        <div className="text-lg">
             {/* Autopilot */}
             <button
                 onClick={() => toggleState('autopilot')}
-                className={`p-1 `}
+                className={`p-1`}
             >
-                <FontAwesomeIcon icon={faShip} className={states.autopilot ? 'text-oBlue text-xl' : textColor } />
+                <FontAwesomeIcon icon={faShip} className={states.autopilot ? 'text-oBlue text-xl' : textColor} />
             </button>
 
             {/* Anchor Watch */}
             <button
                 onClick={() => toggleState('anchorWatch')}
-                className={`p-1  `}
+                className={`p-1`}
             >
-                <FontAwesomeIcon icon={faAnchor} className={states.anchorWatch ? 'text-oYellow text-xl' :textColor } />
+                <FontAwesomeIcon icon={faAnchor} className={states.anchorWatch ? 'text-oYellow text-xl' : textColor} />
             </button>
 
             {/* MOB */}
             <button
                 onClick={() => toggleState('mob')}
-                className={`p-1 `}
+                className={`p-1`}
             >
-                <FontAwesomeIcon icon={faPersonFalling} className={states.mob ? 'text-oRed  text-xl' : textColor } />
+                <FontAwesomeIcon icon={faPersonFalling} className={states.mob ? 'text-oRed text-xl' : textColor} />
             </button>
 
             {/* Night Mode */}
@@ -45,14 +39,23 @@ const ThreeDBoatToolbar = () => {
                 onClick={() => setNightMode(!nightMode)}
                 className={`p-1`}
             >
-                <FontAwesomeIcon icon={faMoon} className={states.nightMode ? "text-oNight text-xl": textColor } />
+                <FontAwesomeIcon icon={faMoon} className={states.nightMode ? 'text-oNight text-xl' : textColor} />
             </button>
 
-            {/* See State - Display real-time seeState from SignalK */}
-            <button 
-            onClick={() => toggleState('showOcean')}
-            className={`p-1`}>
-                <FontAwesomeIcon icon={faWater} className={states.showOcean ? 'text-oBlue text-xl' : textColor } />
+            {/* See State */}
+            <button
+                onClick={() => toggleState('showOcean')}
+                className={`p-1`}
+            >
+                <FontAwesomeIcon icon={faWater} className={states.showOcean ? 'text-oBlue text-xl' : textColor} />
+            </button>
+
+            {/* Parking Mode */}
+            <button
+                onClick={() => toggleState('parkingMode')}
+                className={`p-1`}
+            >
+                <FontAwesomeIcon icon={faParking} className={states.parkingMode ? 'text-oGreen text-xl' : textColor} />
             </button>
         </div>
     );

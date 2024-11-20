@@ -1,9 +1,9 @@
-import { useThreeDView } from './context/ThreeDViewContext';
+
 import { useOcearoContext } from '../context/OcearoContext';
 import { useState, useEffect } from 'react';
 
 const ThreeDBoatSeeLevelIndicator = () => {
-    const { nightMode } = useThreeDView(); // Access SignalK data and nightMode from context
+    const { nightMode } = useOcearoContext(); // Access SignalK data and nightMode from context
     const { getSignalKValue } = useOcearoContext();
     // State variables for the environment data
     const [depth, setDepth] = useState(0);

@@ -2,6 +2,7 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faVideo,faShip, faMapMarkedAlt, faTh } from '@fortawesome/free-solid-svg-icons';
 import BottomTemperatureWidget from './widgets/BottomTemperatureWidget';
+import BottomEnvironmentalWidget from './widgets/BottomEnvironmentalWidget';
 
 const BottomNavigation = ({ setLeftView, setRightView, toggleAppMenu, setShowWebcam }) => {
   // Define a reusable button class for uniform styling
@@ -33,6 +34,7 @@ const BottomNavigation = ({ setLeftView, setRightView, toggleAppMenu, setShowWeb
 
       {/* Right Section - Webcam Buttons */}
       <div className="flex items-center  space-x-10">
+        <BottomEnvironmentalWidget/>
         <button onClick={() => setRightView('navigation')} className={buttonClass}>
           <FontAwesomeIcon icon={faMapMarkedAlt}  />
         </button>

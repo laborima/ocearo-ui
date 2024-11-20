@@ -1,10 +1,9 @@
-import { useThreeDView } from './context/ThreeDViewContext';
 import { useOcearoContext } from '../context/OcearoContext';
 import { useState } from 'react';
 import BatteryIndicator from "@/app/components/3dview/BatteryIndicator";
 
 const ThreeDBoatThanksIndicator = () => {
-    const {  nightMode } = useThreeDView(); // Access SignalK data and night mode from context
+    const {  nightMode } = useOcearoContext(); // Access SignalK data and night mode from context
     const [displayMode, setDisplayMode] = useState('batteries'); // Default mode is to display batteries
     const {getSignalKValue}  = useOcearoContext();
 

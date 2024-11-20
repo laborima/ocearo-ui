@@ -5,9 +5,9 @@ import * as THREE from 'three';
 import SailBoat3D from './SailBoat3D';
 import Ocean3D from './ocean/Ocean3D';
 import AISView from './ais/AISView';
-import { useThreeDView } from './context/ThreeDViewContext';
 import ThreeDCompassView from './ThreeDCompassView';
 import DebugInfo from './DebugInfo';
+import { useOcearoContext } from '../context/OcearoContext';
 import { AISProvider } from './ais/AISContext';
 
 const ThreeDBoatView = ({}) => {    const cameraRef = useRef();
@@ -15,7 +15,7 @@ const ThreeDBoatView = ({}) => {    const cameraRef = useRef();
     const [isUserInteracting, setIsUserInteracting] = useState(false); // Tracks if user is using controls
     const [resetCamera, setResetCamera] = useState(false); // Whether to trigger camera reset
     const resetDuration = 2; // Duration of camera reset in seconds
-    const {states } = useThreeDView();
+    const {states } = useOcearoContext();
 
     // State to manage visibility of ocean and compass
 
