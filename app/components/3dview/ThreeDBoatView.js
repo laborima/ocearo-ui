@@ -1,6 +1,6 @@
 import React, { Suspense, useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Html, Environment } from '@react-three/drei';
 import * as THREE from 'three';
 import SailBoat3D from './SailBoat3D';
 import Ocean3D from './ocean/Ocean3D';
@@ -10,12 +10,13 @@ import DebugInfo from './DebugInfo';
 import { useOcearoContext } from '../context/OcearoContext';
 import { AISProvider } from './ais/AISContext';
 
-const ThreeDBoatView = ({}) => {    const cameraRef = useRef();
+const ThreeDBoatView = ({ }) => {
+    const cameraRef = useRef();
     const orbitControlsRef = useRef();
     const [isUserInteracting, setIsUserInteracting] = useState(false); // Tracks if user is using controls
     const [resetCamera, setResetCamera] = useState(false); // Whether to trigger camera reset
     const resetDuration = 2; // Duration of camera reset in seconds
-    const {states } = useOcearoContext();
+    const { states } = useOcearoContext();
 
     // State to manage visibility of ocean and compass
 
@@ -26,7 +27,7 @@ const ThreeDBoatView = ({}) => {    const cameraRef = useRef();
 
     const sailBoatRef = useRef();
 
-    // Timer to reset camera after inactivity
+ /*   // Timer to reset camera after inactivity
     useEffect(() => {
         let inactivityTimeout;
 
@@ -40,9 +41,9 @@ const ThreeDBoatView = ({}) => {    const cameraRef = useRef();
         }
 
         return () => clearTimeout(inactivityTimeout); // Clear the timer on new interaction or component unmount
-    }, [isUserInteracting]);
+    }, [isUserInteracting]);*/
 
-    // Track OrbitControls interaction and start/reset the inactivity timer
+   /* // Track OrbitControls interaction and start/reset the inactivity timer
     useEffect(() => {
         const controls = orbitControlsRef.current;
 
@@ -62,8 +63,8 @@ const ThreeDBoatView = ({}) => {    const cameraRef = useRef();
             controls?.removeEventListener('end', handleEnd);
         };
     }, []);
-
-    // Smooth camera transition using linear interpolation (LERP)
+*/
+/*    // Smooth camera transition using linear interpolation (LERP)
     useFrame((state, delta) => {
         if (resetCamera && cameraRef.current) {
             // Current position of the camera
@@ -85,38 +86,60 @@ const ThreeDBoatView = ({}) => {    const cameraRef = useRef();
             }
         }
     });
-
+*/
     return (
-            <Suspense fallback={null}>
-                {/* OrbitControls with ref to detect user interaction */}
-                <OrbitControls ref={orbitControlsRef} enableZoom={true} enableRotate={true} />
+        <Suspense fallback={null}>
+            {/* OrbitControls with ref to detect user interaction */}
+            <OrbitControls ref={orbitControlsRef} enableZoom={true} enableRotate={true} />
 
-                {/* Camera */}
-                <PerspectiveCamera ref={cameraRef} fov={50} position={camPosition} makeDefault />
-                
+            {/* Camera */}
+            <PerspectiveCamera ref={cameraRef} fov={50} position={camPosition} makeDefault />
 
-                {/* Ambient light for better visibility */}
-                <ambientLight intensity={0.5} />
-                <directionalLight position={[10, 10, 10]} intensity={0.8} castShadow />
-                <directionalLight position={[-10, 10, -10]} intensity={0.5} />
-                <hemisphereLight skyColor={0xffffff} groundColor={0x444444} intensity={0.5} />
 
-                <pointLight position={[10, 10, 10]} />
-  
-               {/*  <DebugInfo/> */}
-                {/* Your central boat */}
-                <SailBoat3D ref={sailBoatRef} />
-                
-                {states.showOcean && <Ocean3D />}
+            {/* Environment for reflections */}
+            <Environment preset="sunset" background={false} />
 
-                 {/* AIS Boats fetched from SignalK */}
-                 <AISProvider>
-                    <AISView  />
-                 </AISProvider>
-                
-                <ThreeDCompassView visible={isCompassLayerVisible}/>
-                
-            </Suspense>
+            {/* Lighting setup */}
+            {/* Ambient light to fill shadows */}
+            <ambientLight intensity={0.6} />
+
+            {/* Spot light for strong highlights */}
+            <spotLight
+                position={[15, 30, 20]}
+                intensity={2.0}
+                angle={Math.PI / 6}
+                penumbra={0.5}
+                castShadow
+                shadow-mapSize-width={2048}
+                shadow-mapSize-height={2048}
+            />
+
+            {/* Directional light for metallic reflection and shadowing */}
+            <directionalLight
+                position={[-10, 20, 10]}
+                intensity={1.5}
+                castShadow
+                shadow-mapSize-width={2048}
+                shadow-mapSize-height={2048}
+            />
+
+            {/* Point light for subtle fill and reflections */}
+            <pointLight position={[-10, 10, -10]} intensity={0.7} />
+
+            {/*  <DebugInfo/> */}
+            {/* Your central boat */}
+            <SailBoat3D scale={[0.7,0.7,0.7]} ref={sailBoatRef} />
+
+            {states.showOcean && <Ocean3D />}
+
+            {/* AIS Boats fetched from SignalK */}
+            <AISProvider>
+                <AISView />
+            </AISProvider>
+
+            <ThreeDCompassView visible={isCompassLayerVisible} />
+
+        </Suspense>
     );
 };
 

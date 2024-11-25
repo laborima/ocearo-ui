@@ -111,6 +111,34 @@ const ConfigPage = ({ onSave }) => {
                     </label>
                 </div>
 
+                {/* Color Picker */}
+                <div>
+                    <label className="block font-medium">Primary Color:</label>
+                    <input
+                        type="color"
+                        className="border p-2 w-full"
+                        value={config.primaryColor || '#000000'} // Default to black if not set
+                        onChange={(e) =>
+                            setConfig({ ...config, primaryColor: e.target.value })
+                        }
+                    />
+                </div>
+
+                {/* Metallic Effect Toggle */}
+                <div>
+                    <label className="flex items-center">
+                        <input
+                            type="checkbox"
+                            className="mr-2"
+                            checked={config.metallicEffect || false} // Default to false if not set
+                            onChange={(e) =>
+                                setConfig({ ...config, metallicEffect: e.target.checked })
+                            }
+                        />
+                        Enable Metallic Effect
+                    </label>
+                </div>
+
                 <div className="flex space-x-4">
                     {/* Save Button */}
                     <button

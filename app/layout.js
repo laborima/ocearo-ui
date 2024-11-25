@@ -17,6 +17,8 @@ export const metadata = {
   description: "Sailing made smarter",
 };
 
+
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">

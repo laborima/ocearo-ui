@@ -8,56 +8,71 @@ class ConfigService {
             debugMode: false,
         };
 
-        this.configKey = 'ocearoConfig'; // Key used to store the config in localStorage
+        this.configKey = 'ocearoConfig'; // Key used to store the config
+        this.inMemoryConfig = { ...this.defaultConfig }; // Fallback storage for SSR
         this.config = this.loadConfig(); // Load existing config or initialize with defaults
     }
 
-    // Load configuration from localStorage or initialize with defaults
-    loadConfig() {
-        const storedConfig = localStorage.getItem(this.configKey);
-        if (storedConfig) {
-            try {
-                return JSON.parse(storedConfig);
-            } catch (error) {
-                console.error('Failed to parse stored configuration:', error);
-                return { ...this.defaultConfig };
-            }
-        } else {
-            // If no config exists, initialize with defaults
-            this.saveConfig(this.defaultConfig);
-            return { ...this.defaultConfig };
+    isLocalStorageAvailable() {
+        try {
+            return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
+        } catch {
+            return false;
         }
     }
 
-    // Save the current configuration to localStorage
-    saveConfig(newConfig) {
-        this.config = { ...this.config, ...newConfig }; // Merge new values
-        localStorage.setItem(this.configKey, JSON.stringify(this.config));
+    // Load configuration
+    loadConfig() {
+        if (this.isLocalStorageAvailable()) {
+            const storedConfig = localStorage.getItem(this.configKey);
+            if (storedConfig) {
+                try {
+                    return JSON.parse(storedConfig);
+                } catch (error) {
+                    console.error('Failed to parse stored configuration:', error);
+                    return { ...this.defaultConfig };
+                }
+            } else {
+                this.saveConfig(this.defaultConfig);
+                return { ...this.defaultConfig };
+            }
+        }
+        // Use in-memory config during SSR
+        return { ...this.inMemoryConfig };
     }
 
-    // Get a specific configuration value
+    // Save configuration
+    saveConfig(newConfig) {
+        this.config = { ...this.config, ...newConfig };
+        if (this.isLocalStorageAvailable()) {
+            localStorage.setItem(this.configKey, JSON.stringify(this.config));
+        } else {
+            this.inMemoryConfig = { ...this.config };
+        }
+    }
+
     get(key) {
         return this.config[key];
     }
 
-    // Set a specific configuration value and save it
     set(key, value) {
         this.config[key] = value;
         this.saveConfig(this.config);
     }
 
-    // Reset configuration to default values
     resetConfig() {
         this.config = { ...this.defaultConfig };
-        localStorage.setItem(this.configKey, JSON.stringify(this.config));
+        if (this.isLocalStorageAvailable()) {
+            localStorage.setItem(this.configKey, JSON.stringify(this.config));
+        } else {
+            this.inMemoryConfig = { ...this.defaultConfig };
+        }
     }
 
-    // Get all configuration values
     getAll() {
         return { ...this.config };
     }
 }
 
-// Export a single instance of the service for the entire app
 const configService = new ConfigService();
 export default configService;
