@@ -49,7 +49,7 @@ export default function useBoat(boatId, desiredLength, material, useModelMateria
         };
 
         loadBoat();
-    }, [boatId, length, material, useModelMaterial]);
+    }, [boatId, material, useModelMaterial,desiredLength]);
 
     return boat;
 }

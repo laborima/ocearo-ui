@@ -5,13 +5,15 @@ import configService from '../settings/ConfigService'; // Import ConfigService f
 
 import { useGLTF } from '@react-three/drei'
 
+const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
+const modelPath = `${ASSET_PREFIX}/boats/default/assets/scene-transformed.glb`;
 
 export default function SailBoat3D(props) {
     const boatRef = useRef(); // Ref to access and control the boat object
     //const [boat, setBoat] = useState(null); // Store the boat group
     const { getSignalKValue } = useOcearoContext(); // Use the context to get SignalK values
     
-    const { nodes, materials } = useGLTF('/boats/default/assets/scene-transformed.glb')
+    const { nodes, materials } = useGLTF(modelPath)
     
     // Load configuration settings
     const config = configService.getAll();
@@ -52,5 +54,6 @@ export default function SailBoat3D(props) {
     
 
 
-    useGLTF.preload('/boats/default/assets/scene-transformed.glb')
 }
+
+useGLTF.preload(modelPath);

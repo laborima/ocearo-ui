@@ -3,8 +3,8 @@ import React, { forwardRef } from 'react';
 // Dynamic import utility function
 const loadBoatComponent = async (boatType) => {
     try {
-        const module = await import(`/public/boats/${boatType}/assets/Scene.jsx`);
-        return module.Model; // Ensure Scene.jsx exports a Model
+        const boatModule = await import(`/public/boats/${boatType}/Scene.jsx`);
+        return boatModule.Model; // Ensure Scene.jsx exports a Model
     } catch (error) {
         console.error(`Error loading ${boatType} component:`, error);
         throw error;
@@ -45,6 +45,9 @@ const AISBoat = forwardRef(({ size, position, visible, length }, ref) => {
         </group>
     );
 });
+
+// Set display name for debugging purposes
+AISBoat.displayName = 'AISBoat';
 
 export default AISBoat;
 

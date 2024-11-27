@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "description": "Ocean Robot UI: Sailing made smarter",
-  "main": "index.js",
   "keywords": [
     "signalk-webapp"
   ],
@@ -32,7 +31,7 @@
     "tailwindcss": "^3.4.1"
   },
   "signalk": {
-    "appIcon": "./public/icons/ocearo.webp",
+    "appIcon": "./icons/ocearo.webp",
     "displayName": "Ocean Robot UI"
   }
 }

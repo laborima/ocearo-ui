@@ -1,9 +1,0 @@
-{
-    "boatType" : "motorboat",
-    "orientation": "rotate-y-360",
-     "waterlineHeight": -140,
-    "modelType": "gltf",
-    "hull": {
-        "fileName": "assets/scene.gltf"
-    }
-}

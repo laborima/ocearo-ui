@@ -1,9 +1,0 @@
-{
-    "modelType": "gltf",
-    "boatType" : "sailboat",
-    "orientation": "rotate-y-right",
-    "waterlineHeight": 6,
-    "hull": {
-        "fileName": "assets/scene.gltf"
-    }
-}

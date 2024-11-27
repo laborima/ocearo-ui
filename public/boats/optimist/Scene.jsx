@@ -11,8 +11,12 @@ Title: optimist sailboat
 import React from 'react'
 import { useGLTF } from '@react-three/drei'
 
+const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
+const modelPath = `${ASSET_PREFIX}/boats/optimist/assets/scene-transformed.glb`;
+
 export function Model(props) {
-  const { nodes, materials } = useGLTF('/boats/optimist/assets/scene-transformed.glb')
+
+    const { nodes, materials } = useGLTF(modelPath);
   return (
     <group {...props} dispose={null}>
       <mesh geometry={nodes.sail_sail_0.geometry} material={materials.sail} position={[-0.217, 2.849, 0.938]} rotation={[-Math.PI, 0, Math.PI / 2]} scale={[-5.728, 4.361, 4.361]} />
@@ -22,5 +26,3 @@ export function Model(props) {
     </group>
   )
 }
-
-useGLTF.preload('/boats/optimist/assets/scene-transformed.glb')

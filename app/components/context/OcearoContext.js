@@ -111,7 +111,7 @@ export const OcearoContextProvider = ({ children, sampleData = true }) => {
                 clearInterval(sampleDataIntervalRef.current);
             }
         };
-    }, []); // Empty dependency array means this runs once on mount
+    }, [sampleData]); // Empty dependency array means this runs once on mount
 
 
     // General method to retrieve SignalK values

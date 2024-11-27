@@ -1,48 +1,38 @@
 'use client';
 
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Draggable from 'react-draggable';
 import RightPane from './components/RightPane';
 import BottomNavigation from './components/BottomNavigation';
 import { OcearoContextProvider } from './components/context/OcearoContext';
-import FullscreenHandler from './FullScreenHandler';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faShip,
-    faParking,
     faHandsHelping,
     faCogs,
     faMapMarkedAlt,
     faVideo,
-    faTachometerAlt, faCloudSun
-} from '@fortawesome/free-solid-svg-icons'
+    faTachometerAlt,
+    faCloudSun,
+    faExpand,
+} from '@fortawesome/free-solid-svg-icons';
 import ThreeDMainView from './components/3dview/ThreeDMainView';
 
 export default function Home() {
     const [rightView, setRightView] = useState('settings');
-     const [isLeftPaneFullScreen, setIsLeftPaneFullScreen] = useState(false);
+    const [isLeftPaneFullScreen, setIsLeftPaneFullScreen] = useState(false);
     const [isRightPaneFullScreen, setIsRightPaneFullScreen] = useState(false);
     const [showAppMenu, setShowAppMenu] = useState(false);
     const [ShowWebcam, setShowWebcam] = useState(false);
-    const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+    const [screenWidth] = useState(null);
     const [fullscreenSet, setFullscreenSet] = useState(false); // Track if fullscreen is already set
 
-      const handleSetFullScreen = (fullScreen) => {
-          // Only set the fullscreen state if it hasn't been set yet
-          if (!fullscreenSet && fullScreen) {
-              setIsLeftPaneFullScreen(true);
-              setFullscreenSet(true); // Set the flag to avoid further updates
-          }
-      };
-      
-
-      // Effect to handle fullscreen mode when screen width is less than or equal to 720px
-      useEffect(() => {
-          if (screenWidth <= 720) {
-              // Force fullscreen mode for mobile and tablet-sized screens
-              handleSetFullScreen(true);
-          }
-      }, [screenWidth]);
+    const handleSetFullScreen = (fullScreen) => {
+        if (!fullscreenSet && fullScreen) {
+            setIsLeftPaneFullScreen(true);
+            setFullscreenSet(true); // Set the flag to avoid further updates
+        }
+    };
 
     const toggleAppMenu = () => setShowAppMenu(!showAppMenu);
 
@@ -62,6 +52,24 @@ export default function Home() {
         }
     };
 
+    const toggleFullscreen = () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch((err) => {
+                console.error(`Error attempting to enable fullscreen mode: ${err.message} (${err.name})`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    };
+
+    // Updated setRightView function
+    const handleSetRightView = (view) => {
+        if (isLeftPaneFullScreen) {
+            setIsRightPaneFullScreen(true);
+            setIsLeftPaneFullScreen(false);
+        }
+        setRightView(view);
+    };
 
     return (
         <OcearoContextProvider>
@@ -71,7 +79,7 @@ export default function Home() {
                         className={`transition-all duration-300 ${isLeftPaneFullScreen ? 'w-full' : isRightPaneFullScreen ? 'hidden' : 'w-2/5'
                             } bg-leftPaneBg h-full relative`}
                     >
-                        <ThreeDMainView  setFullScreen={handleSetFullScreen} />
+                        <ThreeDMainView setFullScreen={handleSetFullScreen} />
                     </div>
 
                     {/* Draggable Slider */}
@@ -87,52 +95,110 @@ export default function Home() {
                     </Draggable>
 
                     <div
-                        className={` transition-all duration-300 ${isRightPaneFullScreen ? 'w-full' : isLeftPaneFullScreen ? 'hidden' : 'w-3/5'
+                        className={`transition-all duration-300 ${isRightPaneFullScreen ? 'w-full' : isLeftPaneFullScreen ? 'hidden' : 'w-3/5'
                             } h-full bg-rightPaneBg p-4`}
                     >
                         <RightPane view={rightView} />
                     </div>
                 </div>
 
-
-
                 <div className="w-full h-16 bg-black flex items-center justify-center">
                     <BottomNavigation
-                        setRightView={setRightView}
+                        setRightView={handleSetRightView}
                         toggleAppMenu={toggleAppMenu}
                         setShowWebcam={setShowWebcam}
                     />
                 </div>
 
                 {showAppMenu && (
-                    <div className="absolute bg-white p-4 rounded-lg shadow-md top-4 left-1/2 transform -translate-x-1/2 z-50">
-                        <button onClick={() => setLeftView('boat')} className="flex items-center text-black p-2">
-                            <FontAwesomeIcon icon={faShip} className="mr-2" /> Boat View
-                        </button>
-                        <button onClick={() => setRightView('manual')} className="flex items-center text-black p-2">
-                            <FontAwesomeIcon icon={faHandsHelping} className="mr-2" /> Manual
-                        </button>
-                        <button onClick={() => setRightView('instrument')} className="flex items-center text-black p-2">
-                            <FontAwesomeIcon icon={faTachometerAlt} className="mr-2" /> Instruments
-                        </button>
-                        <button onClick={() => setRightView('webcam')} className="flex items-center text-black p-2">
-                            <FontAwesomeIcon icon={faVideo} className="mr-2" /> Webcam
-                        </button>
-                        <button onClick={() => setRightView('navigation')} className="flex items-center text-black p-2">
-                            <FontAwesomeIcon icon={faMapMarkedAlt} className="mr-2" /> Navigation
-                        </button>
-                        <button onClick={() => setRightView('webcam1')} className="flex items-center text-black p-2">
-                            <FontAwesomeIcon icon={faVideo} className="mr-2" /> Webcams
-                        </button>
-                        <button onClick={() => setRightView('settings')} className="flex items-center text-black p-2">
-                            <FontAwesomeIcon icon={faCogs} className="mr-2" /> Settings
-                        </button>
-                        <button onClick={() => setRightView('weather')} className="flex items-center text-black p-2">
-                            <FontAwesomeIcon icon={faCloudSun} className="mr-2" /> Weather
-                        </button>
-
+                    <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-black p-6 rounded-lg shadow-lg z-50 w-200">
+                        <div className="grid grid-cols-2 gap-4">
+                            {/* Show Split View button only if IsRightPaneFullScreen or IsLeftPaneFullScreen */}
+                            {(isRightPaneFullScreen || isLeftPaneFullScreen) && (
+                                <button
+                                    onClick={() => {
+                                        setIsRightPaneFullScreen(false);
+                                        setIsLeftPaneFullScreen(false);
+                                        setShowAppMenu(false);
+                                    }}
+                                    className="flex items-center text-white p-2 rounded-md hover:bg-gray-700 transition">
+                                    <FontAwesomeIcon icon={faShip} className="mr-2" /> Split View
+                                </button>
+                            )}
+                            
+                            {/* Show Boat View button only if IsRightPaneFullScreen */}
+                            {isRightPaneFullScreen && (
+                                <button
+                                    onClick={() => {
+                                        setIsRightPaneFullScreen(false);
+                                        setIsLeftPaneFullScreen(true);
+                                        setShowAppMenu(false);
+                                    }}
+                                    className="flex items-center text-white p-2 rounded-md hover:bg-gray-700 transition">
+                                    <FontAwesomeIcon icon={faShip} className="mr-2" /> Boat View
+                                </button>
+                            )}
+                            
+                            <button
+                                onClick={() => {
+                                    handleSetRightView('manual');
+                                    setShowAppMenu(false);
+                                }}
+                                className="flex items-center text-white p-2 rounded-md hover:bg-gray-700 transition">
+                                <FontAwesomeIcon icon={faHandsHelping} className="mr-2" /> Manual
+                            </button>
+                            <button
+                                onClick={() => {
+                                    handleSetRightView('instrument');
+                                    setShowAppMenu(false);
+                                }}
+                                className="flex items-center text-white p-2 rounded-md hover:bg-gray-700 transition">
+                                <FontAwesomeIcon icon={faTachometerAlt} className="mr-2" /> Instruments
+                            </button>
+                            <button
+                                onClick={() => {
+                                    handleSetRightView('webcam1');
+                                    setShowAppMenu(false);
+                                }}
+                                className="flex items-center text-white p-2 rounded-md hover:bg-gray-700 transition">
+                                <FontAwesomeIcon icon={faVideo} className="mr-2" /> Webcam
+                            </button>
+                            <button
+                                onClick={() => {
+                                    handleSetRightView('navigation');
+                                    setShowAppMenu(false);
+                                }}
+                                className="flex items-center text-white p-2 rounded-md hover:bg-gray-700 transition">
+                                <FontAwesomeIcon icon={faMapMarkedAlt} className="mr-2" /> Navigation
+                            </button>
+                            <button
+                                onClick={() => {
+                                    handleSetRightView('settings');
+                                    setShowAppMenu(false);
+                                }}
+                                className="flex items-center text-white p-2 rounded-md hover:bg-gray-700 transition">
+                                <FontAwesomeIcon icon={faCogs} className="mr-2" /> Settings
+                            </button>
+                            <button
+                                onClick={() => {
+                                    handleSetRightView('weather');
+                                    setShowAppMenu(false);
+                                }}
+                                className="flex items-center text-white p-2 rounded-md hover:bg-gray-700 transition">
+                                <FontAwesomeIcon icon={faCloudSun} className="mr-2" /> Weather
+                            </button>
+                            <button
+                                onClick={() => {
+                                    toggleFullscreen();
+                                    setShowAppMenu(false);
+                                }}
+                                className="flex items-center text-white p-2 rounded-md hover:bg-gray-700 transition">
+                                <FontAwesomeIcon icon={faExpand} className="mr-2" /> Toggle Fullscreen
+                            </button>
+                        </div>
                     </div>
                 )}
+
 
                 {ShowWebcam && (
                     <Draggable>

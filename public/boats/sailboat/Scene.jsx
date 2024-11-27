@@ -7,13 +7,14 @@ Files: scene.gltf [2.09KB] > /home/matthieu/becpg-workspace/ocearo/ocearo-ui/pub
 import React from 'react'
 import { useGLTF } from '@react-three/drei'
 
+const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
+const modelPath = `${ASSET_PREFIX}/boats/sailboat/assets/scene-transformed.glb`;
+
 export function Model(props) {
-  const { nodes, materials } = useGLTF('/boats/sailboat/assets/scene-transformed.glb')
+    const { nodes, materials } = useGLTF(modelPath);
   return (
     <group {...props} dispose={null}>
       <mesh geometry={nodes.sailboat.geometry} material={materials.texture} position={[0, -1.5, 0]} rotation={[-Math.PI, 0.011, -Math.PI]} scale={0.219} />
     </group>
   )
 }
-
-useGLTF.preload('/boats/sailboat/assets/scene-transformed.glb')

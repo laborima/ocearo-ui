@@ -21,16 +21,7 @@ const PDFList = ({ path }) => {
         fetchPdfFiles();
     }, [path]);
 
-    // Toggle Fullscreen
-    const toggleFullscreen = () => {
-        if (!document.fullscreenElement) {
-            viewerRef.current.requestFullscreen().catch(err => {
-                console.error(`Error attempting to enable fullscreen mode: ${err.message} (${err.name})`);
-            });
-        } else {
-            document.exitFullscreen();
-        }
-    };
+
 
     return (
         <div className="flex flex-col h-full" ref={viewerRef}>
@@ -45,12 +36,7 @@ const PDFList = ({ path }) => {
                         {pdf.title}
                     </button>
                 ))}
-                <button
-                    onClick={toggleFullscreen}
-                    className="ml-auto bg-blue-500 text-white px-4 py-2 rounded"
-                >
-                    Toggle Fullscreen
-                </button>
+                
             </div>
 
             {/* PDF Viewer using iframe */}
