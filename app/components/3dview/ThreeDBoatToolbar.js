@@ -15,7 +15,7 @@ const ThreeDBoatToolbar = () => {
                 onClick={() => toggleState('autopilot')}
                 className={`p-1`}
             >
-                <FontAwesomeIcon icon={faShip} className={states.autopilot ? 'text-oBlue text-xl' : textColor} />
+                <FontAwesomeIcon icon={faShip} className={states.autopilot ? 'text-oBlue ' : textColor} />
             </button>
 
             {/* Anchor Watch */}
@@ -23,7 +23,7 @@ const ThreeDBoatToolbar = () => {
                 onClick={() => toggleState('anchorWatch')}
                 className={`p-1`}
             >
-                <FontAwesomeIcon icon={faAnchor} className={states.anchorWatch ? 'text-oYellow text-xl' : textColor} />
+                <FontAwesomeIcon icon={faAnchor} className={states.anchorWatch ? 'text-oYellow ' : textColor} />
             </button>
 
             {/* MOB */}
@@ -31,7 +31,7 @@ const ThreeDBoatToolbar = () => {
                 onClick={() => toggleState('mob')}
                 className={`p-1`}
             >
-                <FontAwesomeIcon icon={faPersonFalling} className={states.mob ? 'text-oRed text-xl' : textColor} />
+                <FontAwesomeIcon icon={faPersonFalling} className={states.mob ? 'text-oRed ' : textColor} />
             </button>
 
             {/* Night Mode */}
@@ -39,7 +39,7 @@ const ThreeDBoatToolbar = () => {
                 onClick={() => setNightMode(!nightMode)}
                 className={`p-1`}
             >
-                <FontAwesomeIcon icon={faMoon} className={states.nightMode ? 'text-oNight text-xl' : textColor} />
+                <FontAwesomeIcon icon={faMoon} className={states.nightMode ? 'text-oNight ' : textColor} />
             </button>
 
             {/* See State */}
@@ -47,7 +47,7 @@ const ThreeDBoatToolbar = () => {
                 onClick={() => toggleState('showOcean')}
                 className={`p-1`}
             >
-                <FontAwesomeIcon icon={faWater} className={states.showOcean ? 'text-oBlue text-xl' : textColor} />
+                <FontAwesomeIcon icon={faWater} className={states.showOcean ? 'text-oBlue ' : textColor} />
             </button>
 
             {/* Parking Mode */}
@@ -55,7 +55,7 @@ const ThreeDBoatToolbar = () => {
                 onClick={() => toggleState('parkingMode')}
                 className={`p-1`}
             >
-                <FontAwesomeIcon icon={faParking} className={states.parkingMode ? 'text-oGreen text-xl' : textColor} />
+                <FontAwesomeIcon icon={faParking} className={states.parkingMode ? 'text-oGreen ' : textColor} />
             </button>
         </div>
     );

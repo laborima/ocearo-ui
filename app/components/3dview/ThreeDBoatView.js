@@ -36,7 +36,7 @@ const ThreeDBoatView = () => {
                            />
 
             {/* Environment for reflections */}
-            <Environment preset="sunset" background={false} />
+            <Environment files="./assets/ocearo_env.hdr" background={false} />
 
             {/* Lighting setup */}
             <ambientLight intensity={0.6} />

@@ -33,5 +33,16 @@ npx create-next-app@latest
 
 All 3D boat models have a waterline length of 10 meters, positioned at 0 on the Y-axis. (Use Blender to change that)
 
-  
+ 
+# Deploy to openplotter
+./deploy.sh
+
+## Add to startup
+vi  ~/.config/lxsession/LXDE-pi/autostart
+@chromium-browser --start-fullscreen  --kiosk --disable-restore-session-state --app=https://localhost:3000/ocearo-ui
+
+--kiosk: Launches Chromium in "kiosk" mode, which is fullscreen without the ability to exit fullscreen using the keyboard.
+--disable-restore-session-state: Prevents Chromium from trying to restore tabs if it was closed unexpectedly.
+--noerrdialogs: Suppresses error dialogs.
+
  

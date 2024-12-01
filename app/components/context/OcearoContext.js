@@ -41,17 +41,6 @@ export const OcearoContextProvider = ({ children, sampleData = true }) => {
                     wsKeepaliveInterval: 10
                 });
 
-                /*         const client = new Client({
-                             hostname: 'demo.signalk.org', // Use actual SignalK server hostname here
-                             port: 443,
-                             useTLS: true,
-                             reconnect: true,
-                             autoConnect: false,
-                             notifications: false,
-                             deltaStreamBehaviour: 'self',
-                             sendMeta: 'all',
-                             wsKeepaliveInterval: 10
-                         });*/
 
                 clientRef.current = client; // Store client in ref
 
@@ -83,8 +72,6 @@ export const OcearoContextProvider = ({ children, sampleData = true }) => {
                         const randomAngle = Math.floor(Math.random() * 91) - 45; // Random angle between -45 and 45
                         const randomRoll = Math.floor(Math.random() * 5) - 5;  // Random roll between -10 and 10
 
-                        // Log the random data being set
-                        console.log(`Sample Data - Rudder Angle: ${randomAngle}, Roll: ${randomRoll}`);
 
                         // Update SignalK data with sample values
                         setSignalKData((prevData) => ({

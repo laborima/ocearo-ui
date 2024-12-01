@@ -52,13 +52,13 @@ const RightPane = ({ view }) => {
             case 'weather':
                 // Dynamically generate Windy embed URL if position is available
                 if (myPosition) {
-                    return `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=kt&zoom=10&overlay=wind&product=ecmwf&level=surface&lat=${myPosition.latitude}&lon=${myPosition.longitude}&message=true`;
+                    return `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=kt&zoom=6&overlay=wind&product=ecmwf&level=surface&lat=${myPosition.latitude}&lon=${myPosition.longitude}&message=true`;
                 }
                 return null; // Return null if position isn't available yet
             default:
                 return null;
         }
-    }, [view, myPosition]); // Dependencies
+    }, [view, myPosition,signalkUrl]); // Dependencies
 
     return (
         <div className="flex flex-col w-full h-full"> {/* Use flex for layout */}

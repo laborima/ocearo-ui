@@ -45,7 +45,7 @@ const ConfigPage = ({ onSave }) => {
                     <label className="block font-medium">SignalK Server URL:</label>
                     <input
                         type="text"
-                        className="border p-2 w-full"
+                        className="border p-2 w-full text-black"
                         value={config.signalkUrl}
                         onChange={(e) =>
                             setConfig({ ...config, signalkUrl: e.target.value })
@@ -72,7 +72,7 @@ const ConfigPage = ({ onSave }) => {
                         <label className="block font-medium">Username:</label>
                         <input
                             type="text"
-                            className="border p-2 w-full"
+                            className="border p-2 w-full text-black"
                             value={config.username}
                             onChange={(e) =>
                                 setConfig({ ...config, username: e.target.value })
@@ -87,7 +87,7 @@ const ConfigPage = ({ onSave }) => {
                         <label className="block font-medium">Password:</label>
                         <input
                             type="password"
-                            className="border p-2 w-full"
+                            className="border p-2 w-full  text-black"
                             value={config.password}
                             onChange={(e) =>
                                 setConfig({ ...config, password: e.target.value })

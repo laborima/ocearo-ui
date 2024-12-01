@@ -54,7 +54,7 @@ const ThreeDMainView = ({ setFullScreen }) => {
             )}
 
             {/* 3D Wind Component */}
-            <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 w-full h-full">
+            <div className="absolute left-1/2 transform -translate-x-1/2 w-full h-full">
                 <Canvas style={{ width: '100%', height: '100%' }} shadows dpr={[1, 2]} gl={{ antialias: true }}>
                     {states.parkingMode ? (
                         <ThreeDParkAssistBoat />

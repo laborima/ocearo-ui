@@ -24,13 +24,13 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
       {/* PWA Manifest */}
-          <link rel="manifest" href="/manifest.json" />
-          <meta name="theme-color" content="#4bbcd8" />
-          <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-          <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-          <link rel="shortcut icon" href="/favicon.ico" />
-          <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-          <meta name="apple-mobile-web-app-title" content="Ocearo" />
+      <link rel="manifest" href={`${process.env.ASSET_PREFIXL}/manifest.json`} />
+              <meta name="theme-color" content="#4bbcd8" />
+              <link rel="icon" type="image/png" href={`${process.env.ASSET_PREFIXL}/favicon-96x96.png`} sizes="96x96" />
+              <link rel="icon" type="image/svg+xml" href={`${process.env.ASSET_PREFIXL}/favicon.svg`} />
+              <link rel="shortcut icon" href={`${process.env.ASSET_PREFIXL}/favicon.ico`} />
+              <link rel="apple-touch-icon" sizes="180x180" href={`${process.env.ASSET_PREFIXL}/apple-touch-icon.png`} />
+              <meta name="apple-mobile-web-app-title" content="Ocearo" />
        </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
