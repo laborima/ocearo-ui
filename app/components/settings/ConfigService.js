@@ -6,6 +6,15 @@ class ConfigService {
             username: '',
             password: '',
             debugMode: false,
+            selectedBoat: {
+                  "name": "Default",
+                  "docPath": "default",
+                  "polarPath": "default",
+                  "modelPath": "default",
+                  "capabilities": ["navigation","rudder","sail"]
+                },
+            primaryColor: null,
+            metallicEffect: false,
         };
 
         this.configKey = 'ocearoConfig'; // Key used to store the config
@@ -71,6 +80,24 @@ class ConfigService {
 
     getAll() {
         return { ...this.config };
+    }
+
+    getDefaultConfig() {
+        return { ...this.defaultConfig };
+    }
+
+    async fetchBoats() {
+        const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
+        const modelPath = `${ASSET_PREFIX}/boats`;
+
+        try {
+            const response = await fetch(`${modelPath}/boats.json`);
+            const data = await response.json();
+            return data.boats || [];
+        } catch (error) {
+            console.error('Error fetching boats:', error);
+            return [];
+        }
     }
 }
 

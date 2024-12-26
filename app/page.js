@@ -24,9 +24,8 @@ export default function Home() {
     const [isLeftPaneFullScreen, setIsLeftPaneFullScreen] = useState(false);
     const [isRightPaneFullScreen, setIsRightPaneFullScreen] = useState(false);
     const [showAppMenu, setShowAppMenu] = useState(false);
-    const [ShowWebcam, setShowWebcam] = useState(false);
-    const [screenWidth] = useState(null);
     const [fullscreenSet, setFullscreenSet] = useState(false); // Track if fullscreen is already set
+   
 
     const handleSetFullScreen = (fullScreen) => {
         if (!fullscreenSet && fullScreen) {
@@ -38,6 +37,8 @@ export default function Home() {
     const toggleAppMenu = () => setShowAppMenu(!showAppMenu);
 
     const handleDrag = (e, data) => {
+        
+          
         const totalWidth = window.innerWidth;
         const threshold = totalWidth / 5;
 
@@ -85,10 +86,10 @@ export default function Home() {
                         </div>
 
                         {/* Draggable Slider */}
-                        <Draggable
+                        <Draggable 
                             axis="x"
                             onDrag={handleDrag}
-                            position={{ x: 0, y: 0 }}
+                           position={{ x: 0, y: 0 }}
                             handle=".handle"
                         >
                             <div className="handle w-1 bg-leftPaneBg h-full cursor-col-resize transition-all duration-200 flex items-center justify-center">
@@ -108,7 +109,6 @@ export default function Home() {
                         <BottomNavigation
                             setRightView={handleSetRightView}
                             toggleAppMenu={toggleAppMenu}
-                            setShowWebcam={setShowWebcam}
                         />
                     </div>
 
@@ -202,16 +202,7 @@ export default function Home() {
                     )}
 
 
-                    {ShowWebcam && (
-                        <Draggable>
-                            <div className="absolute top-0 right-0 p-4 bg-gray-900 text-white z-50 rounded-lg shadow-lg cursor-move">
-                                <h2 className="text-lg font-bold mb-2">Webcam</h2>
-                                <div className="w-64 h-48 bg-gray-700 flex items-center justify-center">
-                                    <p>Webcam Stream</p>
-                                </div>
-                            </div>
-                        </Draggable>
-                    )}
+              
                 </div>
             </OcearoContextProvider>
         </ErrorBoundary>

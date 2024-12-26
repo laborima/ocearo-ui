@@ -1,4 +1,3 @@
-import { useOcearoContext } from '../../context/OcearoContext';
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import Client from '@signalk/client';
 import configService from '../../settings/ConfigService';
@@ -13,94 +12,108 @@ export const AISProvider = ({ children }) => {
     const clientRef = useRef(null);
 
     useEffect(() => {
+        const setKey = (obj, key, path, source) => {
+            const value = path.split('.').reduce((acc, part) => acc?.[part], source);
+            if (value !== undefined) obj[key] = value;
+        };
+
+        const fetchStaticVesselInfo = async (client) => {
+            console.log("Fetching static vessel information...");
+            try {
+                const vessels = await client.API().then(api => api.vessels());
+
+                const staticInfo = Object.entries(vessels).map(([mmsi, data]) => {
+                    const info = { mmsi };
+                    setKey(info, 'name', 'name', data);
+                    setKey(info, 'latitude', 'navigation.position.value.latitude', data);
+                    setKey(info, 'longitude', 'navigation.position.value.longitude', data);
+                    setKey(info, 'longitude', 'navigation.position.value.longitude', data);
+                    setKey(info, 'cog', 'navigation.courseOverGroundTrue.value', data);
+                    setKey(info, 'heading', 'navigation.headingTrue.value', data);
+                    setKey(info, 'length', 'design.length.value.overall', data);
+                    setKey(info, 'beam', 'design.beam.value', data);
+                    setKey(info, 'callsign', 'communication.callsignVhf', data);
+                    setKey(info, 'shipType', 'design.aisShipType.value.id', data);
+                    return info;
+                });
+
+                console.log(`Fetched ${staticInfo.length} vessels.`);
+                setVesselIds(staticInfo);
+            } catch (error) {
+                console.error('Error fetching static vessel info:', error);
+            }
+        };
 
         const fetchAISBoatData = (delta) => {
-            if (!delta || !delta.updates) return;
+            if (!delta || !delta.updates) {
+                console.warn("Delta is missing or does not contain updates:", delta);
+                return;
+            }
 
-            const updatedAisData = {};
+            const getDefaultTarget = (mmsi) => ({
+                mmsi,
+                name: 'unknown',
+                latitude: null,
+                longitude: null,
+                sog: null, // Speed Over Ground
+                cog: null, // Course Over Ground
+                heading: null,
+            });
+
+            const mmsi = delta.context.replace("vessels.", "");
+            if (!mmsi) {
+                console.warn("Update missing MMSI context:", delta);
+                return;
+            }
+
+            const target = aisData[mmsi] || getDefaultTarget(mmsi);
 
             delta.updates.forEach((update) => {
-                const mmsi = delta.context;
 
-                if (!mmsi) return;
-
-                const aisTarget = updatedAisData[mmsi] || aisData[mmsi] || {
-                    mmsi,
-                    name: "unknown",
-                    lat: null,
-                    lon: null,
-                    length: null,
-                    width: null,
-                    cog: null,
-                    sog: null,
-                    state: null
-                };
 
                 update.values.forEach((data) => {
+                    //console.log(`Updating AIS data for MMSI: ${mmsi} ${data.path} ${data.value}`);
                     switch (data.path) {
-                        case 'name':
-                            aisTarget.name = data.value;
-                            break;
                         case 'navigation.position':
-                            aisTarget.lat = data.value.latitude;
-                            aisTarget.lon = data.value.longitude;
-                            break;
-                        case 'navigation.courseOverGroundTrue':
-                            aisTarget.cog = data.value * (180 / Math.PI);
+                            target.latitude = data.value.latitude;
+                            target.longitude = data.value.longitude;
                             break;
                         case 'navigation.speedOverGround':
-                            aisTarget.sog = data.value;
+                            target.sog = data.value;
                             break;
-                        case 'design.length':
-                            aisTarget.length = data.value.overall;
+                        case 'navigation.courseOverGroundTrue':
+                            target.cog = data.value;
                             break;
-                        case 'design.beam':
-                            aisTarget.width = data.value;
-                            break;
-                        case 'navigation.state':
-                            aisTarget.state = data.value;
+                        case 'navigation.headingTrue':
+                            target.heading = data.value;
                             break;
                         default:
                             break;
                     }
                 });
 
-                updatedAisData[mmsi] = aisTarget;
-
-                // If position data exists, add or update vesselIds
-                if (aisTarget.lat && aisTarget.lon) {
-                    // Exclude the current user's vessel (myUUID)
-                    if (!aisTarget.length) {
-                        // Generates a random integer between 2 and 30 (inclusive)
-                        const randomSize = () => Math.floor(Math.random() * (30 - 2 + 1)) + 2;
-                        aisTarget.length = randomSize();
-                    }
-
-
-                    if (mmsi.indexOf("urn:mrn:signalk:uuid")<0) {
-                        setVesselIds((prevVesselIds) => {
-                            // Check if this MMSI is already in vesselIds
-                            if (!prevVesselIds.some(vessel => vessel.mmsi === mmsi)) {
-                                console.log("add vessel:" + aisTarget.length + " " + aisTarget, mmsi);
-                                return [...prevVesselIds, aisTarget];
-                            }
-                            return prevVesselIds;
-                        });
-                    }
-                }
             });
-            setAisData((prevData) => ({ ...prevData, ...updatedAisData }));
+
+            // Update SignalK data state
+            setAisData((prevData) => ({
+                ...prevData,
+                [mmsi]: target,
+            }));
+
         };
 
         const connectSignalKClient = async () => {
-
-            const config = configService.getAll(); // Load config from the service
-            
-            console.debug("Connect to signalk")
-
-            const { signalkUrl } = config;
             try {
+                const { signalkUrl } = configService.getAll();
+                console.log("SignalK URL:", signalkUrl);
+
+                if (!signalkUrl) {
+                    throw new Error("SignalK URL is undefined or invalid.");
+                }
+
                 const [hostname, port] = signalkUrl.replace(/https?:\/\//, '').split(':');
+                console.log(`Connecting to SignalK at hostname: ${hostname}, port: ${port}`);
+
                 const client = new Client({
                     hostname: hostname || 'localhost',
                     port: parseInt(port) || 3000,
@@ -110,17 +123,13 @@ export const AISProvider = ({ children }) => {
                     notifications: false,
                     subscriptions: [
                         {
-                            context: "vessels.*",
+                            context: 'vessels.*',
                             subscribe: [
-                                { path: "name" },
-                                { path: "navigation.position" },
-                                { path: "navigation.speedOverGround" },
-                                { path: "navigation.courseOverGroundTrue" },
-                                { path: "design.length" },
-                                { path: "design.beam" },
-                                { path: "navigation.headingTrue" },
-                                { path: "design.aisShipType" },
-                                { path: "communication" },
+                                { path: 'navigation.position' },
+                                { path: 'navigation.speedOverGround' },
+                                { path: 'navigation.courseOverGroundTrue' },
+                                { path: 'navigation.headingTrue' },
+                                { path: 'navigation.headingTrue', policy: 'fixed' }
                             ],
                         },
                     ],
@@ -128,18 +137,22 @@ export const AISProvider = ({ children }) => {
 
                 clientRef.current = client;
                 await client.connect();
+                console.log("SignalK client connected.");
+
+                // Fetch static info and attach listeners
+                await fetchStaticVesselInfo(client);
                 client.on('delta', fetchAISBoatData);
             } catch (error) {
-                console.error('Failed to connect to SignalK:', error);
+                console.error('Error connecting to SignalK:', error);
             }
         };
+
 
         connectSignalKClient();
 
         return () => {
-            if (clientRef.current) {
-                clientRef.current.disconnect();
-            }
+            console.log("Disconnecting SignalK client...");
+            clientRef.current?.disconnect();
         };
     }, []);
 
@@ -148,4 +161,4 @@ export const AISProvider = ({ children }) => {
             {children}
         </AISContext.Provider>
     );
-};            
+};

@@ -1,21 +1,22 @@
 import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
-import Client, { Discovery } from '@signalk/client';
+import Client from '@signalk/client';
 import configService from '../settings/ConfigService'; // Import the ConfigService
+import { MathUtils } from 'three';
 
 const OcearoContext = createContext();
 
-export const OcearoContextProvider = ({ children, sampleData = true }) => {
+export const OcearoContextProvider = ({ children }) => {
     const [signalkData, setSignalKData] = useState({}); // State to hold SignalK data
-       const [nightMode, setNightMode] = useState(false); // Night mode state
-       const [states, setStates] = useState({}); // General state object for other toggles (e.g., autopilot, anchorWatch)
+    const [nightMode, setNightMode] = useState(false); // Night mode state
+    const [states, setStates] = useState({}); // General state object for other toggles (e.g., autopilot, anchorWatch)
 
-       // Method to toggle any state (e.g., autopilot, anchorWatch)
-       const toggleState = (key) => {
-           setStates((prevState) => ({
-               ...prevState,
-               [key]: !prevState[key],
-           }));
-       };
+    // Method to toggle any state (e.g., autopilot, anchorWatch)
+    const toggleState = (key) => {
+        setStates((prevState) => ({
+            ...prevState,
+            [key]: !prevState[key],
+        }));
+    };
 
 
     // Use useRef to persist client between renders
@@ -26,7 +27,7 @@ export const OcearoContextProvider = ({ children, sampleData = true }) => {
         const connectSignalKClient = async () => {
             const config = configService.getAll(); // Load config from the service
 
-            const { signalkUrl, username, password, debugMode } = config;
+            const { signalkUrl, debugMode } = config;
             try {
                 const [hostname, port] = signalkUrl.replace(/https?:\/\//, '').split(':');
                 const client = new Client({
@@ -52,9 +53,7 @@ export const OcearoContextProvider = ({ children, sampleData = true }) => {
                     delta.updates.forEach((update) => {
                         if (update.values) {
                             update.values.forEach((value) => {
-                                // Log each update path and value
-                                //  console.log(`Update: ${value.path}: ${value.value}`);
-
+                              
                                 // Update SignalK data state
                                 setSignalKData((prevData) => ({
                                     ...prevData,
@@ -66,20 +65,77 @@ export const OcearoContextProvider = ({ children, sampleData = true }) => {
                 });
 
                 // Set up interval for sample data if sampleData is enabled
-                if (sampleData) {
+                if (debugMode) {
                     sampleDataIntervalRef.current = setInterval(() => {
                         // Generate random values for testing
                         const randomAngle = Math.floor(Math.random() * 91) - 45; // Random angle between -45 and 45
                         const randomRoll = Math.floor(Math.random() * 5) - 5;  // Random roll between -10 and 10
 
-
-                        // Update SignalK data with sample values
+                        // Steering and navigation attitude
                         setSignalKData((prevData) => ({
                             ...prevData,
-                            'steering.rudderAngle': randomAngle/*,
-                            'navigation.attitude.roll': randomRoll*/
+                            'steering.rudderAngle': randomAngle,
+                            'navigation.attitude.roll': randomRoll
                         }));
                     }, 5000); // Update every 5 seconds
+
+                    setSignalKData((prevData) => ({
+                        ...prevData,
+                        // Sample wind data
+                        'environment.wind.angleTrueWater': MathUtils.degToRad(25),
+                        'environment.wind.speedTrue': 20,
+                        'environment.wind.angleApparent': MathUtils.degToRad(23),
+                        'environment.wind.speedApparent': 25,
+                        
+                        'environment.water.temperature': toKelvin(17),
+                        'environment.outside.temperature':toKelvin(21),
+                        'propulsion.main.exhaustTemperature':toKelvin(95),
+                        'environment.inside.fridge.temperature':toKelvin(4),
+                        'environment.outside.pressure':1023000,
+                        'environment.inside.humidity': 74,
+                        'environment.inside.voc': 0.03,
+
+                        // Sailing performance
+                        'performance.beatAngle': MathUtils.degToRad(45),
+                        'performance.gybeAngle': MathUtils.degToRad(135),
+                        'performance.beatAngleVelocityMadeGood': 6,
+                        'performance.gybeAngleVelocityMadeGood': 5,
+                        'performance.targetAngle': MathUtils.degToRad(45), // Assuming beatAngle as target
+                        'performance.polarSpeed': 8,
+                        'performance.polarSpeedRatio': 0.95,
+                        'performance.velocityMadeGood': 5,
+                        'navigation.speedThroughWater': 7,
+                        'performance.polarVelocityMadeGood': 6,
+                        'performance.polarVelocityMadeGoodRatio': 0.9,
+
+                        // Navigation heading and waypoints
+                        'navigation.headingTrue': MathUtils.degToRad(0),
+                        'navigation.courseOverGround': MathUtils.degToRad(20),
+                        'navigation.courseGreatCircle.nextPoint.bearingTrue': MathUtils.degToRad(30),
+                        'performance.laylineAngle': MathUtils.degToRad(10),
+
+                        // Laylines for racing
+                        'navigation.racing.layline': MathUtils.degToRad(10),
+                        'navigation.racing.layline.distance': 100,
+                        'navigation.racing.layline.time': 180,
+                        'navigation.racing.oppositeLayline': MathUtils.degToRad(45),
+                        'navigation.racing.oppositeLayline.distance': 80,
+                        'navigation.racing.oppositeLayline.time': 180,
+
+                        // Start line data for racing
+                        'navigation.racing.startLineStb': { latitude: 0, longitude: 0, altitude: 0 },
+                        'navigation.racing.startLinePort': { latitude: 0, longitude: 0, altitude: 0 },
+                        'navigation.racing.distanceStartline': 50,
+                        'navigation.racing.timeToStart': 120,
+                        'navigation.racing.timePortDown': 60,
+                        'navigation.racing.timePortUp': 70,
+                        'navigation.racing.timeStbdDown': 65,
+                        'navigation.racing.timeStbdUp': 75,
+
+                    }));
+
+
+
                 }
             } catch (error) {
                 console.error('Failed to connect to SignalK:', error);
@@ -88,6 +144,8 @@ export const OcearoContextProvider = ({ children, sampleData = true }) => {
 
         // Initialize SignalK client connection
         connectSignalKClient();
+        
+       
 
         // Cleanup function to disconnect from SignalK and clear interval on unmount
         return () => {
@@ -98,24 +156,21 @@ export const OcearoContextProvider = ({ children, sampleData = true }) => {
                 clearInterval(sampleDataIntervalRef.current);
             }
         };
-    }, [sampleData]); // Empty dependency array means this runs once on mount
+    }, []); // Empty dependency array means this runs once on mount
 
 
     // General method to retrieve SignalK values
-    const getSignalKValue = (path) => {
-        return signalkData[path] || null;
-    };
 
-
+    const getSignalKValue =(path) => signalkData[path] || null;
 
     return (
         <OcearoContext.Provider
             value={{
                 getSignalKValue,
                 nightMode,
-                               setNightMode,
-                               states,
-                               toggleState,
+                setNightMode,
+                states,
+                toggleState,
             }}
         >
             {children}
@@ -127,94 +182,24 @@ export const OcearoContextProvider = ({ children, sampleData = true }) => {
 export const useOcearoContext = () => useContext(OcearoContext);
 
 
-export function  toRadians(degrees) {return (degrees * Math.PI) / 180};
+export function toKelvin(degrees) { return degrees + 273.15 };
 
 
-export function rotateVector(v) {
-    return new Vector3(v.x, 0, -v.y);
-}
+export const convertTemperature = (kelvin) => {
+    return kelvin != null ? Math.round((kelvin - 273.15) * 10) / 10 : null;
+};
 
-export function defaultValue(path) {
-    switch (path) {
-        // *** Données de vent ***
-        case 'environment.wind.angleTrueWater':
-            return toRadians(25); // Angle du vent réel (TWA)
-        case 'environment.wind.speedTrue':
-            return 20; // Vitesse du vent réel
-        case 'environment.wind.angleApparent':
-            return toRadians(23); // Angle du vent apparent
-        case 'environment.wind.speedApparent':
-            return 25; // Vitesse du vent apparent
+export const convertWindSpeed = (mps) => {
+    return mps != null ? Math.round((mps * 1.94384) * 10) / 10 : null;
+};
 
-        // *** Performances de navigation ***
-        case 'performance.beatAngle':
-            return toRadians(45); // Angle de près
-        case 'performance.gybeAngle':
-            return toRadians(135); // Angle d'empannage
-        case 'performance.beatAngleVelocityMadeGood':
-            return 6; // VMG en près
-        case 'performance.gybeAngleVelocityMadeGood':
-            return 5; // VMG au portant
-        case 'performance.targetAngle':
-            return defaultValue('performance.beatAngle'); // Angle cible TWA
-        case 'performance.polarSpeed':
-            return 8; // Vitesse polaire du bateau
-        case 'performance.polarSpeedRatio':
-            return 0.95; // Ratio de vitesse polaire
-        case 'performance.velocityMadeGood':
-            return 5; // VMG actuel
-        case 'navigation.speedThroughWater':
-            return 7; // Vitesse à travers l'eau
-        case 'performance.polarVelocityMadeGood':
-            return 6; // VMG polaire
-        case 'performance.polarVelocityMadeGoodRatio':
-            return 0.9; // Ratio de VMG polaire
+export const convertSpeed = (mps) => {
+    return mps != null ? Math.round((mps * 1.94384) * 10) / 10 : null;
+};
 
-        // *** Cap et angle par rapport au waypoint ***
-        case 'navigation.headingTrue':
-            return toRadians(0); // Cap vrai
-        case 'navigation.courseOverGround':
-            return toRadians(20); // Cap sur fond
-        case 'navigation.courseGreatCircle.nextPoint.bearingTrue':
-            return toRadians(30); // Cap vers le prochain waypoint
-        case 'performance.laylineAngle':
-            return toRadians(10); // Angle de layline
 
-        // *** Layline pour navigation de régate ***
-        case 'navigation.racing.layline':
-            return toRadians(10); // Layline parallèle au cap actuel
-        case 'navigation.racing.layline.distance':
-            return 100; // Distance jusqu'à la layline
-        case 'navigation.racing.layline.time':
-            return 180; // Temps estimé pour atteindre la layline
+export const convertPressure = (pa) => {
+    return pa != null ? Math.round((pa / 100) * 10) / 10 : null;
+};
 
-        // *** Layline opposée pour la navigation de régate ***
-        case 'navigation.racing.oppositeLayline':
-            return toRadians(45); // Layline parallèle au cap actuel
-        case 'navigation.racing.oppositeLayline.distance':
-            return 80; // Distance jusqu'à la layline opposée
-        case 'navigation.racing.oppositeLayline.time':
-            return 180; // Temps estimé pour atteindre la layline
 
-        // *** Données de ligne de départ pour la régate ***
-        case 'navigation.racing.startLineStb':
-            return { latitude: 0, longitude: 0, altitude: 0 }; // Position de la marque de départ tribord
-        case 'navigation.racing.startLinePort':
-            return { latitude: 0, longitude: 0, altitude: 0 }; // Position de la marque de départ bâbord
-        case 'navigation.racing.distanceStartline':
-            return 50; // Distance jusqu'à la ligne de départ
-        case 'navigation.racing.timeToStart':
-            return 120; // Temps estimé pour atteindre la ligne de départ
-        case 'navigation.racing.timePortDown':
-            return 60; // Temps estimé en bâbord amure au vent arrière
-        case 'navigation.racing.timePortUp':
-            return 70; // Temps estimé en bâbord amure au près
-        case 'navigation.racing.timeStbdDown':
-            return 65; // Temps estimé en tribord amure au vent arrière
-        case 'navigation.racing.timeStbdUp':
-            return 75; // Temps estimé en tribord amure au près
-
-        default:
-            return null; // Valeur par défaut si le chemin n'est pas trouvé
-    }
-}

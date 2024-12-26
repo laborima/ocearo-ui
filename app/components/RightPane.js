@@ -36,8 +36,6 @@ const RightPane = ({ view }) => {
 
     // Memoize iframeSrc to prevent unnecessary recalculations
     const iframeSrc = useMemo(() => {
-        console.log("myPosition updated:", myPosition);
-        
         switch (view) {
             case 'navigation':
                 return `${signalkUrl}/@signalk/freeboard-sk/`;

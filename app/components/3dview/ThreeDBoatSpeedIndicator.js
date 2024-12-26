@@ -1,4 +1,4 @@
-import { useOcearoContext } from '../context/OcearoContext';
+import { convertSpeed, useOcearoContext } from '../context/OcearoContext';
 import { useState } from 'react';
 
 const ThreeDBoatSpeedIndicator = () => {
@@ -8,10 +8,10 @@ const ThreeDBoatSpeedIndicator = () => {
 
     // Example speed data; you can replace these values with real SignalK data if available
     const speedTypes = {
-        SOG: getSignalKValue('navigation.speedOverGround') || 0.0, // Speed over ground
-        VMG: getSignalKValue('performance.velocityMadeGood') || 0.0, // Velocity made good
-        STW: getSignalKValue('navigation.speedThroughWater') || 0.0, // Speed through water
-        POL : getSignalKValue('performance.polarSpeedRatio') || 8
+        SOG: convertSpeed(getSignalKValue('navigation.speedOverGround')) || 0.0, // Speed over ground
+        VMG: convertSpeed(getSignalKValue('performance.velocityMadeGood')) || 0.0, // Velocity made good
+        STW: convertSpeed(getSignalKValue('navigation.speedThroughWater')) || 0.0, // Speed through water
+        POL : convertSpeed(getSignalKValue('performance.polarSpeedRatio')) || 0.0
     };
     
   /*  const polarSpeed = getSignalKValue('performance.polarSpeed') || 8; // Vitesse polaire du bateau

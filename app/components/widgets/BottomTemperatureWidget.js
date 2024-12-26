@@ -1,29 +1,44 @@
-import { useState } from 'react';
-import { useOcearoContext } from '../context/OcearoContext';
+import { useState, useEffect } from 'react';
+import { convertTemperature, useOcearoContext } from '../context/OcearoContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faThermometerHalf, faWater, faFire, faSnowflake } from '@fortawesome/free-solid-svg-icons'; // Import appropriate icons
+import { faThermometerHalf, faWater, faFire, faSnowflake } from '@fortawesome/free-solid-svg-icons';
+
 
 const BottomTemperatureWidget = () => {
-    const nightMode = false; // Define night mode (can be dynamic)
-    const { getSignalKValue } = useOcearoContext(); // Access SignalK data from the context
-    const [displayMode, setDisplayMode] = useState('waterTemp'); // Default display mode to water temperature
+    const { nightMode } = useOcearoContext();
+    const { getSignalKValue } = useOcearoContext();
 
-    const kelvinToCelsius = (kelvin) => kelvin - 273.15;
+    const [availableModes, setAvailableModes] = useState([]);
+    const [displayMode, setDisplayMode] = useState(null);
 
-    // Fetching various temperatures from SignalK
-    const waterTemperature = kelvinToCelsius(getSignalKValue('environment.water.temperature')) || 20; // Water temperature, fallback to 20°C
-    const airTemperature = getSignalKValue('environment.outside.temperature') || 22; // Air temperature, fallback to 22°C
-    const exhaustTemperature = getSignalKValue('propulsion.main.exhaustTemperature') || 200; // Exhaust temperature, fallback to 200°C
-    const fridgeTemperature = getSignalKValue('environment.inside.fridge.temperature') || 4; // Fridge temperature, fallback to 4°C
+    // Conditionally fetch values
+    const waterTemperature = convertTemperature(getSignalKValue('environment.water.temperature')) ;
+    const airTemperature =  convertTemperature(getSignalKValue('environment.outside.temperature'));
+    const exhaustTemperature =  convertTemperature(getSignalKValue('propulsion.main.exhaustTemperature'));
+    const fridgeTemperature =convertTemperature(getSignalKValue('environment.inside.fridge.temperature')) ;
 
-    // Function to toggle between display modes
+    // Set modes after hydration
+    useEffect(() => {
+        const modes = [];
+        if (waterTemperature !== null) modes.push('waterTemp');
+        if (airTemperature !== null) modes.push('airTemp');
+        if (exhaustTemperature !== null) modes.push('exhaustTemp');
+        if (fridgeTemperature !== null) modes.push('fridgeTemp');
+
+        setAvailableModes(modes);
+        if (modes.length > 0) {
+            setDisplayMode(modes[0]);
+        }
+    }, [waterTemperature, airTemperature, exhaustTemperature, fridgeTemperature]);
+
     const toggleDisplayMode = () => {
-        const modes = ['waterTemp', 'airTemp', 'exhaustTemp', 'fridgeTemp'];
-        const nextModeIndex = (modes.indexOf(displayMode) + 1) % modes.length;
-        setDisplayMode(modes[nextModeIndex]);
+        if (availableModes.length === 0) return;
+
+        const currentIndex = availableModes.indexOf(displayMode);
+        const nextModeIndex = (currentIndex + 1) % availableModes.length;
+        setDisplayMode(availableModes[nextModeIndex]);
     };
 
-    // Define text color based on night mode
     const textColor = nightMode ? 'text-red-500' : 'text-white';
 
     return (
@@ -56,8 +71,13 @@ const BottomTemperatureWidget = () => {
                     <span>{fridgeTemperature}°C</span>
                 </div>
             )}
+            {!displayMode && (
+                <div className="text-2xl">
+                    <span>NA</span>
+                </div>
+            )}
         </div>
     );
-};
+ };
 
 export default BottomTemperatureWidget;

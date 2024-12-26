@@ -38,6 +38,7 @@ const CompassDial = ({ outerRadius, innerRadius }) => {
                         color={markerColorPrimary}
                         fontSize={0.5}
                         rotation={[-Math.PI / 2, 0, Math.PI / 2 - angle]}
+                        font="../../../fonts/Roboto-Bold.ttf"
                     >
                         {label}
                     </Text>

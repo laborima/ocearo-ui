@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { useOcearoContext } from '../../context/OcearoContext';
+import { convertWindSpeed, useOcearoContext } from '../../context/OcearoContext';
 import { Vector3 } from 'three';
 import { Cone, Text } from '@react-three/drei';
 
@@ -14,7 +14,7 @@ const FONT_SIZE = {
 
 const WindArrow = ({ position, rotation, speed, color, fontSize, textPosition = [0, 0.6, 0] }) => (
   <group position={position} rotation={rotation}>
-    <Text color={color} fontSize={fontSize} position={textPosition}>
+    <Text color={color} fontSize={fontSize} position={textPosition} font="../../../fonts/Roboto-Bold.ttf">
       {speed.toFixed(1)}
     </Text>
     <Cone args={[0.25, 0.5, 3]}>
@@ -36,9 +36,9 @@ const WindSector3D = ({ outerRadius }) => {
   const { getSignalKValue } = useOcearoContext();
 
   const trueWindAngle = getSignalKValue('environment.wind.angleTrueGround') || 0;
-  const trueWindSpeed = getSignalKValue('environment.wind.speedOverGround') || 1;
+  const trueWindSpeed = convertWindSpeed(getSignalKValue('environment.wind.speedOverGround')) ||1 ;
   const appWindAngle = getSignalKValue('environment.wind.angleApparent') || 0;
-  const appWindSpeed = getSignalKValue('environment.wind.speedApparent') || 1;
+  const appWindSpeed = convertWindSpeed(getSignalKValue('environment.wind.speedApparent')) || 1;
 
   const trueWindPosition = useMemo(
     () => new Vector3((outerRadius + WIND_OFFSET) * Math.cos(trueWindAngle), 0, -(outerRadius + WIND_OFFSET) * Math.sin(trueWindAngle)),

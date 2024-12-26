@@ -1,24 +1,44 @@
-import { useState } from 'react';
-import { useOcearoContext } from '../context/OcearoContext';
+import { useEffect, useState } from 'react';
+import { convertPressure, useOcearoContext } from '../context/OcearoContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCloud, faDroplet, faWind } from '@fortawesome/free-solid-svg-icons'; // Import appropriate icons
+import { faCloud, faDroplet, faWind } from '@fortawesome/free-solid-svg-icons';
 
 const BottomEnvironmentalWidget = () => {
-    const nightMode = false; // Define night mode (can be dynamic)
+    const { nightMode } = useOcearoContext();
     const { getSignalKValue } = useOcearoContext(); // Access SignalK data from the context
-    const [displayMode, setDisplayMode] = useState('pressure'); // Default display mode to atmospheric pressure
+    
 
-    // Fetching various environmental metrics from SignalK
-    const atmosphericPressure = getSignalKValue('environment.outside.pressure') || 1013; // Atmospheric pressure in hPa, fallback to 1013 hPa
-    const humidity = getSignalKValue('environment.inside.humidity') || 50; // Humidity percentage, fallback to 50%
-    const vocConcentration = getSignalKValue('environment.inside.voc') || 0.5; // VOC concentration in ppm, fallback to 0.5 ppm
+    const [availableModes, setAvailableModes] = useState([]);
+    const [displayMode, setDisplayMode] = useState(null);
 
-    // Function to toggle between display modes
-    const toggleDisplayMode = () => {
-        const modes = ['pressure', 'humidity', 'voc'];
-        const nextModeIndex = (modes.indexOf(displayMode) + 1) % modes.length;
-        setDisplayMode(modes[nextModeIndex]);
-    };
+    // Conditionally fetch values or set them to null if debugMode is off
+    const atmosphericPressure = convertPressure(getSignalKValue('environment.outside.pressure'));
+    const humidity = getSignalKValue('environment.inside.relativeHumidity') ;
+    const vocConcentration =  getSignalKValue('environment.inside.voc') ;
+
+        
+        // Set modes after hydration
+           useEffect(() => {
+               const modes = [];
+               if (atmosphericPressure !== null) modes.push('pressure');
+               if (humidity !== null) modes.push('humidity');
+               if (vocConcentration !== null) modes.push('voc');
+
+               setAvailableModes(modes);
+               if (modes.length > 0) {
+                   setDisplayMode(modes[0]);
+               }
+           }, [atmosphericPressure, humidity, vocConcentration]);
+
+           const toggleDisplayMode = () => {
+               if (availableModes.length === 0) return;
+
+               const currentIndex = availableModes.indexOf(displayMode);
+               const nextModeIndex = (currentIndex + 1) % availableModes.length;
+               setDisplayMode(availableModes[nextModeIndex]);
+           };    
+        
+  
 
     // Define text color based on night mode
     const textColor = nightMode ? 'text-red-500' : 'text-white';
@@ -47,6 +67,11 @@ const BottomEnvironmentalWidget = () => {
                     <span>{vocConcentration} ppm</span>
                 </div>
             )}
+            {!displayMode && (
+                           <div className="text-2xl">
+                               <span>NA</span>
+                           </div>
+                       )}
         </div>
     );
 };

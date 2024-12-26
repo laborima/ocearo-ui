@@ -5,11 +5,24 @@ const ConfigPage = ({ onSave }) => {
     // State for configuration inputs
     const [config, setConfig] = useState(configService.getAll()); // Load initial config from the service
     const [useAuthentication, setUseAuthentication] = useState(!!config.username || !!config.password); // Determine if authentication is enabled
+    const [boats, setBoats] = useState([]); // State for available boats
+    const [selectedBoat, setSelectedBoat] = useState(null); // State for selected boat
 
     // Load configuration on mount
     useEffect(() => {
         setConfig(configService.getAll());
+        loadBoats();
     }, []);
+
+    const loadBoats = async () => {
+        const fetchedBoats = await configService.fetchBoats();
+        setBoats(fetchedBoats);
+
+        if (config.selectedBoat) {
+            const currentBoat = fetchedBoats.find((b) => b.name === config.selectedBoat);
+            setSelectedBoat(currentBoat || null);
+        }
+    };
 
     const handleSave = () => {
         // Save the updated configuration to the service
@@ -34,6 +47,13 @@ const ConfigPage = ({ onSave }) => {
         setUseAuthentication(!!defaultConfig.username || !!defaultConfig.password); // Update authentication toggle
         configService.saveConfig(defaultConfig); // Save default config
         alert('Configuration reset to default values!');
+    };
+
+    const handleBoatChange = (e) => {
+        const selectedBoatName = e.target.value;
+        setConfig({ ...config, selectedBoat: selectedBoatName });
+        const currentBoat = boats.find((b) => b.name === selectedBoatName);
+        setSelectedBoat(currentBoat || null);
     };
 
     return (
@@ -96,20 +116,23 @@ const ConfigPage = ({ onSave }) => {
                     </div>
                 )}
 
-                {/* Debug Mode */}
+                {/* Boat Selection */}
                 <div>
-                    <label className="flex items-center">
-                        <input
-                            type="checkbox"
-                            className="mr-2"
-                            checked={config.debugMode}
-                            onChange={(e) =>
-                                setConfig({ ...config, debugMode: e.target.checked })
-                            }
-                        />
-                        Debug Mode
-                    </label>
+                    <label className="block font-medium">Select Boat:</label>
+                    <select
+                        className="border p-2 w-full text-black"
+                        value={config.selectedBoat || ''}
+                        onChange={handleBoatChange}
+                    >
+                        <option value="">-- Select a Boat --</option>
+                        {boats.map((boat) => (
+                            <option key={boat.name} value={boat.name}>
+                                {boat.name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
+
 
                 {/* Color Picker */}
                 <div>
@@ -138,6 +161,41 @@ const ConfigPage = ({ onSave }) => {
                         Enable Metallic Effect
                     </label>
                 </div>
+
+                {/* Debug Mode */}
+                <div>
+                    <label className="flex items-center">
+                        <input
+                            type="checkbox"
+                            className="mr-2"
+                            checked={config.debugMode}
+                            onChange={(e) =>
+                                setConfig({ ...config, debugMode: e.target.checked })
+                            }
+                        />
+                        Debug Mode
+                    </label>
+                </div>
+
+                {/* Boat Details */}
+                {selectedBoat && config.debugMode && (
+                    <div className="space-y-2">
+                        <div>
+                            <strong>Documentation Path:</strong> {selectedBoat.docPath}
+                        </div>
+                        <div>
+                            <strong>Polar Path:</strong> {selectedBoat.polarPath}
+                        </div>
+                        <div>
+                            <strong>Model Path:</strong> {selectedBoat.modelPath}
+                        </div>
+                        <div>
+                            <strong>Capabilities:</strong>{' '}
+                            {selectedBoat.capabilities.join(', ')}
+                        </div>
+                    </div>
+                )}
+
 
                 <div className="flex space-x-4">
                     {/* Save Button */}
