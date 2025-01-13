@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Draggable from 'react-draggable';
 import RightPane from './components/RightPane';
 import BottomNavigation from './components/BottomNavigation';
@@ -21,7 +21,7 @@ import ErrorBoundary from './ErrorBoundary';
 
 export default function Home() {
     const [rightView, setRightView] = useState('settings');
-    const [isLeftPaneFullScreen, setIsLeftPaneFullScreen] = useState(false);
+    const [isLeftPaneFullScreen, setIsLeftPaneFullScreen] = useState(true);
     const [isRightPaneFullScreen, setIsRightPaneFullScreen] = useState(false);
     const [showAppMenu, setShowAppMenu] = useState(false);
     const [fullscreenSet, setFullscreenSet] = useState(false); // Track if fullscreen is already set

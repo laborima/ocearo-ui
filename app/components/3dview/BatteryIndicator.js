@@ -16,15 +16,15 @@ const BatteryIndicator = ({batteryLevel, batteryNumber}) => {
     return (
         <div className="flex items-center space-x-3 my-2">
             <div
-                className="relative w-8 h-3 bg-oGray rounded-sm border border-oGray flex items-center justify-center">
-                <div className="absolute -right-1 w-1 h-2 bg-oGray rounded-sm"></div>
+                className="relative w-8 h-4 bg-oGray rounded-sm border border-oGray flex items-center justify-center">
+                <div className="absolute -right-1 w-1 h-3 bg-oGray rounded-sm"></div>
                 <div
                     className={`absolute left-0 top-0 h-full ${getBatteryColor()} rounded-sm`}
                     style={{width: `${batteryPercentage}%`}}
                 ></div>
-                <span className="relative z-10 text-xs text-black">{batteryNumber}</span>
+                <span className="relative z-10 text-s text-black">{batteryNumber}</span>
             </div>
-            <span className="text-white text-xs font-medium">{batteryPercentage}%</span>
+            <span className="text-white text-s font-medium">{batteryPercentage}%</span>
         </div>
     );
 };

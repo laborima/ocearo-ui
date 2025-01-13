@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAnchor, faShip, faPersonFalling, faMoon, faWater, faParking } from '@fortawesome/free-solid-svg-icons';
+import { faAnchor, faShip, faPersonFalling, faMoon, faWater, faParking, faSatellite } from '@fortawesome/free-solid-svg-icons';
 import { useOcearoContext } from '../context/OcearoContext';
 
 const ThreeDBoatToolbar = () => {
@@ -25,6 +25,15 @@ const ThreeDBoatToolbar = () => {
             >
                 <FontAwesomeIcon icon={faAnchor} className={states.anchorWatch ? 'text-oYellow ' : textColor} />
             </button>
+            
+
+            {/* Parking Mode */}
+            <button
+                onClick={() => toggleState('parkingMode')}
+                className={`p-1`}
+            >
+                <FontAwesomeIcon icon={faParking} className={states.parkingMode ? 'text-oGreen ' : textColor} />
+            </button>
 
             {/* MOB */}
             <button
@@ -41,6 +50,8 @@ const ThreeDBoatToolbar = () => {
             >
                 <FontAwesomeIcon icon={faMoon} className={states.nightMode ? 'text-oNight ' : textColor} />
             </button>
+            
+            
 
             {/* See State */}
             <button
@@ -50,13 +61,15 @@ const ThreeDBoatToolbar = () => {
                 <FontAwesomeIcon icon={faWater} className={states.showOcean ? 'text-oBlue ' : textColor} />
             </button>
 
-            {/* Parking Mode */}
+
+
             <button
-                onClick={() => toggleState('parkingMode')}
+                onClick={() => toggleState('ais')}
                 className={`p-1`}
             >
-                <FontAwesomeIcon icon={faParking} className={states.parkingMode ? 'text-oGreen ' : textColor} />
+                <FontAwesomeIcon icon={faSatellite} className={states.ais ? 'text-oGreen ' : textColor} />
             </button>
+
         </div>
     );
 };

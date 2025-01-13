@@ -87,11 +87,8 @@ class ConfigService {
     }
 
     async fetchBoats() {
-        const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
-        const modelPath = `${ASSET_PREFIX}/boats`;
-
         try {
-            const response = await fetch(`${modelPath}/boats.json`);
+            const response = await fetch(`boats/boats.json`);
             const data = await response.json();
             return data.boats || [];
         } catch (error) {

@@ -5,10 +5,25 @@ import { MathUtils } from 'three';
 
 const OcearoContext = createContext();
 
+
+export const oBlue = '#09bfff';
+export const oRed = '#cc000c';
+export const oYellow = '#ffbe00';
+export const oGreen = '#0fcd4f';
+
+
 export const OcearoContextProvider = ({ children }) => {
     const [signalkData, setSignalKData] = useState({}); // State to hold SignalK data
     const [nightMode, setNightMode] = useState(false); // Night mode state
-    const [states, setStates] = useState({}); // General state object for other toggles (e.g., autopilot, anchorWatch)
+    const [states, setStates] = useState({
+        autopilot: true, // Default autopilot to true
+        anchorWatch: false,
+        parkingMode: false,
+        mob: false,
+        showOcean: false,
+        ais: false,
+    });
+
 
     // Method to toggle any state (e.g., autopilot, anchorWatch)
     const toggleState = (key) => {
@@ -24,6 +39,8 @@ export const OcearoContextProvider = ({ children }) => {
     const sampleDataIntervalRef = useRef(null);
 
     useEffect(() => {
+
+
         const connectSignalKClient = async () => {
             const config = configService.getAll(); // Load config from the service
 
@@ -53,7 +70,7 @@ export const OcearoContextProvider = ({ children }) => {
                     delta.updates.forEach((update) => {
                         if (update.values) {
                             update.values.forEach((value) => {
-                              
+
                                 // Update SignalK data state
                                 setSignalKData((prevData) => ({
                                     ...prevData,
@@ -69,13 +86,11 @@ export const OcearoContextProvider = ({ children }) => {
                     sampleDataIntervalRef.current = setInterval(() => {
                         // Generate random values for testing
                         const randomAngle = Math.floor(Math.random() * 91) - 45; // Random angle between -45 and 45
-                        const randomRoll = Math.floor(Math.random() * 5) - 5;  // Random roll between -10 and 10
 
                         // Steering and navigation attitude
                         setSignalKData((prevData) => ({
                             ...prevData,
-                            'steering.rudderAngle': randomAngle,
-                            'navigation.attitude.roll': randomRoll
+                            'steering.rudderAngle': MathUtils.degToRad(randomAngle)
                         }));
                     }, 5000); // Update every 5 seconds
 
@@ -86,12 +101,12 @@ export const OcearoContextProvider = ({ children }) => {
                         'environment.wind.speedTrue': 20,
                         'environment.wind.angleApparent': MathUtils.degToRad(23),
                         'environment.wind.speedApparent': 25,
-                        
+
                         'environment.water.temperature': toKelvin(17),
-                        'environment.outside.temperature':toKelvin(21),
-                        'propulsion.main.exhaustTemperature':toKelvin(95),
-                        'environment.inside.fridge.temperature':toKelvin(4),
-                        'environment.outside.pressure':1023000,
+                        'environment.outside.temperature': toKelvin(21),
+                        'propulsion.main.exhaustTemperature': toKelvin(95),
+                        'environment.inside.fridge.temperature': toKelvin(4),
+                        'environment.outside.pressure': 102300,
                         'environment.inside.humidity': 74,
                         'environment.inside.voc': 0.03,
 
@@ -113,6 +128,8 @@ export const OcearoContextProvider = ({ children }) => {
                         'navigation.courseOverGround': MathUtils.degToRad(20),
                         'navigation.courseGreatCircle.nextPoint.bearingTrue': MathUtils.degToRad(30),
                         'performance.laylineAngle': MathUtils.degToRad(10),
+
+                        'navigation.attitude.roll': MathUtils.degToRad(5),
 
                         // Laylines for racing
                         'navigation.racing.layline': MathUtils.degToRad(10),
@@ -142,10 +159,68 @@ export const OcearoContextProvider = ({ children }) => {
             }
         };
 
+        const fetchTideData = async () => {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const filePath = `tides/larochelle/${month}_${year}.json`;
+
+            const response = await fetch(filePath);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const tideData = await response.json();
+
+            const today = date.toISOString().split('T')[0];
+            if (tideData[today]) {
+                let closestHighTide = null;
+                let closestLowTide = null;
+                const now = new Date();
+                const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
+
+                tideData[today].forEach(([type, time, height, coef]) => {
+                    const [hours, minutes] = time.split(':').map(Number);
+                    const tideTimeInMinutes = hours * 60 + minutes;
+
+                    if (type === 'tide.high' && (!closestHighTide || Math.abs(currentTimeInMinutes - tideTimeInMinutes) < Math.abs(currentTimeInMinutes - closestHighTide.timeInMinutes))) {
+                        closestHighTide = { height: parseFloat(height), time, timeInMinutes: tideTimeInMinutes, coef };
+                    } else if (type === 'tide.low' && (!closestLowTide || Math.abs(currentTimeInMinutes - tideTimeInMinutes) < Math.abs(currentTimeInMinutes - closestLowTide.timeInMinutes))) {
+                        closestLowTide = { height: parseFloat(height), time, timeInMinutes: tideTimeInMinutes };
+                    }
+                });
+
+                if (closestHighTide && closestLowTide) {
+                    const nowTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                    const currentTideHeight = calculateTideHeightUsingTwelfths(
+                        closestHighTide.height,
+                        closestLowTide.height,
+                        nowTime,
+                        closestHighTide.time,
+                        closestLowTide.time
+                    );
+
+                    setSignalKData((prevData) => ({
+                        ...prevData,
+                        'environment.tide.heightNow': currentTideHeight,
+                        'environment.tide.heightHigh': closestHighTide.height,
+                        'environment.tide.heightLow': closestLowTide.height,
+                        'environment.tide.timeLow': closestLowTide.time,
+                        'environment.tide.timeHigh': closestHighTide.time,
+                        'environment.tide.coeffNow': closestHighTide.coef
+                    }));
+
+                } else {
+                    throw new Error("Tide data for today is incomplete.");
+                }
+            }
+
+        };
+
+
+
         // Initialize SignalK client connection
         connectSignalKClient();
-        
-       
+
+        fetchTideData();
+
 
         // Cleanup function to disconnect from SignalK and clear interval on unmount
         return () => {
@@ -161,7 +236,7 @@ export const OcearoContextProvider = ({ children }) => {
 
     // General method to retrieve SignalK values
 
-    const getSignalKValue =(path) => signalkData[path] || null;
+    const getSignalKValue = (path) => signalkData[path] || null;
 
     return (
         <OcearoContext.Provider
@@ -202,4 +277,54 @@ export const convertPressure = (pa) => {
     return pa != null ? Math.round((pa / 100) * 10) / 10 : null;
 };
 
+export const calculateTideHeightUsingTwelfths = function(highTideHeight, lowTideHeight, currentTime, highTideTime, lowTideTime) {
+    const convertTimeToMinutes = (timeString) => {
+        const [hours, minutes] = timeString.split(':').map(Number);
+        return hours * 60 + minutes;
+    };
+
+    const highTideMinutes = convertTimeToMinutes(highTideTime);
+    const lowTideMinutes = convertTimeToMinutes(lowTideTime);
+    const currentMinutes = convertTimeToMinutes(currentTime);
+
+    let isRising = false;
+    let startHeight, endHeight, startMinutes, endMinutes;
+
+    if (lowTideMinutes <= currentMinutes && currentMinutes <= highTideMinutes) {
+        isRising = true;
+        startHeight = lowTideHeight;
+        endHeight = highTideHeight;
+        startMinutes = lowTideMinutes;
+        endMinutes = highTideMinutes;
+    } else {
+        startHeight = highTideHeight;
+        endHeight = lowTideHeight;
+        startMinutes = highTideMinutes;
+        endMinutes = lowTideMinutes + (lowTideMinutes < highTideMinutes ? 1440 : 0); // Handle midnight overlap
+    }
+
+    const tideCycleDuration = Math.abs(endMinutes - startMinutes);
+    const tideChange = Math.abs(endHeight - startHeight);
+    let elapsedTime = currentMinutes - startMinutes;
+    if (elapsedTime < 0) elapsedTime += 1440;
+
+    const twelfth = tideChange / 12;
+    let heightChange = 0;
+
+    if (elapsedTime <= tideCycleDuration / 6) {
+        heightChange = twelfth * Math.ceil(elapsedTime / (tideCycleDuration / 12));
+    } else if (elapsedTime <= 2 * tideCycleDuration / 6) {
+        heightChange = twelfth * 2 + twelfth * Math.ceil((elapsedTime - tideCycleDuration / 6) / (tideCycleDuration / 12));
+    } else if (elapsedTime <= 3 * tideCycleDuration / 6) {
+        heightChange = twelfth * 5;
+    } else if (elapsedTime <= 4 * tideCycleDuration / 6) {
+        heightChange = twelfth * 8;
+    } else if (elapsedTime <= 5 * tideCycleDuration / 6) {
+        heightChange = twelfth * 10;
+    } else {
+        heightChange = tideChange;
+    }
+
+    return isRising ? startHeight + heightChange : startHeight - heightChange;
+}
 

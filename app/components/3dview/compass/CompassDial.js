@@ -1,17 +1,18 @@
 import React from 'react';
 import { Ring, Sphere, Text } from '@react-three/drei';
 import { DoubleSide, MathUtils } from 'three';
-import { useOcearoContext } from '../../context/OcearoContext';
+import { oGreen, oRed, useOcearoContext } from '../../context/OcearoContext';
 
 const CompassDial = ({ outerRadius, innerRadius }) => {
     const dialColor = 0xffffff;
     const outerDialOpacity = 0.5;
     const markerColorPrimary = 0x000000;
-    const markerColorGreen = 0x00ff00;
-    const markerColorRed = 0xff0000;
+    const markerColorGreen = oGreen;
+    const markerColorRed =  oRed;
 
     const { getSignalKValue } = useOcearoContext();
     const courseOverGroundAngle = getSignalKValue('navigation.courseOverGroundTrue') || 10;
+    
 
     // Function to create markers for both inner and outer rings
     const createMarkers = (radius, isOuter) => {
@@ -38,7 +39,7 @@ const CompassDial = ({ outerRadius, innerRadius }) => {
                         color={markerColorPrimary}
                         fontSize={0.5}
                         rotation={[-Math.PI / 2, 0, Math.PI / 2 - angle]}
-                        font="../../../fonts/Roboto-Bold.ttf"
+                        font="fonts/Roboto-Bold.ttf"
                     >
                         {label}
                     </Text>

@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { Line } from '@react-three/drei';
 import { Vector3, CatmullRomCurve3, Group, MathUtils } from 'three';
 import polarData from './polar.json';
-import { convertSpeed, convertWindSpeed, useOcearoContext } from '../../context/OcearoContext';
+import { convertSpeed, convertWindSpeed, oBlue, oGreen, oRed, useOcearoContext } from '../../context/OcearoContext';
 import { useFrame } from '@react-three/fiber';
 const DEG2RAD = Math.PI / 180;
 
@@ -81,36 +81,38 @@ function PolarPlot({ timeInMinute, windSpeed }) {
             run: calculateDiamondPosition(run_angle, run_vmg, closestWindSpeedIdx, timeInMinute)
         };
     }, [timeInMinute, windSpeed]);
+    
+
 
     return (
         <>
             <group>
-                {curveData.curve && <Line points={curveData.curve.getPoints(100)} color="steelblue" lineWidth={1} />}
+                {curveData.curve && <Line points={curveData.curve.getPoints(100)} color={oBlue} lineWidth={1} />}
                 {curveData.beat && (
                     <mesh position={curveData.beat}>
                         <octahedronGeometry args={[0.2, 0]} />
-                        <meshStandardMaterial color="green" />
+                        <meshStandardMaterial color={oGreen} />
                     </mesh>
                 )}
                 {curveData.run && (
                     <mesh position={curveData.run}>
                         <octahedronGeometry args={[0.2, 0]} />
-                        <meshStandardMaterial color="red" />
+                        <meshStandardMaterial color={oRed} />
                     </mesh>
                 )}
             </group>
             <group rotation={[0, 0, -Math.PI]}>
-                {curveData.curve && <Line points={curveData.curve.getPoints(100)} color="steelblue" lineWidth={1} />}
+                {curveData.curve && <Line points={curveData.curve.getPoints(100)} color={oBlue} lineWidth={1} />}
                 {curveData.beat && (
                     <mesh position={curveData.beat}>
                         <octahedronGeometry args={[0.2, 0]} />
-                        <meshStandardMaterial color="green" />
+                        <meshStandardMaterial color={oGreen} />
                     </mesh>
                 )}
                 {curveData.run && (
                     <mesh position={curveData.run}>
                         <octahedronGeometry args={[0.2, 0]} />
-                        <meshStandardMaterial color="red" />
+                        <meshStandardMaterial color={oRed} />
                     </mesh>
                 )}
             </group>

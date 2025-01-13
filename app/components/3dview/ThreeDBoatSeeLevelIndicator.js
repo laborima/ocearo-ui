@@ -15,26 +15,34 @@ const ThreeDBoatSeeLevelIndicator = () => {
 
     // Dynamic text color and progress bar background based on night mode
     const textColor = nightMode ? 'text-oNight' : 'text-white';
-    const progressBarBg = nightMode ? 'bg-blue-700' : 'bg-oBlue';
 
     // Calculate the height of the progress bars as percentages
     const depthPercentage = Math.min((depth / 50) * 100, 100); // Max depth at 50m
     // Determine ascending or descending tide based on current tide level
+    
+    // Determine progress bar color based on depth
+     let progressBarColor = 'bg-oBlue'; // Default color
+     if (depth < 3) {
+         progressBarColor = 'bg-oRed'; // Red for depth < 3m
+     } else if (depth < 5) {
+         progressBarColor = 'bg-oYellow'; // Yellow for depth < 5m
+     }
+
 
     return (
         <div >
 
             {/* Label for Depth */}
-            <div className={`text-xs mb-2 ${textColor}`}>Depth</div>
+            <div className={`text-s mb-2 ${textColor}`}>Depth</div>
             {/* Vertical progress bar for Depth */}
-            <div className={`w-2 h-60 ${progressBarBg}  rounded-lg overflow-hidden mb-4`}>
+            <div className={`w-2 h-60 ${progressBarColor}  rounded-lg overflow-hidden mb-4`}>
                 <div
                     className={`bg-oGray transition-all duration-500 `}
                     style={{ height: `${depthPercentage}%` }}
                 ></div>
             </div>
             {/* Display depth value */}
-            <div className={`text-xs mt-2 ${textColor}`}>{depth} m</div>
+            <div className={`text-s mt-2 ${textColor}`}>{depth} m</div>
 
         </div>
     );

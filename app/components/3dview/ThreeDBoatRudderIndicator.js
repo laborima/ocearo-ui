@@ -5,7 +5,9 @@ const ThreeDBoatRudderIndicator = () => {
     const { nightMode } = useOcearoContext();
     const { getSignalKValue } = useOcearoContext();
 
-    const rudderAngle = getSignalKValue('steering.rudderAngle') || 0;
+    const rudderAngleRadians = getSignalKValue('steering.rudderAngle') || 0; // Example: -0.5585 radians
+    const rudderAngle = (rudderAngleRadians * 180) / Math.PI; // Convert to degrees
+
 
     // Function to generate graduation markers
     const renderGraduations = () => {

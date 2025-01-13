@@ -3,13 +3,13 @@ import { useState } from 'react';
 import BatteryIndicator from "@/app/components/3dview/BatteryIndicator";
 
 const ThreeDBoatThanksIndicator = () => {
-    const {  nightMode } = useOcearoContext(); // Access SignalK data and night mode from context
+    const { nightMode } = useOcearoContext(); // Access SignalK data and night mode from context
     const [displayMode, setDisplayMode] = useState('batteries'); // Default mode is to display batteries
-    const {getSignalKValue}  = useOcearoContext();
+    const { getSignalKValue } = useOcearoContext();
 
     // Fetching battery levels from SignalK
     const battery1 = getSignalKValue('electrical.batteries.0.capacity.stateOfCharge') || 22; // Battery 1 percentage
-    const battery2 = getSignalKValue('electrical.batteries.1.capacity.stateOfCharge') || 51; // Battery 2 percentage
+    const battery2 = getSignalKValue('electrical.batteries.1.capacity.stateOfCharge'); // Battery 2 percentage (null if not available)
 
     // Fetching tank levels from SignalK
     const freshWater = getSignalKValue('tanks.freshWater.0.currentLevel') || 40; // Fresh water tank percentage
@@ -29,8 +29,10 @@ const ThreeDBoatThanksIndicator = () => {
             {displayMode === 'batteries' ? (
                 // Display battery levels
                 <div>
-                    <BatteryIndicator batteryLevel={battery1} batteryNumber={1}/>
-                    <BatteryIndicator batteryLevel={battery2} batteryNumber={2}/>
+                    <BatteryIndicator batteryLevel={battery1} batteryNumber={1} />
+                    {battery2 !== null && (
+                        <BatteryIndicator batteryLevel={battery2} batteryNumber={2} />
+                    )}
                 </div>
             ) : (
                 // Display tanks levels
@@ -45,3 +47,4 @@ const ThreeDBoatThanksIndicator = () => {
 };
 
 export default ThreeDBoatThanksIndicator;
+

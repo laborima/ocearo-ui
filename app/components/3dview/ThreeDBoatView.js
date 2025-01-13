@@ -12,6 +12,7 @@ import { AISProvider } from './ais/AISContext';
 import PolarProjection from './polar/Polar3D';
 import LayLines3D from './compass/LayLines3D';
 
+
 const ThreeDBoatView = () => {
     const { states } = useOcearoContext(); // Application state from context
     const isCompassLayerVisible = false; // Compass visibility
@@ -66,20 +67,20 @@ const ThreeDBoatView = () => {
 
             <group position={[0, -3, 0]} >
                 {/* Sailboat */}
-                <SailBoat3D scale={[0.7, 0.7, 0.7]} ref={sailBoatRef} />
+                <SailBoat3D scale={[0.7, 0.7, 0.7]} ref={sailBoatRef}  showSail={true} />
     
                 {/* Ocean */}
                 {states.showOcean && <Ocean3D />}
                 
                 <Trail/>
- 
+
                 
                 <PolarProjection/>
                 
                 {/* AIS Boats */}
-                <AISProvider>
+               {states.ais &&   <AISProvider>
                     <AISView />
-                </AISProvider>
+                </AISProvider> }
     
                 {/* Compass */}
                 <ThreeDCompassView visible={isCompassLayerVisible} />

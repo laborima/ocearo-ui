@@ -58,7 +58,7 @@ const BottomEnvironmentalWidget = () => {
             {displayMode === 'humidity' && (
                 <div className="flex items-center text-2xl">
                     <FontAwesomeIcon icon={faDroplet} className="mr-2" />
-                    <span>{humidity}%</span>
+                    <span>{humidity*100}%</span>
                 </div>
             )}
             {displayMode === 'voc' && (

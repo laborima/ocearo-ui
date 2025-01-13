@@ -176,7 +176,7 @@ const AISView = () => {
 
     const boats = React.useMemo(() => {
         return Object.entries(vesselIds).map(([_, boatData]) => {
-            if (boatData.mmsi && !boatData.mmsi.startsWith("urn:mrn:signalk:uuid:") && ! boatData.mmsi.startsWith("urn:mrn:imo:mmsi:230035780") ) {
+            if (boatData.mmsi && !boatData.mmsi.startsWith("urn:mrn:signalk:uuid:") && !boatData.mmsi.startsWith("227925790") && ! boatData.mmsi.startsWith("urn:mrn:imo:mmsi:230035780") ) {
                // console.log("Add vessel : " + boatData.mmsi);
                 return (
                     <AISBoat

@@ -10,7 +10,7 @@ function Ocean3D() {
   const gl = useThree((state) => state.gl);
   
   // Load and memoize waterNormals texture
-  const waterNormals = useLoader(THREE.TextureLoader, "./assets/waternormals.jpg");
+  const waterNormals = useLoader(THREE.TextureLoader, "assets/waternormals.jpg");
   useMemo(() => {
     waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping;
   }, [waterNormals]);

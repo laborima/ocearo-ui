@@ -23,6 +23,7 @@ const determineBoatType = (shipType) => {
 
 const lengthScalingFactor = 0.1; // Adjust length scaling factor as necessary for visual clarity
 
+
 // AISBoat component
 const AISBoat = forwardRef(({ position, visible, boatData }, ref) => {
     const [BoatComponent, setBoatComponent] = useState(null);
@@ -74,6 +75,7 @@ const AISBoat = forwardRef(({ position, visible, boatData }, ref) => {
                 color="white"
                 anchorX="center"
                 anchorY="top"
+                font="fonts/Roboto-Bold.ttf"
             >
                 {boatInfo}
             </Text>

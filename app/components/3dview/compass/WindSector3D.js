@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { convertWindSpeed, useOcearoContext } from '../../context/OcearoContext';
+import { convertWindSpeed, oBlue, useOcearoContext } from '../../context/OcearoContext';
 import { Vector3 } from 'three';
 import { Cone, Text } from '@react-three/drei';
 
@@ -12,9 +12,11 @@ const FONT_SIZE = {
   APP_WIND: 0.6
 };
 
+
+
 const WindArrow = ({ position, rotation, speed, color, fontSize, textPosition = [0, 0.6, 0] }) => (
   <group position={position} rotation={rotation}>
-    <Text color={color} fontSize={fontSize} position={textPosition} font="../../../fonts/Roboto-Bold.ttf">
+    <Text color={color} fontSize={fontSize} position={textPosition} font="fonts/Roboto-Bold.ttf">
       {speed.toFixed(1)}
     </Text>
     <Cone args={[0.25, 0.5, 3]}>
@@ -36,9 +38,9 @@ const WindSector3D = ({ outerRadius }) => {
   const { getSignalKValue } = useOcearoContext();
 
   const trueWindAngle = getSignalKValue('environment.wind.angleTrueGround') || 0;
-  const trueWindSpeed = convertWindSpeed(getSignalKValue('environment.wind.speedOverGround')) ||1 ;
+  const trueWindSpeed = convertWindSpeed(getSignalKValue('environment.wind.speedOverGround')) ||0 ;
   const appWindAngle = getSignalKValue('environment.wind.angleApparent') || 0;
-  const appWindSpeed = convertWindSpeed(getSignalKValue('environment.wind.speedApparent')) || 1;
+  const appWindSpeed = convertWindSpeed(getSignalKValue('environment.wind.speedApparent')) || 0;
 
   const trueWindPosition = useMemo(
     () => new Vector3((outerRadius + WIND_OFFSET) * Math.cos(trueWindAngle), 0, -(outerRadius + WIND_OFFSET) * Math.sin(trueWindAngle)),
@@ -52,23 +54,28 @@ const WindSector3D = ({ outerRadius }) => {
 
   return (
     <group>
-      <WindArrow
-        position={trueWindPosition}
-        rotation={[-Math.PI / 2, 0, -(Math.PI / 2 - trueWindAngle)]}
-        speed={trueWindSpeed}
-        color="blue"
-        fontSize={FONT_SIZE.TRUE_WIND}
-      />
+      {trueWindSpeed > 0 && (
+        <WindArrow
+          position={trueWindPosition}
+          rotation={[-Math.PI / 2, 0, -(Math.PI / 2 - trueWindAngle)]}
+          speed={trueWindSpeed}
+          color="blue"
+          fontSize={FONT_SIZE.TRUE_WIND}
+        />
+      )}
 
-      <WindArrow
-        position={appWindPosition}
-        rotation={[-Math.PI / 2, 0, -(Math.PI / 2 - appWindAngle)]}
-        speed={appWindSpeed}
-        color="cyan"
-        fontSize={FONT_SIZE.APP_WIND}
-      />
+      {appWindSpeed > 0 && (
+        <WindArrow
+          position={appWindPosition}
+          rotation={[-Math.PI / 2, 0, -(Math.PI / 2 - appWindAngle)]}
+          speed={appWindSpeed}
+          color={oBlue}
+          fontSize={FONT_SIZE.APP_WIND}
+        />
+      )}
     </group>
   );
+
 };
 
 WindSector3D.propTypes = {
