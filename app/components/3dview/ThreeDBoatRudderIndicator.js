@@ -1,5 +1,4 @@
 import { useOcearoContext } from '../context/OcearoContext';
-import { useState, useEffect } from 'react';
 
 const ThreeDBoatRudderIndicator = () => {
     const { nightMode } = useOcearoContext();

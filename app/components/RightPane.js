@@ -4,74 +4,101 @@ import ConfigPage from "./settings/ConfigPage";
 import { useOcearoContext } from './context/OcearoContext';
 import configService from './settings/ConfigService';
 
+// Constants
+const POSITION_UPDATE_INTERVAL = 10000; // 10 seconds
+const POSITION_CHANGE_THRESHOLD = 0.01;
+const DEFAULT_POSITION = {
+  latitude: 46.1591,
+  longitude: -1.1522
+};
+
+// External URLs configuration
+const EXTERNAL_URLS = {
+  navigation: (signalkUrl) => `${signalkUrl}/@signalk/freeboard-sk/`,
+  instrument: (signalkUrl) => `${signalkUrl}/@mxtommy/kip/`,
+  netflix: () => 'https://www.netflix.com',
+  webcam1: () => 'https://pv.viewsurf.com/2080/Chatelaillon-Port?i=NzU4Mjp1bmRlZmluZWQ',
+  webcam2: () => 'https://pv.viewsurf.com/1478/Chatelaillon-Plage&lt?i=NTkyMDp1bmRlZmluZWQ',
+  weather: (_, position) => position && `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=kt&zoom=6&overlay=wind&product=ecmwf&level=surface&lat=${position.latitude}&lon=${position.longitude}&message=true`
+};
+
 const RightPane = ({ view }) => {
-    const { getSignalKValue } = useOcearoContext(); // Access SignalK data from the context
+  const { getSignalKValue } = useOcearoContext();
+  const [myPosition, setMyPosition] = useState(null);
+  const [error, setError] = useState(null);
+  const config = configService.getAll();
+  const { signalkUrl } = config;
 
-    const [myPosition, setMyPosition] = useState(null);
-    const config = configService.getAll(); // Load config from the service
+  // Position update effect
+  useEffect(() => {
+    const fetchPosition = () => {
+      try {
+        const position = getSignalKValue('navigation.position') || DEFAULT_POSITION;
 
-    const { signalkUrl } = config;
+        setMyPosition((prev) => {
+          if (!prev) return position;
+          
+          const hasSignificantChange = 
+            Math.abs(prev.latitude - position.latitude) > POSITION_CHANGE_THRESHOLD ||
+            Math.abs(prev.longitude - position.longitude) > POSITION_CHANGE_THRESHOLD;
 
-    useEffect(() => {
-        const fetchPosition = () => {
-            const position = getSignalKValue('navigation.position') || { latitude: 46.1591, longitude: -1.1522 };
-            
-            // Update position only if it has changed significantly
-            setMyPosition((prev) => {
-                
-                if (!prev || Math.abs(prev.latitude - position.latitude) > 0.01 || Math.abs(prev.longitude - position.longitude) > 0.01) {
-                    return position;
-                }
-                return prev;
-            });
-        };
-
-        fetchPosition();
-
-        const intervalId = setInterval(fetchPosition, 10000);
-
-        return () => clearInterval(intervalId);
-    }, [getSignalKValue]);
-
-
-    // Memoize iframeSrc to prevent unnecessary recalculations
-    const iframeSrc = useMemo(() => {
-        switch (view) {
-            case 'navigation':
-                return `${signalkUrl}/@signalk/freeboard-sk/`;
-            case 'instrument':
-                return `${signalkUrl}/@mxtommy/kip/`;
-            case 'netflix':
-                return 'https://www.netflix.com';
-            case 'webcam1':
-                return 'https://pv.viewsurf.com/2080/Chatelaillon-Port?i=NzU4Mjp1bmRlZmluZWQ';
-            case 'webcam2':
-                return 'https://pv.viewsurf.com/1478/Chatelaillon-Plage&lt?i=NTkyMDp1bmRlZmluZWQ';
-            case 'weather':
-                // Dynamically generate Windy embed URL if position is available
-                if (myPosition) {
-                    return `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=kt&zoom=6&overlay=wind&product=ecmwf&level=surface&lat=${myPosition.latitude}&lon=${myPosition.longitude}&message=true`;
-                }
-                return null; // Return null if position isn't available yet
-            default:
-                return null;
-        }
-    }, [view, myPosition,signalkUrl]); // Dependencies
-
-    return (
-        <div className="flex flex-col w-full h-full"> {/* Use flex for layout */}
-            {view === 'manual' ? <PDFList path="boats/dufour310/docs" /> : null}
-            {view === 'settings' ? <ConfigPage /> : null}
+          return hasSignificantChange ? position : prev;
+        });
         
-            {iframeSrc ? (
-                <iframe
-                    className="flex-grow border-none"
-                    src={iframeSrc} // Use memoized iframeSrc value
-                    title="External Application"
-                />
-            ) : null}
-        </div>
-    );
+        setError(null);
+      } catch (err) {
+        setError('Error fetching position data');
+        console.error('Position fetch error:', err);
+      }
+    };
+
+    fetchPosition();
+    const intervalId = setInterval(fetchPosition, POSITION_UPDATE_INTERVAL);
+    return () => clearInterval(intervalId);
+  }, [getSignalKValue]);
+
+  // URL generation
+  const iframeSrc = useMemo(() => {
+    const urlGenerator = EXTERNAL_URLS[view];
+    if (!urlGenerator) return null;
+    
+    try {
+      return urlGenerator(signalkUrl, myPosition);
+    } catch (err) {
+      console.error('Error generating URL:', err);
+      setError('Error generating application URL');
+      return null;
+    }
+  }, [view, myPosition, signalkUrl]);
+
+  // Render component based on view type
+  const renderContent = () => {
+    if (error) {
+      return <div className="text-red-500 p-4">{error}</div>;
+    }
+
+    switch (view) {
+      case 'manual':
+        return <PDFList path="boats/dufour310/docs" />;
+      case 'settings':
+        return <ConfigPage />;
+      default:
+        return iframeSrc && (
+          <iframe
+            className="flex-grow border-none"
+            src={iframeSrc}
+            title="External Application"
+            onError={() => setError('Failed to load external content')}
+          />
+        );
+    }
+  };
+
+  return (
+    <div className="flex flex-col w-full h-full">
+      {renderContent()}
+    </div>
+  );
 };
 
 export default RightPane;

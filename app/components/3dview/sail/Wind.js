@@ -16,10 +16,8 @@ export function windSheer(windspeed, height, hellman) {
     // https://en.wikipedia.org/wiki/Wind_gradient
     let v10m = kts2ms(windspeed);
     let height10m = 10;
-    //let hellman = 0.27; // alpha
     let v = v10m * (Math.pow((height / height10m), hellman));
-    //console.log(v);
-    return (ms2kts(v));
+    
 
     // location α ... hellman constant for wind condition
     // Unstable air above open water surface:   0.06
@@ -31,7 +29,9 @@ export function windSheer(windspeed, height, hellman) {
     // Neutral air above human inhabited areas: 0.34
     // Stable air above flat open coast:    0.40
     // Stable air above human inhabited areas:  0.60
-    return
+    return (ms2kts(v));
+
+
 }
 
 // https://en.wikipedia.org/wiki/Apparent_wind

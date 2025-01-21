@@ -1,74 +1,80 @@
 import React, { Suspense, useRef, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Html, Environment } from '@react-three/drei';
 import * as THREE from 'three';
 import SailBoat3D from '../SailBoat3D';
 import { useOcearoContext } from '../../context/OcearoContext';
 
 const ThreeDParkAssistBoat = () => {
-    const camPosition = new THREE.Vector3(0, 20, 0);
     const sailBoatRef = useRef();
-    const cameraRef = useRef();
     const pathRef = useRef();
 
     const { getSignalKValue } = useOcearoContext();
     const rudderAngle = getSignalKValue('steering.rudderAngle') || 0;
     const sog = getSignalKValue('navigation.speedOverGround') || 0;
 
-    // Generate the projected path based on the rudder angle and SOG
+    // Helper function to generate the curve points
+    const generateCurvePoints = (rudderAngle, sog, maxCurvePoints = 100, scaleFactor = 0.1) => {
+        const theta = THREE.MathUtils.degToRad(rudderAngle);
+        const radius = sog !== 0 ? sog / Math.tan(theta || 0.01) : 1000; // Avoid division by zero
+        const clampedRadius = Math.min(Math.max(radius, -500), 500); // Limit radius for stability
+
+        const points = [];
+        for (let i = 0; i < maxCurvePoints; i++) {
+            const angle = (i / maxCurvePoints) * Math.PI; // Sweep angle
+            const x = clampedRadius * (1 - Math.cos(angle)) * scaleFactor;
+            const y = 0; // Keep path on 2D plane
+            const z = clampedRadius * Math.sin(angle) * scaleFactor;
+            points.push(new THREE.Vector3(x, y, z));
+        }
+        return points;
+    };
+
+    // Update the projected path
     useEffect(() => {
         if (!pathRef.current) return;
 
-        const maxCurvePoints = 100;   // Number of points to approximate the path curve
-        const scaleFactor = 0.1;      // Scale to adjust curve size
-
-        // Convert rudder angle to radians and calculate turning radius
-        const theta = THREE.MathUtils.degToRad(rudderAngle);
-        const radius = sog / Math.tan(theta || 0.01); // Avoid division by zero
-
-        // Generate points along the curve
-        const points = [];
-        for (let i = 0; i < maxCurvePoints; i++) {
-            const angle = (i / maxCurvePoints) * Math.PI; // Sweep angle for the curve
-            const x = radius * (1 - Math.cos(angle)) * scaleFactor;
-            const y = 0; // Assuming we're on a 2D plane, no vertical displacement
-            const z = radius * Math.sin(angle) * scaleFactor;
-            points.push(new THREE.Vector3(x, y, z));
-        }
-
-        // Update the line geometry with new points
+        const points = generateCurvePoints(rudderAngle, sog);
         pathRef.current.geometry.setFromPoints(points);
     }, [rudderAngle, sog]);
 
-
-/*    // Ensure the camera updates each frame
-    useFrame(() => {
-        if (cameraRef.current) {
-            cameraRef.current.updateMatrixWorld();
-        }
-    });*/
-
-
     return (
-        <Suspense fallback={null}>
-          {/*  <PerspectiveCamera ref={cameraRef} fov={50} position={camPosition} makeDefault /> */}
-            <OrbitControls
-                enableZoom={true}
-                enableRotate={true}
-                maxAzimuthAngle={Infinity}
-                minAzimuthAngle={-Infinity}
-                maxPolarAngle={Math.PI}
-                minPolarAngle={0}
-            />
-            <ambientLight intensity={1} />
-            <SailBoat3D ref={sailBoatRef} />
+        <Suspense fallback={<Html center>Loading...</Html>}>
+            {/* Camera */}
+            <PerspectiveCamera makeDefault fov={60} near={1} far={1000} position={[0, 20, 30]} />
+            <OrbitControls enableZoom={true} enableRotate={true} maxPolarAngle={Math.PI / 2} minPolarAngle={Math.PI / 4} />
 
-            {/* Projected path in Three.js */}
-            <group position={[0, 0, -5]} rotation-y={Math.PI}>
-                <line ref={pathRef}>
-                    <bufferGeometry />
-                    <lineBasicMaterial color="cyan" linewidth={2} />
-                </line>
+            {/* Environment */}
+            <Environment files="./assets/ocearo_env.hdr" background={false} intensity={0.8} />
+
+            {/* Lighting */}
+            <ambientLight intensity={0.6} />
+            <spotLight
+                position={[15, 30, 20]}
+                intensity={1.8}
+                angle={Math.PI / 6}
+                penumbra={0.5}
+                castShadow
+                shadow-mapSize-width={1024}
+                shadow-mapSize-height={1024}
+                shadow-camera-near={0.5}
+                shadow-camera-far={50}
+                shadow-bias={-0.0001}
+            />
+            <directionalLight position={[-10, 20, 10]} intensity={1.5} color="#ffd1a6" castShadow />
+            <pointLight position={[-10, 10, -10]} intensity={0.7} />
+
+            {/* Boat and Path */}
+            <group position={[0, -3, 0]}>
+                {/* Sailboat */}
+                <SailBoat3D position={[0, 0, 0.7]} scale={[0.7, 0.7, 0.7]} ref={sailBoatRef} showSail={false} />
+
+                {/* Projected Path */}
+                <group position={[0, 0, -5]} rotation-y={Math.PI}>
+                    <line ref={pathRef}>
+                        <bufferGeometry />
+                        <lineBasicMaterial color="cyan" linewidth={2} />
+                    </line>
+                </group>
             </group>
         </Suspense>
     );

@@ -12,6 +12,83 @@ export const oYellow = '#ffbe00';
 export const oGreen = '#0fcd4f';
 
 
+
+// Utility functions
+export const toKelvin = (degrees) => degrees + 273.15;
+export const convertTemperature = (kelvin) => kelvin != null ? Math.round((kelvin - 273.15) * 10) / 10 : null;
+export const convertWindSpeed = (mps) => mps != null ? Math.round((mps * 1.94384) * 10) / 10 : null;
+export const convertSpeed = convertWindSpeed;
+export const convertPressure = (pa) => pa != null ? Math.round((pa / 100) * 10) / 10 : null;
+
+// Constants
+const SAMPLE_DATA_INTERVAL = 5000;
+const INITIAL_STATES = {
+    autopilot: true,
+    anchorWatch: false,
+    parkingMode: false,
+    mob: false,
+    showOcean: false,
+    ais: false,
+};
+
+// Separate sample data into its own object for better organization
+const SAMPLE_DATA = {
+    wind: {
+        'environment.wind.angleTrueWater': MathUtils.degToRad(25),
+        'environment.wind.speedTrue': 20,
+        'environment.wind.angleApparent': MathUtils.degToRad(23),
+        'environment.wind.speedApparent': 25,
+    },
+    temperature: {
+        'environment.water.temperature': toKelvin(17),
+        'environment.outside.temperature': toKelvin(21),
+        'propulsion.main.exhaustTemperature': toKelvin(95),
+        'environment.inside.fridge.temperature': toKelvin(4),
+    },
+    environment: {
+        'environment.outside.pressure': 102300,
+        'environment.inside.humidity': 74,
+        'environment.inside.voc': 0.03,
+    },
+    performance: {
+        'performance.beatAngle': MathUtils.degToRad(45),
+        'performance.gybeAngle': MathUtils.degToRad(135),
+        'performance.beatAngleVelocityMadeGood': 6,
+        'performance.gybeAngleVelocityMadeGood': 5,
+        'performance.targetAngle': MathUtils.degToRad(45),
+        'performance.polarSpeed': 8,
+        'performance.polarSpeedRatio': 0.95,
+        'performance.velocityMadeGood': 5,
+        'performance.polarVelocityMadeGood': 6,
+        'performance.polarVelocityMadeGoodRatio': 0.9,
+    },
+    navigation: {
+        'navigation.speedThroughWater': 7,
+        'navigation.headingTrue': MathUtils.degToRad(0),
+        'navigation.courseOverGround': MathUtils.degToRad(20),
+        'navigation.courseGreatCircle.nextPoint.bearingTrue': MathUtils.degToRad(30),
+        'navigation.attitude.roll': MathUtils.degToRad(5),
+    },
+    racing: {
+        'navigation.racing.layline': MathUtils.degToRad(10),
+        'navigation.racing.layline.distance': 100,
+        'navigation.racing.layline.time': 180,
+        'navigation.racing.oppositeLayline': MathUtils.degToRad(45),
+        'navigation.racing.oppositeLayline.distance': 80,
+        'navigation.racing.oppositeLayline.time': 180,
+        'navigation.racing.startLineStb': { latitude: 0, longitude: 0, altitude: 0 },
+        'navigation.racing.startLinePort': { latitude: 0, longitude: 0, altitude: 0 },
+        'navigation.racing.distanceStartline': 50,
+        'navigation.racing.timeToStart': 120,
+        'navigation.racing.timePortDown': 60,
+        'navigation.racing.timePortUp': 70,
+        'navigation.racing.timeStbdDown': 65,
+        'navigation.racing.timeStbdUp': 75,
+    },
+};
+
+
+
 export const OcearoContextProvider = ({ children }) => {
     const [signalkData, setSignalKData] = useState({}); // State to hold SignalK data
     const [nightMode, setNightMode] = useState(false); // Night mode state
@@ -26,13 +103,12 @@ export const OcearoContextProvider = ({ children }) => {
 
 
     // Method to toggle any state (e.g., autopilot, anchorWatch)
-    const toggleState = (key) => {
+    const toggleState = (key, value = undefined) => {
         setStates((prevState) => ({
             ...prevState,
-            [key]: !prevState[key],
+            [key]: value !== undefined ? value : !prevState[key], // Set explicitly or toggle
         }));
     };
-
 
     // Use useRef to persist client between renders
     const clientRef = useRef(null);
@@ -82,77 +158,20 @@ export const OcearoContextProvider = ({ children }) => {
                 });
 
                 // Set up interval for sample data if sampleData is enabled
-                if (debugMode) {
+                if (config.debugMode) {
                     sampleDataIntervalRef.current = setInterval(() => {
-                        // Generate random values for testing
-                        const randomAngle = Math.floor(Math.random() * 91) - 45; // Random angle between -45 and 45
-
-                        // Steering and navigation attitude
-                        setSignalKData((prevData) => ({
-                            ...prevData,
-                            'steering.rudderAngle': MathUtils.degToRad(randomAngle)
+                        const randomAngle = Math.floor(Math.random() * 91) - 45;
+                        setSignalKData(prev => ({
+                            ...prev,
+                            'steering.rudderAngle': MathUtils.degToRad(randomAngle),
+                            ...SAMPLE_DATA.wind,
+                            ...SAMPLE_DATA.temperature,
+                            ...SAMPLE_DATA.environment,
+                            ...SAMPLE_DATA.performance,
+                            ...SAMPLE_DATA.navigation,
+                            ...SAMPLE_DATA.racing,
                         }));
-                    }, 5000); // Update every 5 seconds
-
-                    setSignalKData((prevData) => ({
-                        ...prevData,
-                        // Sample wind data
-                        'environment.wind.angleTrueWater': MathUtils.degToRad(25),
-                        'environment.wind.speedTrue': 20,
-                        'environment.wind.angleApparent': MathUtils.degToRad(23),
-                        'environment.wind.speedApparent': 25,
-
-                        'environment.water.temperature': toKelvin(17),
-                        'environment.outside.temperature': toKelvin(21),
-                        'propulsion.main.exhaustTemperature': toKelvin(95),
-                        'environment.inside.fridge.temperature': toKelvin(4),
-                        'environment.outside.pressure': 102300,
-                        'environment.inside.humidity': 74,
-                        'environment.inside.voc': 0.03,
-
-                        // Sailing performance
-                        'performance.beatAngle': MathUtils.degToRad(45),
-                        'performance.gybeAngle': MathUtils.degToRad(135),
-                        'performance.beatAngleVelocityMadeGood': 6,
-                        'performance.gybeAngleVelocityMadeGood': 5,
-                        'performance.targetAngle': MathUtils.degToRad(45), // Assuming beatAngle as target
-                        'performance.polarSpeed': 8,
-                        'performance.polarSpeedRatio': 0.95,
-                        'performance.velocityMadeGood': 5,
-                        'navigation.speedThroughWater': 7,
-                        'performance.polarVelocityMadeGood': 6,
-                        'performance.polarVelocityMadeGoodRatio': 0.9,
-
-                        // Navigation heading and waypoints
-                        'navigation.headingTrue': MathUtils.degToRad(0),
-                        'navigation.courseOverGround': MathUtils.degToRad(20),
-                        'navigation.courseGreatCircle.nextPoint.bearingTrue': MathUtils.degToRad(30),
-                        'performance.laylineAngle': MathUtils.degToRad(10),
-
-                        'navigation.attitude.roll': MathUtils.degToRad(5),
-
-                        // Laylines for racing
-                        'navigation.racing.layline': MathUtils.degToRad(10),
-                        'navigation.racing.layline.distance': 100,
-                        'navigation.racing.layline.time': 180,
-                        'navigation.racing.oppositeLayline': MathUtils.degToRad(45),
-                        'navigation.racing.oppositeLayline.distance': 80,
-                        'navigation.racing.oppositeLayline.time': 180,
-
-                        // Start line data for racing
-                        'navigation.racing.startLineStb': { latitude: 0, longitude: 0, altitude: 0 },
-                        'navigation.racing.startLinePort': { latitude: 0, longitude: 0, altitude: 0 },
-                        'navigation.racing.distanceStartline': 50,
-                        'navigation.racing.timeToStart': 120,
-                        'navigation.racing.timePortDown': 60,
-                        'navigation.racing.timePortUp': 70,
-                        'navigation.racing.timeStbdDown': 65,
-                        'navigation.racing.timeStbdUp': 75,
-
-                    }));
-
-
-
+                    }, SAMPLE_DATA_INTERVAL);
                 }
             } catch (error) {
                 console.error('Failed to connect to SignalK:', error);
@@ -256,26 +275,6 @@ export const OcearoContextProvider = ({ children }) => {
 // Hook to useOcearoContext
 export const useOcearoContext = () => useContext(OcearoContext);
 
-
-export function toKelvin(degrees) { return degrees + 273.15 };
-
-
-export const convertTemperature = (kelvin) => {
-    return kelvin != null ? Math.round((kelvin - 273.15) * 10) / 10 : null;
-};
-
-export const convertWindSpeed = (mps) => {
-    return mps != null ? Math.round((mps * 1.94384) * 10) / 10 : null;
-};
-
-export const convertSpeed = (mps) => {
-    return mps != null ? Math.round((mps * 1.94384) * 10) / 10 : null;
-};
-
-
-export const convertPressure = (pa) => {
-    return pa != null ? Math.round((pa / 100) * 10) / 10 : null;
-};
 
 export const calculateTideHeightUsingTwelfths = function(highTideHeight, lowTideHeight, currentTime, highTideTime, lowTideTime) {
     const convertTimeToMinutes = (timeString) => {

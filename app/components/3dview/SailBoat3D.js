@@ -20,7 +20,7 @@ const SailBoat3D = forwardRef(({ showSail = false, ...props }, ref) => {
 
     // Load configuration settings
     const config = configService.getAll();
-    const primaryColor = config.primaryColor || '#ffffff'; // Default to white if not set
+    const primaryColor = config.primaryColor; // Default to white if not set
     const metallicEffect = config.metallicEffect || false; // Default to non-metallic
 
     // Get inclination from SignalK (use 'heel' data as an example)
@@ -31,11 +31,21 @@ const SailBoat3D = forwardRef(({ showSail = false, ...props }, ref) => {
 
     useEffect(() => {
         // Apply the color and metallic effect to the hull (fiberglass2 material)
-        if (materials && materials.fiberglass) {
+        if (primaryColor && materials && materials.fiberglass) {
             materials.fiberglass.color.set(primaryColor); // Set the material color
             materials.fiberglass.metalness = metallicEffect ? 1.0 : 0.0; // Apply metallic effect
             materials.fiberglass.roughness = metallicEffect ? 0.2 : 1.0; // Adjust roughness for metallic look
         }
+        
+        // Reduce texture resolution for low GPU devices
+               Object.values(materials).forEach((material) => {
+                   if (material.map) {
+                       material.map.minFilter = THREE.LinearFilter;
+                       material.map.magFilter = THREE.LinearFilter;
+                       material.map.anisotropy = 1; // Reduce anisotropy for better performance
+                   }
+               });
+               
     }, [primaryColor, metallicEffect, materials]);
 
 

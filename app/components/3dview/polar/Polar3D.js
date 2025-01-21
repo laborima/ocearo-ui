@@ -1,121 +1,151 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import { Line } from '@react-three/drei';
 import { Vector3, CatmullRomCurve3, Group, MathUtils } from 'three';
-import polarData from './polar.json';
-import { convertSpeed, convertWindSpeed, oBlue, oGreen, oRed, useOcearoContext } from '../../context/OcearoContext';
 import { useFrame } from '@react-three/fiber';
+import polarData from './polar.json';
+import { 
+    convertSpeed, 
+    convertWindSpeed, 
+    oBlue, 
+    oGreen, 
+    oRed, 
+    useOcearoContext 
+} from '../../context/OcearoContext';
+
+// Constants
 const DEG2RAD = Math.PI / 180;
+const ROTATION_INTERPOLATION_FACTOR = 0.05;
+const SOG_SMOOTHING_FACTOR = 0.1;
+const DEFAULT_SOG = 3;
+const ANGLE_INCREMENT = 10;
+const SPHERE_SIZE = 0.4;
+const SPHERE_SEGMENTS = 32;
+const DEFAULT_LINE_WIDTH = 1;
+const PLOTS_COUNT = 10;
+const FRAME_TO_MINUTE_RATIO = 3600;
 
 // Utility functions
 const radiusScale = (value, timeInMinute) => value * 0.44704 * 60 * timeInMinute * 0.1;
 
 const calculatePosition = (angleDeg, value, timeInMinute) => {
-    if (angleDeg === 0 || value === 0) return new Vector3(0, 0, 0);
+    if (!angleDeg || !value) return new Vector3(0, 0, 0);
     
     const angleRad = angleDeg * DEG2RAD;
     const radius = radiusScale(value, timeInMinute);
-    return new Vector3(radius * Math.sin(angleRad), 0, -radius * Math.cos(angleRad));
+    return new Vector3(
+        radius * Math.sin(angleRad), 
+        0, 
+        -radius * Math.cos(angleRad)
+    );
 };
 
-const findClosestIndex = (values, target) =>
-    values.reduce((closestIdx, current, idx) =>
+const findClosestIndex = (values, target) => {
+    if (!values?.length) return 0;
+    return values.reduce((closestIdx, current, idx) => 
         Math.abs(current - target) < Math.abs(values[closestIdx] - target) ? idx : closestIdx, 0);
+};
+
+// Diamond marker component
+const DiamondMarker = ({ position, color }) => {
+    if (!position) return null;
+    
+    return (
+        <mesh position={position}>
+            <sphereGeometry args={[SPHERE_SIZE, SPHERE_SEGMENTS, SPHERE_SEGMENTS]} />
+            <meshStandardMaterial color={color} />
+        </mesh>
+    );
+};
+
+// Polar curve component
+const PolarCurve = ({ points, color }) => {
+    if (!points?.length) return null;
+    
+    return <Line points={points} color={color} lineWidth={DEFAULT_LINE_WIDTH} />;
+};
 
 function PolarPlot({ timeInMinute, windSpeed }) {
     const polarRef = useRef(polarData.vpp);
 
-    const calculateDiamondPosition = useMemo(() => (angles, vmgs, windSpeedIdx, timeInMinute) => {
-        if (!angles || !vmgs || angles.length <= windSpeedIdx || vmgs.length <= windSpeedIdx) {
-            console.error("Invalid angle or VMG data.");
+    const calculateDiamondPosition = useCallback((angles, vmgs, windSpeedIdx, timeInMinute) => {
+        if (!angles?.length || !vmgs?.length || angles.length <= windSpeedIdx || vmgs.length <= windSpeedIdx) {
+            console.warn("Invalid angle or VMG data");
             return null;
         }
         return calculatePosition(angles[windSpeedIdx], vmgs[windSpeedIdx], timeInMinute);
     }, []);
 
-    const createRadialCurve = useMemo(() => (windSpeedIdx, timeInMinute) => {
+    const createRadialCurve = useCallback((windSpeedIdx, timeInMinute) => {
         const { speeds, angles, beat_angle, beat_vmg, run_angle, run_vmg } = polarRef.current;
         
-        if (!speeds || !angles || !speeds.length || !angles.length) {
-            console.error("Invalid polar data.");
+        if (!speeds?.length || !angles?.length) {
+            console.warn("Invalid polar data");
             return null;
         }
 
         const interpolate = (start, end, ratio) => start + ratio * (end - start);
         const points = [];
 
-        // 0° to beat_angle: speed from 0 to beat_vmg
-        for (let angle = 0; angle <= beat_angle[windSpeedIdx]; angle += 10) {
-            points.push(calculatePosition(angle, interpolate(0, beat_vmg[windSpeedIdx], angle / beat_angle[windSpeedIdx]), timeInMinute));
-        }
+        // Generate points for different angle ranges
+        const generatePoints = (startAngle, endAngle, getSpeed) => {
+            for (let angle = startAngle; angle <= endAngle; angle += ANGLE_INCREMENT) {
+                points.push(calculatePosition(angle, getSpeed(angle), timeInMinute));
+            }
+        };
 
-        // beat_angle to run_angle: use existing polar data
-        angles.forEach((angle, i) => {
+        // 0° to beat_angle
+        generatePoints(0, beat_angle[windSpeedIdx], 
+            angle => interpolate(0, beat_vmg[windSpeedIdx], angle / beat_angle[windSpeedIdx]));
+
+        // beat_angle to run_angle
+        angles.forEach(angle => {
             if (angle > beat_angle[windSpeedIdx] && angle < run_angle[windSpeedIdx]) {
-                points.push(calculatePosition(angle, polarRef.current[Math.floor(angle)]?.[windSpeedIdx] || 0, timeInMinute));
+                const speed = polarRef.current[Math.floor(angle)]?.[windSpeedIdx] || 0;
+                points.push(calculatePosition(angle, speed, timeInMinute));
             }
         });
 
-        // run_angle to 180°: constant speed of run_vmg
-        for (let angle = run_angle[windSpeedIdx]; angle <= 180; angle += 10) {
-            points.push(calculatePosition(angle, run_vmg[windSpeedIdx], timeInMinute));
-        }
+        // run_angle to 180°
+        generatePoints(run_angle[windSpeedIdx], 180, 
+            () => run_vmg[windSpeedIdx]);
 
-        // Points for the other half (180° to 360°) would be symmetrical, but we're not including them here for simplicity
         return new CatmullRomCurve3(points, true);
     }, []);
 
-    // Use useMemo for curve and diamonds
     const curveData = useMemo(() => {
         const polar = polarRef.current;
-        const { speeds, beat_angle, beat_vmg, run_angle, run_vmg } = polar;
-        
-        if (!speeds || speeds.length === 0) {
-            console.error("Speeds data is missing.");
+        if (!polar?.speeds?.length) {
+            console.warn("Invalid polar data structure");
             return { curve: null, beat: null, run: null };
         }
 
-        const closestWindSpeedIdx = findClosestIndex(speeds, windSpeed);
+        const windSpeedIdx = findClosestIndex(polar.speeds, windSpeed);
+        const curve = createRadialCurve(windSpeedIdx, timeInMinute);
+        
         return {
-            curve: createRadialCurve(closestWindSpeedIdx, timeInMinute),
-            beat: calculateDiamondPosition(beat_angle, beat_vmg, closestWindSpeedIdx, timeInMinute),
-            run: calculateDiamondPosition(run_angle, run_vmg, closestWindSpeedIdx, timeInMinute)
+            curve,
+            beat: calculateDiamondPosition(polar.beat_angle, polar.beat_vmg, windSpeedIdx, timeInMinute),
+            run: calculateDiamondPosition(polar.run_angle, polar.run_vmg, windSpeedIdx, timeInMinute)
         };
-    }, [timeInMinute, windSpeed]);
-    
+    }, [timeInMinute, windSpeed, calculateDiamondPosition, createRadialCurve]);
 
+    const renderPolarGroup = (rotation = 0) => (
+        <group rotation={[0, 0, rotation]}>
+            {curveData.curve && (
+                <PolarCurve 
+                    points={curveData.curve.getPoints(100)} 
+                    color={oBlue} 
+                />
+            )}
+            <DiamondMarker position={curveData.beat} color={oGreen} />
+            <DiamondMarker position={curveData.run} color={oRed} />
+        </group>
+    );
 
     return (
         <>
-            <group>
-                {curveData.curve && <Line points={curveData.curve.getPoints(100)} color={oBlue} lineWidth={1} />}
-                {curveData.beat && (
-                    <mesh position={curveData.beat}>
-                        <octahedronGeometry args={[0.2, 0]} />
-                        <meshStandardMaterial color={oGreen} />
-                    </mesh>
-                )}
-                {curveData.run && (
-                    <mesh position={curveData.run}>
-                        <octahedronGeometry args={[0.2, 0]} />
-                        <meshStandardMaterial color={oRed} />
-                    </mesh>
-                )}
-            </group>
-            <group rotation={[0, 0, -Math.PI]}>
-                {curveData.curve && <Line points={curveData.curve.getPoints(100)} color={oBlue} lineWidth={1} />}
-                {curveData.beat && (
-                    <mesh position={curveData.beat}>
-                        <octahedronGeometry args={[0.2, 0]} />
-                        <meshStandardMaterial color={oGreen} />
-                    </mesh>
-                )}
-                {curveData.run && (
-                    <mesh position={curveData.run}>
-                        <octahedronGeometry args={[0.2, 0]} />
-                        <meshStandardMaterial color={oRed} />
-                    </mesh>
-                )}
-            </group>
+            {renderPolarGroup(0)}
+            {renderPolarGroup(-Math.PI)}
         </>
     );
 }
@@ -125,71 +155,50 @@ function PolarProjection() {
     const [plots, setPlots] = useState([]);
     const frameCount = useRef(0);
     const previousAngles = useRef([]);
+    const lastSOG = useRef(DEFAULT_SOG);
     const { getSignalKValue } = useOcearoContext();
 
-    // Fetch SignalK values
     const appWindAngle = getSignalKValue('environment.wind.angleApparent');
-    const trueWindAngle = getSignalKValue('environment.wind.angleTrueGround') || appWindAngle;
     const trueWindSpeed = convertWindSpeed(getSignalKValue('environment.wind.speedOverGround'));
-    const sog = getSignalKValue('navigation.speedOverGround') || 3;
+    const sog = getSignalKValue('navigation.speedOverGround') || DEFAULT_SOG;
 
     useEffect(() => {
-        const initialPlots = Array.from({ length: 10 }, (_, index) => ({
+        const initialPlots = Array.from({ length: PLOTS_COUNT }, (_, index) => ({
             id: index,
             timeInMinute: 5 * (index + 1),
         }));
 
         setPlots(initialPlots);
         groupRefs.current = initialPlots.map(() => new Group());
-        previousAngles.current = Array(10).fill(0);
+        previousAngles.current = Array(PLOTS_COUNT).fill(0);
     }, []);
 
-    const lerpAngle = (start, end, t) => MathUtils.lerp(start, end, t);
-
-    useFrame(() => {
+    useFrame((_, delta) => {
         frameCount.current += 1;
-
-        setPlots((currentPlots) => {
-            const updatedPlots = currentPlots.map((plot, index) => {
+        lastSOG.current = MathUtils.lerp(lastSOG.current, sog, SOG_SMOOTHING_FACTOR);
+        
+        setPlots(currentPlots => 
+            currentPlots.map((plot, index) => {
                 const group = groupRefs.current[index];
                 if (!group) return plot;
 
-                const remainingTime = plot.timeInMinute - frameCount.current / 3600;
+                const remainingTime = plot.timeInMinute - frameCount.current / FRAME_TO_MINUTE_RATIO;
 
                 if (remainingTime > 0) {
-                    const distanceCovered = sog * (plot.timeInMinute * 60);
-                    const scaleFactor = Math.max(0, 1 - distanceCovered / (plot.timeInMinute * 600));
-
                     const prevAngle = previousAngles.current[index];
-                    const interpolatedAngle = lerpAngle(prevAngle, trueWindAngle, 0.05);
-
+                    const interpolatedAngle = MathUtils.lerp(
+                        prevAngle, 
+                        appWindAngle, 
+                        ROTATION_INTERPOLATION_FACTOR
+                    );
+                    
                     group.rotation.set(0, interpolatedAngle, 0);
-                    group.scale.set(scaleFactor, scaleFactor, scaleFactor);
-
                     previousAngles.current[index] = interpolatedAngle;
                 }
 
                 return plot;
-            });
-
-            if (updatedPlots[0]?.timeInMinute * sog <= 0.1) {
-                const newPlotId = updatedPlots[updatedPlots.length - 1]?.id + 1 || 0;
-
-                updatedPlots.shift();
-                updatedPlots.push({
-                    id: newPlotId,
-                    timeInMinute: 5 * (updatedPlots.length + 1),
-                });
-
-                groupRefs.current.shift();
-                groupRefs.current.push(new Group());
-
-                previousAngles.current.shift();
-                previousAngles.current.push(0);
-            }
-
-            return updatedPlots;
-        });
+            })
+        );
     });
 
     return (
@@ -197,11 +206,14 @@ function PolarProjection() {
             {plots.map((plot, index) => (
                 <group
                     key={plot.id}
-                    ref={(ref) => {
+                    ref={ref => {
                         if (ref) groupRefs.current[index] = ref;
                     }}
                 >
-                    <PolarPlot timeInMinute={plot.timeInMinute} windSpeed={trueWindSpeed} />
+                    <PolarPlot 
+                        timeInMinute={plot.timeInMinute} 
+                        windSpeed={trueWindSpeed} 
+                    />
                 </group>
             ))}
         </>

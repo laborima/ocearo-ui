@@ -2,26 +2,58 @@ import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { convertWindSpeed, oBlue, useOcearoContext } from '../../context/OcearoContext';
 import { Vector3 } from 'three';
-import { Cone, Text } from '@react-three/drei';
+import { Cone, Cylinder, Text } from '@react-three/drei';
+import * as THREE from 'three';
 
 // Constants for configuration
 const MARKER_COLOR_PRIMARY = 0x00FF00;
-const WIND_OFFSET = 0.3;
+const WIND_OFFSET = 0.7;
 const FONT_SIZE = {
-  TRUE_WIND: 0.5,
-  APP_WIND: 0.6
+  TRUE_WIND: 1,
+  APP_WIND: 1
 };
 
 
 
-const WindArrow = ({ position, rotation, speed, color, fontSize, textPosition = [0, 0.6, 0] }) => (
+const WindArrow = ({
+  position = [0, 0, 0],
+  rotation = [0, 0, 0],
+  speed,
+  color = '#ffffff',
+  fontSize = 0.5,
+  textPosition = [0, 0.8, 0],
+  arrowSize = 1, // Scale factor for the entire arrow
+}) => (
   <group position={position} rotation={rotation}>
-    <Text color={color} fontSize={fontSize} position={textPosition} font="fonts/Roboto-Bold.ttf">
+    {/* Speed text */}
+    <Text 
+      characters=".0123456789" 
+      color={color} 
+      fontSize={fontSize * arrowSize}
+      position={textPosition}
+      font="fonts/Roboto-Bold.ttf"
+    >
       {speed.toFixed(1)}
     </Text>
-    <Cone args={[0.25, 0.5, 3]}>
-      <meshStandardMaterial color={color} />
-    </Cone>
+
+    {/* Arrow head */}
+    <mesh>
+          <shapeGeometry args={[
+            new THREE.Shape([
+              // Center point
+              new THREE.Vector2(0, 0),
+              // Right point (now pointing down)
+              new THREE.Vector2(0.5 * arrowSize * Math.cos(5*Math.PI/6), 0.5 * arrowSize * Math.sin(5*Math.PI/6)),
+              // Tip point (now at bottom)
+              new THREE.Vector2(0, -0.577 * arrowSize),
+              // Left point (now pointing down)
+              new THREE.Vector2(-0.5 * arrowSize * Math.cos(5*Math.PI/6), 0.5 * arrowSize * Math.sin(5*Math.PI/6)),
+              // Back to center
+              new THREE.Vector2(0, 0),
+            ])
+          ]} />
+          <meshStandardMaterial color={color} side={THREE.DoubleSide} />
+        </mesh>
   </group>
 );
 

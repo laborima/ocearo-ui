@@ -1,6 +1,5 @@
 import React from 'react';
 import CompassDial from './compass/CompassDial';
-import LayLines3D from './compass/LayLines3D';
 import WindSector3D from './compass/WindSector3D';
 
 
@@ -16,7 +15,6 @@ const ThreeDCompassView = () => {
   
             
             <WindSector3D  outerRadius={outerRadius+1.1}  />
-          {  /*<LayLines3D outerRadius={outerRadius}  />*/ }
         </>
     );
 };

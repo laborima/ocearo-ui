@@ -1,51 +1,97 @@
-
 import { useOcearoContext } from '../context/OcearoContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 
-const ThreeDBoatSeeLevelIndicator = () => {
-    const { nightMode } = useOcearoContext(); // Access SignalK data and nightMode from context
-    const { getSignalKValue } = useOcearoContext();
-    // State variables for the environment data
-    const [depth, setDepth] = useState(0);
-
-    // Fetching depth and tide levels from SignalK
-    useEffect(() => {
-        setDepth(getSignalKValue('environment.depth.belowTransducer') || 0);
-    }, [getSignalKValue]);
-
-    // Dynamic text color and progress bar background based on night mode
-    const textColor = nightMode ? 'text-oNight' : 'text-white';
-
-    // Calculate the height of the progress bars as percentages
-    const depthPercentage = Math.min((depth / 50) * 100, 100); // Max depth at 50m
-    // Determine ascending or descending tide based on current tide level
-    
-    // Determine progress bar color based on depth
-     let progressBarColor = 'bg-oBlue'; // Default color
-     if (depth < 3) {
-         progressBarColor = 'bg-oRed'; // Red for depth < 3m
-     } else if (depth < 5) {
-         progressBarColor = 'bg-oYellow'; // Yellow for depth < 5m
-     }
-
-
-    return (
-        <div >
-
-            {/* Label for Depth */}
-            <div className={`text-s mb-2 ${textColor}`}>Depth</div>
-            {/* Vertical progress bar for Depth */}
-            <div className={`w-2 h-60 ${progressBarColor}  rounded-lg overflow-hidden mb-4`}>
-                <div
-                    className={`bg-oGray transition-all duration-500 `}
-                    style={{ height: `${depthPercentage}%` }}
-                ></div>
-            </div>
-            {/* Display depth value */}
-            <div className={`text-s mt-2 ${textColor}`}>{depth} m</div>
-
-        </div>
-    );
+// Constants
+const DEPTH_THRESHOLDS = {
+  DANGER: 3,
+  WARNING: 5,
+  MAX_DEPTH: 50
 };
 
-export default ThreeDBoatSeeLevelIndicator;
+const DEPTH_COLORS = {
+  DANGER: 'bg-oRed',
+  WARNING: 'bg-oYellow',
+  SAFE: 'bg-oBlue'
+};
+
+const TEXT_COLORS = {
+  NIGHT: 'text-oNight',
+  DAY: 'text-white'
+};
+
+const ThreeDBoatSeaLevelIndicator = () => {
+  const { nightMode, getSignalKValue } = useOcearoContext();
+  const [depth, setDepth] = useState(null);
+
+  // Fetch depth data from SignalK
+  useEffect(() => {
+    const rawDepth = getSignalKValue('environment.depth.belowTransducer');
+    setDepth(rawDepth !== undefined && rawDepth !== null ? Number(rawDepth.toFixed(1)) : null);
+  }, [getSignalKValue]);
+
+  // Calculate depth percentage for progress bar
+  const depthPercentage = useMemo(() => {
+    if (depth === null) return 0;
+    return Math.min((depth / DEPTH_THRESHOLDS.MAX_DEPTH) * 100, 100);
+  }, [depth]);
+
+  // Determine progress bar color based on depth
+  const progressBarColor = useMemo(() => {
+    if (depth === null) return DEPTH_COLORS.SAFE;
+    if (depth < DEPTH_THRESHOLDS.DANGER) return DEPTH_COLORS.DANGER;
+    if (depth < DEPTH_THRESHOLDS.WARNING) return DEPTH_COLORS.WARNING;
+    return DEPTH_COLORS.SAFE;
+  }, [depth]);
+
+  // Get text color based on night mode
+  const textColor = nightMode ? TEXT_COLORS.NIGHT : TEXT_COLORS.DAY;
+
+  // Format depth display
+  const formattedDepth = useCallback((depth) => {
+    if (depth === null) return '--';
+    return `${depth} m`;
+  }, []);
+
+  // Render progress bar
+  const ProgressBar = () => (
+    <div 
+      className={`w-2 h-60 ${progressBarColor} rounded-lg overflow-hidden mb-4`}
+      role="progressbar"
+      aria-valuenow={depth}
+      aria-valuemin="0"
+      aria-valuemax={DEPTH_THRESHOLDS.MAX_DEPTH}
+      aria-label={`Water depth: ${formattedDepth(depth)}`}
+    >
+      <div
+        className="bg-oGray transition-all duration-500 ease-in-out"
+        style={{ height: `${100 - depthPercentage}%` }}
+      />
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col items-center">
+      {/* Label */}
+      <div className={`text-sm mb-2 ${textColor}`}>Depth</div>
+
+      {/* Progress Bar */}
+      <ProgressBar />
+
+      {/* Depth Value */}
+      <div 
+        className={`text-sm mt-2 ${textColor} ${depth < DEPTH_THRESHOLDS.DANGER ? 'animate-pulse' : ''}`}
+      >
+        {formattedDepth(depth)}
+      </div>
+
+      {/* Warning Message for Shallow Water */}
+      {depth !== null && depth < DEPTH_THRESHOLDS.WARNING && (
+        <div className={`text-xs mt-1 ${depth < DEPTH_THRESHOLDS.DANGER ? 'text-oRed' : 'text-oYellow'}`}>
+          {depth < DEPTH_THRESHOLDS.DANGER ? 'Danger: Shallow Water!' : 'Caution: Approaching Shallow Water'}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ThreeDBoatSeaLevelIndicator;
