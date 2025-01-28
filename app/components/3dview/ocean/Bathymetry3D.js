@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import BathymetryGrid from "./BathymetryGrid";
 import TideChart from "./TideChart";
 
+https://erddap.emodnet.eu/erddap/files/bathymetry_2022/
+
 const App = () => {
   const [bathymetryData, setBathymetryData] = useState([]);
   const [tideData, setTideData] = useState([]);

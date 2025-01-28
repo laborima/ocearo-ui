@@ -1,83 +1,95 @@
-import React, { Suspense, useRef, useEffect } from 'react';
+import React, { Suspense, useRef } from 'react';
 import { OrbitControls, PerspectiveCamera, Html, Environment } from '@react-three/drei';
-import * as THREE from 'three';
 import SailBoat3D from '../SailBoat3D';
-import { useOcearoContext } from '../../context/OcearoContext';
+import { useOcearoContext, convertWindSpeed, oGreen } from '../../context/OcearoContext';
+import WindSector3D from '../compass/WindSector3D';
+import BoatRotationCurve from './BoatRotationCurve';
+import Current3D from '../compass/Current3D';
 
 const ThreeDParkAssistBoat = () => {
-    const sailBoatRef = useRef();
-    const pathRef = useRef();
+  const sailBoatRef = useRef();
+  const { getSignalKValue } = useOcearoContext();
+  
+  // Get rudder and speed data
+  const rudderAngle = getSignalKValue('steering.rudderAngle') || 0;
+  const sog = getSignalKValue('navigation.speedOverGround') || 0;
+  
+  // Get apparent wind data
+  const appWindAngle = getSignalKValue('environment.wind.angleApparent') || 0;
+  const appWindSpeed = convertWindSpeed(getSignalKValue('environment.wind.speedApparent')) || 0;
+  
+  // Get current data
+  const currentData = getSignalKValue('environment.current') || {
+    setTrue: 0,
+    drift: 0
+  };
 
-    const { getSignalKValue } = useOcearoContext();
-    const rudderAngle = getSignalKValue('steering.rudderAngle') || 0;
-    const sog = getSignalKValue('navigation.speedOverGround') || 0;
 
-    // Helper function to generate the curve points
-    const generateCurvePoints = (rudderAngle, sog, maxCurvePoints = 100, scaleFactor = 0.1) => {
-        const theta = THREE.MathUtils.degToRad(rudderAngle);
-        const radius = sog !== 0 ? sog / Math.tan(theta || 0.01) : 1000; // Avoid division by zero
-        const clampedRadius = Math.min(Math.max(radius, -500), 500); // Limit radius for stability
+  return (
+    <Suspense fallback={<Html center>Loading...</Html>}>
+      <PerspectiveCamera makeDefault fov={60} near={1} far={1000} position={[0, 5, 10]} />
+      <OrbitControls 
+        enableZoom={true} 
+        enableRotate={true} 
+        maxPolarAngle={Math.PI / 2} 
+        minPolarAngle={Math.PI / 4} 
+      />
 
-        const points = [];
-        for (let i = 0; i < maxCurvePoints; i++) {
-            const angle = (i / maxCurvePoints) * Math.PI; // Sweep angle
-            const x = clampedRadius * (1 - Math.cos(angle)) * scaleFactor;
-            const y = 0; // Keep path on 2D plane
-            const z = clampedRadius * Math.sin(angle) * scaleFactor;
-            points.push(new THREE.Vector3(x, y, z));
-        }
-        return points;
-    };
+      <Environment files="./assets/ocearo_env.hdr" background={false} intensity={0.8} />
 
-    // Update the projected path
-    useEffect(() => {
-        if (!pathRef.current) return;
+      <ambientLight intensity={0.6} />
+      <spotLight
+        position={[15, 30, 20]}
+        intensity={1.8}
+        angle={Math.PI / 6}
+        penumbra={0.5}
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-near={0.5}
+        shadow-camera-far={50}
+        shadow-bias={-0.0001}
+      />
+      <directionalLight 
+        position={[-10, 20, 10]} 
+        intensity={1.5} 
+        color="#ffd1a6" 
+        castShadow 
+      />
+      <pointLight position={[-10, 10, -10]} intensity={0.7} />
 
-        const points = generateCurvePoints(rudderAngle, sog);
-        pathRef.current.geometry.setFromPoints(points);
-    }, [rudderAngle, sog]);
+      <group position={[0, -3, 0]}>
+        <SailBoat3D 
+          position={[0, 0, 0.7]} 
+          scale={[0.7, 0.7, 0.7]} 
+          ref={sailBoatRef} 
+          showSail={false} 
+        />
 
-    return (
-        <Suspense fallback={<Html center>Loading...</Html>}>
-            {/* Camera */}
-            <PerspectiveCamera makeDefault fov={60} near={1} far={1000} position={[0, 20, 30]} />
-            <OrbitControls enableZoom={true} enableRotate={true} maxPolarAngle={Math.PI / 2} minPolarAngle={Math.PI / 4} />
+        <WindSector3D 
+          outerRadius={5}
+        />
+        
+        <Current3D 
+                 outerRadius={5}
+               />
 
-            {/* Environment */}
-            <Environment files="./assets/ocearo_env.hdr" background={false} intensity={0.8} />
-
-            {/* Lighting */}
-            <ambientLight intensity={0.6} />
-            <spotLight
-                position={[15, 30, 20]}
-                intensity={1.8}
-                angle={Math.PI / 6}
-                penumbra={0.5}
-                castShadow
-                shadow-mapSize-width={1024}
-                shadow-mapSize-height={1024}
-                shadow-camera-near={0.5}
-                shadow-camera-far={50}
-                shadow-bias={-0.0001}
-            />
-            <directionalLight position={[-10, 20, 10]} intensity={1.5} color="#ffd1a6" castShadow />
-            <pointLight position={[-10, 10, -10]} intensity={0.7} />
-
-            {/* Boat and Path */}
-            <group position={[0, -3, 0]}>
-                {/* Sailboat */}
-                <SailBoat3D position={[0, 0, 0.7]} scale={[0.7, 0.7, 0.7]} ref={sailBoatRef} showSail={false} />
-
-                {/* Projected Path */}
-                <group position={[0, 0, -5]} rotation-y={Math.PI}>
-                    <line ref={pathRef}>
-                        <bufferGeometry />
-                        <lineBasicMaterial color="cyan" linewidth={2} />
-                    </line>
-                </group>
-            </group>
-        </Suspense>
-    );
+        <group position={[0, 0, -5]} rotation-y={Math.PI}>
+          <BoatRotationCurve
+            rudderAngle={rudderAngle}
+            sog={sog}
+            windSpeed={appWindSpeed}
+            windDirection={appWindAngle}
+            currentSpeed={currentData.drift}
+            currentDirection={currentData.setTrue}
+            boatWidth={2}
+            color={oGreen}
+            maxCurvePoints={100}
+          />
+        </group>
+      </group>
+    </Suspense>
+  );
 };
 
 export default ThreeDParkAssistBoat;

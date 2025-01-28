@@ -3,87 +3,83 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import * as Wind from './Wind';
 import SailShape from './SailShape';
-import { useOcearoContext, convertWindSpeed, convertSpeed, oBlue } from '../../context/OcearoContext';
+import { useOcearoContext, oBlue } from '../../context/OcearoContext';
 
-const Sail3D = ({ windParams = { speed: 5.0, hellman: 0.27 },
-    boatParams = {
-        mastrotation: 0.0,
-        heading: 130.0,
-        speed: 5.0
-    },
-    sailParams = {
-        mastArea: 0,
-        sailArea: 0,
-        cunningham: 1,
-        angleOfAttack: 20
-    }
+// Constants (moved outside the component to avoid recalculation)
+const SAIL_HEIGHT = 8000; // mm
+const SAIL_LEVEL_HEIGHT = 50; // mm
+const SAIL_VERTICES_PER_LEVEL = Math.floor(1000 / SAIL_LEVEL_HEIGHT);
+const SAIL_LEVELS = Math.ceil(SAIL_HEIGHT / SAIL_LEVEL_HEIGHT);
+const SAIL_TACK_HEIGHT = 900; // mm
+const SAIL_TACK_MAST_DISTANCE = 3600; // mm
+const SAIL_MAST_WIDTH = 200; // mm
+const SAIL_DECKSWEEPER_WIDTH = 3800; // mm
+const SAIL_TOP_MAST_DISTANCE = 390; // mm
+const SAIL_LEECH_CURVATURE = 600; // mm
+
+const BOAT_LIMITS = {
+    waterlineToMastFootHeight: 0.45, // m
+    maxMastRotation: Math.PI / 2,
+    maxChordRotationPerSailLevel: (Math.PI / 3) * 2,
+};
+
+const Sail3D = ({
+    windParams = { speed: 5.0, hellman: 0.27 },
+    boatParams = { mastrotation: 0.0, heading: 130.0, speed: 5.0 },
+    sailParams = { mastArea: 0, sailArea: 0, cunningham: 1, angleOfAttack: 20 },
 }) => {
-
     const { getSignalKValue } = useOcearoContext();
-
 
     const sailRef = useRef();
     const flatSailGeometryRef = useRef(null);
     const lastMastRotationRef = useRef(0);
     const lastCunninghamRef = useRef(null);
     const sailShapeRef = useRef(null);
-
-
-    // Constants
-    const SAIL_HEIGHT = 8000; // mm (hauteur totale de la voile)
-    const SAIL_LEVEL_HEIGHT = 50; // mm (hauteur d'un niveau de voile)
-    const SAIL_VERTICES_PER_LEVEL = Math.floor(1000 / SAIL_LEVEL_HEIGHT);// (nombre de sommets par niveau)
-    const SAIL_LEVELS = Math.ceil(SAIL_HEIGHT / SAIL_LEVEL_HEIGHT);// (nombre total de niveaux dans la voile)
-    const SAIL_TACK_HEIGHT = 900; // mm (hauteur du point d'amure)
-    const SAIL_TACK_MAST_DISTANCE = 3600; // mm (distance entre le point d'amure et le mât)
-    const SAIL_MAST_WIDTH = 200; // mm (largeur du mât)
-    const SAIL_DECKSWEEPER_WIDTH = 3800;  // mm (largeur du racleur de pont)
-    const SAIL_TOP_MAST_DISTANCE = 390; // mm (distance du haut de la voile au mât supérieur)
-    const SAIL_LEECH_CURVATURE = 600; // mm (courbure du bord de fuite de la voile)
-
-    const BOAT_LIMITS = {
-        waterlineToMastFootHeight: 0.45, // m
-        maxMastRotation: Math.PI / 2,
-        maxChordRotationPerSailLevel: (Math.PI / 3) * 2
-    };
-
-
     const windGroupRef = useRef();
     const apparentWindFieldRef = useRef({});
+
+    // Memoized wind cone creation
+    const createWindCone = useMemo(() => {
+        const windcone = new THREE.Group();
+        const geometry = new THREE.ConeGeometry(0.1, 0.2, 12);
+        const material = new THREE.MeshStandardMaterial({
+            color: oBlue,
+            opacity: 0.5,
+            transparent: true,
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.set(0, -0.1, 0);
+        windcone.add(mesh);
+        return windcone;
+    }, []);
 
     // Initialize wind visualization on mount
     useEffect(() => {
         const windGroup = new THREE.Group();
-        const windcone = createWindCone();
-
-        // Create apparentWindField
         const apparentWindField = {};
+
         for (let height = 0; height < SAIL_HEIGHT / 1000; height += 0.5) {
-            const clone = windcone.clone();
+            const clone = createWindCone.clone();
             clone.position.set(0, height, 0);
             apparentWindField[height * 2] = clone;
             windGroup.add(clone);
         }
 
-        // Adjust windGroup position
         windGroup.position.set(0, 0, 0);
 
-        // Add to scene
         if (windGroupRef.current) {
             windGroupRef.current.add(windGroup);
         }
 
-        // Store references
         apparentWindFieldRef.current = apparentWindField;
 
-        // Cleanup on unmount
         return () => {
             windGroup.clear();
         };
-    }, []);
+    }, [createWindCone]);
 
-    // Function to recalculate apparent wind field
-    const recalcApparentWindField = (appWindSpeed, appWindAngle, hellman) => {
+    // Recalculate apparent wind field
+    const recalcApparentWindField = (appWindSpeed, hellman) => {
         const apparentWindField = apparentWindFieldRef.current;
 
         if (!apparentWindField) {
@@ -93,34 +89,29 @@ const Sail3D = ({ windParams = { speed: 5.0, hellman: 0.27 },
 
         for (let height = 0; height < SAIL_HEIGHT / 1000; height += 0.5) {
             const aws = Wind.windSheer(appWindSpeed, height, hellman);
-            const awa = appWindAngle;
-
             const cone = apparentWindField[height * 2];
+
             if (!cone) {
                 console.warn(`Apparent wind field cone at height ${height} is not defined.`);
                 continue;
             }
 
-            // Scale and rotate the cone
             cone.scale.set(aws * 0.1, aws, aws * 0.1);
-            cone.rotation.set(0, Math.PI / 2 - THREE.MathUtils.degToRad(awa), Math.PI / 2);
+            cone.rotation.set(0, -Math.PI, Math.PI / 2);
         }
     };
 
-
-
+    // Memoized sail geometry creation
     const createSailGeometry = useMemo(() => {
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
         const colors = [];
         const sailClipWidthPerLevel = [];
 
-        // Create vertices
         for (let level = 0; level <= SAIL_LEVELS; level++) {
-            let height = Math.min(level * SAIL_LEVEL_HEIGHT, SAIL_HEIGHT);
-
-            // Calculate sail width at this level
+            const height = Math.min(level * SAIL_LEVEL_HEIGHT, SAIL_HEIGHT);
             let sailWidth, clipOffWidth;
+
             if (height < SAIL_TACK_HEIGHT) {
                 sailWidth = SAIL_TACK_MAST_DISTANCE;
                 clipOffWidth = SAIL_DECKSWEEPER_WIDTH +
@@ -134,7 +125,6 @@ const Sail3D = ({ windParams = { speed: 5.0, hellman: 0.27 },
                 clipOffWidth = sailWidth;
             }
 
-            // Add vertices for this level
             let lastX = 0;
             for (let v = 0; v < SAIL_VERTICES_PER_LEVEL; v++) {
                 const segWidth = sailWidth / (SAIL_VERTICES_PER_LEVEL - 1);
@@ -147,26 +137,19 @@ const Sail3D = ({ windParams = { speed: 5.0, hellman: 0.27 },
 
                 vertices.push(
                     v === 0 ? 0 : (lastX + finalSegWidth) / 1000, // x
-                    height / 1000,                              // y
-                    0                                    // z
+                    height / 1000, // y
+                    0 // z
                 );
 
                 lastX = v === 0 ? 0 : lastX + finalSegWidth;
 
-
                 const sailStripeInterval = Math.floor(SAIL_LEVELS / 10);
-                // Add colors (alternating dark grey and red stripes)
-                if (level % sailStripeInterval === 0) {
-                    colors.push(0.8, 0.0, 0.047); //red
-                } else {
-                    colors.push(0.596, 0.596, 0.596); //colorDarkGrey
-                }
+                colors.push(...(level % sailStripeInterval === 0 ? [0.8, 0.0, 0.047] : [0.596, 0.596, 0.596]));
             }
 
             sailClipWidthPerLevel.push(clipOffWidth === sailWidth ? null : clipOffWidth);
         }
 
-        // Create indices for triangles
         const indices = [];
         for (let level = 0; level < SAIL_LEVELS; level++) {
             for (let v = 1; v < SAIL_VERTICES_PER_LEVEL; v++) {
@@ -186,20 +169,20 @@ const Sail3D = ({ windParams = { speed: 5.0, hellman: 0.27 },
         return { geometry, sailClipWidthPerLevel };
     }, []);
 
+    // Memoized wind angle and speed
+    const appWindAngle = useMemo(() => getSignalKValue('environment.wind.angleApparent') || 0, [getSignalKValue]);
+    const appWindSpeed = useMemo(() => getSignalKValue('environment.wind.speedApparent') || 0, [getSignalKValue]);
+
+    // Update sail geometry and wind field
     useFrame(() => {
         if (!sailRef.current) return;
 
-        const courseOverGroundAngle = getSignalKValue('navigation.courseOverGroundTrue') || 0; //Radian
-        const appWindAngle = Math.PI / 2 - getSignalKValue('environment.wind.angleApparent') || 0; //Radian
-        const appWindSpeed = getSignalKValue('environment.wind.speedApparent') || 0; // m/s
+        recalcApparentWindField(appWindSpeed, windParams.hellman);
 
+        const isWindFromLeft = appWindAngle > Math.PI && appWindAngle <= 2 * Math.PI;
         const sailGeometry = sailRef.current.geometry;
         const positions = sailGeometry.attributes.position.array;
 
-        // Initialize boat configuration calculations
-        const boatHeadingRad = courseOverGroundAngle;
-
-        // Update sail shape if cunningham changed
         if (sailParams.cunningham !== lastCunninghamRef.current) {
             sailShapeRef.current = new SailShape(
                 SAIL_TACK_MAST_DISTANCE,
@@ -210,21 +193,15 @@ const Sail3D = ({ windParams = { speed: 5.0, hellman: 0.27 },
             lastCunninghamRef.current = sailParams.cunningham;
         }
 
-        // Create flat sail geometry if it doesn't exist
         if (!flatSailGeometryRef.current) {
             flatSailGeometryRef.current = sailGeometry.clone();
         }
 
         const mastFootOverWaterHeight = BOAT_LIMITS.waterlineToMastFootHeight * 1000;
-        const dirFact = boatHeadingRad < 0 ? -1.0 : 1.0;
+        const dirFact = isWindFromLeft ? -1.0 : 1.0;
 
-        // Calculate apparent wind
-        const aw = { "awa": appWindAngle, "aws": appWindSpeed };
-
-
-        // Calculate angles
         let chordAngleOfAttackRad = THREE.MathUtils.degToRad(sailParams.angleOfAttack);
-        const absAwaRad = Math.abs(aw.awa);
+        const absAwaRad = Math.abs(appWindAngle);
         const mastEntryAngleRad = sailShapeRef.current.mastAngleRad;
 
         if (absAwaRad < 0.01) {
@@ -236,21 +213,14 @@ const Sail3D = ({ windParams = { speed: 5.0, hellman: 0.27 },
             BOAT_LIMITS.maxMastRotation
         );
 
-        //Wind
-        recalcApparentWindField(appWindSpeed, appWindAngle, windParams.hellman);
-
-
-        // Setup for sail shape adjustments
         const luffAxis = new THREE.Vector3(0, 1, 0);
         let lastChordRotationRad = null;
 
-        // Adjust sail shape for each level
         for (let level = 0; level <= SAIL_LEVELS; level++) {
             const overWaterHeight = level * SAIL_LEVEL_HEIGHT + mastFootOverWaterHeight;
-            const levelAw = { "awa": appWindAngle, "aws": Wind.windSheer(appWindSpeed, overWaterHeight / 1000.0, windParams.hellman) }
+            const levelAw = { "awa": appWindAngle, "aws": Wind.windSheer(appWindSpeed, overWaterHeight / 1000.0, windParams.hellman) };
             const levelAbsAwaRad = Math.abs(levelAw.awa);
 
-            // Calculate chord angles
             let chordAngleRad = levelAbsAwaRad - chordAngleOfAttackRad;
             if (chordAngleRad < 0) {
                 chordAngleRad = 0;
@@ -265,7 +235,6 @@ const Sail3D = ({ windParams = { speed: 5.0, hellman: 0.27 },
             }
             lastChordRotationRad = chordRotationRad;
 
-            // Get vertex angles for this level
             const clipWidth = createSailGeometry.sailClipWidthPerLevel[level];
             const verticeAnglesRad = sailShapeRef.current.getVerticesAngles(
                 SAIL_VERTICES_PER_LEVEL,
@@ -273,7 +242,6 @@ const Sail3D = ({ windParams = { speed: 5.0, hellman: 0.27 },
                 clipWidth
             );
 
-            // Apply rotations to vertices
             for (let v = 1; v < SAIL_VERTICES_PER_LEVEL; v++) {
                 const i = (level * SAIL_VERTICES_PER_LEVEL + v) * 3;
                 const originalPos = new THREE.Vector3(
@@ -282,30 +250,24 @@ const Sail3D = ({ windParams = { speed: 5.0, hellman: 0.27 },
                     flatSailGeometryRef.current.attributes.position.array[i + 2]
                 );
 
-                // Apply rotation
                 originalPos.applyAxisAngle(
                     luffAxis,
-                    -(chordRotationRad + verticeAnglesRad[v] + Math.PI / 2) * dirFact
+                    -(chordRotationRad + verticeAnglesRad[v]) * dirFact
                 );
 
-                // Update positions
                 positions[i] = originalPos.x;
                 positions[i + 1] = originalPos.y;
                 positions[i + 2] = originalPos.z;
             }
-
-
         }
 
-        // Update geometry and boat parameters
         sailGeometry.attributes.position.needsUpdate = true;
 
         const newBoatParams = {
             ...boatParams,
-            mastrotation: mastRotationRad * dirFact
+            mastrotation: mastRotationRad * dirFact,
         };
 
-        // Update mast rotation
         if (sailRef.current) {
             sailRef.current.rotateY(
                 lastMastRotationRef.current - newBoatParams.mastrotation
@@ -313,10 +275,10 @@ const Sail3D = ({ windParams = { speed: 5.0, hellman: 0.27 },
         }
 
         lastMastRotationRef.current = newBoatParams.mastrotation;
-    }, [getSignalKValue]);
+    });
 
     return (
-        <mesh ref={sailRef} position={[0, 2, -1]}>
+        <mesh ref={sailRef} position={[0, 2, -1]} rotation={[0, -Math.PI / 2, 0]}>
             <bufferGeometry {...createSailGeometry.geometry} />
             <group ref={windGroupRef} />
             <meshBasicMaterial
@@ -330,20 +292,3 @@ const Sail3D = ({ windParams = { speed: 5.0, hellman: 0.27 },
 };
 
 export default Sail3D;
-
-
-
-// Helper to create wind cone geometry and material
-const createWindCone = () => {
-    const windcone = new THREE.Group();
-    const geometry = new THREE.ConeGeometry(0.1, 0.2, 12);
-    const material = new THREE.MeshStandardMaterial({
-        color: oBlue,
-        opacity: 0.5,
-        transparent: true,
-    });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(0, -0.1, 0);
-    windcone.add(mesh);
-    return windcone;
-};
