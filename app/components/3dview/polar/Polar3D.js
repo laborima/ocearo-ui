@@ -13,16 +13,18 @@ import {
 } from '../../context/OcearoContext';
 
 // Constants
-const DEG2RAD = Math.PI / 180;
-const ROTATION_INTERPOLATION_FACTOR = 0.05;
-const SOG_SMOOTHING_FACTOR = 0.1;
-const DEFAULT_SOG = 3;
-const ANGLE_INCREMENT = 10;
-const SPHERE_SIZE = 0.4;
-const SPHERE_SEGMENTS = 32;
-const DEFAULT_LINE_WIDTH = 1;
-const PLOTS_COUNT = 10;
-const FRAME_TO_MINUTE_RATIO = 3600;
+const CONSTANTS = {
+    DEG2RAD: Math.PI / 180,
+    ROTATION_INTERPOLATION_FACTOR: 0.05,
+    SOG_SMOOTHING_FACTOR: 0.1,
+    DEFAULT_SOG: 3,
+    ANGLE_INCREMENT: 10,
+    SPHERE_SIZE: 0.4,
+    SPHERE_SEGMENTS: 32,
+    DEFAULT_LINE_WIDTH: 1,
+    PLOTS_COUNT: 10,
+    FRAME_TO_MINUTE_RATIO: 3600,
+};
 
 // Utility functions
 const radiusScale = (value, timeInMinute) => value * 0.44704 * 60 * timeInMinute * 0.1;
@@ -30,7 +32,7 @@ const radiusScale = (value, timeInMinute) => value * 0.44704 * 60 * timeInMinute
 const calculatePosition = (angleDeg, value, timeInMinute) => {
     if (!angleDeg || !value) return new Vector3(0, 0, 0);
     
-    const angleRad = angleDeg * DEG2RAD;
+    const angleRad = angleDeg * CONSTANTS.DEG2RAD;
     const radius = radiusScale(value, timeInMinute);
     return new Vector3(
         radius * Math.sin(angleRad), 
@@ -41,8 +43,17 @@ const calculatePosition = (angleDeg, value, timeInMinute) => {
 
 const findClosestIndex = (values, target) => {
     if (!values?.length) return 0;
-    return values.reduce((closestIdx, current, idx) => 
-        Math.abs(current - target) < Math.abs(values[closestIdx] - target) ? idx : closestIdx, 0);
+    
+    let low = 0, high = values.length - 1;
+    while (low < high) {
+        const mid = Math.floor((low + high) / 2);
+        if (values[mid] < target) {
+            low = mid + 1;
+        } else {
+            high = mid;
+        }
+    }
+    return low;
 };
 
 // Diamond marker component
@@ -51,7 +62,7 @@ const DiamondMarker = ({ position, color }) => {
     
     return (
         <mesh position={position}>
-            <sphereGeometry args={[SPHERE_SIZE, SPHERE_SEGMENTS, SPHERE_SEGMENTS]} />
+            <sphereGeometry args={[CONSTANTS.SPHERE_SIZE, CONSTANTS.SPHERE_SEGMENTS, CONSTANTS.SPHERE_SEGMENTS]} />
             <meshStandardMaterial color={color} />
         </mesh>
     );
@@ -61,10 +72,10 @@ const DiamondMarker = ({ position, color }) => {
 const PolarCurve = ({ points, color }) => {
     if (!points?.length) return null;
     
-    return <Line points={points} color={color} lineWidth={DEFAULT_LINE_WIDTH} />;
+    return <Line points={points} color={color} lineWidth={CONSTANTS.DEFAULT_LINE_WIDTH} />;
 };
 
-function PolarPlot({ timeInMinute, windSpeed }) {
+const PolarPlot = React.memo(({ timeInMinute, windSpeed }) => {
     const polarRef = useRef(polarData.vpp);
 
     const calculateDiamondPosition = useCallback((angles, vmgs, windSpeedIdx, timeInMinute) => {
@@ -88,7 +99,7 @@ function PolarPlot({ timeInMinute, windSpeed }) {
 
         // Generate points for different angle ranges
         const generatePoints = (startAngle, endAngle, getSpeed) => {
-            for (let angle = startAngle; angle <= endAngle; angle += ANGLE_INCREMENT) {
+            for (let angle = startAngle; angle <= endAngle; angle += CONSTANTS.ANGLE_INCREMENT) {
                 points.push(calculatePosition(angle, getSpeed(angle), timeInMinute));
             }
         };
@@ -129,76 +140,71 @@ function PolarPlot({ timeInMinute, windSpeed }) {
         };
     }, [timeInMinute, windSpeed, calculateDiamondPosition, createRadialCurve]);
 
-    const renderPolarGroup = (rotation = 0) => (
-        <group rotation={[0, 0, rotation]}>
-            {curveData.curve && (
-                <PolarCurve 
-                    points={curveData.curve.getPoints(100)} 
-                    color={oBlue} 
-                />
-            )}
-            <DiamondMarker position={curveData.beat} color={oGreen} />
-            <DiamondMarker position={curveData.run} color={oRed} />
-        </group>
-    );
+    const rotations = [0, -Math.PI];
 
     return (
         <>
-            {renderPolarGroup(0)}
-            {renderPolarGroup(-Math.PI)}
+            {rotations.map((rotation, idx) => (
+                <group key={idx} rotation={[0, 0, rotation]}>
+                    {curveData.curve && (
+                        <PolarCurve 
+                            points={curveData.curve.getPoints(100)} 
+                            color={oBlue} 
+                        />
+                    )}
+                    <DiamondMarker position={curveData.beat} color={oGreen} />
+                    <DiamondMarker position={curveData.run} color={oRed} />
+                </group>
+            ))}
         </>
     );
-}
+});
 
 function PolarProjection() {
     const groupRefs = useRef([]);
     const [plots, setPlots] = useState([]);
     const frameCount = useRef(0);
     const previousAngles = useRef([]);
-    const lastSOG = useRef(DEFAULT_SOG);
+    const lastSOG = useRef(CONSTANTS.DEFAULT_SOG);
     const { getSignalKValue } = useOcearoContext();
 
     const appWindAngle = getSignalKValue('environment.wind.angleApparent');
-    const trueWindSpeed = convertWindSpeed(getSignalKValue('environment.wind.speedOverGround'));
-    const sog = getSignalKValue('navigation.speedOverGround') || DEFAULT_SOG;
+    const trueWindSpeed = convertWindSpeed(getSignalKValue('environment.wind.speedOverGround')) || 0;
+    const sog = getSignalKValue('navigation.speedOverGround') || CONSTANTS.DEFAULT_SOG;
 
     useEffect(() => {
-        const initialPlots = Array.from({ length: PLOTS_COUNT }, (_, index) => ({
+        const initialPlots = Array.from({ length: CONSTANTS.PLOTS_COUNT }, (_, index) => ({
             id: index,
             timeInMinute: 5 * (index + 1),
         }));
 
         setPlots(initialPlots);
         groupRefs.current = initialPlots.map(() => new Group());
-        previousAngles.current = Array(PLOTS_COUNT).fill(0);
+        previousAngles.current = Array(CONSTANTS.PLOTS_COUNT).fill(0);
     }, []);
 
     useFrame((_, delta) => {
         frameCount.current += 1;
-        lastSOG.current = MathUtils.lerp(lastSOG.current, sog, SOG_SMOOTHING_FACTOR);
+        lastSOG.current = MathUtils.lerp(lastSOG.current, sog, CONSTANTS.SOG_SMOOTHING_FACTOR);
         
-        setPlots(currentPlots => 
-            currentPlots.map((plot, index) => {
-                const group = groupRefs.current[index];
-                if (!group) return plot;
+        plots.forEach((plot, index) => {
+            const group = groupRefs.current[index];
+            if (!group) return;
 
-                const remainingTime = plot.timeInMinute - frameCount.current / FRAME_TO_MINUTE_RATIO;
+            const remainingTime = plot.timeInMinute - frameCount.current / CONSTANTS.FRAME_TO_MINUTE_RATIO;
 
-                if (remainingTime > 0) {
-                    const prevAngle = previousAngles.current[index];
-                    const interpolatedAngle = MathUtils.lerp(
-                        prevAngle, 
-                        appWindAngle, 
-                        ROTATION_INTERPOLATION_FACTOR
-                    );
-                    
-                    group.rotation.set(0, interpolatedAngle, 0);
-                    previousAngles.current[index] = interpolatedAngle;
-                }
-
-                return plot;
-            })
-        );
+            if (remainingTime > 0) {
+                const prevAngle = previousAngles.current[index];
+                const interpolatedAngle = MathUtils.lerp(
+                    prevAngle, 
+                    appWindAngle, 
+                    CONSTANTS.ROTATION_INTERPOLATION_FACTOR
+                );
+                
+                group.rotation.set(0, interpolatedAngle, 0);
+                previousAngles.current[index] = interpolatedAngle;
+            }
+        });
     });
 
     return (

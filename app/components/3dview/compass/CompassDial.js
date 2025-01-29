@@ -101,7 +101,7 @@ const CompassDial = ({ outerRadius, innerRadius }) => {
   return (
     <>
       {/* Rotating inner dial */}
-      <group rotation={[0, -courseOverGroundAngle, 0]}>
+      <group rotation={[0, Math.PI-courseOverGroundAngle, 0]}>
         <StaticRing
           innerRadius={staticProps.innerRadius}
           outerRadius={staticProps.outerRadius}

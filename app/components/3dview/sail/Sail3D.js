@@ -174,7 +174,7 @@ const Sail3D = ({
     const appWindSpeed = useMemo(() => getSignalKValue('environment.wind.speedApparent') || 0, [getSignalKValue]);
 
     // Update sail geometry and wind field
-    useFrame(() => {
+    useEffect(() => {
         if (!sailRef.current) return;
 
         recalcApparentWindField(appWindSpeed, windParams.hellman);
@@ -275,7 +275,15 @@ const Sail3D = ({
         }
 
         lastMastRotationRef.current = newBoatParams.mastrotation;
-    });
+    }    , [
+        // Dependencies - add all values that should trigger an update
+        appWindSpeed,
+        appWindAngle,
+        windParams.hellman,
+        sailParams.cunningham,
+        sailParams.angleOfAttack,
+        boatParams
+    ]);
 
     return (
         <mesh ref={sailRef} position={[0, 2, -1]} rotation={[0, -Math.PI / 2, 0]}>

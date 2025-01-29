@@ -33,7 +33,18 @@ const TANK_TYPES = {
 
 const BATTERY_CONFIG = {
   WARNING_THRESHOLD: 50,
-  DANGER_THRESHOLD: 20
+  DANGER_THRESHOLD: 20,
+  CHARGING_THRESHOLD: 13 // Voltage threshold to determine if battery is charging
+};
+
+// Function to estimate SoC based on voltage
+const estimateStateOfCharge = (voltage) => {
+  // Example for a 12V lead-acid battery
+  if (voltage >= 12.7) return 100;
+  if (voltage >= 12.5) return 75;
+  if (voltage >= 12.3) return 50;
+  if (voltage >= 12.1) return 25;
+  return 0;
 };
 
 // Tank Indicator Component
@@ -58,8 +69,10 @@ const TankIndicator = ({ level, type }) => {
 };
 
 // Battery Indicator Component
-const BatteryIndicator = ({ batteryLevel, batteryNumber }) => {
+const BatteryIndicator = ({ batteryLevel, batteryNumber, voltage }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
   const percentage = Math.max(0, Math.min(100, batteryLevel));
+  const isCharging = voltage > BATTERY_CONFIG.CHARGING_THRESHOLD;
 
   const batteryColor = useMemo(() => {
     if (percentage > BATTERY_CONFIG.WARNING_THRESHOLD) return 'bg-oGreen';
@@ -68,7 +81,11 @@ const BatteryIndicator = ({ batteryLevel, batteryNumber }) => {
   }, [percentage]);
 
   return (
-    <div className="flex items-center space-x-3 my-2">
+    <div 
+      className="flex items-center space-x-3 my-2 relative"
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+    >
       <div className="relative w-8 h-4 bg-oGray rounded-sm border border-oGray flex items-center justify-center">
         <div className="absolute -right-1 w-1 h-3 bg-oGray rounded-sm" />
         <div
@@ -80,6 +97,14 @@ const BatteryIndicator = ({ batteryLevel, batteryNumber }) => {
       <span className={`text-sm font-medium ${percentage <= BATTERY_CONFIG.DANGER_THRESHOLD ? 'text-oRed animate-pulse' : ''}`}>
         {percentage}%
       </span>
+      {isCharging && (
+        <span className="text-oGreen ml-1">⚡</span>
+      )}
+      {showTooltip && (
+        <div className="absolute -left-20 top-10 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap">
+          Voltage: {voltage?.toFixed(1)}V {isCharging && '(Charging)'}
+        </div>
+      )}
     </div>
   );
 };
@@ -89,16 +114,19 @@ const ThreeDBoatTankIndicator = () => {
   const [displayMode, setDisplayMode] = useState(INDICATOR_TYPES.BATTERIES);
 
   // Fetch battery data
-  const batteries = useMemo(() => ([
-    {
-      level: getSignalKValue('electrical.batteries.0.capacity.stateOfCharge') || 22,
-      number: 1
-    },
-    {
-      level: getSignalKValue('electrical.batteries.1.capacity.stateOfCharge'),
-      number: 2
-    }
-  ].filter(battery => battery.level !== null)), [getSignalKValue]);
+  const batteries = useMemo(() => {
+    const battery1SoC = getSignalKValue('electrical.batteries.1.capacity.stateOfCharge');
+    const battery1Voltage = getSignalKValue('electrical.batteries.1.voltage');
+    const battery1EstimatedSoC = battery1SoC === null ? estimateStateOfCharge(battery1Voltage) : battery1SoC;
+
+    return [
+      {
+        level: battery1EstimatedSoC,
+        number: 1,
+        voltage: battery1Voltage
+      }
+    ].filter(battery => battery.level !== null);
+  }, [getSignalKValue]);
 
   // Fetch tank data
   const tankLevels = useMemo(() => ({
@@ -131,6 +159,7 @@ const ThreeDBoatTankIndicator = () => {
               key={battery.number}
               batteryLevel={battery.level}
               batteryNumber={battery.number}
+              voltage={battery.voltage}
             />
           ))}
         </div>
