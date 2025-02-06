@@ -24,6 +24,12 @@ export default function Home() {
     };
 
     const toggleAppMenu = () => setShowAppMenu(!showAppMenu);
+    
+    const toggleSettings = () => {
+        setIsRightPaneFullScreen(false);
+        setIsLeftPaneFullScreen(true);
+        setRightView('settings');
+    }; 
 
     const handleDrag = (e, data) => {
         const totalWidth = window.innerWidth;

@@ -2,5 +2,8 @@
     {
         "file": "signalk.pdf",
         "title": "SignalK Protocol Documentation"
+    } , {
+        "file": "opencpn.pdf",
+        "title": "OpenCPN User Manual Version 4.8.6"
     }
 ]

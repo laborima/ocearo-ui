@@ -6,16 +6,20 @@ const AISContext = createContext();
 
 export const useAIS = () => useContext(AISContext);
 
+const setKey = (obj, key, path, source) => {
+    const value = path.split('.').reduce((acc, part) => acc?.[part], source);
+    if (value !== undefined) obj[key] = value;
+};
+
+
 export const AISProvider = ({ children }) => {
     const [aisData, setAisData] = useState({});
     const [vesselIds, setVesselIds] = useState([]);
     const clientRef = useRef(null);
 
+
+
     useEffect(() => {
-        const setKey = (obj, key, path, source) => {
-            const value = path.split('.').reduce((acc, part) => acc?.[part], source);
-            if (value !== undefined) obj[key] = value;
-        };
 
         const fetchStaticVesselInfo = async (client) => {
             console.log("Fetching static vessel information...");
@@ -26,7 +30,6 @@ export const AISProvider = ({ children }) => {
                     const info = { mmsi };
                     setKey(info, 'name', 'name', data);
                     setKey(info, 'latitude', 'navigation.position.value.latitude', data);
-                    setKey(info, 'longitude', 'navigation.position.value.longitude', data);
                     setKey(info, 'longitude', 'navigation.position.value.longitude', data);
                     setKey(info, 'cog', 'navigation.courseOverGroundTrue.value', data);
                     setKey(info, 'heading', 'navigation.headingTrue.value', data);
@@ -72,8 +75,10 @@ export const AISProvider = ({ children }) => {
 
 
                 update.values.forEach((data) => {
-                    //console.log(`Updating AIS data for MMSI: ${mmsi} ${data.path} ${data.value}`);
                     switch (data.path) {
+                        case 'name':
+                          target.name = data.value;
+                           break;
                         case 'navigation.position':
                             target.latitude = data.value.latitude;
                             target.longitude = data.value.longitude;
@@ -128,8 +133,7 @@ export const AISProvider = ({ children }) => {
                                 { path: 'navigation.position' },
                                 { path: 'navigation.speedOverGround' },
                                 { path: 'navigation.courseOverGroundTrue' },
-                                { path: 'navigation.headingTrue' },
-                                { path: 'navigation.headingTrue', policy: 'fixed' }
+                                { path: 'navigation.headingTrue' }
                             ],
                         },
                     ],

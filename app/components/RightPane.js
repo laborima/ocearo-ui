@@ -80,7 +80,7 @@ const RightPane = ({ view }) => {
 
     switch (view) {
       case 'manual':
-        return <PDFList path="boats/dufour310/docs" />;
+        return <PDFList path="boats/default/docs" />;
       case 'settings':
         return <ConfigPage />;
       default:

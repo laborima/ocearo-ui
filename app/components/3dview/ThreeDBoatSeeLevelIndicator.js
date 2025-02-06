@@ -84,12 +84,6 @@ const ThreeDBoatSeaLevelIndicator = () => {
         {formattedDepth(depth)}
       </div>
 
-      {/* Warning Message for Shallow Water */}
-      {depth !== null && depth < DEPTH_THRESHOLDS.WARNING && (
-        <div className={`text-xs mt-1 ${depth < DEPTH_THRESHOLDS.DANGER ? 'text-oRed' : 'text-oYellow'}`}>
-          {depth < DEPTH_THRESHOLDS.DANGER ? 'Danger: Shallow Water!' : 'Caution: Approaching Shallow Water'}
-        </div>
-      )}
     </div>
   );
 };

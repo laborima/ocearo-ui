@@ -2,43 +2,26 @@
   "boats": [
     {
       "name": "Default",
-      "docPath": "default",
-      "polarPath": "default",
-      "modelPath": "default",
-      "capabilities": ["navigation","rudder","sail"]
-    },
-    {
-      "name": "Cirrus",
-      "docPath": "dufour310",
-      "polarPath": "default",
       "modelPath": "default",
       "capabilities": ["navigation","rudder","sail"]
     },
     {
       "name": "Optimist",
-      "docPath": "default",
-      "polarPath": "default",
       "modelPath": "optimist",
       "capabilities": ["navigation","ais"]
     },
     {
       "name": "Sailboat",
-      "docPath": "default",
-      "polarPath": "default",
       "modelPath": "sailboat",
       "capabilities": ["navigation","ais"]
     },
     {
       "name": "Ship",
-      "docPath": "default",
-      "polarPath": "default",
       "modelPath": "ship",
       "capabilities": ["navigation","ais"]
     },
     {
       "name": "Windsurf",
-      "docPath": "default",
-      "polarPath": "default",
       "modelPath": "windsurf",
       "capabilities": ["navigation","ais"]
     }

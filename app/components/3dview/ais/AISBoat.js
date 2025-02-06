@@ -1,4 +1,3 @@
-import { Html } from '@react-three/drei';
 import { Text } from '@react-three/drei';
 import React, { forwardRef, useState, useEffect } from 'react';
 

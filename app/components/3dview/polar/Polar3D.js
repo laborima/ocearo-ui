@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
 import { Line } from '@react-three/drei';
 import { Vector3, CatmullRomCurve3, Group, MathUtils } from 'three';
 import { useFrame } from '@react-three/fiber';
-import polarData from './polar.json';
+import polarData from '/public/boats/default/polar/polar.json';
 import { 
     convertSpeed, 
     convertWindSpeed, 
@@ -225,5 +225,9 @@ function PolarProjection() {
         </>
     );
 }
+
+// Set display name for debugging purposes
+PolarPlot.displayName = 'PolarPlot';
+
 
 export default PolarProjection;
