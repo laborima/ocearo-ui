@@ -8,7 +8,8 @@ extend({ Water });
 function Ocean3D() {
   const ref = useRef();
   const gl = useThree((state) => state.gl);
-  
+  const scene = useThree((state) => state.scene);
+
   // Load and memoize waterNormals texture
   const waterNormals = useLoader(THREE.TextureLoader, "assets/waternormals.jpg");
   useMemo(() => {
@@ -18,16 +19,22 @@ function Ocean3D() {
   // Memoize plane geometry and water configuration to avoid unnecessary re-creations
   const geom = useMemo(() => new THREE.PlaneGeometry(10000, 10000), []); // Reduced plane size
   const config = useMemo(() => ({
-    textureWidth: 512, // Use smaller textures if possible
-    textureHeight: 512,
+    textureWidth: 600, // Use smaller textures if possible
+    textureHeight: 450,
     waterNormals,
-    sunDirection: new THREE.Vector3(),
-    sunColor: 0xeb8934,
-    waterColor: 0x0064b5,
-    distortionScale: 20, // Lower distortion for better performance
-    fog: false,
+    sunDirection: new THREE.Vector3(0, 1, 0), // Sun direction moved to the top
+    sunColor: 0xffffff, // White sun color
+    waterColor: 0x0077be, // Sea blue water color
+    distortionScale: 5, // Increased distortion for more waves
     format: gl.encoding,
+    reflectivity: 0, // Disable reflections
   }), [waterNormals, gl.encoding]);
+
+  // Disable environment map if present
+  useMemo(() => {
+    scene.environment = null;
+    scene.background = null;
+  }, [scene]);
 
   // Throttled frame update to reduce unnecessary updates
   let elapsedTime = 0;
@@ -46,7 +53,7 @@ function Ocean3D() {
       ref={ref}
       args={[geom, config]}
       rotation-x={-Math.PI / 2}
-      position={[0, 0, 0]}
+      position={[0, -0.1, 0]} // Lowered the water position
     />
   );
 }

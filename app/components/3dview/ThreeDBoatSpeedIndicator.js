@@ -45,6 +45,7 @@ const ThreeDBoatSpeedIndicator = () => {
     }, [availableTypes, currentSpeedType]);
 
     const textColor = nightMode ? 'text-oNight' : 'text-oGray';
+    const speedTextColor = nightMode ? 'text-oNight' : 'text-white';
 
     // If no speed data is available at all
     if (availableTypes.length === 0) {
@@ -59,7 +60,7 @@ const ThreeDBoatSpeedIndicator = () => {
     return (
         <div className="mt-4">
             <div
-                className={`text-6xl font-bold cursor-pointer text-white transition-colors duration-200 hover:text-gray-200`}
+                className={`text-6xl font-bold cursor-pointer ${speedTextColor}`}
                 onClick={toggleSpeedType}
                 role="button"
                 tabIndex={0}

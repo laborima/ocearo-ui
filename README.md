@@ -70,16 +70,23 @@ Ocean Robot's roadmap includes advanced features aimed at enhancing safety and e
 
 ### Building
 
+
+Clone sources:
+
+```bash
+git clone https://github.com/laborima/ocearo-ui.git
+```
+
+Install dependencies:
+
+```bash
+npm install next react react-dom
+```
+
 Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Access the UI at [http://localhost:3000](http://localhost:3000) in your browser.

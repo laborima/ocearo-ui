@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Ring, Sphere, Text } from '@react-three/drei';
 import { DoubleSide, MathUtils } from 'three';
-import { oGreen, oRed, useOcearoContext } from '../../context/OcearoContext';
+import { oGreen, oRed, oNight, useOcearoContext } from '../../context/OcearoContext';
 
 // Memoized markers creation component
 const StaticMarkers = React.memo(({ radius, isOuter, markerColorPrimary, markerColorGreen, markerColorRed }) => {
@@ -72,13 +72,16 @@ const StaticRing = React.memo(({ innerRadius, outerRadius, dialColor, opacity = 
 StaticRing.displayName = 'StaticRing';
 
 const CompassDial = ({ outerRadius, innerRadius }) => {
-  const dialColor = 0xffffff;
+    
+    
   const outerDialOpacity = 0.5;
   const markerColorPrimary = 0x000000;
   const markerColorGreen = oGreen;
   const markerColorRed = oRed;
 
-  const { getSignalKValue } = useOcearoContext();
+  const { nightMode, getSignalKValue } = useOcearoContext();
+  const dialColor = nightMode ? oNight : 0xffffff;
+  
   const courseOverGroundAngle = getSignalKValue('navigation.courseOverGroundTrue') || 10;
 
   // Memoize the static properties

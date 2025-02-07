@@ -11,11 +11,12 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import BottomTemperatureWidget from './widgets/BottomTemperatureWidget';
 import BottomEnvironmentalWidget from './widgets/BottomEnvironmentalWidget';
+import { useOcearoContext } from './context/OcearoContext';
 
-const NavButton = ({ icon, onClick, label }) => (
+const NavButton = ({ icon, onClick, label, textColor }) => (
   <button
     onClick={onClick}
-    className="text-white text-2xl flex items-center justify-center hover:text-gray-300 transition-colors duration-200"
+    className={`${textColor} text-2xl flex items-center justify-center hover:text-gray-300 transition-colors duration-200`}
     aria-label={label}
   >
     <FontAwesomeIcon icon={icon} />
@@ -23,6 +24,9 @@ const NavButton = ({ icon, onClick, label }) => (
 );
 
 const BottomNavigation = ({ setLeftView, setRightView, toggleAppMenu, setShowWebcam }) => {
+  const { nightMode } = useOcearoContext();
+  const textColor = nightMode ? 'text-oNight' : 'text-white';
+
   const navigationItems = [
     {
       section: 'left',
@@ -76,6 +80,7 @@ const BottomNavigation = ({ setLeftView, setRightView, toggleAppMenu, setShowWeb
         icon={item.icon}
         onClick={item.onClick}
         label={item.label}
+        textColor={textColor}
       />
     ));
   };

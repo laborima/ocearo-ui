@@ -10,6 +10,7 @@ export const oBlue = '#09bfff';
 export const oRed = '#cc000c';
 export const oYellow = '#ffbe00';
 export const oGreen = '#0fcd4f';
+export const oNight = '#ef4444';
 
 
 
@@ -185,50 +186,53 @@ export const OcearoContextProvider = ({ children }) => {
             const filePath = `tides/larochelle/${month}_${year}.json`;
 
             const response = await fetch(filePath);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const tideData = await response.json();
+            if (response.ok) {
+                const tideData = await response.json();
 
-            const today = date.toISOString().split('T')[0];
-            if (tideData[today]) {
-                let closestHighTide = null;
-                let closestLowTide = null;
-                const now = new Date();
-                const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
+                const today = date.toISOString().split('T')[0];
+                if (tideData[today]) {
+                    let closestHighTide = null;
+                    let closestLowTide = null;
+                    const now = new Date();
+                    const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
 
-                tideData[today].forEach(([type, time, height, coef]) => {
-                    const [hours, minutes] = time.split(':').map(Number);
-                    const tideTimeInMinutes = hours * 60 + minutes;
+                    tideData[today].forEach(([type, time, height, coef]) => {
+                        const [hours, minutes] = time.split(':').map(Number);
+                        const tideTimeInMinutes = hours * 60 + minutes;
 
-                    if (type === 'tide.high' && (!closestHighTide || Math.abs(currentTimeInMinutes - tideTimeInMinutes) < Math.abs(currentTimeInMinutes - closestHighTide.timeInMinutes))) {
-                        closestHighTide = { height: parseFloat(height), time, timeInMinutes: tideTimeInMinutes, coef };
-                    } else if (type === 'tide.low' && (!closestLowTide || Math.abs(currentTimeInMinutes - tideTimeInMinutes) < Math.abs(currentTimeInMinutes - closestLowTide.timeInMinutes))) {
-                        closestLowTide = { height: parseFloat(height), time, timeInMinutes: tideTimeInMinutes };
+                        if (type === 'tide.high' && (!closestHighTide || Math.abs(currentTimeInMinutes - tideTimeInMinutes) < Math.abs(currentTimeInMinutes - closestHighTide.timeInMinutes))) {
+                            closestHighTide = { height: parseFloat(height), time, timeInMinutes: tideTimeInMinutes, coef };
+                        } else if (type === 'tide.low' && (!closestLowTide || Math.abs(currentTimeInMinutes - tideTimeInMinutes) < Math.abs(currentTimeInMinutes - closestLowTide.timeInMinutes))) {
+                            closestLowTide = { height: parseFloat(height), time, timeInMinutes: tideTimeInMinutes };
+                        }
+                    });
+
+                    if (closestHighTide && closestLowTide) {
+                        const nowTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                        const currentTideHeight = calculateTideHeightUsingTwelfths(
+                            closestHighTide.height,
+                            closestLowTide.height,
+                            nowTime,
+                            closestHighTide.time,
+                            closestLowTide.time
+                        );
+
+                        setSignalKData((prevData) => ({
+                            ...prevData,
+                            'environment.tide.heightNow': currentTideHeight,
+                            'environment.tide.heightHigh': closestHighTide.height,
+                            'environment.tide.heightLow': closestLowTide.height,
+                            'environment.tide.timeLow': closestLowTide.time,
+                            'environment.tide.timeHigh': closestHighTide.time,
+                            'environment.tide.coeffNow': closestHighTide.coef
+                        }));
+
+                    } else {
+                        throw new Error("Tide data for today is incomplete.");
                     }
-                });
-
-                if (closestHighTide && closestLowTide) {
-                    const nowTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-                    const currentTideHeight = calculateTideHeightUsingTwelfths(
-                        closestHighTide.height,
-                        closestLowTide.height,
-                        nowTime,
-                        closestHighTide.time,
-                        closestLowTide.time
-                    );
-
-                    setSignalKData((prevData) => ({
-                        ...prevData,
-                        'environment.tide.heightNow': currentTideHeight,
-                        'environment.tide.heightHigh': closestHighTide.height,
-                        'environment.tide.heightLow': closestLowTide.height,
-                        'environment.tide.timeLow': closestLowTide.time,
-                        'environment.tide.timeHigh': closestHighTide.time,
-                        'environment.tide.coeffNow': closestHighTide.coef
-                    }));
-
-                } else {
-                    throw new Error("Tide data for today is incomplete.");
                 }
+            } else {
+                console.warn("No tide data found");
             }
 
         };
