@@ -217,10 +217,14 @@ Create an `index.json` file and place it under:
 
 ## **Deploying to OpenPlotter**
 
-Run the deployment script:
+Adapt and run the deployment script deploy.sh or:
 
 ```bash
-./deploy.sh
+git clone https://github.com/laborima/ocearo-ui.git
+cd ocearo-ui
+npm install next react react-dom
+NODE_ENV=production npm run build
+scp -r -P 22./out/* pi@openplotter.local:/home/pi/.signalk/node_modules/ocearo-ui
 ```
 
 ### Adding to OpenPlotter Startup
