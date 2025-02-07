@@ -168,6 +168,8 @@ const Sail3D = ({
 
         return { geometry, sailClipWidthPerLevel };
     }, []);
+    
+    const { geometry, sailClipWidthPerLevel } = createSailGeometry;
 
     // Memoized wind angle and speed
     const appWindAngle = useMemo(() => getSignalKValue('environment.wind.angleApparent') || 0, [getSignalKValue]);
@@ -235,7 +237,7 @@ const Sail3D = ({
             }
             lastChordRotationRad = chordRotationRad;
 
-            const clipWidth = createSailGeometry.sailClipWidthPerLevel[level];
+            const clipWidth = sailClipWidthPerLevel[level];
             const verticeAnglesRad = sailShapeRef.current.getVerticesAngles(
                 SAIL_VERTICES_PER_LEVEL,
                 SAIL_MAST_WIDTH,
@@ -282,12 +284,12 @@ const Sail3D = ({
         windParams.hellman,
         sailParams.cunningham,
         sailParams.angleOfAttack,
-        boatParams
+        boatParams, sailClipWidthPerLevel
     ]);
 
     return (
         <mesh ref={sailRef} position={[0, 2, -1]} rotation={[0, -Math.PI / 2, 0]}>
-            <bufferGeometry {...createSailGeometry.geometry} />
+            <bufferGeometry {...geometry} />
             <group ref={windGroupRef} />
             <meshBasicMaterial
                 vertexColors

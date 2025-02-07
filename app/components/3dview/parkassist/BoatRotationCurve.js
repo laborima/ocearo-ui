@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
 
 const BoatRotationCurve = ({
@@ -9,13 +9,13 @@ const BoatRotationCurve = ({
   currentSpeed = 0,
   currentDirection = 0,
   boatWidth = 2,
-  color = "white",
-  maxCurvePoints = 100
+  color = 'white',
+  maxCurvePoints = 100,
 }) => {
   const pathRef = useRef();
 
-  // Helper function to calculate environmental force vector
-  const calculateEnvironmentalForce = () => {
+  // Calculate environmental force based on wind and current parameters.
+  const calculateEnvironmentalForce = useCallback(() => {
     const windRad = THREE.MathUtils.degToRad(windDirection);
     const currentRad = THREE.MathUtils.degToRad(currentDirection);
 
@@ -27,25 +27,24 @@ const BoatRotationCurve = ({
 
     return {
       x: windForceX + currentForceX,
-      z: windForceZ + currentForceZ
+      z: windForceZ + currentForceZ,
     };
-  };
+  }, [windSpeed, windDirection, currentSpeed, currentDirection]);
 
-  // Generate straight line points with environmental forces
-  const generateStraightLinePoints = () => {
+  // Generate points for a straight-line path (used when the rudder angle is nearly 0)
+  const generateStraightLinePoints = useCallback(() => {
     const envForce = calculateEnvironmentalForce();
     const points = [];
-    const lineLength = 50; // Length of the projected path
+    const lineLength = 50; // Total length of the projected path
 
     for (let i = 0; i < maxCurvePoints; i++) {
       const t = (i / maxCurvePoints) * lineLength;
-      
-      // Start from origin and project forward
+      // Start at the origin and project along negative Z
       let x = 0;
-      let z = -t; // Project along negative Z axis
+      let z = -t;
 
-      // Apply environmental forces with increasing effect over distance
-      const distanceEffect = (t / lineLength) * (t / lineLength);
+      // Increase the effect of the environmental force with distance (quadratic effect)
+      const distanceEffect = (t / lineLength) ** 2;
       x += envForce.x * distanceEffect * lineLength;
       z += envForce.z * distanceEffect * lineLength;
 
@@ -53,17 +52,21 @@ const BoatRotationCurve = ({
     }
 
     return points;
-  };
+  }, [calculateEnvironmentalForce, maxCurvePoints]);
 
-  // Generate curve points considering environmental forces
-  const generateCurvePoints = () => {
-    // If rudder angle is 0 (or very close to 0), generate straight line
+  // Generate curve points that simulate the boat's turning path,
+  // modified by the rudder angle and environmental forces.
+  const generateCurvePoints = useCallback(() => {
+    // If the rudder angle is nearly 0, fall back to a straight line.
     if (Math.abs(rudderAngle) < 0.1) {
       return generateStraightLinePoints();
     }
 
+    // Calculate the turning radius based on the rudder angle and speed.
     const theta = THREE.MathUtils.degToRad(rudderAngle);
+    // Use a fallback small angle value to avoid division by zero.
     const baseRadius = sog !== 0 ? sog / Math.tan(theta || 0.01) : 1000;
+    // Clamp the radius to a sensible range based on boat width.
     const clampedRadius = Math.min(Math.max(Math.abs(baseRadius), boatWidth * 2), 500);
 
     const envForce = calculateEnvironmentalForce();
@@ -71,17 +74,17 @@ const BoatRotationCurve = ({
 
     for (let i = 0; i < maxCurvePoints; i++) {
       const t = i / maxCurvePoints;
-      const angle = t * Math.PI;
+      const angle = t * Math.PI; // Vary the angle over the curve
 
-      // Base curve points
+      // Base curve calculation (scaled down for visualization)
       let x = clampedRadius * (1 - Math.cos(angle)) * 0.1;
       let z = clampedRadius * Math.sin(angle) * 0.1;
 
-      // Apply environmental forces with increasing effect over distance
+      // Apply environmental forces with an increasing effect over distance.
       x += envForce.x * t * t;
       z += envForce.z * t * t;
 
-      // Ensure minimum turning radius based on boat width
+      // Ensure a minimum turning radius based on boat width.
       const minTurnRadius = boatWidth * 1.5;
       const currentRadius = Math.sqrt(x * x + z * z);
       if (currentRadius < minTurnRadius) {
@@ -94,14 +97,22 @@ const BoatRotationCurve = ({
     }
 
     return points;
-  };
+  }, [
+    rudderAngle,
+    sog,
+    boatWidth,
+    maxCurvePoints,
+    calculateEnvironmentalForce,
+    generateStraightLinePoints,
+  ]);
 
+  // Update the geometry of the path whenever the curve changes.
   useEffect(() => {
     if (!pathRef.current) return;
 
     const points = generateCurvePoints();
     pathRef.current.geometry.setFromPoints(points);
-  }, [rudderAngle, sog, windSpeed, windDirection, currentSpeed, currentDirection, boatWidth]);
+  }, [generateCurvePoints]);
 
   return (
     <line ref={pathRef}>

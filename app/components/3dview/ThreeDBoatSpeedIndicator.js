@@ -1,17 +1,19 @@
 import { convertSpeed, useOcearoContext } from '../context/OcearoContext';
 import { useState, useMemo, useCallback } from 'react';
 
+// Define speed types and their corresponding SignalK paths
+const SPEED_CONFIG = {
+    SOG: 'navigation.speedOverGround',
+    VMG: 'performance.velocityMadeGood',
+    STW: 'navigation.speedThroughWater',
+    POL: 'performance.polarSpeedRatio'
+};
+
+
 const ThreeDBoatSpeedIndicator = () => {
     const { nightMode, getSignalKValue } = useOcearoContext();
     const [speedType, setSpeedType] = useState('SOG');
 
-    // Define speed types and their corresponding SignalK paths
-    const SPEED_CONFIG = {
-        SOG: 'navigation.speedOverGround',
-        VMG: 'performance.velocityMadeGood',
-        STW: 'navigation.speedThroughWater',
-        POL: 'performance.polarSpeedRatio'
-    };
 
     // Use useMemo to prevent unnecessary recalculations
     const speedTypes = useMemo(() => {

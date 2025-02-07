@@ -48,7 +48,7 @@ export const AISProvider = ({ children }) => {
         };
 
         const fetchAISBoatData = (delta) => {
-            if (!delta || !delta.updates) {
+            if (!delta?.updates) {
                 console.warn("Delta is missing or does not contain updates:", delta);
                 return;
             }
@@ -58,8 +58,8 @@ export const AISProvider = ({ children }) => {
                 name: 'unknown',
                 latitude: null,
                 longitude: null,
-                sog: null, // Speed Over Ground
-                cog: null, // Course Over Ground
+                sog: null,
+                cog: null,
                 heading: null,
             });
 
@@ -69,42 +69,41 @@ export const AISProvider = ({ children }) => {
                 return;
             }
 
-            const target = aisData[mmsi] || getDefaultTarget(mmsi);
+            // Use the functional update form to get the latest aisData.
+            setAisData((prevData) => {
+                // Use the previous state instead of the outer aisData.
+                const target = prevData[mmsi] || getDefaultTarget(mmsi);
 
-            delta.updates.forEach((update) => {
-
-
-                update.values.forEach((data) => {
-                    switch (data.path) {
-                        case 'name':
-                          target.name = data.value;
-                           break;
-                        case 'navigation.position':
-                            target.latitude = data.value.latitude;
-                            target.longitude = data.value.longitude;
-                            break;
-                        case 'navigation.speedOverGround':
-                            target.sog = data.value;
-                            break;
-                        case 'navigation.courseOverGroundTrue':
-                            target.cog = data.value;
-                            break;
-                        case 'navigation.headingTrue':
-                            target.heading = data.value;
-                            break;
-                        default:
-                            break;
-                    }
+                delta.updates.forEach((update) => {
+                    update.values.forEach((data) => {
+                        switch (data.path) {
+                            case 'name':
+                                target.name = data.value;
+                                break;
+                            case 'navigation.position':
+                                target.latitude = data.value.latitude;
+                                target.longitude = data.value.longitude;
+                                break;
+                            case 'navigation.speedOverGround':
+                                target.sog = data.value;
+                                break;
+                            case 'navigation.courseOverGroundTrue':
+                                target.cog = data.value;
+                                break;
+                            case 'navigation.headingTrue':
+                                target.heading = data.value;
+                                break;
+                            default:
+                                break;
+                        }
+                    });
                 });
 
+                return {
+                    ...prevData,
+                    [mmsi]: target,
+                };
             });
-
-            // Update SignalK data state
-            setAisData((prevData) => ({
-                ...prevData,
-                [mmsi]: target,
-            }));
-
         };
 
         const connectSignalKClient = async () => {

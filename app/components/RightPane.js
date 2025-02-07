@@ -17,10 +17,10 @@ const EXTERNAL_URLS = {
   navigation: (signalkUrl) => `${signalkUrl}/@signalk/freeboard-sk/`,
   instrument: (signalkUrl) => `${signalkUrl}/@mxtommy/kip/`,
   netflix: () => 'https://www.netflix.com',
-  battery: () => ':3000/grafana',
+  battery: (signalkUrl) => signalkUrl.replace(':3000', ':3001') + '/grafana',
   webcam1: () => 'https://pv.viewsurf.com/2080/Chatelaillon-Port?i=NzU4Mjp1bmRlZmluZWQ',
   webcam2: () => 'https://pv.viewsurf.com/1478/Chatelaillon-Plage&lt?i=NTkyMDp1bmRlZmluZWQ',
-  weather: (_, position) => position && `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=kt&zoom=6&overlay=wind&product=ecmwf&level=surface&lat=${position.latitude}&lon=${position.longitude}&message=true`
+  weather: (_, position) => position && `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=kt&zoom=10&overlay=wind&product=ecmwf&level=surface&lat=${position.latitude}&lon=${position.longitude}&message=true`
 };
 
 const RightPane = ({ view }) => {

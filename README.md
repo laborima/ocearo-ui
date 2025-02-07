@@ -75,6 +75,7 @@ Clone sources:
 
 ```bash
 git clone https://github.com/laborima/ocearo-ui.git
+cd ocearo-ui
 ```
 
 Install dependencies:
