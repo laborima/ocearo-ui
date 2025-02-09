@@ -20,8 +20,7 @@ const determineBoatType = (shipType) => {
     return 'ship';
 };
 
-const lengthScalingFactor = 0.1; // Adjust length scaling factor as necessary for visual clarity
-
+const BASE_MODEL_LENGTH = 10; // Base length of the boat model in units
 
 // AISBoat component
 const AISBoat = forwardRef(({ position, visible, boatData }, ref) => {
@@ -45,8 +44,6 @@ const AISBoat = forwardRef(({ position, visible, boatData }, ref) => {
         return null; // Or show a loading indicator
     }
 
-    
-
     // Helper function to format boat data
     const formatBoatData = (label, value) => {
         return `${label}: ${value || 'N/A'}\n`;
@@ -58,12 +55,13 @@ const AISBoat = forwardRef(({ position, visible, boatData }, ref) => {
         formatBoatData('Type', boatData.shipType)
     ].join('');
 
-    // Use Math.max to ensure a minimum size for visibility
-    const length = Math.max((boatData.length || 5) * lengthScalingFactor, 0.5);
+    // Calculate the scale factor based on the desired length
+    const desiredLength = boatData.length || BASE_MODEL_LENGTH; // Default to base model length if length is not provided
+    const scaleFactor = desiredLength / BASE_MODEL_LENGTH;
 
     return (
         <group ref={ref} position={position} visible={visible}>
-            <BoatComponent scale={[length, length, length]} />
+            <BoatComponent scale={[scaleFactor, scaleFactor, scaleFactor]} />
 
             <Text
                 position={[3, 9, 0]} // Position above the boat

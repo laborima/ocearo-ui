@@ -9,7 +9,7 @@ SSH_PORT=22                # SSH port, default is 22
 
 # Build the Next.js project
 echo "Building the Next.js project..."
-NODE_ENV=production  npm run build
+NODE_ENV=production npm run build
 
 # Check if build was successful
 if [ $? -ne 0 ]; then
