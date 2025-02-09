@@ -10,7 +10,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "link": "ln -s $PWD/out $HOME/.signalk/node_modules/ocearo-ui"
   },
   "dependencies": {
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
