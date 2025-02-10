@@ -26,8 +26,10 @@ export default function Home() {
     const toggleAppMenu = () => setShowAppMenu(!showAppMenu);
     
     const toggleSettings = () => {
-        setIsRightPaneFullScreen(false);
-        setIsLeftPaneFullScreen(true);
+        if (isLeftPaneFullScreen) {
+            setIsRightPaneFullScreen(false);
+            setIsLeftPaneFullScreen(true);
+        }
         setRightView('settings');
     }; 
 
