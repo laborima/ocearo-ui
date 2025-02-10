@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": false,
   "description": "Ocean Robot UI: Sailing made smarter",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/laborima/ocearo-ui",
   "keywords": [
     "signalk-webapp"
   ],
