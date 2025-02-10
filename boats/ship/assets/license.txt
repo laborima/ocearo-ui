@@ -1,0 +1,11 @@
+Model Information:
+* title:	Low poly Boat
+* source:	https://sketchfab.com/3d-models/low-poly-boat-512861944de047a69e9ae447323f6c3e
+* author:	Aditya Graphical (https://sketchfab.com/Adityakm)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Low poly Boat" (https://sketchfab.com/3d-models/low-poly-boat-512861944de047a69e9ae447323f6c3e) by Aditya Graphical (https://sketchfab.com/Adityakm) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
