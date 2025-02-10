@@ -1,7 +1,7 @@
 {
   "name": "ocearo-ui",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "Ocean Robot UI: Sailing made smarter",
   "keywords": [
     "signalk-webapp"
