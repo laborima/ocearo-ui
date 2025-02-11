@@ -48,7 +48,7 @@ const SAMPLE_DATA = {
     },
     environment: {
         'environment.outside.pressure': 102300,
-        'environment.inside.humidity': 74,
+        'environment.inside.relativeHumidity': 0.74,
         'environment.inside.voc': 0.03,
     },
     performance: {

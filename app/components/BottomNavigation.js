@@ -23,7 +23,7 @@ const NavButton = ({ icon, onClick, label, textColor }) => (
   </button>
 );
 
-const BottomNavigation = ({ setLeftView, setRightView, toggleAppMenu, setShowWebcam }) => {
+const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
   const { nightMode } = useOcearoContext();
   const textColor = nightMode ? 'text-oNight' : 'text-white';
 
@@ -33,7 +33,7 @@ const BottomNavigation = ({ setLeftView, setRightView, toggleAppMenu, setShowWeb
       items: [
         {
           icon: faShip,
-          onClick: () => setRightView('settings'),
+          onClick: () => toggleSettings(),
           label: 'Settings'
         }
       ]

@@ -48,10 +48,10 @@ const ThreeDMainView = ({ setFullScreen }) => {
             </div>
 
             {/* See Level Indicator (left-side) */}
-            <div className="absolute left-2 bottom-20 z-20 flex flex-col items-center">
+            <div className="absolute left-2 bottom-2 z-20 flex flex-col items-center">
                 <ThreeDBoatSeeLevelIndicator />
             </div>
-            <div className="absolute right-2 bottom-20 z-20 flex flex-col items-center">
+            <div className="absolute right-2 bottom-2 z-20 flex flex-col items-center">
                 <ThreeDBoatTideLevelIndicator />
             </div>
 

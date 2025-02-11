@@ -12,16 +12,17 @@ import {
     faBatteryFull,
     faSyncAlt
 } from '@fortawesome/free-solid-svg-icons';
+import { VIEW_MODES } from '../page';
 
 const AppMenu = ({
-    isRightPaneFullScreen,
-    isLeftPaneFullScreen,
+    currentViewMode,
+    toggleViewMode,
     handleSetRightView,
-    setIsRightPaneFullScreen,
-    setIsLeftPaneFullScreen,
     toggleFullscreen,
     setShowAppMenu,
 }) => {
+
+
     const MenuButton = ({ icon, label, onClick }) => (
         <button
             onClick={() => {
@@ -37,40 +38,15 @@ const AppMenu = ({
     return (
         <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-black p-6 rounded-lg shadow-lg z-50 w-200">
             <div className="grid grid-cols-2 gap-4">
-                {/* View Control Buttons */}
-                {(isRightPaneFullScreen || isLeftPaneFullScreen) && (
-                    <MenuButton
-                        icon={faExpand}
-                        label="Split View"
-                        onClick={() => {
-                            setIsRightPaneFullScreen(false);
-                            setIsLeftPaneFullScreen(false);
-                        }}
-                    />
+                {currentViewMode !== VIEW_MODES.SPLIT && (
+                    <MenuButton icon={faExpand} label="Split View" onClick={() => toggleViewMode(VIEW_MODES.SPLIT)} />
                 )}
-                {(!isRightPaneFullScreen && !isLeftPaneFullScreen) && (
-                    <MenuButton
-                        icon={faExpand}
-                        label="Full View"
-                        onClick={() => {
-                            setIsRightPaneFullScreen(false);
-                            setIsLeftPaneFullScreen(true);
-                        }}
-                    />
+                {currentViewMode !== VIEW_MODES.APP && (
+                    <MenuButton icon={faExpand} label="Full View" onClick={() => toggleViewMode(VIEW_MODES.APP)} />
                 )}
-
-                {(isRightPaneFullScreen) && (
-                    <MenuButton
-                        icon={faShip}
-                        label="Boat View"
-                        onClick={() => {
-                            setIsRightPaneFullScreen(false);
-                            setIsLeftPaneFullScreen(true);
-                        }}
-                    />
+                {currentViewMode !== VIEW_MODES.BOAT && (
+                    <MenuButton icon={faShip} label="Boat View" onClick={() => toggleViewMode(VIEW_MODES.BOAT)} />
                 )}
-
-
 
                 {/* Navigation Buttons */}
                 <MenuButton

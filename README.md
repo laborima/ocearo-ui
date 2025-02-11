@@ -70,6 +70,11 @@ Ocean Robot's roadmap includes advanced features aimed at enhancing safety and e
   
 ---
 
+Check out the live demo: https://laborima.github.io/ocearo-ui/
+Or install it in Signal K using the NPM package: https://www.npmjs.com/package/ocearo-ui
+
+---
+
 ## **Development and Deployment**
 
 ### Building
