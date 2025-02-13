@@ -35,8 +35,8 @@ const AnchoredCircle = () => {
         longitude: initialPosition.longitude
       });
     }
-  }, []);
-
+  }, [getSignalKValue, anchorPosition]);
+  
   // Create the circle geometry
   useEffect(() => {
     if (circleRef.current) {
