@@ -4,40 +4,38 @@ import configService from './ConfigService';
 const ConfigPage = ({ onSave }) => {
   const initialConfig = configService.getAll();
   const computedSignalKUrl = configService.getComputedSignalKUrl();
+  const boats = configService.getBoatsData(); // Get full list of boats
 
   const [config, setConfig] = useState(initialConfig);
   const [useAuthentication, setUseAuthentication] = useState(
     !!initialConfig.username || !!initialConfig.password
   );
-  const [setSignalKUrl, setSetSignalKUrl] = useState(false);
-  const [boats, setBoats] = useState([]);
+  const [signalKUrlSet, setSignalKUrlSet] = useState(false);
   const [selectedBoat, setSelectedBoat] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Track changes by comparing current config with initial config
-  const checkForChanges = useCallback((newConfig) => {
-    const hasChanges = JSON.stringify(newConfig) !== JSON.stringify(initialConfig);
-    setHasUnsavedChanges(hasChanges);
-  }, [initialConfig]);
+  const checkForChanges = useCallback(
+    (newConfig) => {
+      const hasChanges = JSON.stringify(newConfig) !== JSON.stringify(initialConfig);
+      setHasUnsavedChanges(hasChanges);
+    },
+    [initialConfig]
+  );
 
   useEffect(() => {
     const loadConfiguration = async () => {
       const configFromService = configService.getAll();
       setConfig(configFromService);
 
-      const fetchedBoats = await configService.fetchBoats();
-      setBoats(fetchedBoats);
-
       if (configFromService.selectedBoat) {
-        const currentBoat = fetchedBoats.find(
-          (b) => b.name === configFromService.selectedBoat
-        );
+        const currentBoat = boats.find((boat) => boat.name === configFromService.selectedBoat);
         setSelectedBoat(currentBoat || null);
       }
     };
 
     loadConfiguration();
-  }, []);
+  }, [boats]);
 
   // Update config and check for changes
   const updateConfig = (updates) => {
@@ -49,7 +47,7 @@ const ConfigPage = ({ onSave }) => {
   const handleSave = () => {
     const updatedConfig = { ...config };
 
-    if (!setSignalKUrl) {
+    if (!signalKUrlSet) {
       updatedConfig.signalkUrl = computedSignalKUrl;
       updatedConfig.username = '';
       updatedConfig.password = '';
@@ -67,7 +65,7 @@ const ConfigPage = ({ onSave }) => {
     const defaultConfig = configService.getDefaultConfig();
     setConfig(defaultConfig);
     setUseAuthentication(false);
-    setSetSignalKUrl(false);
+    setSignalKUrlSet(false);
     configService.saveConfig(defaultConfig);
     setHasUnsavedChanges(false);
   };
@@ -99,24 +97,24 @@ const ConfigPage = ({ onSave }) => {
         {/* Connection Settings */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Connection Settings</h2>
-          
+
           <div>
             <label className="flex items-center">
               <input
                 type="checkbox"
                 className="mr-2"
-                checked={setSignalKUrl}
+                checked={signalKUrlSet}
                 onChange={(e) => {
-                  setSetSignalKUrl(e.target.checked);
+                  setSignalKUrlSet(e.target.checked);
                   checkForChanges(config);
                 }}
               />
               Set SignalK URL
-              {!setSignalKUrl && <span className="ml-2">({computedSignalKUrl})</span>}
+              {!signalKUrlSet && <span className="ml-2">({computedSignalKUrl})</span>}
             </label>
           </div>
 
-          {setSignalKUrl && (
+          {signalKUrlSet && (
             <>
               <div>
                 <label className="block font-medium mb-1">SignalK Server URL:</label>
@@ -172,7 +170,7 @@ const ConfigPage = ({ onSave }) => {
         {/* Vessel Settings */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Vessel Settings</h2>
-          
+
           <div>
             <label className="block font-medium mb-1">Select Vessel:</label>
             <select
@@ -210,33 +208,6 @@ const ConfigPage = ({ onSave }) => {
               Enable Metallic Effect
             </label>
           </div>
-        </div>
-
-        {/* Advanced Settings */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Advanced Settings</h2>
-
-          <div>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={config.debugMode || false}
-                onChange={(e) => updateConfig({
-                  debugMode: e.target.checked,
-                  signalkUrl: computedSignalKUrl
-                })}
-              />
-              Debug Mode
-            </label>
-          </div>
-
-          {selectedBoat && config.debugMode && (
-            <div className="space-y-2 text-sm text-gray-400">
-              <div>3D Model: {selectedBoat.modelPath}</div>
-              <div>Features: {selectedBoat.capabilities?.join(', ')}</div>
-            </div>
-          )}
         </div>
 
         {/* Action Buttons */}

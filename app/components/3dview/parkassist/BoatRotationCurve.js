@@ -9,12 +9,16 @@ const BoatRotationCurve = ({
   currentSpeed = 0,
   currentDirection = 0,
   boatWidth = 2,
-  color = 'white',
   maxCurvePoints = 100,
 }) => {
-  const pathRef = useRef();
+  // Refs for each line
+  const centerLineRef = useRef();
+  const portLineRef = useRef();
+  const starboardLineRef = useRef();
 
-  // Calculate environmental force based on wind and current parameters.
+  /**
+   * 1) Calculate environmental force (same as your original).
+   */
   const calculateEnvironmentalForce = useCallback(() => {
     const windRad = THREE.MathUtils.degToRad(windDirection);
     const currentRad = THREE.MathUtils.degToRad(currentDirection);
@@ -31,19 +35,21 @@ const BoatRotationCurve = ({
     };
   }, [windSpeed, windDirection, currentSpeed, currentDirection]);
 
-  // Generate points for a straight-line path (used when the rudder angle is nearly 0)
+  /**
+   * 2) Straight-line points (fallback if rudder is near zero).
+   */
   const generateStraightLinePoints = useCallback(() => {
     const envForce = calculateEnvironmentalForce();
     const points = [];
-    const lineLength = 50; // Total length of the projected path
+    const lineLength = 50; // arbitrary total length
 
     for (let i = 0; i < maxCurvePoints; i++) {
       const t = (i / maxCurvePoints) * lineLength;
-      // Start at the origin and project along negative Z
+      // Forward along -Z
       let x = 0;
       let z = -t;
 
-      // Increase the effect of the environmental force with distance (quadratic effect)
+      // Quadratic drift
       const distanceEffect = (t / lineLength) ** 2;
       x += envForce.x * distanceEffect * lineLength;
       z += envForce.z * distanceEffect * lineLength;
@@ -54,19 +60,17 @@ const BoatRotationCurve = ({
     return points;
   }, [calculateEnvironmentalForce, maxCurvePoints]);
 
-  // Generate curve points that simulate the boat's turning path,
-  // modified by the rudder angle and environmental forces.
+  /**
+   * 3) Primary turning curve (includes rudder angle + environment).
+   */
   const generateCurvePoints = useCallback(() => {
-    // If the rudder angle is nearly 0, fall back to a straight line.
     if (Math.abs(rudderAngle) < 0.1) {
+      // If rudder angle is tiny, revert to straight line
       return generateStraightLinePoints();
     }
 
-    // Calculate the turning radius based on the rudder angle and speed.
     const theta = THREE.MathUtils.degToRad(rudderAngle);
-    // Use a fallback small angle value to avoid division by zero.
     const baseRadius = sog !== 0 ? sog / Math.tan(theta || 0.01) : 1000;
-    // Clamp the radius to a sensible range based on boat width.
     const clampedRadius = Math.min(Math.max(Math.abs(baseRadius), boatWidth * 2), 500);
 
     const envForce = calculateEnvironmentalForce();
@@ -74,19 +78,20 @@ const BoatRotationCurve = ({
 
     for (let i = 0; i < maxCurvePoints; i++) {
       const t = i / maxCurvePoints;
-      const angle = t * Math.PI; // Vary the angle over the curve
+      // We'll just do an arc from 0 to PI
+      const angle = t * Math.PI;
 
-      // Base curve calculation (scaled down for visualization)
+      // Basic turning shape (scaled down)
       let x = clampedRadius * (1 - Math.cos(angle)) * 0.1;
       let z = clampedRadius * Math.sin(angle) * 0.1;
 
-      // Apply environmental forces with an increasing effect over distance.
+      // Add environmental drift
       x += envForce.x * t * t;
       z += envForce.z * t * t;
 
-      // Ensure a minimum turning radius based on boat width.
-      const minTurnRadius = boatWidth * 1.5;
+      // Minimum turn radius
       const currentRadius = Math.sqrt(x * x + z * z);
+      const minTurnRadius = boatWidth * 1.5;
       if (currentRadius < minTurnRadius) {
         const scale = minTurnRadius / currentRadius;
         x *= scale;
@@ -106,19 +111,79 @@ const BoatRotationCurve = ({
     generateStraightLinePoints,
   ]);
 
-  // Update the geometry of the path whenever the curve changes.
-  useEffect(() => {
-    if (!pathRef.current) return;
+  /**
+   * 4) Offset the curve to produce a "parallel" line in XZ plane.
+   *    This is a simplistic approach:
+   *    - For each point, compute the direction from (prev -> next).
+   *    - The perpendicular in XZ is roughly (-dir.z, dir.x).
+   *    - Multiply by offsetDistance and add to the current point.
+   */
+  const offsetCurvePoints = useCallback((points, offsetDistance) => {
+    const offsetPts = [];
 
-    const points = generateCurvePoints();
-    pathRef.current.geometry.setFromPoints(points);
-  }, [generateCurvePoints]);
+    for (let i = 0; i < points.length; i++) {
+      // Look at prev & next to get direction
+      const prevIndex = i === 0 ? 0 : i - 1;
+      const nextIndex = i === points.length - 1 ? points.length - 1 : i + 1;
+
+      const prev = points[prevIndex];
+      const next = points[nextIndex];
+      const curr = points[i];
+
+      // direction from prev to next
+      const dir = new THREE.Vector3().subVectors(next, prev).normalize();
+
+      // In XZ, a perpendicular can be:
+      //    normal = (-dir.z, 0, dir.x)
+      // If you want the "other" side, you can invert it.
+      const normal = new THREE.Vector3(-dir.z, 0, dir.x).normalize();
+
+      // Offset the current point by that normal * offsetDistance
+      const offsetPt = new THREE.Vector3().copy(curr).addScaledVector(normal, offsetDistance);
+      offsetPts.push(offsetPt);
+    }
+    return offsetPts;
+  }, []);
+
+  /**
+   * 5) Update the three lines (center, port, starboard) on each render.
+   */
+  useEffect(() => {
+    if (!centerLineRef.current || !portLineRef.current || !starboardLineRef.current) return;
+
+    //  Main curve points
+    const mainPoints = generateCurvePoints();
+
+    //  Offset left/right by half the boat width (adjust if you prefer a different spacing)
+    const leftPoints = offsetCurvePoints(mainPoints, -boatWidth * 0.5);
+    const rightPoints = offsetCurvePoints(mainPoints, boatWidth * 0.5);
+
+    // Assign geometry
+    centerLineRef.current.geometry.setFromPoints(mainPoints);
+    portLineRef.current.geometry.setFromPoints(leftPoints);
+    starboardLineRef.current.geometry.setFromPoints(rightPoints);
+  }, [generateCurvePoints, offsetCurvePoints, boatWidth]);
 
   return (
-    <line ref={pathRef}>
-      <bufferGeometry />
-      <lineBasicMaterial color={color} linewidth={4} />
-    </line>
+    <>
+      {/* Center line */}
+      <line ref={centerLineRef}>
+        <bufferGeometry />
+        <lineBasicMaterial color="blue" linewidth={3} />
+      </line>
+
+      {/* Port line (offset) */}
+      <line ref={portLineRef}>
+        <bufferGeometry />
+        <lineBasicMaterial color="red" linewidth={3} />
+      </line>
+
+      {/* Starboard line (offset) */}
+      <line ref={starboardLineRef}>
+        <bufferGeometry />
+        <lineBasicMaterial color="yellow" linewidth={3} />
+      </line>
+    </>
   );
 };
 

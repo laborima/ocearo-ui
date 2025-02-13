@@ -1,3 +1,5 @@
+import boatsData from '/public/boats/boats.json';
+
 class ConfigService {
   constructor() {
     // Default configuration
@@ -81,12 +83,21 @@ class ConfigService {
   }
 
   getSelectedBoat() {
-     const selectedBoatName = this.config.selectedBoat;
-     if (!selectedBoatName) return null;
-     
-     // Find the full boat object from the cached boats array
-     return this.boats.find(boat => boat.name === selectedBoatName) || null;
+      const selectedBoatName = this.config.selectedBoat;
+      if (!selectedBoatName) return []; // Ensure it's an array
+
+      // Find the selected boat
+      const boat = this.getBoatsData().find(boat => boat.name === selectedBoatName);
+      
+      return boat ? [boat] : []; // Wrap in an array to avoid map() errors
+  }
+
+
+   
+   getBoatsData(){
+     return boatsData.boats;
    }
+   
   /**
    * Returns the computed SignalK URL based on the current debug mode.
    *
@@ -106,17 +117,7 @@ class ConfigService {
     }
   }
 
-  async fetchBoats() {
-    try {
-      const response = await fetch(`boats/boats.json`);
-      const data = await response.json();
-      this.boats = data.boats || []; 
-      return this.boats;
-    } catch (error) {
-      console.error('Error fetching boats:', error);
-      return [];
-    }
-  }
+
 }
 
 const configService = new ConfigService();
