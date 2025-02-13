@@ -3,6 +3,7 @@ import { useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Html, Environment } from '@react-three/drei';
 import * as THREE from 'three';
 import SailBoat3D from '../SailBoat3D';
+import AnchoredCircle from './AnchoredCircle';
 
 const ThreeDAnchoredBoat = () => {
     const sailBoatRef = useRef();
@@ -61,7 +62,9 @@ const ThreeDAnchoredBoat = () => {
                 <pointLight position={[-10, 10, -10]} intensity={0.7} />
 
                 {/* Boat model */}
-                <SailBoat3D ref={sailBoatRef} scale={[1.5, 1.5, 1.5]} position={[0, -6, 0]} />
+                <SailBoat3D ref={sailBoatRef} scale={[1.3, 1.3, 1.3]} position={[0, -6, 0]} />
+                
+                <AnchoredCircle />
 
                 {/* Reflective plane (water or ground) */}
                 <mesh

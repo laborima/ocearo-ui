@@ -34,13 +34,10 @@ const ThreeDMainView = ({ setFullScreen }) => {
 
                 {/* Speed Indicator (top-left) */}
                 {!states.anchorWatch && <ThreeDBoatSpeedIndicator />}
+                {states.anchorWatch && <ThreeDBoatPositionDateIndicator/> }
             </div>
 
-            {states.anchorWatch && (
-                <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10">
-                    <ThreeDBoatPositionDateIndicator />
-                </div>
-            )}
+           
 
             {/* Thanks & Batteries Indicator (top-right) */}
             <div className="absolute top-2  z-10  right-2" >
