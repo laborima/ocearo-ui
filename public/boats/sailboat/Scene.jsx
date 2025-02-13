@@ -11,7 +11,8 @@ const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
 const modelPath = `${ASSET_PREFIX}/boats/sailboat/assets/scene-transformed.glb`;
 
 export function Model(props) {
-    const { nodes, materials } = useGLTF(modelPath);
+    const { nodes, materials } = useGLTF(modelPath, `${ASSET_PREFIX}/draco/`);
+    
   return (
     <group {...props} dispose={null}>
       <mesh geometry={nodes.sailboat.geometry} material={materials.texture} position={[0, -1.5, 0]} rotation={[-Math.PI, 0.011, -Math.PI]} scale={0.219} />

@@ -1,0 +1,1 @@
+npx gltfjsx $1/scene.gltf  --transform

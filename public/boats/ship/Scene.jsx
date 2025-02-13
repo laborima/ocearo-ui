@@ -11,11 +11,11 @@ const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
 const modelPath = `${ASSET_PREFIX}/boats/ship/assets/scene-transformed.glb`;
 
 export function Model(props) {
-    const { nodes, materials } = useGLTF(modelPath);
+   const { nodes, materials } = useGLTF(modelPath, `${ASSET_PREFIX}/draco/`);
     
   return (
     <group {...props} dispose={null}>
-      <mesh geometry={nodes.Object_10.geometry} material={materials.material_0} position={[0, -0.55, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={0.004} />
-    </group>
+    <mesh geometry={nodes.Object_10.geometry} material={materials.material_0} position={[0, -0.55, 0]} rotation={[-1.558, 0.002, 3.139]} scale={0.004} />
+  </group>
   )
 }
