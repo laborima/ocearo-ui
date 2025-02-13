@@ -3,7 +3,7 @@
     {
       "name": "Default",
       "modelPath": "default",
-      "capabilities": ["navigation","rudder","sail"]
+      "capabilities": ["navigation","rudder","sail","color"]
     },
     {
       "name": "Optimist",
