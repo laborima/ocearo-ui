@@ -6,13 +6,7 @@ class ConfigService {
       username: '',
       password: '',
       debugMode: false,
-      selectedBoat: {
-        name: 'Default',
-        docPath: 'default',
-        polarPath: 'default',
-        modelPath: 'default',
-        capabilities: ['navigation', 'rudder', 'sail'],
-      },
+      selectedBoat: 'Default',
       primaryColor: null,
       metallicEffect: false,
     };
@@ -86,6 +80,13 @@ class ConfigService {
     return { ...this.defaultConfig };
   }
 
+  getSelectedBoat() {
+     const selectedBoatName = this.config.selectedBoat;
+     if (!selectedBoatName) return null;
+     
+     // Find the full boat object from the cached boats array
+     return this.boats.find(boat => boat.name === selectedBoatName) || null;
+   }
   /**
    * Returns the computed SignalK URL based on the current debug mode.
    *
@@ -109,7 +110,8 @@ class ConfigService {
     try {
       const response = await fetch(`boats/boats.json`);
       const data = await response.json();
-      return data.boats || [];
+      this.boats = data.boats || []; 
+      return this.boats;
     } catch (error) {
       console.error('Error fetching boats:', error);
       return [];

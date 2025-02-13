@@ -233,7 +233,6 @@ const ConfigPage = ({ onSave }) => {
 
           {selectedBoat && config.debugMode && (
             <div className="space-y-2 text-sm text-gray-400">
-              <div>Work in progress</div>
               <div>3D Model: {selectedBoat.modelPath}</div>
               <div>Features: {selectedBoat.capabilities?.join(', ')}</div>
             </div>

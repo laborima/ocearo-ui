@@ -59,7 +59,7 @@ const updatePosition = (boat, targetX, targetY, interpolate = true) => {
 };
 
 const updateRotation = (boat, targetAngle, interpolate = true) => {
-  const radianAngle = (targetAngle + 180 * Math.PI) / 180;
+ const radianAngle = targetAngle * Math.PI / 180;
   if (interpolate) {
     boat.children[0].rotation.y += (radianAngle - boat.children[0].rotation.y) * 0.1;
   } else {
