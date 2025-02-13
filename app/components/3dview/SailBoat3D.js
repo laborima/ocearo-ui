@@ -20,13 +20,20 @@ const SailBoat3D = forwardRef(({ showSail = false, ...props }, ref) => {
 
     // Memoize configuration to prevent unnecessary recalculations
     const config = useMemo(() => configService.getAll(), []);
-    const selectedBoat = useMemo(() => configService.getSelectedBoat(), []);
+    const selectedBoat = useMemo(() => {
+      const boat = configService.getSelectedBoat();
+      return boat ?? {
+        "name": "Default",
+        "modelPath": "default",
+        "capabilities": ["navigation", "rudder", "sail", "color"]
+      };
+    }, []);
 
-    const modelPath = useMemo(() => 
-            getModelPath(selectedBoat?.modelPath),
-            [selectedBoat]
-        );
-
+    const modelPath = useMemo(() =>
+      getModelPath(selectedBoat.modelPath),
+      [selectedBoat]
+    );
+    
     const capabilities = selectedBoat?.capabilities || [];
 
     // Load model only when path changes
