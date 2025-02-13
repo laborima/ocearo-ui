@@ -1,7 +1,7 @@
 import { useOcearoContext } from '../context/OcearoContext';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 
-// Constants
+// Constants remain the same
 const TIDE_DISPLAY_THRESHOLDS = {
   MIN: 10,
   MAX: 90
@@ -25,6 +25,7 @@ const TEXT_COLORS = {
 
 const ThreeDBoatTideLevelIndicator = () => {
   const { nightMode, getSignalKValue } = useOcearoContext();
+  const [maxHeight, setMaxHeight] = useState(240); // Default height (equivalent to h-60)
   const [tideData, setTideData] = useState({
     level: null,
     high: null,
@@ -35,6 +36,7 @@ const ThreeDBoatTideLevelIndicator = () => {
     isRising: null
   });
 
+  // Existing helper functions remain the same
   const timeToMinutes = useCallback((timeString) => {
     if (!timeString) return null;
     const [hours, minutes] = timeString.split(':').map(Number);
@@ -60,6 +62,25 @@ const ThreeDBoatTideLevelIndicator = () => {
     return Math.min(100, Math.max(0, percentage));
   }, []);
 
+  // New effect for responsive height
+  useEffect(() => {
+    const updateMaxHeight = () => {
+      const vh = window.innerHeight;
+      // For smaller screens (< 640px height), use 25% of viewport height
+      // For larger screens, use 35% of viewport height
+      // Both capped at 240px (original h-60 equivalent)
+      const newHeight = vh < 640 
+        ? Math.min(vh * 0.25, 240)
+        : Math.min(vh * 0.35, 240);
+      setMaxHeight(newHeight);
+    };
+
+    updateMaxHeight();
+    window.addEventListener('resize', updateMaxHeight);
+    return () => window.removeEventListener('resize', updateMaxHeight);
+  }, []);
+
+  // Existing tide data effect
   useEffect(() => {
     const currentTime = new Date();
     const currentTimeString = currentTime.toLocaleTimeString('en-GB', { 
@@ -107,18 +128,15 @@ const ThreeDBoatTideLevelIndicator = () => {
     [level, low, high, computeTidePercentage]
   );
 
-  // Check if we have all required data
   if (Object.values(tideData).some(value => value === null)) {
     return null;
   }
 
-  // Determine if we should show the current tide level
   const shouldShowTideLevel = tidePercentage > TIDE_DISPLAY_THRESHOLDS.MIN && 
                             tidePercentage < TIDE_DISPLAY_THRESHOLDS.MAX;
 
   return (
     <div className="flex flex-col items-center">
-      {/* Location and High Tide Info */}
       <div className={`text-sm ${textColor}`}>
         La Rochelle
       </div>
@@ -130,14 +148,11 @@ const ThreeDBoatTideLevelIndicator = () => {
         <span>{coefficient}</span>
       </div>
 
-      {/* Tide Level Indicator */}
-      <div className="relative flex flex-col h-60 w-8">
-        {/* High Tide Mark */}
+      <div className="relative flex flex-col w-8" style={{ height: maxHeight }}>
         <span className={`absolute ${textColor} text-sm font-medium`} style={{ top: '0%', left: '60%' }}>
           {high}m
         </span>
         
-        {/* Current Level Mark - Only shown when within thresholds */}
         {shouldShowTideLevel && (
           <span 
             className={`absolute ${textColor} text-sm font-medium transition-opacity duration-300`} 
@@ -147,13 +162,11 @@ const ThreeDBoatTideLevelIndicator = () => {
           </span>
         )}
         
-        {/* Low Tide Mark */}
         <span className={`absolute ${textColor} text-sm font-medium`} style={{ bottom: '0%', left: '60%' }}>
           {low}m
         </span>
 
-        {/* Progress Bar */}
-        <div className="flex flex-col justify-end bg-oGray rounded-3xl w-2 h-60 overflow-hidden">
+        <div className="flex flex-col justify-end bg-oGray rounded-3xl w-2 overflow-hidden" style={{ height: maxHeight }}>
           <div
             role="progressbar"
             className={`${tideColors.BACKGROUND} w-2 rounded-3xl transition-all duration-500`}
@@ -166,7 +179,6 @@ const ThreeDBoatTideLevelIndicator = () => {
         </div>
       </div>
 
-      {/* Low Tide Time */}
       <div className={`text-sm mt-2 ${textColor}`}>
         {timeLow}
       </div>

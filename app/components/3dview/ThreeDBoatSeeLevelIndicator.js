@@ -1,7 +1,6 @@
 import { useOcearoContext } from '../context/OcearoContext';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 
-// Constants
 const DEPTH_THRESHOLDS = {
   DANGER: 3,
   WARNING: 5,
@@ -22,6 +21,25 @@ const TEXT_COLORS = {
 const ThreeDBoatSeaLevelIndicator = () => {
   const { nightMode, getSignalKValue } = useOcearoContext();
   const [depth, setDepth] = useState(null);
+  const [barHeight, setBarHeight] = useState(240); // Default height (equivalent to h-60)
+
+  // Handle responsive height
+  useEffect(() => {
+    const updateBarHeight = () => {
+      const vh = window.innerHeight;
+      // For smaller screens (< 640px height), use 25% of viewport height
+      // For larger screens, use 35% of viewport height
+      // Both capped at 240px (original h-60 equivalent)
+      const newHeight = vh < 640 
+        ? Math.min(vh * 0.25, 240)
+        : Math.min(vh * 0.35, 240);
+      setBarHeight(newHeight);
+    };
+
+    updateBarHeight();
+    window.addEventListener('resize', updateBarHeight);
+    return () => window.removeEventListener('resize', updateBarHeight);
+  }, []);
 
   // Fetch depth data from SignalK
   useEffect(() => {
@@ -54,8 +72,9 @@ const ThreeDBoatSeaLevelIndicator = () => {
 
   // Render progress bar
   const ProgressBar = () => (
-    <div 
-      className={`w-2 h-60 ${progressBarColor} rounded-lg overflow-hidden mb-4`}
+    <div
+      className={`w-2 ${progressBarColor} rounded-lg overflow-hidden mb-4`}
+      style={{ height: barHeight }}
       role="progressbar"
       aria-valuenow={depth}
       aria-valuemin="0"
@@ -78,12 +97,11 @@ const ThreeDBoatSeaLevelIndicator = () => {
       <ProgressBar />
 
       {/* Depth Value */}
-      <div 
+      <div
         className={`text-sm mt-2 ${textColor} ${depth < DEPTH_THRESHOLDS.DANGER ? 'animate-pulse' : ''}`}
       >
         {formattedDepth(depth)}
       </div>
-
     </div>
   );
 };
