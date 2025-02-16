@@ -71,6 +71,7 @@ Ocean Robot's roadmap includes advanced features aimed at enhancing safety and e
 ---
 
 Check out the live demo: https://laborima.github.io/ocearo-ui/
+
 Or install it in Signal K using the NPM package: https://www.npmjs.com/package/ocearo-ui
 
 ---
@@ -259,3 +260,17 @@ Thanks to OpenPlotter, Signal K, and the MacArthur Hat project for their foundat
 Thanks to Apparent Wind Sail-Trim Simulator https://github.com/flyinggorilla/simulator.atterwind.info for is work on sail representation
 Thanks to https://jieter.github.io/orc-data/site/ for Polar data
 Special thanks to open-source 3D model contributors for enhancing the visual experience.
+
+---
+
+⚠ Navigation Disclaimer
+
+Use with Caution – Not a Substitute for Official Navigation Systems
+
+Ocearo UI is designed to enhance sailing awareness and provide real-time data visualization. However, this software is not a certified navigation or safety system and should not be relied upon as the sole source of navigational information.
+
+* Always cross-check data with official marine charts, GPS devices, and other navigation aids.
+* Maintain situational awareness and follow maritime safety regulations.
+* The developers of Ocearo UI are not liable for any incidents, accidents, or navigation errors that may arise from using this software.
+
+By using Ocearo UI, you acknowledge and accept the inherent risks of relying on non-certified navigation tools. Always navigate responsibly!
