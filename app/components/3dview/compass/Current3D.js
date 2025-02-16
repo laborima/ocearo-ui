@@ -25,7 +25,7 @@ const CurrentArrow = ({
       color={color}
       fontSize={fontSize * arrowSize}
       position={textPosition}
-      font="/fonts/Roboto-Bold.ttf"
+      font="fonts/Roboto-Bold.ttf"
       anchorX="center"
       anchorY="middle"
     >

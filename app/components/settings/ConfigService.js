@@ -87,10 +87,8 @@ class ConfigService {
       if (!selectedBoatName) return []; // Ensure it's an array
 
       // Find the selected boat
-      const boat = this.getBoatsData().find(boat => boat.name === selectedBoatName);
-      
-      return boat ? [boat] : []; // Wrap in an array to avoid map() errors
-  }
+      return this.getBoatsData().find(boat => boat.name === selectedBoatName)
+    }
 
 
    

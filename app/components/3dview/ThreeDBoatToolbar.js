@@ -48,14 +48,14 @@ const ThreeDBoatToolbar = () => {
                 <FontAwesomeIcon icon={faParking} className={states.parkingMode ? 'text-oGreen' : textColor} />
             </button>
 
-            {/* MOB */}
+            {/* MOB 
             <button
                 onClick={() => toggleState('mob')}
                 className="p-1"
             >
                 <FontAwesomeIcon icon={faPersonFalling} className={states.mob ? 'text-oRed' : textColor} />
             </button>
-
+            */}
             {/* Night Mode */}
             <button
                 onClick={() => setNightMode(!nightMode)}

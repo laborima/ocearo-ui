@@ -18,17 +18,14 @@ const SailBoat3D = forwardRef(({ showSail = false, ...props }, ref) => {
     const rudderRef = useRef();
     const { getSignalKValue } = useOcearoContext();
 
-    // Memoize configuration to prevent unnecessary recalculations
-    const config = useMemo(() => configService.getAll(), []);
-    const selectedBoat = useMemo(() => {
-      const boat = configService.getSelectedBoat();
-      return boat ?? {
-        "name": "Default",
-        "modelPath": "default",
-        "capabilities": ["navigation", "rudder", "sail", "color"]
-      };
-    }, []);
+    const config = configService.getAll();
+    let selectedBoat = configService.getSelectedBoat() || {
+        name: "Default",
+        modelPath: "default",
+        capabilities: ["navigation", "rudder", "sail", "color"]
+    };
 
+    
     const modelPath = useMemo(() =>
       getModelPath(selectedBoat.modelPath),
       [selectedBoat]

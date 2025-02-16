@@ -7,7 +7,7 @@ import { useAIS } from './AISContext';
 import AISBoat from './AISBoat';
 
 // --- Constants ---
-const LENGTH_SCALING_FACTOR = 0.2;
+const LENGTH_SCALING_FACTOR = 0.7;
 const EARTH_RADIUS_METERS = 6371000;
 
 // --- Helper Functions ---
