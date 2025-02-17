@@ -2,7 +2,8 @@ import React, { useRef } from "react";
 import { useFrame, extend } from "@react-three/fiber";
 import { shaderMaterial } from "@react-three/drei";
 import * as THREE from "three";
-
+import { useOcearoContext } from "../../context/OcearoContext";
+// Create a custom shader material with an extra 'rainbowActive' uniform.
 const TrailShaderMaterial = shaderMaterial(
   {
     time: 0,
@@ -12,6 +13,7 @@ const TrailShaderMaterial = shaderMaterial(
     color: new THREE.Color(0x787878),
     foamColor: new THREE.Color(0xffffff),
     waterColor: new THREE.Color(0x0066ff),
+    rainbowActive: 0.0, // When > 0.5, enable the dynamic rainbow effect.
   },
   // Vertex Shader
   `
@@ -21,7 +23,7 @@ const TrailShaderMaterial = shaderMaterial(
     void main() {
       vUv = uv;
       
-      // Add subtle vertex displacement for wave effect
+      // Add subtle vertex displacement for a wavy effect.
       float elevation = sin(position.x * 0.2 + position.y * 0.3) * 0.1;
       vElevation = elevation;
       vec3 newPosition = position + normal * elevation;
@@ -38,17 +40,18 @@ const TrailShaderMaterial = shaderMaterial(
     uniform vec3 color;
     uniform vec3 foamColor;
     uniform vec3 waterColor;
+    uniform float rainbowActive; // Controls whether the rainbow effect is applied.
 
     varying vec2 vUv;
     varying float vElevation;
 
-    // Improved noise functions
+    // Standard noise functions.
     vec4 permute(vec4 x) {
-      return mod(((x*34.0)+1.0)*x, 289.0);
+      return mod(((x * 34.0) + 1.0) * x, 289.0);
     }
 
     vec2 fade(vec2 t) {
-      return t*t*t*(t*(t*6.0-15.0)+10.0);
+      return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
     }
 
     float cnoise(vec2 P) {
@@ -64,11 +67,12 @@ const TrailShaderMaterial = shaderMaterial(
       vec4 gy = abs(gx) - 0.5;
       vec4 tx = floor(gx + 0.5);
       gx = gx - tx;
-      vec2 g00 = vec2(gx.x,gy.x);
-      vec2 g10 = vec2(gx.y,gy.y);
-      vec2 g01 = vec2(gx.z,gy.z);
-      vec2 g11 = vec2(gx.w,gy.w);
-      vec4 norm = 1.79284291400159 - 0.85373472095314 * vec4(dot(g00,g00), dot(g10,g10), dot(g01,g01), dot(g11,g11));
+      vec2 g00 = vec2(gx.x, gy.x);
+      vec2 g10 = vec2(gx.y, gy.y);
+      vec2 g01 = vec2(gx.z, gy.z);
+      vec2 g11 = vec2(gx.w, gy.w);
+      vec4 norm = 1.79284291400159 - 0.85373472095314 *
+                  vec4(dot(g00, g00), dot(g10, g10), dot(g01, g01), dot(g11, g11));
       g00 *= norm.x;
       g10 *= norm.y;
       g01 *= norm.z;
@@ -83,31 +87,48 @@ const TrailShaderMaterial = shaderMaterial(
       return 2.3 * n_xy;
     }
 
+    // HSL to RGB conversion function.
+    vec3 hsl2rgb(vec3 hsl) {
+      vec3 rgb = clamp(abs(mod(hsl.x * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0,
+                       0.0, 1.0);
+      rgb = rgb * rgb * (3.0 - 2.0 * rgb);
+      return hsl.z + hsl.y * (rgb - 0.5) * (1.0 - abs(2.0 * hsl.z - 1.0));
+    }
+
     void main() {
-      // Create multiple layers of noise for more complex water pattern
+      // Combine multiple layers of noise to build a complex water pattern.
       float baseNoise = cnoise(vUv * scale + vec2(time * speed, 0.0));
       float detailNoise = cnoise(vUv * scale * 2.0 + vec2(time * speed * 1.5, 0.0)) * 0.5;
       float turbulence = cnoise(vUv * scale * 4.0 + vec2(time * speed * 2.0, 0.0)) * 0.25;
-      
-      // Combine noise layers
       float noise = baseNoise + detailNoise + turbulence;
       
-      // Create wake pattern
+      // Create a wake pattern.
       float wake = smoothstep(0.3, 0.7, 1.0 - abs(vUv.x - 0.5) * 2.0);
       
-      // Create foam effect
+      // Create a foam effect.
       float foam = smoothstep(0.4, 0.6, noise + wake);
       
-      // Combine colors for water effect
+      // Mix water and foam colors, then blend in the base color.
       vec3 finalColor = mix(waterColor, foamColor, foam);
       finalColor = mix(finalColor, color, wake * 0.5);
       
-      // Dynamic opacity with wake and foam
+      // Adjust dynamic opacity.
       float alpha = opacity * (wake + foam * 0.5) * (1.0 - vUv.y);
       
-      // Add wave highlights
-      float highlight = smoothstep(0.2, 0.4, noise + wake) * (1.0 - smoothstep(0.4, 0.6, noise + wake));
+      // Add wave highlights.
+      float highlight = smoothstep(0.2, 0.4, noise + wake) *
+                        (1.0 - smoothstep(0.4, 0.6, noise + wake));
       finalColor += highlight * foamColor * 0.5;
+      
+      // --- Rainbow Effect ---
+      // When rainbowActive is enabled, overlay a dynamic rainbow gradient.
+      if (rainbowActive > 0.5) {
+        // Cycle the hue based on the horizontal UV and time.
+        float rainbowHue = mod(vUv.x + time * 0.5, 1.0);
+        vec3 rainbowColor = hsl2rgb(vec3(rainbowHue, 1.0, 0.5));
+        // Blend the rainbow with the original finalColor.
+        finalColor = mix(finalColor, rainbowColor, 0.7);
+      }
       
       gl_FragColor = vec4(finalColor, alpha);
     }
@@ -125,10 +146,17 @@ export const Trail = ({
   opacity = 0.5,
 }) => {
   const trailRef = useRef();
+  const { getSignalKValue } = useOcearoContext();
 
   useFrame((state, delta) => {
     if (trailRef.current) {
+      // Animate time for continuous shader movement.
       trailRef.current.uniforms.time.value += delta;
+
+      // Check the autopilot state via SignalK.
+      const autopilotState = getSignalKValue("steering.autopilot.state") || false;
+      // Enable the rainbow effect when autopilot is active.
+      trailRef.current.uniforms.rainbowActive.value = autopilotState ? 1.0 : 0.0;
     }
   });
 
