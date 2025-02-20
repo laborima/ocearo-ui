@@ -10,6 +10,7 @@ import {
     faCloudSun,
     faExpand,
     faBatteryFull,
+    faHeadphones,
     faSyncAlt
 } from '@fortawesome/free-solid-svg-icons';
 import { VIEW_MODES } from '../page';
@@ -89,6 +90,12 @@ const AppMenu = ({
                     icon={faBatteryFull}
                     label="Battery"
                     onClick={() => handleSetRightView('battery')}
+                />
+
+                <MenuButton
+                    icon={faHeadphones}
+                    label="Media player"
+                    onClick={() => handleSetRightView('mediaplayer')}
                 />
 
                 <MenuButton
