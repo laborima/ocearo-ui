@@ -6,24 +6,17 @@ import ThreeDBoatToolbar from './ThreeDBoatToolbar';
 import ThreeDBoatSpeedIndicator from './ThreeDBoatSpeedIndicator';
 import ThreeDBoatThanksIndicator from './ThreeDBoatThanksIndicator';
 import ThreeDBoatRudderIndicator from './ThreeDBoatRudderIndicator';
-import ThreeDBoatSeeLevelIndicator from './ThreeDBoatSeeLevelIndicator';
 import ThreeDBoatTideLevelIndicator from './ThreeDBoatTideLevelIndicator';
 import ThreeDParkAssistBoat from './parkassist/ThreeDParkAssistBoat';
 import ThreeDAnchoredBoat from './anchored/ThreeDAnchoredBoat';
 import { useOcearoContext } from '../context/OcearoContext';
-import { useEffect } from 'react';
 import * as THREE from 'three';
 import ThreeDBoatPositionDateIndicator from './ThreeDBoatPositionDateIndicator';
+import ThreeDBoatSeaLevelIndicator from './ThreeDBoatSeaLevelIndicator';
 
-const ThreeDMainView = ({ setFullScreen }) => {
+const ThreeDMainView = () => {
 
     const { states } = useOcearoContext(); // Access global context, including nightMode
-
-    useEffect(() => {
-        setFullScreen(states.anchorWatch);
-    }, [states.anchorWatch, setFullScreen]);
-
-
 
     return (
         <div className="w-full h-full relative ">
@@ -46,7 +39,7 @@ const ThreeDMainView = ({ setFullScreen }) => {
 
             {/* See Level Indicator (left-side) */}
             <div className="absolute left-2 bottom-2 z-20 flex flex-col items-center">
-                <ThreeDBoatSeeLevelIndicator />
+                <ThreeDBoatSeaLevelIndicator />
             </div>
             <div className="absolute right-2 bottom-2 z-20 flex flex-col items-center">
                 <ThreeDBoatTideLevelIndicator />
@@ -62,9 +55,10 @@ const ThreeDMainView = ({ setFullScreen }) => {
 
             {/* 3D Wind Component */}
             <div className="absolute left-1/2 transform -translate-x-1/2 w-full h-full">
-                <Canvas style={{ width: '100%', height: '100%' }} shadows dpr={[1, 2]} gl={{
-                    antialias: true, physicallyCorrectLights: true,
-                    toneMapping: THREE.ACESFilmicToneMapping,
+                <Canvas style={{ width: '100%', height: '100%' }} shadows={false} dpr={[1, 1]} gl={{
+                    antialias: true,
+                    physicallyCorrectLights: false,
+                    toneMapping: THREE.LinearToneMapping,
                     toneMappingExposure: 1
                 }}>
                     {states.parkingMode ? (

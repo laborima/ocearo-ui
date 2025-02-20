@@ -143,7 +143,7 @@ export default function Home() {
                 <div className="h-screen flex flex-col bg-black relative">
                     <div className="flex flex-1">
                         <div className={layoutClasses.leftPane}>
-                            <ThreeDMainView setFullScreen={() => {}} />
+                            <ThreeDMainView  />
                         </div>
 
                         <Draggable 
