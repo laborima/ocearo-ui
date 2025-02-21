@@ -32,6 +32,23 @@ const INITIAL_STATES = {
     ais: false,
 };
 
+export const BATTERY_CONFIG = {
+  WARNING_THRESHOLD: 50,
+  DANGER_THRESHOLD: 20,
+  CHARGING_THRESHOLD: 13 // Voltage threshold to determine if battery is charging
+};
+
+// Function to estimate SoC based on voltage
+export const estimateStateOfCharge = (voltage) => {
+  // Example for a 12V lead-acid battery
+  if (voltage >= 12.7) return 100;
+  if (voltage >= 12.5) return 75;
+  if (voltage >= 12.3) return 50;
+  if (voltage >= 12.1) return 25;
+  return 0;
+};
+
+
 // Separate sample data into its own object for better organization
 const SAMPLE_DATA = {
     wind: {

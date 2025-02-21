@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useOcearoContext } from '../context/OcearoContext';
+import { BATTERY_CONFIG, estimateStateOfCharge, useOcearoContext } from '../context/OcearoContext';
+
+
 
 const BatteryMonitor = () => {
   const { nightMode, getSignalKValue } = useOcearoContext();
@@ -9,23 +11,26 @@ const BatteryMonitor = () => {
 
   const getInitialBatteryData = () => {
     const time = new Date().toLocaleTimeString();
+    const voltage = getSignalKValue('electrical.batteries.1.voltage') || 12;
+    const stateOfCharge = getSignalKValue('electrical.batteries.1.capacity.stateOfCharge');
     return {
       time,
-      voltage: getSignalKValue('electrical.batteries.1.voltage') || 12,
+      voltage,
       current: getSignalKValue('electrical.batteries.1.current') || 5,
-      stateOfCharge: getSignalKValue('electrical.batteries.1.capacity.stateOfCharge') || 85,
+      stateOfCharge: stateOfCharge !== null ? stateOfCharge : estimateStateOfCharge(voltage),
     };
   };
 
+  // Initialize with 30 data points for smoother graphs
   const [batteryData, setBatteryData] = useState(
-    Array(10).fill(null).map(getInitialBatteryData)
+    Array(30).fill(null).map(getInitialBatteryData)
   );
   const [performanceData, setPerformanceData] = useState(() => {
     const time = new Date().toLocaleTimeString();
-    return Array(10).fill({
+    return Array(30).fill({
       time,
       fps: 60,
-      ms: 16.67
+      ms: 16.67,
     });
   });
 
@@ -35,31 +40,32 @@ const BatteryMonitor = () => {
     const updateAllData = () => {
       const now = new Date();
       const timeStr = now.toLocaleTimeString();
-      
       framesRef.current++;
       const time = performance.now();
       const frameTime = time - beginTimeRef.current;
 
       if (time >= prevTimeRef.current + 1000) {
         const fps = (framesRef.current * 1000) / (time - prevTimeRef.current);
-        
-        setPerformanceData(prev => [
+        const avgFrameTime = fps > 0 ? 1000 / fps : 0;
+
+        setPerformanceData((prev) => [
           ...prev.slice(1),
-          { time: timeStr, fps: fps, ms: frameTime }
+          { time: timeStr, fps: fps, ms: avgFrameTime },
         ]);
 
-        const voltage = getSignalKValue('electrical.batteries.1.voltage');
-        const current = getSignalKValue('electrical.batteries.1.current');
+        const voltage = getSignalKValue('electrical.batteries.1.voltage') || batteryData[batteryData.length - 1].voltage;
+        const current = getSignalKValue('electrical.batteries.1.current') || batteryData[batteryData.length - 1].current;
         const stateOfCharge = getSignalKValue('electrical.batteries.1.capacity.stateOfCharge');
+        const estimatedSoC = stateOfCharge !== null ? stateOfCharge : estimateStateOfCharge(voltage);
 
-        setBatteryData(prev => [
+        setBatteryData((prev) => [
           ...prev.slice(1),
           {
             time: timeStr,
-            voltage: voltage || prev[prev.length - 1].voltage,
-            current: current || prev[prev.length - 1].current,
-            stateOfCharge: stateOfCharge || prev[prev.length - 1].stateOfCharge
-          }
+            voltage,
+            current,
+            stateOfCharge: estimatedSoC,
+          },
         ]);
 
         prevTimeRef.current = time;
@@ -78,12 +84,19 @@ const BatteryMonitor = () => {
   const batteryScales = {
     voltage: { min: 11, max: 15, step: 1 },
     current: { min: 0, max: 15, step: 5 },
-    soc: { min: 0, max: 100, step: 25 }
+    soc: { min: 0, max: 100, step: 25 },
   };
 
   const performanceScales = {
     fps: { min: 0, max: 60, step: 15 },
-    ms: { min: 0, max: 33.33, step: 10 }
+    ms: { min: 0, max: 33.33, step: 10 },
+  };
+
+  // Function to determine SoC color
+  const getSoCColor = (percentage) => {
+    if (percentage > BATTERY_CONFIG.WARNING_THRESHOLD) return 'bg-oGreen';
+    if (percentage > BATTERY_CONFIG.DANGER_THRESHOLD) return 'bg-oYellow';
+    return 'bg-oRed';
   };
 
   return (
@@ -104,21 +117,26 @@ const BatteryMonitor = () => {
                   style={{ bottom: `${(i / 4) * 100}%` }}
                 >
                   <span className={`absolute -left-10 text-xs ${nightMode ? 'text-oNight' : 'text-white'}`}>
-                    {batteryScales.soc.min + (i * batteryScales.soc.step)}%
+                    {batteryScales.soc.min + i * batteryScales.soc.step}%
                   </span>
                 </div>
               ))}
             </div>
-            
-            <div className="h-full flex items-end space-x-2">
+
+            <div className="h-full flex items-end space-x-1">
               {batteryData.map((data, index) => (
-                <div 
-                  key={`${data.time}-${index}`} 
+                <div
+                  key={`${data.time}-${index}`}
                   className="flex-1 flex flex-col justify-end h-full space-y-1 relative"
                 >
                   <div
                     className="w-full bg-blue-500 transition-all duration-300"
-                    style={{ height: `${((data.voltage - batteryScales.voltage.min) / (batteryScales.voltage.max - batteryScales.voltage.min)) * 100}%` }}
+                    style={{
+                      height: `${
+                        ((data.voltage - batteryScales.voltage.min) /
+                          (batteryScales.voltage.max - batteryScales.voltage.min)) * 100
+                      }%`,
+                    }}
                     title={`Voltage: ${data.voltage.toFixed(1)}V`}
                   />
                   <div
@@ -127,13 +145,17 @@ const BatteryMonitor = () => {
                     title={`Current: ${data.current.toFixed(1)}A`}
                   />
                   <div
-                    className="w-full bg-yellow-500 transition-all duration-300"
+                    className={`w-full ${getSoCColor(data.stateOfCharge)} transition-all duration-300`}
                     style={{ height: `${data.stateOfCharge}%` }}
                     title={`SoC: ${data.stateOfCharge.toFixed(1)}%`}
                   />
-                  <span className={`text-xs ${nightMode ? 'text-oNight' : 'text-white'} transform -rotate-45 origin-top-left absolute bottom-0 -mb-6`}>
-                    {data.time.split(':')[1]}
-                  </span>
+                  {index % 5 === 0 && (
+                    <span
+                      className={`text-xs ${nightMode ? 'text-oNight' : 'text-white'} transform -rotate-45 origin-top-left absolute bottom-0 -mb-6`}
+                    >
+                      {data.time.split(':')[1]}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
@@ -148,7 +170,7 @@ const BatteryMonitor = () => {
               <span className={nightMode ? 'text-oNight' : 'text-white'}>Current (0-15A)</span>
             </div>
             <div className="flex items-center">
-              <div className="w-3 h-3 bg-yellow-500 rounded mr-2"></div>
+              <div className="w-3 h-3 bg-oGreen rounded mr-2"></div>
               <span className={nightMode ? 'text-oNight' : 'text-white'}>SoC (0-100%)</span>
             </div>
           </div>
@@ -169,16 +191,16 @@ const BatteryMonitor = () => {
                   style={{ bottom: `${(i / 4) * 100}%` }}
                 >
                   <span className={`absolute -left-10 text-xs ${nightMode ? 'text-oNight' : 'text-white'}`}>
-                    {performanceScales.fps.min + (i * performanceScales.fps.step)}
+                    {performanceScales.fps.min + i * performanceScales.fps.step}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="h-full flex items-end space-x-2">
+            <div className="h-full flex items-end space-x-1">
               {performanceData.map((data, index) => (
-                <div 
-                  key={`${data.time}-${index}`} 
+                <div
+                  key={`${data.time}-${index}`}
                   className="flex-1 flex flex-col justify-end h-full space-y-1 relative"
                 >
                   <div
@@ -191,9 +213,13 @@ const BatteryMonitor = () => {
                     style={{ height: `${(data.ms / performanceScales.ms.max) * 100}%` }}
                     title={`MS: ${data.ms.toFixed(1)}`}
                   />
-                  <span className={`text-xs ${nightMode ? 'text-oNight' : 'text-white'} transform -rotate-45 origin-top-left absolute bottom-0 -mb-6`}>
-                    {data.time.split(':')[1]}
-                  </span>
+                  {index % 5 === 0 && (
+                    <span
+                      className={`text-xs ${nightMode ? 'text-oNight' : 'text-white'} transform -rotate-45 origin-top-left absolute bottom-0 -mb-6`}
+                    >
+                      {data.time.split(':')[1]}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>
