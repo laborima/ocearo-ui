@@ -1,7 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { BATTERY_CONFIG, estimateStateOfCharge, useOcearoContext } from '../context/OcearoContext';
-
-
 
 const BatteryMonitor = () => {
   const { nightMode, getSignalKValue } = useOcearoContext();
@@ -9,7 +7,7 @@ const BatteryMonitor = () => {
   const prevTimeRef = useRef(performance.now());
   const framesRef = useRef(0);
 
-  const getInitialBatteryData = () => {
+  const getInitialBatteryData = useCallback(() => {
     const time = new Date().toLocaleTimeString();
     const voltage = getSignalKValue('electrical.batteries.1.voltage') || 12;
     const stateOfCharge = getSignalKValue('electrical.batteries.1.capacity.stateOfCharge');
@@ -19,12 +17,13 @@ const BatteryMonitor = () => {
       current: getSignalKValue('electrical.batteries.1.current') || 5,
       stateOfCharge: stateOfCharge !== null ? stateOfCharge : estimateStateOfCharge(voltage),
     };
-  };
+  }, [getSignalKValue]);
 
   // Initialize with 30 data points for smoother graphs
-  const [batteryData, setBatteryData] = useState(
+  const [batteryData, setBatteryData] = useState(() =>
     Array(30).fill(null).map(getInitialBatteryData)
   );
+  
   const [performanceData, setPerformanceData] = useState(() => {
     const time = new Date().toLocaleTimeString();
     return Array(30).fill({
@@ -33,6 +32,21 @@ const BatteryMonitor = () => {
       ms: 16.67,
     });
   });
+
+  const updateBatteryData = useCallback((timeStr) => {
+    const lastData = batteryData[batteryData.length - 1];
+    const voltage = getSignalKValue('electrical.batteries.1.voltage') || lastData.voltage;
+    const current = getSignalKValue('electrical.batteries.1.current') || lastData.current;
+    const stateOfCharge = getSignalKValue('electrical.batteries.1.capacity.stateOfCharge');
+    const estimatedSoC = stateOfCharge !== null ? stateOfCharge : estimateStateOfCharge(voltage);
+
+    return {
+      time: timeStr,
+      voltage,
+      current,
+      stateOfCharge: estimatedSoC,
+    };
+  }, [getSignalKValue, batteryData]);
 
   useEffect(() => {
     let animationFrameId;
@@ -53,19 +67,9 @@ const BatteryMonitor = () => {
           { time: timeStr, fps: fps, ms: avgFrameTime },
         ]);
 
-        const voltage = getSignalKValue('electrical.batteries.1.voltage') || batteryData[batteryData.length - 1].voltage;
-        const current = getSignalKValue('electrical.batteries.1.current') || batteryData[batteryData.length - 1].current;
-        const stateOfCharge = getSignalKValue('electrical.batteries.1.capacity.stateOfCharge');
-        const estimatedSoC = stateOfCharge !== null ? stateOfCharge : estimateStateOfCharge(voltage);
-
         setBatteryData((prev) => [
           ...prev.slice(1),
-          {
-            time: timeStr,
-            voltage,
-            current,
-            stateOfCharge: estimatedSoC,
-          },
+          updateBatteryData(timeStr),
         ]);
 
         prevTimeRef.current = time;
@@ -78,9 +82,9 @@ const BatteryMonitor = () => {
 
     animationFrameId = requestAnimationFrame(updateAllData);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [getSignalKValue]);
+  }, [updateBatteryData]);
 
-  // Scale definitions
+  // Rest of your component code remains the same...
   const batteryScales = {
     voltage: { min: 11, max: 15, step: 1 },
     current: { min: 0, max: 15, step: 5 },
@@ -92,7 +96,6 @@ const BatteryMonitor = () => {
     ms: { min: 0, max: 33.33, step: 10 },
   };
 
-  // Function to determine SoC color
   const getSoCColor = (percentage) => {
     if (percentage > BATTERY_CONFIG.WARNING_THRESHOLD) return 'bg-oGreen';
     if (percentage > BATTERY_CONFIG.DANGER_THRESHOLD) return 'bg-oYellow';

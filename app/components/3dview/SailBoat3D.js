@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, forwardRef, useMemo } from 'react';
+import React, { useRef, useEffect, forwardRef, useMemo, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useOcearoContext } from '../context/OcearoContext';
 import configService from '../settings/ConfigService';
@@ -10,27 +10,40 @@ const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
 
 
 // Helper function to get model path
-const getModelPath = (modelPath = 'default') => 
+const getModelPath = (modelPath = 'default') =>
     `${ASSET_PREFIX}/boats/${modelPath}/assets/scene-transformed.glb`;
+
+const defaultBoat = {
+    name: "Default",
+    modelPath: "default",
+    capabilities: ["navigation", "rudder", "sail", "color"]
+};
+
 
 const SailBoat3D = forwardRef(({ showSail = false, ...props }, ref) => {
     const boatRef = useRef();
     const rudderRef = useRef();
     const { getSignalKValue } = useOcearoContext();
-
     const config = configService.getAll();
-    let selectedBoat = configService.getSelectedBoat() || {
-        name: "Default",
-        modelPath: "default",
-        capabilities: ["navigation", "rudder", "sail", "color"]
-    };
 
-    
-    const modelPath = useMemo(() =>
-      getModelPath(selectedBoat.modelPath),
-      [selectedBoat]
+    // Use state to store the selected boat
+    const [selectedBoat, setSelectedBoat] = useState(() =>
+        configService.getSelectedBoat() || defaultBoat
     );
-    
+
+    // Update selectedBoat when config changes
+    useEffect(() => {
+        const newSelectedBoat = configService.getSelectedBoat() || defaultBoat;
+        setSelectedBoat(newSelectedBoat);
+    }, [config]);
+
+
+
+    const modelPath = useMemo(() =>
+        getModelPath(selectedBoat.modelPath),
+        [selectedBoat]
+    );
+
     const capabilities = selectedBoat?.capabilities || [];
 
     // Load model only when path changes
