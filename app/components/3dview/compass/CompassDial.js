@@ -82,7 +82,8 @@ const CompassDial = ({ outerRadius, innerRadius }) => {
   const { nightMode, getSignalKValue } = useOcearoContext();
   const dialColor = nightMode ? oNight : 0xffffff;
   
-  const courseOverGroundAngle = getSignalKValue('navigation.courseOverGroundTrue') || 10;
+  const courseOverGroundAngle = getSignalKValue('navigation.courseOverGroundTrue')
+   || getSignalKValue('navigation.headingTrue');
 
   // Memoize the static properties
   const staticProps = useMemo(() => ({
