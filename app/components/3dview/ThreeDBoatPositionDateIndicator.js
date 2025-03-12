@@ -40,19 +40,31 @@ const ThreeDBoatPositionDateIndicator = () => {
       });
     }
   };
-  
 
   const textColor = nightMode ? 'text-oNight' : 'text-oGray';
   const positionTextColor = nightMode ? 'text-oNight' : 'text-white';
 
+  // Check if position is null or undefined
+  if (!position) {
+    return (
+      <div className="mt-4">
+        <div className={`text-3xl font-bold cursor-pointer flex gap-2 ${positionTextColor}`}>
+          <span>--</span>
+          <span>--</span>
+        </div>
+        <div className={`text-lg ${textColor}`}>{getCurrentDateTime()}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-4">
-          <div className={`text-3xl font-bold cursor-pointer flex gap-2 ${positionTextColor}`}>
-            <span>{formatCoordinate(position.latitude, true)}</span>
-            <span>{formatCoordinate(position.longitude, false)}</span>
-          </div>
-          <div className={`text-lg ${textColor}`}>{getCurrentDateTime()}</div>
-        </div>
+      <div className={`text-3xl font-bold cursor-pointer flex gap-2 ${positionTextColor}`}>
+        <span>{formatCoordinate(position.latitude, true)}</span>
+        <span>{formatCoordinate(position.longitude, false)}</span>
+      </div>
+      <div className={`text-lg ${textColor}`}>{getCurrentDateTime()}</div>
+    </div>
   );
 };
 
