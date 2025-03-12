@@ -22,7 +22,7 @@ const CONSTANTS = {
     SPHERE_SIZE: 0.4,
     SPHERE_SEGMENTS: 32,
     DEFAULT_LINE_WIDTH: 1,
-    PLOTS_COUNT: 10,
+    PLOTS_COUNT: 5,
     FRAME_TO_MINUTE_RATIO: 3600,
 };
 
@@ -145,7 +145,7 @@ const PolarPlot = React.memo(({ timeInMinute, windSpeed }) => {
     return (
         <>
             {rotations.map((rotation, idx) => (
-                <group key={idx} rotation={[0, 0, rotation]}>
+                <group key={idx} position={[0,-0.7,0]} rotation={[0, 0, rotation]}>
                     {curveData.curve && (
                         <PolarCurve 
                             points={curveData.curve.getPoints(100)} 
@@ -168,7 +168,7 @@ function PolarProjection() {
     const lastSOG = useRef(CONSTANTS.DEFAULT_SOG);
     const { getSignalKValue } = useOcearoContext();
 
-    const appWindAngle = getSignalKValue('environment.wind.angleApparent');
+    const appWindAngle = - getSignalKValue('environment.wind.angleApparent');
     const trueWindSpeed = convertWindSpeed(getSignalKValue('environment.wind.speedOverGround')) || 0;
     const sog = getSignalKValue('navigation.speedOverGround') || CONSTANTS.DEFAULT_SOG;
 
@@ -206,6 +206,14 @@ function PolarProjection() {
             }
         });
     });
+    
+    const [isVisible, setIsVisible] = useState(false);
+      
+      useEffect(() => {
+          setIsVisible(!(appWindAngle === null || trueWindSpeed === 0 || trueWindSpeed === null));
+      }, [appWindAngle, trueWindSpeed]);
+      
+      if (!isVisible) return null;
 
     return (
         <>

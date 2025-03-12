@@ -1,86 +1,104 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAnchor, faShip, faPersonFalling, faMoon, faWater, faParking, faSatellite } from '@fortawesome/free-solid-svg-icons';
+import { faAnchor, faShip, faPersonFalling, faMoon, faWater, faParking, faSatellite, faCompass } from '@fortawesome/free-solid-svg-icons';
 import { useOcearoContext } from '../context/OcearoContext';
+import { useEffect } from 'react';
 
 const ThreeDBoatToolbar = () => {
-    const { nightMode, setNightMode, states, toggleState } = useOcearoContext();
+  const { nightMode, setNightMode, states, toggleState } = useOcearoContext();
 
-    // Dynamic text color based on night mode
-    const textColor = nightMode ? 'text-oNight' : 'text-oGray';
+  // Dynamic text color based on night mode
+  const textColor = nightMode ? 'text-oNight' : 'text-oGray';
 
-    // Helper function to toggle a mode, ensuring exclusivity
-    const toggleExclusiveMode = (mode) => {
-        const updatedStates = {
-            autopilot: mode === 'autopilot',
-            anchorWatch: mode === 'anchorWatch',
-            parkingMode: mode === 'parkingMode',
-        };
-
-        // Update states to ensure only the selected mode is active
-        Object.keys(updatedStates).forEach((key) => {
-            toggleState(key, updatedStates[key]);
-        });
+  // Helper function to toggle a mode, ensuring exclusivity
+  const toggleExclusiveMode = (mode) => {
+    const updatedStates = {
+      autopilot: mode === 'autopilot',
+      anchorWatch: mode === 'anchorWatch',
+      parkingMode: mode === 'parkingMode',
     };
 
-    return (
-        <div className="text-lg">
-            {/* Autopilot */}
-            <button
-                onClick={() => toggleExclusiveMode('autopilot')}
-                className="p-1"
-            >
-                <FontAwesomeIcon icon={faShip} className={states.autopilot ? 'text-oBlue' : textColor} />
-            </button>
+    // Update states to ensure only the selected mode is active
+    Object.keys(updatedStates).forEach((key) => {
+      toggleState(key, updatedStates[key]);
+    });
+  };
 
-            {/* Anchor Watch */}
-            <button
-                onClick={() => toggleExclusiveMode('anchorWatch')}
-                className="p-1"
-            >
-                <FontAwesomeIcon icon={faAnchor} className={states.anchorWatch ? 'text-oYellow' : textColor} />
-            </button>
+  // Enable showPolar by default when autopilot is activated
+  useEffect(() => {
+    if (states.autopilot && !states.showPolar) {
+      toggleState('showPolar', true);
+    }
+  }, [states.autopilot]);
 
-            {/* Parking Mode */}
-            <button
-                onClick={() => toggleExclusiveMode('parkingMode')}
-                className="p-1"
-            >
-                <FontAwesomeIcon icon={faParking} className={states.parkingMode ? 'text-oGreen' : textColor} />
-            </button>
+  return (
+    <div className="text-lg">
+      {/* Autopilot */}
+      <button
+        onClick={() => toggleExclusiveMode('autopilot')}
+        className="p-1"
+      >
+        <FontAwesomeIcon icon={faShip} className={states.autopilot ? 'text-oBlue' : textColor} />
+      </button>
 
-            {/* MOB 
-            <button
-                onClick={() => toggleState('mob')}
-                className="p-1"
-            >
-                <FontAwesomeIcon icon={faPersonFalling} className={states.mob ? 'text-oRed' : textColor} />
-            </button>
-            */}
-            {/* Night Mode */}
-            <button
-                onClick={() => setNightMode(!nightMode)}
-                className="p-1"
-            >
-                <FontAwesomeIcon icon={faMoon} className={nightMode ? 'text-oNight' : textColor} />
-            </button>
+      {/* Show Polar - only visible when autopilot is active */}
+      {states.autopilot && (
+        <button
+          onClick={() => toggleState('showPolar')}
+          className="p-1"
+        >
+          <FontAwesomeIcon icon={faCompass} className={states.showPolar ? 'text-oBlue' : textColor} />
+        </button>
+      )}
 
-            {/* See State */}
-            <button
-                onClick={() => toggleState('showOcean')}
-                className="p-1"
-            >
-                <FontAwesomeIcon icon={faWater} className={states.showOcean ? 'text-oBlue' : textColor} />
-            </button>
+      {/* Anchor Watch */}
+      <button
+        onClick={() => toggleExclusiveMode('anchorWatch')}
+        className="p-1"
+      >
+        <FontAwesomeIcon icon={faAnchor} className={states.anchorWatch ? 'text-oYellow' : textColor} />
+      </button>
 
-            {/* AIS */}
-            <button
-                onClick={() => toggleState('ais')}
-                className="p-1"
-            >
-                <FontAwesomeIcon icon={faSatellite} className={states.ais ? 'text-oGreen' : textColor} />
-            </button>
-        </div>
-    );
+      {/* Parking Mode */}
+      <button
+        onClick={() => toggleExclusiveMode('parkingMode')}
+        className="p-1"
+      >
+        <FontAwesomeIcon icon={faParking} className={states.parkingMode ? 'text-oGreen' : textColor} />
+      </button>
+
+      {/* MOB
+      <button
+        onClick={() => toggleState('mob')}
+        className="p-1"
+      >
+        <FontAwesomeIcon icon={faPersonFalling} className={states.mob ? 'text-oRed' : textColor} />
+      </button>
+      */}
+      {/* Night Mode */}
+      <button
+        onClick={() => setNightMode(!nightMode)}
+        className="p-1"
+      >
+        <FontAwesomeIcon icon={faMoon} className={nightMode ? 'text-oNight' : textColor} />
+      </button>
+
+      {/* See State */}
+      <button
+        onClick={() => toggleState('showOcean')}
+        className="p-1"
+      >
+        <FontAwesomeIcon icon={faWater} className={states.showOcean ? 'text-oBlue' : textColor} />
+      </button>
+
+      {/* AIS */}
+      <button
+        onClick={() => toggleState('ais')}
+        className="p-1"
+      >
+        <FontAwesomeIcon icon={faSatellite} className={states.ais ? 'text-oGreen' : textColor} />
+      </button>
+    </div>
+  );
 };
 
 export default ThreeDBoatToolbar;
