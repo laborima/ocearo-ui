@@ -11,6 +11,7 @@ import { useOcearoContext } from '../context/OcearoContext';
 import { AISProvider } from './ais/AISContext';
 import PolarProjection from './polar/Polar3D';
 import LayLines3D from './compass/LayLines3D';
+import BoatLighting from './BoatLighting';
 
 
 const ThreeDBoatView = () => {
@@ -43,39 +44,7 @@ const ThreeDBoatView = () => {
             <Environment files="./assets/ocearo_env.hdr" background={false} intensity={0.8} />
 
             {/* Lighting setup */}
-            <ambientLight intensity={0.6} />
-
-            <spotLight
-                position={[15, 30, 20]}
-                intensity={2.0}
-                angle={Math.PI / 6}
-                penumbra={0.5}
-                castShadow
-                shadow-mapSize-width={1024}
-                shadow-mapSize-height={1024}
-                shadow-camera-near={0.5}
-                shadow-camera-far={50}
-                shadow-bias={-0.0001}
-            />
-
-            <directionalLight
-                position={[-10, 20, 10]}
-                intensity={1.5}
-                castShadow
-                shadow-mapSize-width={1024}
-                shadow-mapSize-height={1024}
-                shadow-camera-near={0.5}
-                shadow-camera-far={50}
-                shadow-bias={-0.0001}
-                color="#ffd1a6"
-            />
-
-            <directionalLight
-                position={[10, 10, -10]}
-                intensity={0.3} // Low intensity for subtle fill
-            />
-
-            <pointLight position={[-10, 10, -10]} intensity={0.7} />
+            <BoatLighting />
 
             <group position={[0, -3, 0]} >
                 {/* Sailboat */}
@@ -87,7 +56,7 @@ const ThreeDBoatView = () => {
                 <Trail />
 
 
-                <PolarProjection />
+                {states.showPolar && <PolarProjection /> }
 
                 {/* AIS Boats */}
                 {states.ais && <AISProvider>

@@ -133,7 +133,7 @@ export const OcearoContextProvider = ({ children }) => {
     const sampleDataIntervalRef = useRef(null);
 
     useEffect(() => {
-
+        let isMounted = true;
 
         const connectSignalKClient = async () => {
             const config = configService.getAll(); // Load config from the service
@@ -161,6 +161,7 @@ export const OcearoContextProvider = ({ children }) => {
 
                 // Listen for delta updates from SignalK server
                 client.on('delta', (delta) => {
+                    if (!isMounted) return;
                     delta.updates.forEach((update) => {
                         if (update.values) {
                             update.values.forEach((value) => {
@@ -264,6 +265,7 @@ export const OcearoContextProvider = ({ children }) => {
 
         // Cleanup function to disconnect from SignalK and clear interval on unmount
         return () => {
+            isMounted = false;
             if (clientRef.current) {
                 clientRef.current.disconnect();
             }

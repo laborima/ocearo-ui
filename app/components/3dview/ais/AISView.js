@@ -150,11 +150,11 @@ const AISView = () => {
           targetColor = 'red';
         }
 
-        console.log(
+   /*     console.log(
           `Boat ${boatData.mmsi}: Displayed Distance = ${displayedDistance.toFixed(
             2
           )}, Target Color = ${targetColor}`
-        );
+        ); */
 
         // Update position and rotation
         updatePosition(boat, predictedX, predictedY, !isFirstFrame);
