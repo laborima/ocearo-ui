@@ -30,23 +30,12 @@ const INITIAL_STATES = {
     mob: false,
     showOcean: false,
     ais: false,
+    showPolar: true
 };
 
-export const BATTERY_CONFIG = {
-  WARNING_THRESHOLD: 50,
-  DANGER_THRESHOLD: 20,
-  CHARGING_THRESHOLD: 13 // Voltage threshold to determine if battery is charging
-};
-
-// Function to estimate SoC based on voltage
-export const estimateStateOfCharge = (voltage) => {
-  // Example for a 12V lead-acid battery
-  if (voltage >= 12.7) return 100;
-  if (voltage >= 12.5) return 75;
-  if (voltage >= 12.3) return 50;
-  if (voltage >= 12.1) return 25;
-  return 0;
-};
+// Battery utilities have been moved to a dedicated file at:
+// app/components/utils/BatteryUtils.js
+// Import { BATTERY_CONFIG, estimateStateOfCharge, isBatteryCharging, getBatteryColorClass } from there
 
 
 // Separate sample data into its own object for better organization
@@ -110,14 +99,7 @@ const SAMPLE_DATA = {
 export const OcearoContextProvider = ({ children }) => {
     const [signalkData, setSignalKData] = useState({}); // State to hold SignalK data
     const [nightMode, setNightMode] = useState(false); // Night mode state
-    const [states, setStates] = useState({
-        autopilot: true, // Default autopilot to true
-        anchorWatch: false,
-        parkingMode: false,
-        mob: false,
-        showOcean: false,
-        ais: false,
-    });
+    const [states, setStates] = useState(INITIAL_STATES);
 
 
     // Method to toggle any state (e.g., autopilot, anchorWatch)

@@ -1,21 +1,54 @@
-import { Canvas } from '@react-three/fiber';
-
-// Importing the new components
-import ThreeDBoatView from './ThreeDBoatView';
-import ThreeDBoatToolbar from './ThreeDBoatToolbar';
-import ThreeDBoatSpeedIndicator from './ThreeDBoatSpeedIndicator';
-import ThreeDBoatThanksIndicator from './ThreeDBoatThanksIndicator';
-import ThreeDBoatRudderIndicator from './ThreeDBoatRudderIndicator';
-import ThreeDBoatTideLevelIndicator from './ThreeDBoatTideLevelIndicator';
-import ThreeDParkAssistBoat from './parkassist/ThreeDParkAssistBoat';
-import ThreeDAnchoredBoat from './anchored/ThreeDAnchoredBoat';
+import { Canvas, useThree } from '@react-three/fiber';
+import dynamic from 'next/dynamic';
 import { useOcearoContext } from '../context/OcearoContext';
 import * as THREE from 'three';
-import ThreeDBoatPositionDateIndicator from './ThreeDBoatPositionDateIndicator';
-import ThreeDBoatSeaLevelIndicator from './ThreeDBoatSeaLevelIndicator';
+import { useEffect } from 'react';
+
+// Basic UI components loaded synchronously
+import ThreeDBoatToolbar from './ThreeDBoatToolbar';
+import ThreeDBoatThanksIndicator from './ThreeDBoatThanksIndicator';
+
+// Heavy 3D components loaded dynamically
+const ThreeDBoatView = dynamic(() => import('./ThreeDBoatView'), { ssr: false });
+const ThreeDParkAssistBoat = dynamic(() => import('./parkassist/ThreeDParkAssistBoat'), { ssr: false });
+const ThreeDAnchoredBoat = dynamic(() => import('./anchored/ThreeDAnchoredBoat'), { ssr: false });
+
+// Secondary UI components loaded dynamically
+const ThreeDBoatSpeedIndicator = dynamic(() => import('./ThreeDBoatSpeedIndicator'));
+const ThreeDBoatRudderIndicator = dynamic(() => import('./ThreeDBoatRudderIndicator'));
+const ThreeDBoatTideLevelIndicator = dynamic(() => import('./ThreeDBoatTideLevelIndicator'));
+const ThreeDBoatPositionDateIndicator = dynamic(() => import('./ThreeDBoatPositionDateIndicator'));
+const ThreeDBoatSeaLevelIndicator = dynamic(() => import('./ThreeDBoatSeaLevelIndicator'));
+
+// Component to expose Three.js renderer and info for performance monitoring
+const RendererExposer = () => {
+  const { gl, scene } = useThree();
+  
+  useEffect(() => {
+    // Expose the renderer to the window for performance monitoring
+    if (window && gl) {
+      window.__OCEARO_RENDERER = gl;
+      
+      // Setup info tracking interval
+      const trackInfoInterval = setInterval(() => {
+        if (gl && gl.info) {
+          window.__OCEARO_RENDER_INFO = gl.info;
+        }
+      }, 1000);
+      
+      return () => {
+        // Cleanup
+        delete window.__OCEARO_RENDERER;
+        delete window.__OCEARO_RENDER_INFO;
+        clearInterval(trackInfoInterval);
+      };
+    }
+  }, [gl, scene]);
+  
+  return null;
+};
 
 const ThreeDMainView = () => {
-
     const { states } = useOcearoContext(); // Access global context, including nightMode
 
     return (
@@ -61,6 +94,7 @@ const ThreeDMainView = () => {
                     toneMapping: THREE.LinearToneMapping,
                     toneMappingExposure: 1
                 }}>
+                    <RendererExposer />
                     {states.parkingMode ? (
                         <ThreeDParkAssistBoat />
                     ) : states.anchorWatch ? (
