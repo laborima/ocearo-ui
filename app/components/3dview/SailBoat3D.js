@@ -6,7 +6,7 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import Sail3D from './sail/Sail3D';
 
-const ASSET_PREFIX = process.env.ASSET_PREFIX || '';
+const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
 
 
 // Helper function to get model path
