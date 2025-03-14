@@ -1,13 +1,29 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import Draggable from 'react-draggable';
-import RightPane from './components/RightPane';
-import BottomNavigation from './components/BottomNavigation';
-import AppMenu from './components/AppMenu';
 import { OcearoContextProvider } from './components/context/OcearoContext';
-import ThreeDMainView from './components/3dview/ThreeDMainView';
 import ErrorBoundary from './ErrorBoundary';
+
+// Dynamically import components for code splitting
+const RightPane = dynamic(() => import('./components/RightPane'), {
+  loading: () => <div className="w-full h-full flex items-center justify-center">Loading...</div>
+});
+
+const BottomNavigation = dynamic(() => import('./components/BottomNavigation'));
+
+const AppMenu = dynamic(() => import('./components/AppMenu'));
+
+// Keep ThreeDMainView import dynamic with custom loading component
+const ThreeDMainView = dynamic(() => import('./components/3dview/ThreeDMainView'), {
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center">
+      <div className="text-white text-2xl">Loading 3D View...</div>
+    </div>
+  ),
+  ssr: false // Disable server-side rendering for 3D components
+});
 
 // View mode constants
 export const VIEW_MODES = {

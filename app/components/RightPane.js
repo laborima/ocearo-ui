@@ -1,10 +1,24 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import PDFList from "./docviewer/PDFList";
-import ConfigPage from "./settings/ConfigPage";
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { useOcearoContext } from './context/OcearoContext';
 import configService from './settings/ConfigService';
-import MediaPlayer from './mediaplayer/MediaPlayer';
-import BatteryMonitor from './settings/BatteryMonitor';
+
+// Dynamic imports for lazy-loaded components
+const PDFList = dynamic(() => import('./docviewer/PDFList'), {
+  loading: () => <div className="w-full h-full flex justify-center items-center">Loading documents...</div>
+});
+
+const ConfigPage = dynamic(() => import('./settings/ConfigPage'), {
+  loading: () => <div className="w-full h-full flex justify-center items-center">Loading settings...</div>
+});
+
+const MediaPlayer = dynamic(() => import('./mediaplayer/MediaPlayer'), {
+  loading: () => <div className="w-full h-full flex justify-center items-center">Loading media player...</div>
+});
+
+const BatteryMonitor = dynamic(() => import('./settings/BatteryMonitor'), {
+  loading: () => <div className="w-full h-full flex justify-center items-center">Loading battery monitor...</div>
+});
 
 // Constants
 const POSITION_UPDATE_INTERVAL = 10000; // 10 seconds
