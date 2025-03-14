@@ -207,13 +207,7 @@ function PolarProjection() {
         });
     });
     
-    const [isVisible, setIsVisible] = useState(false);
-      
-      useEffect(() => {
-          setIsVisible(!(appWindAngle === null || trueWindSpeed === 0 || trueWindSpeed === null));
-      }, [appWindAngle, trueWindSpeed]);
-      
-      if (!isVisible) return null;
+
 
     return (
         <>
