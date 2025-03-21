@@ -388,7 +388,7 @@ const AISView = ({ onUpdateInfoPanel }) => {
           />
         );
       });
-  }, [vesselIds, aisData, myPositionRef.current, maxDisplayedDistance]);
+  }, [vesselIds, aisData, maxDisplayedDistance]);
 
   // Format boat data for display
   const formatBoatData = (label, value, unit = '', isAngle = false) => {
