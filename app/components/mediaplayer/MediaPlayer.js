@@ -13,26 +13,31 @@ const MediaPlayer = () => {
     { 
       name: 'Netflix', 
       url: 'https://www.netflix.com', 
-      icon: '/icons/mediaplayer/netflix.png',
+      icon: './icons/mediaplayer/netflix.png',
       external: true
     },
     { 
       name: 'YouTube', 
       url: 'https://www.youtube.com', 
-      icon: '/icons/mediaplayer/youtube.png',
+      icon: './icons/mediaplayer/youtube.png',
       external: true
     },
     { 
       name: 'Disney+', 
       url: 'https://www.disneyplus.com', 
-      icon: '/icons/mediaplayer/disneyplus.png',
+      icon: './icons/mediaplayer/disneyplus.png',
       external: true
     },
     { 
       name: 'Prime Video', 
       url: 'https://www.primevideo.com', 
-      icon: '/icons/mediaplayer/amazon.png',
+      icon: './icons/mediaplayer/amazon.png',
       external: true
+    },
+    { 
+      name: 'Spotify', 
+      url: 'https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M', 
+      icon: '/icons/mediaplayer/spotify.png'
     },
     { 
       name: 'Deezer', 
@@ -89,7 +94,7 @@ const MediaPlayer = () => {
   };
 
   return (
-    <div className="bg-rightPaneBg flex flex-col h-full p-6">
+    <div className="bg-rightPaneBg flex flex-col h-full p-6 overflow-auto">
       {selectedService ? (
         <div className="flex-1 flex flex-col">
           {/* Header */}
