@@ -430,8 +430,8 @@ const BatteryMonitor = () => {
   const hasTemperatureData = currentBatteryData.temperature !== null;
   
   return (
-    <div className="p-6 flex flex-col h-full bg-rightPaneBg">
-      <div className="grid gap-6 md:grid-cols-2">
+    <div className="p-6 flex flex-col h-full bg-rightPaneBg overflow-auto">
+      <div className="grid gap-6 md:grid-cols-2 auto-rows-fr h-full">
         {/* Primary Battery Visualization */}
         <div className="bg-oGray2 rounded-lg shadow-lg p-4 flex flex-col md:row-span-2">
           <h2 className={`text-lg font-semibold ${nightMode ? 'text-oNight' : 'text-white'} mb-6 text-center`}>
@@ -501,7 +501,7 @@ const BatteryMonitor = () => {
         </div>
 
         {/* Battery Graph */}
-        <div className="bg-oGray2 rounded-lg shadow-lg p-4">
+        <div className="bg-oGray2 rounded-lg shadow-lg p-4 flex flex-col h-full">
           <div className="flex justify-between items-center mb-4">
             <h2 className={`text-lg font-semibold ${nightMode ? 'text-oNight' : 'text-white'}`}>
               Battery Graph
@@ -536,7 +536,7 @@ const BatteryMonitor = () => {
             </div>
           </div>
           
-          <div className="h-64 mt-6 mb-8 relative">
+          <div className="h-48 relative">
             {activeView === 'voltage' && (
               <LineChart 
                 data={batteryData} 
@@ -585,7 +585,7 @@ const BatteryMonitor = () => {
         </div>
         
         {/* Performance Metrics */}
-        <div className="bg-oGray2 rounded-lg shadow-lg p-4">
+        <div className="bg-oGray2 rounded-lg shadow-lg p-4 flex flex-col h-full">
           <div className="flex justify-between items-center mb-4">
             <h2 className={`text-lg font-semibold ${nightMode ? 'text-oNight' : 'text-white'} flex items-center`}>
               <FontAwesomeIcon icon={faMicrochip} className="mr-2" />
@@ -619,7 +619,7 @@ const BatteryMonitor = () => {
             </div>
           </div>
           
-          <div className="h-56 mt-4 mb-4 relative">
+          <div className="h-48 relative">
             {activePerformanceView === 'fps' && (
               <LineChart 
                 data={performanceData} 
