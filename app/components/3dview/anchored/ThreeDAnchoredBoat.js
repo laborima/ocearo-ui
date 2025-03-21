@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import SailBoat3D from '../SailBoat3D';
 import AnchoredCircle from './AnchoredCircle';
 
-const ThreeDAnchoredBoat = () => {
+const ThreeDAnchoredBoat = ({ onUpdateInfoPanel }) => {
     const sailBoatRef = useRef();
     const { size } = useThree(); // Get canvas dimensions
     const aspect = size.width / size.height; // Calculate aspect ratio
@@ -62,7 +62,12 @@ const ThreeDAnchoredBoat = () => {
             <pointLight position={[-10, 10, -10]} intensity={0.7} />
 
             {/* Boat model */}
-            <SailBoat3D ref={sailBoatRef} scale={[1.3, 1.3, 1.3]} position={[0, -6, 0]} />
+            <SailBoat3D 
+                ref={sailBoatRef} 
+                scale={[1.3, 1.3, 1.3]} 
+                position={[0, -6, 0]} 
+                onUpdateInfoPanel={onUpdateInfoPanel} 
+            />
 
             <AnchoredCircle />
 

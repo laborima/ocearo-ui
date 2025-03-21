@@ -6,7 +6,7 @@ import WindSector3D from '../compass/WindSector3D';
 import BoatNavigationSystem from './BoatNavigationSystem';
 import Current3D from '../compass/Current3D';
 
-const ThreeDParkAssistBoat = () => {
+const ThreeDParkAssistBoat = ({ onUpdateInfoPanel }) => {
   const sailBoatRef = useRef();
   const { getSignalKValue } = useOcearoContext();
 
@@ -92,6 +92,7 @@ const ThreeDParkAssistBoat = () => {
           scale={[0.5, 0.5, 0.5]}
           ref={sailBoatRef}
           showSail={false}
+          onUpdateInfoPanel={onUpdateInfoPanel}
         />
 
         <WindSector3D outerRadius={5} />

@@ -20,7 +20,7 @@ const defaultBoat = {
 };
 
 
-const SailBoat3D = forwardRef(({ showSail = false, ...props }, ref) => {
+const SailBoat3D = forwardRef(({ showSail = false, onUpdateInfoPanel, ...props }, ref) => {
     const boatRef = useRef();
     const rudderRef = useRef();
     const { getSignalKValue } = useOcearoContext();
@@ -166,8 +166,70 @@ const SailBoat3D = forwardRef(({ showSail = false, ...props }, ref) => {
         return meshComponents[selectedBoat.name] || meshComponents.Default;
     }, [selectedBoat.name, nodes, materials]);
 
+    // Get the various boat data values for display in the info panel
+    const boatData = useMemo(() => {
+        return {
+            // Basic info
+            name: selectedBoat.name || 'Sailboat',
+            type: 'sailboat',
+            
+            // Wind data
+            trueWindAngle: getSignalKValue('environment.wind.angleTrueWater') || 0,
+            trueWindSpeed: getSignalKValue('environment.wind.speedTrue') || 0,
+            appWindAngle: getSignalKValue('environment.wind.angleApparent') || 0,
+            appWindSpeed: getSignalKValue('environment.wind.speedApparent') || 0,
+            
+            // Navigation performance
+            beatAngle: getSignalKValue('performance.beatAngle') || 0,
+            polarSpeed: getSignalKValue('performance.polarSpeed') || 0,
+            polarSpeedRatio: getSignalKValue('performance.polarSpeedRatio') || 0,
+            velocityMadeGood: getSignalKValue('performance.velocityMadeGood') || 0,
+            speedThroughWater: getSignalKValue('navigation.speedThroughWater') || 0,
+            
+            // Heading and course
+            headingTrue: getSignalKValue('navigation.headingTrue') || 0,
+            courseOverGroundTrue: getSignalKValue('navigation.courseOverGroundTrue') || 0,
+           
+            position: getSignalKValue('navigation.position') || { latitude: 0, longitude: 0 }
+        };
+    }, [getSignalKValue, selectedBoat.name]);
+
+   
+    // Format data for InfoPanel display
+    const formatInfoPanelContent = (data) => {
+        // Convert radians to degrees and format
+        const toDegrees = (rad) => Math.round((rad * 180 / Math.PI + 360) % 360);
+        
+        return [
+            `Name: ${data.name}`,
+            `Wind: ${data.trueWindSpeed.toFixed(1)}kn @ ${toDegrees(data.trueWindAngle)}°`,
+            `App Wind: ${data.appWindSpeed.toFixed(1)}kn @ ${toDegrees(data.appWindAngle)}°`,
+            `Speed: ${data.speedThroughWater.toFixed(1)}kn`,
+            `Heading: ${toDegrees(data.headingTrue)}°`,
+            `COG: ${toDegrees(data.courseOverGroundTrue)}°`,
+            `VMG: ${data.velocityMadeGood.toFixed(1)}kn`,
+            `Polar: ${(data.polarSpeedRatio * 100).toFixed(0)}%`,
+            `Position: ${data.position.latitude.toFixed(4)}°, ${data.position.longitude.toFixed(4)}°`
+        ].join('\n');
+    };
+    
+    // Handle pointer events
+    const handlePointerOver = () => {
+        if (onUpdateInfoPanel) onUpdateInfoPanel(formatInfoPanelContent(boatData));
+    };
+    
+    const handlePointerOut = () => {
+        if (onUpdateInfoPanel) onUpdateInfoPanel(null);
+    };
+
     return (
-        <group {...props} ref={boatRef} dispose={null}>
+        <group 
+            {...props} 
+            ref={boatRef} 
+            dispose={null}
+            onPointerOver={handlePointerOver}
+            onPointerOut={handlePointerOut}
+        >
             {capabilities.includes('sail') && showSail && <Sail3D />}
             <BoatMeshes />
         </group>

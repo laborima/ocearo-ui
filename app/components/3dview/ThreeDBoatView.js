@@ -15,10 +15,9 @@ import BoatLighting from './BoatLighting';
 import configService from '../settings/ConfigService';
 
 const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
-    const { states } = useOcearoContext(); // Application state from context
+    const { states, getSignalKValue } = useOcearoContext(); // Application state from context
     const isCompassLayerVisible = false; // Compass visibility
     const config = configService.getAll(); // Load config from the service
-
 
     const sailBoatRef = useRef();
 
@@ -50,7 +49,13 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
 
             <group position={[0, -3, 0]} >
                 {/* Sailboat */}
-                <SailBoat3D position={[0, 0, 0.7]} scale={[0.7, 0.7, 0.7]} ref={sailBoatRef} showSail={true} />
+                <SailBoat3D 
+                    position={[0, 0, 0.7]} 
+                    scale={[0.7, 0.7, 0.7]} 
+                    ref={sailBoatRef} 
+                    showSail={true} 
+                    onUpdateInfoPanel={onUpdateInfoPanel} 
+                />
 
                 {/* Ocean */}
                 {states.showOcean && <Ocean3D />}

@@ -101,9 +101,9 @@ const ThreeDMainView = () => {
                 }}>
                     <RendererExposer />
                     {states.parkingMode ? (
-                        <ThreeDParkAssistBoat />
+                        <ThreeDParkAssistBoat onUpdateInfoPanel={setInfoPanelContent} />
                     ) : states.anchorWatch ? (
-                        <ThreeDAnchoredBoat />
+                        <ThreeDAnchoredBoat onUpdateInfoPanel={setInfoPanelContent} />
                     ) : (
                         <ThreeDBoatView onUpdateInfoPanel={setInfoPanelContent} />
                     )}

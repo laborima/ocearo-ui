@@ -52,7 +52,7 @@ const AISBoat = forwardRef(({ position, visible, boatData, onHover }, ref) => {
 
     // Basic info always displayed
     const basicInfo = [
-        formatBoatData('Name', boatData.name || boatData.mmsi)
+        formatBoatData('Name', boatData.name ? boatData.name : `MMSI ${boatData.mmsi.replace('urn:mrn:imo:mmsi:', '')}`, '')
     ].join('');
 
     // Calculate the scale factor based on the desired length
