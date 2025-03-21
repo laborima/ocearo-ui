@@ -228,6 +228,24 @@ const ConfigPage = ({ onSave }) => {
                             Debug Mode
                         </label>
                     </div>
+                    
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium">
+                            AIS Length Scaling Factor
+                            <div className="text-xs text-gray-500">Controls the scaling of AIS boats on the map (default: 0.7)</div>
+                        </label>
+                        <input
+                            type="number"
+                            className="w-full p-2 border rounded text-black"
+                            value={config.aisLengthScalingFactor || 0.7}
+                            step="0.1"
+                            min="0.1"
+                            max="2.0"
+                            onChange={(e) => updateConfig({
+                                aisLengthScalingFactor: parseFloat(e.target.value)
+                            })}
+                        />
+                    </div>
 
                     {selectedBoat && config.debugMode && (
                         <div className="space-y-2 text-sm text-gray-400">

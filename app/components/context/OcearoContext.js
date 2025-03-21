@@ -120,7 +120,7 @@ export const OcearoContextProvider = ({ children }) => {
         const connectSignalKClient = async () => {
             const config = configService.getAll(); // Load config from the service
 
-            const { signalkUrl, debugMode } = config;
+            const { signalkUrl } = config;
             try {
                 const [hostname, port] = signalkUrl.replace(/https?:\/\//, '').split(':');
                 const client = new Client({

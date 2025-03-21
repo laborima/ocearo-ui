@@ -82,8 +82,11 @@ const CompassDial = ({ outerRadius, innerRadius }) => {
   const { nightMode, getSignalKValue } = useOcearoContext();
   const dialColor = nightMode ? oNight : 0xffffff;
   
+  const heading = getSignalKValue('navigation.headingTrue') || getSignalKValue('navigation.headingMagnetic');
   const courseOverGroundAngle = getSignalKValue('navigation.courseOverGroundTrue')
-   || getSignalKValue('navigation.headingTrue');
+   || getSignalKValue('navigation.courseOverGroundMagnetic');
+
+  const compassHeading = courseOverGroundAngle || heading  || 0;
 
   // Memoize the static properties
   const staticProps = useMemo(() => ({
@@ -105,7 +108,7 @@ const CompassDial = ({ outerRadius, innerRadius }) => {
   return (
     <>
       {/* Rotating inner dial */}
-      <group rotation={[0, Math.PI-courseOverGroundAngle, 0]}>
+      <group rotation={[0, Math.PI-compassHeading, 0]}>
         <StaticRing
           innerRadius={staticProps.innerRadius}
           outerRadius={staticProps.outerRadius}

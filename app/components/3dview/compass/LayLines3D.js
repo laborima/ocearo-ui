@@ -1,106 +1,252 @@
-import React, {  useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Vector3, MathUtils } from 'three';
-import { Line, Sphere } from '@react-three/drei';
+import { Sphere } from '@react-three/drei';
 import { useOcearoContext } from '../../context/OcearoContext';
 
 
+// Helper function to convert nautical miles and bearing to 3D coordinates
+export function nmToCarthesian(distanceNM, bearingRad, scale = 1) {
+    return new Vector3(
+        distanceNM * Math.sin(bearingRad) * scale,
+        0,
+        -distanceNM * Math.cos(bearingRad) * scale
+    );
+}
+
+// Helper to rotate a 2D vector for the compass view
 export function rotateVector(v) {
     return new Vector3(v.x, 0, -v.y);
 }
 
-const LayLines3D = ({ outerRadius }) => {
+// ParallelepipedLine component to render 3D lines as parallelepipeds
+const ParallelepipedLine = ({ start, end, color, width = 0.2, height = 0.1, dashed = false }) => {
+    // Calculate the midpoint, length, and direction of the line
+    const midpoint = useMemo(() => {
+        if (!start || !end || !start.isVector3 || !end.isVector3) {
+            return new Vector3();
+        }
+        return new Vector3().addVectors(start, end).multiplyScalar(0.5);
+    }, [start, end]);
+    
+    const direction = useMemo(() => {
+        if (!start || !end || !start.isVector3 || !end.isVector3) {
+            return new Vector3(0, 0, 1);
+        }
+        return new Vector3().subVectors(end, start).normalize();
+    }, [start, end]);
+    
+    const length = useMemo(() => {
+        if (!start || !end || !start.isVector3 || !end.isVector3) {
+            return 0;
+        }
+        return start.distanceTo(end);
+    }, [start, end]);
+    
+    // Calculate rotation to align with the direction
+    const rotation = useMemo(() => {
+        // For 3D lines, we need to calculate the rotation to align with the direction
+        // We're working in the XZ plane (Y is up)
+        const angle = Math.atan2(direction.x, direction.z);
+        return [0, angle, 0]; // [rotX, rotY, rotZ]
+    }, [direction]);
+    
+    // Only render if both start and end are valid vectors
+    if (!start || !end || !start.isVector3 || !end.isVector3) {
+        return null;
+    }
+    
+    if (dashed) {
+        // For dashed lines, create multiple small segments
+        const dashLength = 0.4;
+        const gapLength = 0.3;
+        const totalLength = length;
+        const numSegments = Math.floor(totalLength / (dashLength + gapLength));
+        
+        if (numSegments <= 0) return null;
+        
+        const segments = [];
+        for (let i = 0; i < numSegments; i++) {
+            const segmentStart = i * (dashLength + gapLength);
+            const segmentPosition = new Vector3().copy(start).add(
+                new Vector3().copy(direction).multiplyScalar(segmentStart + dashLength / 2)
+            );
+            
+            segments.push(
+                <mesh 
+                    key={i} 
+                    position={segmentPosition.toArray()} 
+                    rotation={rotation} 
+                    scale={[width, height, dashLength]}
+                >
+                    <boxGeometry />
+                    <meshStandardMaterial color={color} />
+                </mesh>
+            );
+        }
+        
+        return <>{segments}</>;
+    }
+    
+    // For solid lines, create a single parallelepiped
+    return (
+        <mesh 
+            position={midpoint.toArray()} 
+            rotation={rotation} 
+            scale={[width, height, length]}
+        >
+            <boxGeometry />
+            <meshStandardMaterial color={color} />
+        </mesh>
+    );
+};
+
+const LayLines3D = ({ outerRadius = 10 }) => {
     const { getSignalKValue } = useOcearoContext();
-    const [showLaylines, setShowLaylines] = useState(false);
+    const [showLaylines, setShowLaylines] = useState(true);
 
+    // Get waypoint data
+    const waypointBearing = getSignalKValue('navigation.courseGreatCircle.nextPoint.bearingTrue') || 10;
+    const waypointDistance = getSignalKValue('navigation.courseGreatCircle.nextPoint.distance') || 20;
+    
     // Wind data
-    const trueWindAngle = getSignalKValue('environment.wind.angleTrueWater') || MathUtils.degToRad(25); // True Wind Angle (TWA)
-    const trueWindSpeed = getSignalKValue('environment.wind.speedTrue') || 20; // True Wind Speed
-    const appWindAngle = getSignalKValue('environment.wind.angleApparent') || MathUtils.degToRad(23); // Apparent Wind Angle
-    const appWindSpeed = getSignalKValue('environment.wind.speedApparent') || 25; // Apparent Wind Speed
-
-    // Navigation performance
-    const beatAngle = getSignalKValue('performance.beatAngle') || MathUtils.degToRad(45); // Beat Angle
-    const gybeAngle = getSignalKValue('performance.gybeAngle') || MathUtils.degToRad(135); // Gybe Angle
-    const beatVMG = getSignalKValue('performance.beatAngleVelocityMadeGood') || 6; // VMG on beat
-    const gybeVMG = getSignalKValue('performance.gybeAngleVelocityMadeGood') || 5; // VMG on gybe
-    const targetTWA = getSignalKValue('performance.targetAngle') || beatAngle; // Target True Wind Angle
-    const optimalWindAngle = targetTWA - trueWindAngle || MathUtils.degToRad(15); // Optimal Wind Angle
-    const polarSpeed = getSignalKValue('performance.polarSpeed') || 8; // Polar Speed of the boat
-    const polarSpeedRatio = getSignalKValue('performance.polarSpeedRatio') || 0.95; // Polar Speed Ratio
-    const velocityMadeGood = getSignalKValue('performance.velocityMadeGood') || 5; // Current VMG
-    const speedThroughWater = getSignalKValue('navigation.speedThroughWater') || 7; // Speed Through Water
-    const polarVelocityMadeGood = getSignalKValue('performance.polarVelocityMadeGood') || 6; // Polar VMG
-    const polarVelocityMadeGoodRatio = getSignalKValue('performance.polarVelocityMadeGoodRatio') || 0.9; // Polar VMG Ratio
-
-    // Course data
-    const headingTrue = getSignalKValue('navigation.headingTrue') || MathUtils.degToRad(0); // True Heading
-    const courseOverGroundAngle = getSignalKValue('navigation.courseOverGround') || MathUtils.degToRad(10); // Course Over Ground
-    const nextWaypointBearing = getSignalKValue('navigation.courseGreatCircle.nextPoint.bearingTrue') || MathUtils.degToRad(30); // Bearing to next waypoint
-    const laylineAngle = getSignalKValue('performance.laylineAngle') || MathUtils.degToRad(10); // Layline Angle
-
-    // Racing data
-    const layline = getSignalKValue('navigation.racing.layline') || beatAngle; // Layline angle for racing
-    const laylineDistance = getSignalKValue('navigation.racing.layline.distance') || 100; // Distance to layline
-    const laylineTime = getSignalKValue('navigation.racing.layline.time') || 180; // Time to reach layline
-    const oppositeLayline = getSignalKValue('navigation.racing.oppositeLayline') || MathUtils.degToRad(45); // Opposite layline angle
-    const oppositeLaylineDistance = getSignalKValue('navigation.racing.oppositeLayline.distance') || 80; // Distance to opposite layline
-    const oppositeLaylineTime = getSignalKValue('navigation.racing.oppositeLayline.time') || 180; // Time to reach opposite layline
-
-    // Constants for angles (in radians) and distance
-    const tackAngle = 2 * trueWindAngle; // Tack angle, assuming 45 degrees
-    const waypointAngle = nextWaypointBearing; // Waypoint angle
-    const waypointDistance = 20; // Distance to waypoint
-
-    const layLineAngle = layline;
-    const laylineTackAngle = 2 * (trueWindAngle + layLineAngle);
-
-    // Calculate waypoint and course position
-    const DE = waypointDistance * Math.cos(waypointAngle);
-    const DC = DE / Math.cos(Math.PI / 2 - tackAngle);
-    const EC = Math.sin(Math.PI / 2 - tackAngle) * DC;
-    const BE = waypointDistance * Math.sin(waypointAngle);
-    const BC = BE - EC;
-
-    const waypointPosition = rotateVector(new Vector3(DE, BE, 0));
-    const waypointCirclePosition = rotateVector(new Vector3(outerRadius * Math.cos(waypointAngle), outerRadius * Math.sin(waypointAngle), 0));
-    const oppositeTackLinePosition = rotateVector(new Vector3(DE, EC, 0));
-    const courseLinePosition = rotateVector(new Vector3(0, BC, 0));
-
-    // Calculate layline positions
-    const DC2 = DE / Math.cos(Math.PI / 2 - laylineTackAngle);
-    const EC2 = Math.sin(Math.PI / 2 - laylineTackAngle) * DC2;
-    const BE2 = waypointDistance * Math.sin(waypointAngle);
-    const BC2 = BE2 - EC2;
-
-    const oppositeLaylineEndPosition = rotateVector(new Vector3(outerRadius * Math.cos(laylineTackAngle), outerRadius * Math.sin(laylineTackAngle), 0));
-    const laylineEndPosition = rotateVector(new Vector3(outerRadius * Math.cos(layLineAngle), outerRadius * Math.sin(layLineAngle), 0));
-
+    const trueWindDirection = getSignalKValue('environment.wind.directionTrue') || 0;
+    
+    // Performance data - sailing angles
+    const beatAngle = getSignalKValue('performance.beatAngle') || MathUtils.degToRad(45);
+    
+    // Calculate the waypoint position using bearing and distance
+    const waypointPosition = useMemo(() => {
+        if (waypointBearing !== undefined && waypointDistance !== undefined) {
+            // Convert from nautical miles and bearing to XYZ coordinates
+            return nmToCarthesian(waypointDistance, waypointBearing, 1);
+        }
+        // Default position if no waypoint data
+        return new Vector3(0, 0, -5);
+    }, [waypointBearing, waypointDistance]);
+    
+    // Calculate layline angles based on wind direction
+    const portTackAngle = useMemo(() => {
+        return trueWindDirection + beatAngle;
+    }, [trueWindDirection, beatAngle]);
+    
+    const starboardTackAngle = useMemo(() => {
+        return trueWindDirection - beatAngle;
+    }, [trueWindDirection, beatAngle]);
+    
+    // Calculate layline endpoints at the outer radius
+    const portLaylineEnd = useMemo(() => {
+        return nmToCarthesian(outerRadius, portTackAngle, 1);
+    }, [outerRadius, portTackAngle]);
+    
+    const starboardLaylineEnd = useMemo(() => {
+        return nmToCarthesian(outerRadius, starboardTackAngle, 1);
+    }, [outerRadius, starboardTackAngle]);
+    
+    // Calculate the layline corners to create a trapezoid shape
+    // This is a simpler, more reliable approach that directly creates laylines
+    // matching the reference image
+    const laylineCorners = useMemo(() => {
+        // Simple approach - create points at fixed distances along the layline angles
+        // Use 70% of the waypoint distance for a nice visual balance
+        const cornerDistance = waypointDistance * 0.7;
+        
+        // Calculate the corner positions directly using the tack angles
+        const portCorner = nmToCarthesian(cornerDistance, portTackAngle, 1);
+        const starboardCorner = nmToCarthesian(cornerDistance, starboardTackAngle, 1);
+        
+        return { port: portCorner, starboard: starboardCorner };
+    }, [waypointDistance, portTackAngle, starboardTackAngle]);
+    
+    // Origin (boat position) is always at 0,0,0
     const boatPosition = new Vector3(0, 0, 0);
 
     return (
         <group>
-            <mesh position={waypointPosition}>
-                <coneGeometry args={[0.5, 1, 32]} />
-                <meshStandardMaterial color="orange" />
-            </mesh>
-            
-            <Sphere
-                position={waypointCirclePosition.toArray()}
-                args={[0.2, 16, 16]}
-                rotation={[Math.PI / 2, 0, 0]}
-                material-color="orange"
-            />
-
-            {/* Laylines and Course Lines */}
-            <Line points={[boatPosition, courseLinePosition]} color="green" lineWidth={5} />
-            <Line points={[boatPosition, oppositeTackLinePosition]} color="red" lineWidth={5} />
-            <Line points={[oppositeTackLinePosition, waypointPosition]} color="green" lineWidth={5} />
-            <Line points={[courseLinePosition, waypointPosition]} color="red" lineWidth={5} />
-
-            {/* Laylines with Dashed Pattern */}
-            <Line points={[boatPosition, laylineEndPosition]} color="green" lineWidth={5} dashed dashSize={0.2} gapSize={0.2} />
-            <Line points={[boatPosition, oppositeLaylineEndPosition]} color="red" lineWidth={5} dashed dashSize={0.2} gapSize={0.2} />
-
+            {showLaylines && (
+                <>
+                    {/* Target waypoint as yellow sphere with cross */}
+                    <Sphere
+                        position={waypointPosition.toArray()}
+                        args={[0.5, 16, 16]}
+                        material-color="yellow"
+                    >
+                        {/* Horizontal cross line */}
+                        <mesh position={[0, 0, 0]} rotation={[0, Math.PI/2, 0]}>
+                            <cylinderGeometry args={[0.05, 0.05, 1, 8]} />
+                            <meshStandardMaterial color="black" />
+                        </mesh>
+                        {/* Vertical cross line */}
+                        <mesh position={[0, 0, 0]} rotation={[Math.PI/2, 0, 0]}>
+                            <cylinderGeometry args={[0.05, 0.05, 1, 8]} />
+                            <meshStandardMaterial color="black" />
+                        </mesh>
+                    </Sphere>
+                    
+                    {/* Direct route to waypoint */}
+                    <ParallelepipedLine 
+                        start={boatPosition} 
+                        end={waypointPosition} 
+                        color="yellow" 
+                        width={0.1} 
+                        height={0.05} 
+                        dashed 
+                    />
+                    
+                    {/* Port tack layline (green) */}
+                    <ParallelepipedLine 
+                        start={boatPosition} 
+                        end={laylineCorners.port} 
+                        color="green" 
+                        width={0.2} 
+                        height={0.1} 
+                    />
+                    
+                    <ParallelepipedLine 
+                        start={laylineCorners.port} 
+                        end={waypointPosition} 
+                        color="green" 
+                        width={0.2} 
+                        height={0.1} 
+                    />
+                    
+                    {/* Starboard tack layline (red) */}
+                    <ParallelepipedLine 
+                        start={boatPosition} 
+                        end={laylineCorners.starboard} 
+                        color="red" 
+                        width={0.2} 
+                        height={0.1} 
+                    />
+                    
+                    <ParallelepipedLine 
+                        start={laylineCorners.starboard} 
+                        end={waypointPosition} 
+                        color="red" 
+                        width={0.2} 
+                        height={0.1} 
+                    />
+                    
+                    
+                    {/* Extended laylines */}
+                    <ParallelepipedLine 
+                        start={boatPosition} 
+                        end={portLaylineEnd} 
+                        color="green" 
+                        width={0.2} 
+                        height={0.1} 
+                        dashed 
+                    />
+                    
+                    <ParallelepipedLine 
+                        start={boatPosition} 
+                        end={starboardLaylineEnd} 
+                        color="red" 
+                        width={0.2} 
+                        height={0.1} 
+                        dashed 
+                    />
+                </>
+            )}
         </group>
     );
 };

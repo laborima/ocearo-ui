@@ -75,7 +75,7 @@ const BatteryIndicator = ({ batteryLevel, batteryNumber, voltage }) => {
                     style={{ width: `${percentage}%` }}
                 />
                 {isCharging && (
-                    <span className="relative z-10 text-base text-white  font-bold">⚡︎</span>
+                    <span className="relative z-10 text-xs text-white  font-bold">⚡︎</span>
                 )}
 
                 {!isCharging && (

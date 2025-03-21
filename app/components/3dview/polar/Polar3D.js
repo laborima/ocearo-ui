@@ -171,7 +171,17 @@ function PolarProjection() {
     const appWindAngle = - getSignalKValue('environment.wind.angleApparent');
     const trueWindSpeed = convertWindSpeed(getSignalKValue('environment.wind.speedOverGround')) || 0;
     const sog = getSignalKValue('navigation.speedOverGround') || CONSTANTS.DEFAULT_SOG;
+    
+    // Add a ref to track the previous wind speed for detecting changes
+    const prevWindSpeedRef = useRef(trueWindSpeed);
 
+    // React Three Fiber handles automatic cleanup of Three.js objects
+    // We will use React's key prop to force remounting of components when needed
+
+    // State to force remounting of polar plots when needed
+    const [redrawKey, setRedrawKey] = useState(Date.now());
+    const redrawIntervalRef = useRef(null);
+    
     useEffect(() => {
         const initialPlots = Array.from({ length: CONSTANTS.PLOTS_COUNT }, (_, index) => ({
             id: index,
@@ -181,7 +191,38 @@ function PolarProjection() {
         setPlots(initialPlots);
         groupRefs.current = initialPlots.map(() => new Group());
         previousAngles.current = Array(CONSTANTS.PLOTS_COUNT).fill(0);
+        
+        // Set up interval to periodically force redraw of plots (every 2 minutes)
+        redrawIntervalRef.current = setInterval(() => {
+            setRedrawKey(Date.now());
+            frameCount.current = 0; // Reset frame counter when redrawing
+            console.log('Forcing redraw of polar plots');
+        }, 120000); // 120 seconds = 2 minutes
+        
+        // Cleanup on component unmount
+        return () => {
+            if (redrawIntervalRef.current) {
+                clearInterval(redrawIntervalRef.current);
+            }
+        };
     }, []);
+
+    // Effect to recreate polar curves when wind speed changes significantly
+    useEffect(() => {
+        // If wind speed has changed significantly (more than 5 knots)
+        if (Math.abs(prevWindSpeedRef.current - trueWindSpeed) > 5) {
+            console.log(`Wind speed changed from ${prevWindSpeedRef.current} to ${trueWindSpeed}, recreating polar curves`);
+            
+            // Force redraw by updating the key
+            setRedrawKey(Date.now());
+            
+            // Reset the frame counter
+            frameCount.current = 0;
+            
+            // Update the ref with current wind speed
+            prevWindSpeedRef.current = trueWindSpeed;
+        }
+    }, [trueWindSpeed]);
 
     useFrame((_, delta) => {
         frameCount.current += 1;
@@ -213,12 +254,13 @@ function PolarProjection() {
         <>
             {plots.map((plot, index) => (
                 <group
-                    key={plot.id}
+                    key={`${plot.id}-${redrawKey}`}
                     ref={ref => {
                         if (ref) groupRefs.current[index] = ref;
                     }}
                 >
                     <PolarPlot 
+                        key={`plot-${redrawKey}-${index}`}
                         timeInMinute={plot.timeInMinute} 
                         windSpeed={trueWindSpeed} 
                     />

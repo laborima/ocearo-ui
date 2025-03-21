@@ -156,8 +156,8 @@ export default function Home() {
     return (
         <ErrorBoundary>
             <OcearoContextProvider>
-                <div className="h-screen flex flex-col bg-black relative">
-                    <div className="flex flex-1">
+                <div className="h-screen flex flex-col bg-black relative overflow-hidden">
+                    <div className="flex flex-1 min-h-0">
                         <div className={layoutClasses.leftPane}>
                             <ThreeDMainView  />
                         </div>
@@ -179,7 +179,7 @@ export default function Home() {
                         </div>
                     </div>
 
-                    <div className="w-full h-16 bg-black flex items-center justify-center">
+                    <div className="w-full h-16 min-h-16 bg-black flex items-center justify-center shrink-0">
                         <BottomNavigation
                             setRightView={handleSetRightView}
                             toggleAppMenu={toggleAppMenu}

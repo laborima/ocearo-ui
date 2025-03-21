@@ -23,7 +23,7 @@ const determineBoatType = (shipType) => {
 const BASE_MODEL_LENGTH = 10; // Base length of the boat model in units
 
 // AISBoat component
-const AISBoat = forwardRef(({ position, visible, boatData }, ref) => {
+const AISBoat = forwardRef(({ position, visible, boatData, onHover }, ref) => {
     const [BoatComponent, setBoatComponent] = useState(null);
     const boatType = determineBoatType(boatData.shipType);
 
@@ -45,37 +45,68 @@ const AISBoat = forwardRef(({ position, visible, boatData }, ref) => {
     }
 
     // Helper function to format boat data
-    const formatBoatData = (label, value) => {
-        return `${label}: ${value || 'N/A'}\n`;
+    const formatBoatData = (label, value, unit = '') => {
+        const displayValue = value !== undefined && value !== null ? `${value}${unit}` : 'N/A';
+        return `${label}: ${displayValue}\n`;
     };
 
-    const boatInfo = [
-        formatBoatData('Name', boatData.name || 'Unknown'),
-        formatBoatData('Length', boatData.length ? `${boatData.length}m` : 'N/A'),
-        formatBoatData('Type', boatData.shipType)
+    // Basic info always displayed
+    const basicInfo = [
+        formatBoatData('Name', boatData.name || boatData.mmsi)
     ].join('');
 
     // Calculate the scale factor based on the desired length
     const desiredLength = boatData.length || BASE_MODEL_LENGTH; // Default to base model length if length is not provided
     const scaleFactor = desiredLength / BASE_MODEL_LENGTH;
 
-    return (
-        <group ref={ref} position={position} visible={visible}>
-            <BoatComponent scale={[scaleFactor, scaleFactor, scaleFactor]} />
 
-            <Text
-                position={[3, 9, 0]} // Position above the boat
-                fontSize={0.5}
-                maxWidth={3} // Adjust as needed
-                lineHeight={1}
-                textAlign="left"
-                color="white"
-                anchorX="center"
-                anchorY="top"
-                font="fonts/Roboto-Bold.ttf"
+
+    return (
+        <group 
+            ref={ref} 
+            position={position} 
+            visible={visible}
+        >
+            <group 
+                onClick={(e) => {
+                    e.stopPropagation();
+                    console.log('Clicked on boat:', boatData.name || boatData.mmsi);
+                }}
+                onPointerOver={(e) => {
+                    e.stopPropagation();
+                    // Only trigger hover when component is for sure mounted
+                    if (BoatComponent) {
+                        onHover && onHover(boatData);
+                    }
+                }}
+                onPointerOut={(e) => {
+                    e.stopPropagation();
+                    onHover && onHover(null);
+                }}
             >
-                {boatInfo}
-            </Text>
+                <BoatComponent 
+                    scale={[scaleFactor, scaleFactor, scaleFactor]}
+                />
+            </group>
+
+            {/* Simple label above the boat */}
+            <group position={[1.5, 4, 0]}>
+                <Text
+                    position={[0, 0, 0]}
+                    fontSize={0.4}
+                    maxWidth={3}
+                    lineHeight={1.2}
+                    textAlign="left"
+                    color="white"
+                    anchorX="center"
+                    anchorY="middle"
+                    font="fonts/Roboto-Bold.ttf"
+                    renderOrder={1000}
+                    depthTest={false}
+                >
+                    {basicInfo}
+                </Text>
+            </group>
         </group>
     );
 });

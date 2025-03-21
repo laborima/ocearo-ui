@@ -12,11 +12,13 @@ import { AISProvider } from './ais/AISContext';
 import PolarProjection from './polar/Polar3D';
 import LayLines3D from './compass/LayLines3D';
 import BoatLighting from './BoatLighting';
+import configService from '../settings/ConfigService';
 
-
-const ThreeDBoatView = () => {
+const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
     const { states } = useOcearoContext(); // Application state from context
     const isCompassLayerVisible = false; // Compass visibility
+    const config = configService.getAll(); // Load config from the service
+
 
     const sailBoatRef = useRef();
 
@@ -55,12 +57,14 @@ const ThreeDBoatView = () => {
 
                 <Trail />
 
+                {/* Laylines */}
+                {/*config.debugMode && <LayLines3D outerRadius={5.6} />*/}
 
                 {states.showPolar && <PolarProjection /> }
 
                 {/* AIS Boats */}
                 {states.ais && <AISProvider>
-                    <AISView />
+                    <AISView onUpdateInfoPanel={onUpdateInfoPanel} />
                 </AISProvider>}
 
                 {/* Compass */}

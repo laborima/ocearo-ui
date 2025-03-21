@@ -16,6 +16,7 @@ export const AISProvider = ({ children }) => {
     const [aisData, setAisData] = useState({});
     const [vesselIds, setVesselIds] = useState([]);
     const clientRef = useRef(null);
+    const lastUpdateRef = useRef({});
 
 
 
@@ -31,17 +32,34 @@ export const AISProvider = ({ children }) => {
                     setKey(info, 'name', 'name', data);
                     setKey(info, 'latitude', 'navigation.position.value.latitude', data);
                     setKey(info, 'longitude', 'navigation.position.value.longitude', data);
+                    setKey(info, 'sog', 'navigation.speedOverGround.value', data);
                     setKey(info, 'cog', 'navigation.courseOverGroundTrue.value', data);
+                    setKey(info, 'cogMagnetic', 'navigation.courseOverGroundMagnetic.value', data);
                     setKey(info, 'heading', 'navigation.headingTrue.value', data);
+                    setKey(info, 'headingMagnetic', 'navigation.headingMagnetic.value', data);
                     setKey(info, 'length', 'design.length.value.overall', data);
                     setKey(info, 'beam', 'design.beam.value', data);
                     setKey(info, 'callsign', 'communication.callsignVhf', data);
                     setKey(info, 'shipType', 'design.aisShipType.value.id', data);
+                    info.lastUpdate = Date.now();
                     return info;
                 });
 
                 console.log(`Fetched ${staticInfo.length} vessels.`);
                 setVesselIds(staticInfo);
+                
+                // Initialize aisData with the static vessel information
+                const initialAisData = {};
+                staticInfo.forEach(vessel => {
+                    if (vessel.mmsi && (vessel.latitude !== null || vessel.longitude !== null)) {
+                        initialAisData[vessel.mmsi] = vessel;
+                    }
+                });
+                
+                if (Object.keys(initialAisData).length > 0) {
+                    console.log(`Initializing AIS data with ${Object.keys(initialAisData).length} vessels`);
+                    setAisData(initialAisData);
+                }
             } catch (error) {
                 console.error('Error fetching static vessel info:', error);
             }
@@ -60,7 +78,9 @@ export const AISProvider = ({ children }) => {
                 longitude: null,
                 sog: null,
                 cog: null,
+                cogMagnetic: null,
                 heading: null,
+                headingMagnetic: null,
             });
 
             const mmsi = delta.context.replace("vessels.", "");
@@ -69,11 +89,15 @@ export const AISProvider = ({ children }) => {
                 return;
             }
 
+            // Track the last update time for this vessel
+            lastUpdateRef.current[mmsi] = Date.now();
+            
             // Use the functional update form to get the latest aisData.
             setAisData((prevData) => {
                 // Use the previous state instead of the outer aisData.
                 const target = prevData[mmsi] || getDefaultTarget(mmsi);
-
+                target.lastUpdate = lastUpdateRef.current[mmsi];
+                
                 delta.updates.forEach((update) => {
                     update.values.forEach((data) => {
                         switch (data.path) {
@@ -90,8 +114,14 @@ export const AISProvider = ({ children }) => {
                             case 'navigation.courseOverGroundTrue':
                                 target.cog = data.value;
                                 break;
+                            case 'navigation.courseOverGroundMagnetic':
+                                target.cogMagnetic = data.value;
+                                break;
                             case 'navigation.headingTrue':
                                 target.heading = data.value;
+                                break;
+                            case 'navigation.headingMagnetic':
+                                target.headingMagnetic = data.value;
                                 break;
                             default:
                                 break;
@@ -132,7 +162,9 @@ export const AISProvider = ({ children }) => {
                                 { path: 'navigation.position' },
                                 { path: 'navigation.speedOverGround' },
                                 { path: 'navigation.courseOverGroundTrue' },
-                                { path: 'navigation.headingTrue' }
+                                { path: 'navigation.courseOverGroundMagnetic' },
+                                { path: 'navigation.headingTrue' },
+                                { path: 'navigation.headingMagnetic' }
                             ],
                         },
                     ],

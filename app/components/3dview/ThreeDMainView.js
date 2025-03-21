@@ -2,7 +2,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 import dynamic from 'next/dynamic';
 import { useOcearoContext } from '../context/OcearoContext';
 import * as THREE from 'three';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 // Basic UI components loaded synchronously
 import ThreeDBoatToolbar from './ThreeDBoatToolbar';
@@ -19,6 +19,7 @@ const ThreeDBoatRudderIndicator = dynamic(() => import('./ThreeDBoatRudderIndica
 const ThreeDBoatTideLevelIndicator = dynamic(() => import('./ThreeDBoatTideLevelIndicator'));
 const ThreeDBoatPositionDateIndicator = dynamic(() => import('./ThreeDBoatPositionDateIndicator'));
 const ThreeDBoatSeaLevelIndicator = dynamic(() => import('./ThreeDBoatSeaLevelIndicator'));
+const InfoPanel = dynamic(() => import('./InfoPanel'));
 
 // Component to expose Three.js renderer and info for performance monitoring
 const RendererExposer = () => {
@@ -50,6 +51,7 @@ const RendererExposer = () => {
 
 const ThreeDMainView = () => {
     const { states } = useOcearoContext(); // Access global context, including nightMode
+    const [infoPanelContent, setInfoPanelContent] = useState(null);
 
     return (
         <div className="w-full h-full relative ">
@@ -65,8 +67,11 @@ const ThreeDMainView = () => {
 
            
 
-            {/* Thanks & Batteries Indicator (top-right) */}
-            <div className="absolute top-2  z-10  right-2" >
+            {/* InfoPanel positioned above Thanks indicators */}
+            <div className="absolute top-2 right-2 z-20 flex flex-col items-end">
+                <div className="mb-2">
+                    <InfoPanel content={infoPanelContent} />
+                </div>
                 <ThreeDBoatThanksIndicator />
             </div>
 
@@ -100,11 +105,11 @@ const ThreeDMainView = () => {
                     ) : states.anchorWatch ? (
                         <ThreeDAnchoredBoat />
                     ) : (
-                        <ThreeDBoatView />
+                        <ThreeDBoatView onUpdateInfoPanel={setInfoPanelContent} />
                     )}
                 </Canvas>
             </div>
-
+            {/* InfoPanel moved above Thanks indicators */}
 
         </div>
     );
