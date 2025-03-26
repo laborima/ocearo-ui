@@ -6,6 +6,20 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import Sail3D from './sail/Sail3D';
 
+/**
+ * Find a mesh with material in an object hierarchy
+ * @param {Object} obj - The 3D object to search
+ * @returns {Object|null} - The object with material or null if not found
+ */
+const findMaterial = (obj) => {
+  if (obj.material) return obj;
+  for (const child of obj.children) {
+    const found = findMaterial(child);
+    if (found) return found;
+  }
+  return null;
+};
+
 const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
 
 
@@ -57,13 +71,38 @@ const SailBoat3D = forwardRef(({ showSail = false, onUpdateInfoPanel, ...props }
 
     // Update materials when properties change
     useEffect(() => {
-        if (!materials?.fiberglass) return;
+        // For default boat, use direct material access
+        if (selectedBoat.modelPath === "default") {
+            if (!materials?.fiberglass) return;
+            
+            materials.fiberglass.color.set(materialProperties.primaryColor);
+            materials.fiberglass.metalness = materialProperties.metallicEffect ? 1.0 : 0.0;
+            materials.fiberglass.roughness = materialProperties.metallicEffect ? 0.2 : 1.0;
+        } 
+        // For non-default boats, use findMaterial to locate and update the material
+        else if (boatRef.current) {
+            // Get all scene objects
+            boatRef.current.traverse((child) => {
+                if (child.isMesh && child.material) {
+                    // Apply color and material properties to each material
+                    if (Array.isArray(child.material)) {
+                        // Handle multi-material objects
+                        child.material.forEach(mat => {
+                            mat.color.set(materialProperties.primaryColor);
+                            mat.metalness = materialProperties.metallicEffect ? 1.0 : 0.0;
+                            mat.roughness = materialProperties.metallicEffect ? 0.2 : 1.0;
+                        });
+                    } else {
+                        // Handle single material objects
+                        child.material.color.set(materialProperties.primaryColor);
+                        child.material.metalness = materialProperties.metallicEffect ? 1.0 : 0.0;
+                        child.material.roughness = materialProperties.metallicEffect ? 0.2 : 1.0;
+                    }
+                }
+            });
+        }
 
-        materials.fiberglass.color.set(materialProperties.primaryColor);
-        materials.fiberglass.metalness = materialProperties.metallicEffect ? 1.0 : 0.0;
-        materials.fiberglass.roughness = materialProperties.metallicEffect ? 0.2 : 1.0;
-
-        // Optimize textures
+        // Optimize textures for all boats
         Object.values(materials).forEach(material => {
             if (material.map) {
                 material.map.minFilter = THREE.LinearFilter;
@@ -71,7 +110,7 @@ const SailBoat3D = forwardRef(({ showSail = false, onUpdateInfoPanel, ...props }
                 material.map.anisotropy = 1;
             }
         });
-    }, [materials, materialProperties]);
+    }, [materials, materialProperties, selectedBoat, boatRef]);
 
     // Memoize transformation matrix for better performance
     const rudderMatrix = useMemo(() => new THREE.Matrix4(), []);
@@ -213,13 +252,17 @@ const SailBoat3D = forwardRef(({ showSail = false, onUpdateInfoPanel, ...props }
         ].join('\n');
     };
     
-    // Handle pointer events
-    const handlePointerOver = () => {
-        if (onUpdateInfoPanel) onUpdateInfoPanel(formatInfoPanelContent(boatData));
-    };
+    // Handle touch/click events for touchscreen optimization
+    const [infoVisible, setInfoVisible] = useState(false);
     
-    const handlePointerOut = () => {
-        if (onUpdateInfoPanel) onUpdateInfoPanel(null);
+    const handleInfoPanelToggle = () => {
+        const newVisibleState = !infoVisible;
+        setInfoVisible(newVisibleState);
+        
+        if (onUpdateInfoPanel) {
+            // If toggling on, show the info; if toggling off, hide it
+            onUpdateInfoPanel(newVisibleState ? formatInfoPanelContent(boatData) : null);
+        }
     };
 
     return (
@@ -227,8 +270,7 @@ const SailBoat3D = forwardRef(({ showSail = false, onUpdateInfoPanel, ...props }
             {...props} 
             ref={boatRef} 
             dispose={null}
-            onPointerOver={handlePointerOver}
-            onPointerOut={handlePointerOut}
+            onClick={handleInfoPanelToggle}
         >
             {capabilities.includes('sail') && showSail && <Sail3D />}
             <BoatMeshes />
