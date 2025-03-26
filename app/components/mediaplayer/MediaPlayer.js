@@ -37,7 +37,7 @@ const MediaPlayer = () => {
     { 
       name: 'Spotify', 
       url: 'https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M', 
-      icon: '/icons/mediaplayer/spotify.png'
+      icon: './icons/mediaplayer/spotify.png'
     },
     { 
       name: 'Deezer', 
