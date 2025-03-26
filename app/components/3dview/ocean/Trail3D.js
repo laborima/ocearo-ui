@@ -154,7 +154,7 @@ export const Trail = ({
       trailRef.current.uniforms.time.value += delta;
 
       // Check the autopilot state via SignalK.
-      const autopilotState = getSignalKValue("steering.autopilot.state") == "enabled" || false;
+      const autopilotState = getSignalKValue("steering.autopilot.state") == "auto" || false;
       // Enable the rainbow effect when autopilot is active.
       trailRef.current.uniforms.rainbowActive.value = autopilotState ? 1.0 : 0.0;
     }
