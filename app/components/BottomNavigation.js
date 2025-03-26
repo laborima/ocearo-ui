@@ -86,20 +86,20 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
   };
 
   return (
-    <div className="flex items-center justify-between w-full h-full bg-black px-4">
+    <div className="flex items-center w-full h-full bg-black px-4">
       {/* Left Section */}
-      <div className="flex items-center space-x-10">
+      <div className="flex-1 flex items-center space-x-10">
         {renderSection('left')}
         <BottomTemperatureWidget />
       </div>
 
       {/* Center Section */}
-      <div className="flex items-center justify-center space-x-10">
+      <div className="flex-1 flex items-center justify-center space-x-10">
         {renderSection('center')}
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center space-x-10">
+      <div className="flex-1 flex items-center justify-end space-x-10">
         <BottomEnvironmentalWidget />
       </div>
     </div>
