@@ -22,7 +22,7 @@ export const convertSpeed = convertWindSpeed;
 export const convertPressure = (pa) => pa != null ? Math.round((pa / 100) * 10) / 10 : null;
 
 // Constants
-const SAMPLE_DATA_INTERVAL = 5000;
+const SAMPLE_DATA_INTERVAL = 1000;
 const INITIAL_STATES = {
     autopilot: true,
     anchorWatch: false,
@@ -33,18 +33,13 @@ const INITIAL_STATES = {
     showPolar: true
 };
 
-// Battery utilities have been moved to a dedicated file at:
-// app/components/utils/BatteryUtils.js
-// Import { BATTERY_CONFIG, estimateStateOfCharge, isBatteryCharging, getBatteryColorClass } from there
-
-
 // Separate sample data into its own object for better organization
 const SAMPLE_DATA = {
     wind: {
-        'environment.wind.angleTrueWater': MathUtils.degToRad(25),
-        'environment.wind.speedTrue': 20,
-        'environment.wind.angleApparent': MathUtils.degToRad(23),
-        'environment.wind.speedApparent': 25,
+        'environment.wind.angleTrueWater': MathUtils.degToRad(0),
+        'environment.wind.speedTrue': 10.288,
+        'environment.wind.angleApparent': MathUtils.degToRad(0),
+        'environment.wind.speedApparent': 10.288,
     },
     temperature: {
         'environment.water.temperature': toKelvin(17),
@@ -117,65 +112,97 @@ export const OcearoContextProvider = ({ children }) => {
     useEffect(() => {
         let isMounted = true;
 
+        /**
+         * Connects to the SignalK server and sets up data handling
+         * Ensures debug data is available even if the connection fails
+         */
         const connectSignalKClient = async () => {
             const config = configService.getAll(); // Load config from the service
-
-            const { signalkUrl } = config;
+            const { signalkUrl, debugMode } = config;
+            
+            // Setup debug data interval function - extracted to be reusable
+            const setupDebugDataInterval = () => {
+                // Clear any existing interval
+                if (sampleDataIntervalRef.current) {
+                    clearInterval(sampleDataIntervalRef.current);
+                }
+                
+                // Track the wind angle for incremental changes
+                let currentWindAngle = 0;
+                
+                // Create new interval for sample data
+                sampleDataIntervalRef.current = setInterval(() => {
+                    const randomAngle = Math.floor(Math.random() * 91) - 45;
+                    
+                    // Increment the wind angle by 5 degrees each interval
+                    currentWindAngle = (currentWindAngle + 5) % 360;
+                    
+                    setSignalKData(prev => ({
+                        ...prev,
+                        'steering.rudderAngle': MathUtils.degToRad(randomAngle),
+                        // Override the apparent wind angle with our incrementing value
+                        'environment.wind.angleApparent': MathUtils.degToRad(currentWindAngle),
+                        // Keep other wind data from sample data
+                        'environment.wind.angleTrueWater': SAMPLE_DATA.wind['environment.wind.angleTrueWater'],
+                        'environment.wind.speedTrue': SAMPLE_DATA.wind['environment.wind.speedTrue'],
+                        'environment.wind.speedApparent': SAMPLE_DATA.wind['environment.wind.speedApparent'],
+                        ...SAMPLE_DATA.temperature,
+                        ...SAMPLE_DATA.environment,
+                        ...SAMPLE_DATA.performance,
+                        ...SAMPLE_DATA.navigation,
+                        ...SAMPLE_DATA.racing,
+                    }));
+                }, SAMPLE_DATA_INTERVAL);
+            };
+            
             try {
-                const [hostname, port] = signalkUrl.replace(/https?:\/\//, '').split(':');
-                const client = new Client({
-                    hostname: hostname || 'localhost',
-                    port: parseInt(port) || 3000,
-                    useTLS: signalkUrl.startsWith('https'),
-                    reconnect: true,
-                    autoConnect: false,
-                    notifications: false,
-                    deltaStreamBehaviour: 'self',
-                    sendMeta: 'all',
-                    wsKeepaliveInterval: 10
-                });
-
-
-                clientRef.current = client; // Store client in ref
-
-                // Connect to the client
-                await client.connect();
-
-                // Listen for delta updates from SignalK server
-                client.on('delta', (delta) => {
-                    if (!isMounted) return;
-                    delta.updates.forEach((update) => {
-                        if (update.values) {
-                            update.values.forEach((value) => {
-
-                                // Update SignalK data state
-                                setSignalKData((prevData) => ({
-                                    ...prevData,
-                                    [value.path]: value.value,
-                                }));
-                            });
-                        }
+                // Only attempt to connect if not in debug mode
+                if (!debugMode) {
+                    const [hostname, port] = signalkUrl.replace(/https?:\/\//, '').split(':');
+                    const client = new Client({
+                        hostname: hostname || 'localhost',
+                        port: parseInt(port) || 3000,
+                        useTLS: signalkUrl.startsWith('https'),
+                        reconnect: true,
+                        autoConnect: false,
+                        notifications: false,
+                        deltaStreamBehaviour: 'self',
+                        sendMeta: 'all',
+                        wsKeepaliveInterval: 10
                     });
-                });
 
-                // Set up interval for sample data if sampleData is enabled
-                if (config.debugMode) {
-                    sampleDataIntervalRef.current = setInterval(() => {
-                        const randomAngle = Math.floor(Math.random() * 91) - 45;
-                        setSignalKData(prev => ({
-                            ...prev,
-                            'steering.rudderAngle': MathUtils.degToRad(randomAngle),
-                            ...SAMPLE_DATA.wind,
-                            ...SAMPLE_DATA.temperature,
-                            ...SAMPLE_DATA.environment,
-                            ...SAMPLE_DATA.performance,
-                            ...SAMPLE_DATA.navigation,
-                            ...SAMPLE_DATA.racing,
-                        }));
-                    }, SAMPLE_DATA_INTERVAL);
+                    clientRef.current = client; // Store client in ref
+
+                    // Connect to the client
+                    await client.connect();
+
+                    // Listen for delta updates from SignalK server
+                    client.on('delta', (delta) => {
+                        if (!isMounted) return;
+                        delta.updates.forEach((update) => {
+                            if (update.values) {
+                                update.values.forEach((value) => {
+                                    // Update SignalK data state
+                                    setSignalKData((prevData) => ({
+                                        ...prevData,
+                                        [value.path]: value.value,
+                                    }));
+                                });
+                            }
+                        });
+                    });
+                }
+                
+                // Set up interval for sample data if debugMode is enabled
+                if (debugMode) {
+                    setupDebugDataInterval();
                 }
             } catch (error) {
                 console.error('Failed to connect to SignalK:', error);
+                
+                // If connection fails, enable debug data regardless of config setting
+                // This ensures the app has data to display even without a server connection
+                setupDebugDataInterval();
             }
         };
 
@@ -277,58 +304,115 @@ export const OcearoContextProvider = ({ children }) => {
     );
 };
 
-// Hook to useOcearoContext
+// Hook to access the Ocearo context throughout the application
 export const useOcearoContext = () => useContext(OcearoContext);
 
 
+/**
+ * Calculates the tide height at a specific time using the Rule of Twelfths.
+ * 
+ * The Rule of Twelfths is a simple method used by sailors to estimate the height of the tide at a given time,
+ * based on the principle that the tide rises and falls in a sinusoidal pattern. The rule divides the tidal range
+ * into 12 equal parts and distributes them over a 6-hour cycle as follows:
+ * 
+ * Hour 1: 1/12 of the range
+ * Hour 2: 2/12 of the range
+ * Hour 3: 3/12 of the range
+ * Hour 4: 3/12 of the range
+ * Hour 5: 2/12 of the range
+ * Hour 6: 1/12 of the range
+ * 
+ * @param {number} highTideHeight - The water height at high tide in meters
+ * @param {number} lowTideHeight - The water height at low tide in meters
+ * @param {string} currentTime - The current time in 24-hour format (HH:MM)
+ * @param {string} highTideTime - The time of high tide in 24-hour format (HH:MM)
+ * @param {string} lowTideTime - The time of low tide in 24-hour format (HH:MM)
+ * @returns {number} The estimated tide height at the current time in meters
+ */
 export const calculateTideHeightUsingTwelfths = function(highTideHeight, lowTideHeight, currentTime, highTideTime, lowTideTime) {
+    // Validate input time strings
+    if (!currentTime || !highTideTime || !lowTideTime || 
+        !/^\d{1,2}:\d{2}$/.test(currentTime) || 
+        !/^\d{1,2}:\d{2}$/.test(highTideTime) || 
+        !/^\d{1,2}:\d{2}$/.test(lowTideTime)) {
+        console.error('Invalid time format provided to calculateTideHeightUsingTwelfths');
+        return (highTideHeight + lowTideHeight) / 2; // Return average as fallback
+    }
+    
+    /**
+     * Converts a time string (HH:MM) to total minutes since midnight
+     * @param {string} timeString - Time in format HH:MM
+     * @returns {number} Total minutes since midnight
+     */
     const convertTimeToMinutes = (timeString) => {
         const [hours, minutes] = timeString.split(':').map(Number);
         return hours * 60 + minutes;
     };
 
+    // Convert all times to minutes for easier calculation
     const highTideMinutes = convertTimeToMinutes(highTideTime);
     const lowTideMinutes = convertTimeToMinutes(lowTideTime);
     const currentMinutes = convertTimeToMinutes(currentTime);
 
+    // Determine if tide is rising or falling and set calculation parameters
     let isRising = false;
     let startHeight, endHeight, startMinutes, endMinutes;
 
     if (lowTideMinutes <= currentMinutes && currentMinutes <= highTideMinutes) {
+        // We are in a rising tide cycle (low to high)
         isRising = true;
         startHeight = lowTideHeight;
         endHeight = highTideHeight;
         startMinutes = lowTideMinutes;
         endMinutes = highTideMinutes;
     } else {
+        // We are in a falling tide cycle (high to low)
         startHeight = highTideHeight;
         endHeight = lowTideHeight;
         startMinutes = highTideMinutes;
-        endMinutes = lowTideMinutes + (lowTideMinutes < highTideMinutes ? 1440 : 0); // Handle midnight overlap
+        // Handle case where low tide is on the next day (midnight overlap)
+        endMinutes = lowTideMinutes + (lowTideMinutes < highTideMinutes ? 1440 : 0); 
     }
 
+    // Calculate total duration of this tide cycle and the total height change
     const tideCycleDuration = Math.abs(endMinutes - startMinutes);
     const tideChange = Math.abs(endHeight - startHeight);
+    
+    // Calculate elapsed time since start of cycle, handling day wraparound
     let elapsedTime = currentMinutes - startMinutes;
-    if (elapsedTime < 0) elapsedTime += 1440;
+    if (elapsedTime < 0) elapsedTime += 1440; // Add minutes in a day (24*60) if negative
 
+    // Calculate one twelfth of the total tide change
     const twelfth = tideChange / 12;
     let heightChange = 0;
 
+    // Apply the Rule of Twelfths based on elapsed time
+    // First hour: 1/12 of the range
     if (elapsedTime <= tideCycleDuration / 6) {
         heightChange = twelfth * Math.ceil(elapsedTime / (tideCycleDuration / 12));
-    } else if (elapsedTime <= 2 * tideCycleDuration / 6) {
+    } 
+    // Second hour: 2/12 of the range (total 3/12)
+    else if (elapsedTime <= 2 * tideCycleDuration / 6) {
         heightChange = twelfth * 2 + twelfth * Math.ceil((elapsedTime - tideCycleDuration / 6) / (tideCycleDuration / 12));
-    } else if (elapsedTime <= 3 * tideCycleDuration / 6) {
+    } 
+    // Third hour: 3/12 of the range (total 6/12)
+    else if (elapsedTime <= 3 * tideCycleDuration / 6) {
         heightChange = twelfth * 5;
-    } else if (elapsedTime <= 4 * tideCycleDuration / 6) {
+    } 
+    // Fourth hour: 3/12 of the range (total 9/12)
+    else if (elapsedTime <= 4 * tideCycleDuration / 6) {
         heightChange = twelfth * 8;
-    } else if (elapsedTime <= 5 * tideCycleDuration / 6) {
+    } 
+    // Fifth hour: 2/12 of the range (total 11/12)
+    else if (elapsedTime <= 5 * tideCycleDuration / 6) {
         heightChange = twelfth * 10;
-    } else {
+    } 
+    // Sixth hour: 1/12 of the range (total 12/12)
+    else {
         heightChange = tideChange;
     }
 
+    // Return the final calculated height based on whether tide is rising or falling
     return isRising ? startHeight + heightChange : startHeight - heightChange;
 }
 

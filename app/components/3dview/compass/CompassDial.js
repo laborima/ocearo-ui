@@ -1,9 +1,27 @@
+/**
+ * CompassDial Component
+ * 
+ * A 3D compass dial that displays heading information with color-coded markers.
+ * Designed for the Ocearo UI with touch-optimized interactions.
+ */
 import React, { useMemo } from 'react';
 import { Ring, Sphere, Text } from '@react-three/drei';
 import { DoubleSide, MathUtils } from 'three';
 import { oGreen, oRed, oNight, useOcearoContext } from '../../context/OcearoContext';
 
-// Memoized markers creation component
+/**
+ * StaticMarkers Component
+ * 
+ * Creates the markers and labels for the compass dial.
+ * - Inner dial: Shows degree labels (0-330) with 'N' at 0°
+ * - Outer dial: Shows color-coded markers (green 0-60°, red 300-360°)
+ * 
+ * @param {number} radius - Radius of the marker circle
+ * @param {boolean} isOuter - Whether this is for the outer dial
+ * @param {number} markerColorPrimary - Color for standard markers
+ * @param {number} markerColorGreen - Color for green zone markers
+ * @param {number} markerColorRed - Color for red zone markers
+ */
 const StaticMarkers = React.memo(({ radius, isOuter, markerColorPrimary, markerColorGreen, markerColorRed }) => {
   const markers = useMemo(() => {
     const markersArray = [];
@@ -54,7 +72,17 @@ const StaticMarkers = React.memo(({ radius, isOuter, markerColorPrimary, markerC
 
 StaticMarkers.displayName = 'StaticMarkers';
 
-// Memoized static ring component
+/**
+ * StaticRing Component
+ * 
+ * Creates a ring for the compass dial with configurable properties.
+ * 
+ * @param {number} innerRadius - Inner radius of the ring
+ * @param {number} outerRadius - Outer radius of the ring
+ * @param {number} dialColor - Color of the ring
+ * @param {number} opacity - Opacity of the ring (default: 1)
+ * @param {boolean} transparent - Whether the ring material is transparent (default: false)
+ */
 const StaticRing = React.memo(({ innerRadius, outerRadius, dialColor, opacity = 1, transparent = false }) => (
   <Ring
     args={[innerRadius, outerRadius, 64]}
@@ -71,22 +99,36 @@ const StaticRing = React.memo(({ innerRadius, outerRadius, dialColor, opacity = 
 
 StaticRing.displayName = 'StaticRing';
 
+/**
+ * CompassDial Component
+ * 
+ * Main component that renders a 3D compass dial with the following features:
+ * - Rotating inner dial that shows the current heading
+ * - Static outer dial with color-coded markers
+ * - Clockwise rotation that matches standard compass behavior
+ * - North (0°) positioned at the bottom of the compass
+ * 
+ * @param {number} outerRadius - Outer radius of the compass dial
+ * @param {number} innerRadius - Inner radius of the compass dial
+ */
 const CompassDial = ({ outerRadius, innerRadius }) => {
-    
-    
+  // Constants for visual appearance
   const outerDialOpacity = 0.5;
   const markerColorPrimary = 0x000000;
   const markerColorGreen = oGreen;
   const markerColorRed = oRed;
 
+  // Get context values and night mode setting
   const { nightMode, getSignalKValue } = useOcearoContext();
   const dialColor = nightMode ? oNight : 0xffffff;
   
+  // Get heading data from SignalK values
   const heading = getSignalKValue('navigation.headingTrue') || getSignalKValue('navigation.headingMagnetic');
   const courseOverGroundAngle = getSignalKValue('navigation.courseOverGroundTrue')
    || getSignalKValue('navigation.courseOverGroundMagnetic');
 
-  const compassHeading = courseOverGroundAngle || heading  || 0;
+  // Use course over ground if available, otherwise use heading
+  const compassHeading = courseOverGroundAngle || heading || 0;
 
   // Memoize the static properties
   const staticProps = useMemo(() => ({
@@ -107,8 +149,21 @@ const CompassDial = ({ outerRadius, innerRadius }) => {
 
   return (
     <>
-      {/* Rotating inner dial */}
-      <group rotation={[0, Math.PI-compassHeading, 0]}>
+      {/* 
+        Rotating inner dial
+        
+        Compass rotation calculation:  
+        1. In Three.js, Y-rotation of 0 points to -Z axis
+        2. We rotate clockwise using the heading value directly
+        3. We add Math.PI (180°) to position North at the bottom of the compass
+        4. This creates a standard marine compass with:
+           - North (0°) at the bottom
+           - East (90°) on the left
+           - South (180°) at the top
+           - West (270°) on the right
+        5. The rotation is clockwise, matching standard compass behavior
+      */}
+      <group rotation={[0, compassHeading + Math.PI, 0]}>
         <StaticRing
           innerRadius={staticProps.innerRadius}
           outerRadius={staticProps.outerRadius}
@@ -123,7 +178,13 @@ const CompassDial = ({ outerRadius, innerRadius }) => {
         />
       </group>
 
-      {/* Static outer dial */}
+      {/* 
+        Static outer dial
+        - Remains fixed while inner dial rotates
+        - Contains color-coded markers:
+          - Green zone: 0-60° (starboard side)
+          - Red zone: 300-360° (port side)
+      */}
       <group>
         <StaticRing
           innerRadius={staticProps.innerRadius + 1}
