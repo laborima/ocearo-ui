@@ -18,35 +18,36 @@ const BoatLighting = () => {
       {/* Ambient light - general scene illumination */}
       <ambientLight intensity={ambientIntensity} />
       
-      {/* Main directional light - coming straight from the top */}
+      {/* Main directional light - coming from behind the scene */}
       <directionalLight
-        position={[0, 50, 0]}
+        position={[0, 70, -100]}
         intensity={mainLightIntensity}
         castShadow
         shadow-mapSize-width={1024}
         shadow-mapSize-height={1024}
         shadow-camera-near={0.5}
-        shadow-camera-far={100}
-        shadow-camera-left={-20}
-        shadow-camera-right={20}
-        shadow-camera-top={20}
-        shadow-camera-bottom={-20}
+        shadow-camera-far={200}
+        shadow-camera-left={-50}
+        shadow-camera-right={50}
+        shadow-camera-top={50}
+        shadow-camera-bottom={-50}
         shadow-bias={-0.0001}
         color={mainLightColor}
       />
       
-      {/* Secondary fill light - also from top but slightly offset for subtle dimension */}
-      <directionalLight
-        position={[0, 40, 5]}
-        intensity={fillLightIntensity}
-        castShadow={false}
+      {/* Point light from behind for backlighting effect */}
+      <pointLight 
+        position={[0, 40, -80]} 
+        intensity={fillLightIntensity * 2.5} 
+        distance={150}
+        decay={2}
       />
       
-      {/* Point light directly above the boat */}
+      {/* Soft fill light from the front to avoid complete darkness */}
       <pointLight 
-        position={[0, 30, 0]} 
-        intensity={fillLightIntensity * 1.5} 
-        distance={60}
+        position={[0, 30, 100]} 
+        intensity={fillLightIntensity * 0.8} 
+        distance={120}
         decay={2}
       />
     </>

@@ -93,11 +93,19 @@ const ThreeDMainView = () => {
 
             {/* 3D Wind Component */}
             <div className="absolute left-1/2 transform -translate-x-1/2 w-full h-full">
-                <Canvas style={{ width: '100%', height: '100%' }} shadows={false} dpr={[1, 1]} gl={{
+                <Canvas
+                style={{ width: '100%', height: '100%' }}
+                shadows={false}
+                dpr={Math.min(window.devicePixelRatio, 1.5)}
+                performance={{ min: 0.5 }}
+                gl={{
                     antialias: true,
+                    powerPreference: 'low-power',
                     physicallyCorrectLights: false,
-                    toneMapping: THREE.LinearToneMapping,
-                    toneMappingExposure: 1
+                    toneMapping: THREE.NoToneMapping,
+                    toneMappingExposure: 1,
+                    shadowMap: { enabled: false },
+                    precision: 'lowp'
                 }}>
                     <RendererExposer />
                     {states.parkingMode ? (

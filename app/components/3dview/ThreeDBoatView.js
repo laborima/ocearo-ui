@@ -28,21 +28,28 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
             <PerspectiveCamera
                 makeDefault
                 fov={60}
-                near={1}
-                far={1000}
+                near={5}
+                far={500}
                 position={[0, 5, 20]}
             />
             {/* Orbit controls */}
             <OrbitControls
                 enableZoom={true}
                 enableRotate={true}
-
-                maxPolarAngle={Math.PI / 2} // Prevent rotating below the boat
-                minPolarAngle={Math.PI / 4} // Limit upward rotation
+                maxPolarAngle={Math.PI / 2}
+                minPolarAngle={Math.PI / 4}
+                enableDamping={false}
+                zoomSpeed={0.5}
+                rotateSpeed={0.5}
             />
 
             {/* Environment for reflections */}
-            <Environment files="./assets/ocearo_env.hdr" background={false} intensity={0.8} />
+            <Environment
+                files="./assets/ocearo_env.hdr"
+                background={false}
+                intensity={0.8}
+                resolution={256}
+            />
 
             {/* Lighting setup */}
             <BoatLighting />
@@ -65,7 +72,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 {/* Laylines */}
                 {/*config.debugMode && <LayLines3D outerRadius={5.6} />*/}
 
-                {states.showPolar && <PolarProjection /> }
+                {states.showPolar && !states.showOcean && <PolarProjection /> }
 
                 {/* AIS Boats */}
                 {states.ais && <AISProvider>

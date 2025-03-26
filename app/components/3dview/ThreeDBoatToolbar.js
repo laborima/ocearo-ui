@@ -88,8 +88,8 @@ const ThreeDBoatToolbar = () => {
                 <FontAwesomeIcon icon={faWater} className={states.showOcean ? 'text-oBlue' : textColor} />
             </button>
 
-            {/* Show Polar - only visible when autopilot is active */}
-            {states.autopilot && (
+            {/* Show Polar - only visible when autopilot is active and ocean is hidden */}
+            {states.autopilot && !states.showOcean && (
                 <button
                     onClick={() => toggleState('showPolar')}
                     className="p-1"
