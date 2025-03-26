@@ -37,11 +37,29 @@ const ConfigPage = ({ onSave }) => {
         loadConfiguration();
     }, [boats]);
 
-    // Update config and check for changes
+    // Update config, check for changes, and auto-save
     const updateConfig = (updates) => {
         const newConfig = { ...config, ...updates };
         setConfig(newConfig);
         checkForChanges(newConfig);
+        
+        // Auto-save when settings change
+        const updatedConfig = { ...newConfig };
+        
+        // Apply special logic from handleSave
+        if (!signalKUrlSet) {
+            updatedConfig.signalkUrl = computedSignalKUrl;
+            updatedConfig.username = '';
+            updatedConfig.password = '';
+        } else if (!useAuthentication) {
+            updatedConfig.username = '';
+            updatedConfig.password = '';
+        }
+        
+        // Save the config
+        configService.saveConfig(updatedConfig);
+        onSave?.(updatedConfig);
+        setHasUnsavedChanges(false);
     };
 
     const handleSave = () => {
@@ -79,18 +97,6 @@ const ConfigPage = ({ onSave }) => {
 
     return (
         <div className="p-4 text-white">
-            {hasUnsavedChanges && (
-                <div className="bg-oBlue text-white px-4 py-2 rounded mb-4 flex justify-between items-center">
-                    <span>You have unsaved changes</span>
-                    <button
-                        onClick={handleSave}
-                        className="bg-white text-black px-3 py-1 rounded text-sm hover:bg-gray-100"
-                    >
-                        Save Now
-                    </button>
-                </div>
-            )}
-
             <h1 className="text-2xl font-bold mb-4">Ocearo Configuration</h1>
 
             <div className="space-y-4">
@@ -258,9 +264,10 @@ const ConfigPage = ({ onSave }) => {
                 <div className="flex space-x-4 pt-4">
                     <button
                         onClick={handleSave}
-                        className="bg-oBlue text-white px-4 py-2 rounded hover:bg-blue-600"
+                        disabled={!hasUnsavedChanges}
+                        className={`px-4 py-2 rounded ${hasUnsavedChanges ? 'bg-oBlue text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
                     >
-                        Save Configuration
+                        {hasUnsavedChanges ? 'Save Changes' : 'Saved'}
                     </button>
                     <button
                         onClick={handleReset}
