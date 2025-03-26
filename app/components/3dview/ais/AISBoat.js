@@ -56,7 +56,10 @@ const AISBoat = forwardRef(({ position, visible, boatData, onHover }, ref) => {
     ].join('');
 
     // Calculate the scale factor based on the desired length
-    const desiredLength = boatData.length || BASE_MODEL_LENGTH; // Default to base model length if length is not provided
+    // Ensure a minimum boat length of 4 meters for better visibility
+    const MIN_BOAT_LENGTH = 4; // Minimum boat length in meters
+    const providedLength = boatData.length || BASE_MODEL_LENGTH;
+    const desiredLength = Math.max(providedLength, MIN_BOAT_LENGTH); // Use either provided length or minimum length, whichever is larger
     const scaleFactor = desiredLength / BASE_MODEL_LENGTH;
 
 
@@ -70,18 +73,13 @@ const AISBoat = forwardRef(({ position, visible, boatData, onHover }, ref) => {
             <group 
                 onClick={(e) => {
                     e.stopPropagation();
-                    console.log('Clicked on boat:', boatData.name || boatData.mmsi);
-                }}
-                onPointerOver={(e) => {
-                    e.stopPropagation();
-                    // Only trigger hover when component is for sure mounted
+                    // Toggle the info panel for this boat
                     if (BoatComponent) {
+                        // If we pass the same boat data that's already being shown, it will toggle off
+                        // If we pass new boat data, it will show that boat's info
                         onHover && onHover(boatData);
                     }
-                }}
-                onPointerOut={(e) => {
-                    e.stopPropagation();
-                    onHover && onHover(null);
+                    console.log('Clicked on boat:', boatData.name || boatData.mmsi);
                 }}
             >
                 <BoatComponent 

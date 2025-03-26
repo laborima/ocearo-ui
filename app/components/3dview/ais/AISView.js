@@ -118,8 +118,8 @@ const AISView = ({ onUpdateInfoPanel }) => {
   const myPositionRef = useRef(null);
   const { getSignalKValue } = useOcearoContext();
   
-  // State for the global infoPanel
-  const [hoveredBoat, setHoveredBoat] = useState(null);
+  // State for the global infoPanel (now click-based for touchscreen optimization)
+  const [selectedBoat, setSelectedBoat] = useState(null);
   
   // Store my boat's rotation angle for use in calculations
   const myRotationRef = useRef(0);
@@ -384,11 +384,18 @@ const AISView = ({ onUpdateInfoPanel }) => {
             position={[scaledX, 0, scaledY]} // Use proper orientation for 3D space
             visible={isInDisplayZone} // Only visible if in the display zone
             boatData={{...vessel, ...vesselData}} // Merge vessel info with position data
-            onHover={setHoveredBoat} // Pass the hover handler
+            onHover={(boat) => {
+              // Toggle selection - if clicking the same boat, deselect it
+              if (selectedBoat && boat && selectedBoat.mmsi === boat.mmsi) {
+                setSelectedBoat(null);
+              } else {
+                setSelectedBoat(boat);
+              }
+            }} // Pass the click handler for touchscreen optimization
           />
         );
       });
-  }, [vesselIds, aisData, maxDisplayedDistance]);
+  }, [vesselIds, aisData, maxDisplayedDistance, selectedBoat]);
 
   // Format boat data for display
   const formatBoatData = (label, value, unit = '', isAngle = false) => {
@@ -456,37 +463,37 @@ const AISView = ({ onUpdateInfoPanel }) => {
     return Math.round(distanceNM * 10) / 10;
   };
   
-  // Prepare info panel content if a boat is hovered
-  const infoPanelContent = hoveredBoat ? [
-    formatBoatData('Name', hoveredBoat.name || 'Unknown'),
-    formatBoatData('MMSI', formatMMSI(hoveredBoat.mmsi)),
-    formatBoatData('Distance', calculateDistanceNM(hoveredBoat), ' NM'),
-    formatBoatData('Length', hoveredBoat.length, 'm'),
-    formatBoatData('Type', hoveredBoat.shipType),
-    formatBoatData('SOG', hoveredBoat.sog, ' kts'),
-    formatBoatData('COG', hoveredBoat.cog, '°', true),
-    formatBoatData('Heading', hoveredBoat.heading, '°', true),
-    formatBoatData('Beam', hoveredBoat.beam, 'm'),
-    formatBoatData('Draft', hoveredBoat.draft, 'm'),
-    formatBoatData('Callsign', hoveredBoat.callsign),
-    formatBoatData('Destination', hoveredBoat.destination)
+  // Prepare info panel content if a boat is selected
+  const infoPanelContent = selectedBoat ? [
+    formatBoatData('Name', selectedBoat.name || 'Unknown'),
+    formatBoatData('MMSI', formatMMSI(selectedBoat.mmsi)),
+    formatBoatData('Distance', calculateDistanceNM(selectedBoat), ' NM'),
+    formatBoatData('Length', selectedBoat.length, 'm'),
+    formatBoatData('Type', selectedBoat.shipType),
+    formatBoatData('SOG', selectedBoat.sog, ' kts'),
+    formatBoatData('COG', selectedBoat.cog, '°', true),
+    formatBoatData('Heading', selectedBoat.heading, '°', true),
+    formatBoatData('Beam', selectedBoat.beam, 'm'),
+    formatBoatData('Draft', selectedBoat.draft, 'm'),
+    formatBoatData('Callsign', selectedBoat.callsign),
+    formatBoatData('Destination', selectedBoat.destination)
   ]
     .filter(item => item !== null) // Filter out null values (unavailable info)
     .join('\n') : ''; // Join with newlines for proper formatting
 
-  // Send info panel content to parent component when hoveredBoat changes
+  // Send info panel content to parent component when selectedBoat changes
   React.useEffect(() => {
     if (onUpdateInfoPanel) {
       onUpdateInfoPanel(infoPanelContent);
     }
-  }, [hoveredBoat, infoPanelContent, onUpdateInfoPanel]);
+  }, [selectedBoat, infoPanelContent, onUpdateInfoPanel]);
 
   return (
     <>
       {boats}
       
       {/* InfoPanel now moved to parent (ThreeDMainView) component */}
-      {hoveredBoat && (
+      {selectedBoat && (
         <group position={[0, 1, 0]}>
           {/* 3D position marker for the InfoPanel - will be at fixed position */}
           <mesh scale={[0.1, 0.1, 0.1]} visible={false}>
