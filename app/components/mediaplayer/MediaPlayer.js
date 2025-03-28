@@ -42,7 +42,7 @@ const MediaPlayer = () => {
     { 
       name: 'Deezer', 
       url: 'https://widget.deezer.com/widget/dark/playlist/1479458365', 
-      icon: '/icons/mediaplayer/deezer.png'
+      icon: './icons/mediaplayer/deezer.png'
     }
   ];
 

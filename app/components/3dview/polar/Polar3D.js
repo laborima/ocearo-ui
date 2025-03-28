@@ -83,7 +83,21 @@ const PolarPlot = React.memo(({ timeInMinute, windSpeed }) => {
             console.warn("Invalid angle or VMG data");
             return null;
         }
-        return calculatePosition(angles[windSpeedIdx], vmgs[windSpeedIdx], timeInMinute);
+        
+        // Get the angle and speed values
+        const angle = angles[windSpeedIdx];
+        const speed = vmgs[windSpeedIdx];
+        
+        // Use exact angle to find proper position on the curve
+        const angleRad = angle * CONSTANTS.DEG2RAD;
+        const radius = radiusScale(speed, timeInMinute);
+        
+        // Match the calculation method used in the curve generation
+        return new Vector3(
+            radius * Math.sin(angleRad),
+            0,
+            -radius * Math.cos(angleRad)
+        );
     }, []);
 
     const createRadialCurve = useCallback((windSpeedIdx, timeInMinute) => {
@@ -104,20 +118,32 @@ const PolarPlot = React.memo(({ timeInMinute, windSpeed }) => {
             }
         };
 
-        // 0° to beat_angle
-        generatePoints(0, beat_angle[windSpeedIdx], 
+        // 0° to beat_angle (excluding the beat angle itself)
+        generatePoints(0, beat_angle[windSpeedIdx] - CONSTANTS.ANGLE_INCREMENT, 
             angle => interpolate(0, beat_vmg[windSpeedIdx], angle / beat_angle[windSpeedIdx]));
+            
+        // Add the exact beat angle point (for diamond alignment)
+        const beatAngle = beat_angle[windSpeedIdx];
+        const beatSpeed = beat_vmg[windSpeedIdx];
+        const beatPoint = calculatePosition(beatAngle, beatSpeed, timeInMinute);
+        points.push(beatPoint);
 
-        // beat_angle to run_angle
+        // beat_angle to run_angle (excluding the run angle itself)
         angles.forEach(angle => {
             if (angle > beat_angle[windSpeedIdx] && angle < run_angle[windSpeedIdx]) {
                 const speed = polarRef.current[Math.floor(angle)]?.[windSpeedIdx] || 0;
                 points.push(calculatePosition(angle, speed, timeInMinute));
             }
         });
+        
+        // Add the exact run angle point (for diamond alignment) 
+        const runAngle = run_angle[windSpeedIdx];
+        const runSpeed = run_vmg[windSpeedIdx]; 
+        const runPoint = calculatePosition(runAngle, runSpeed, timeInMinute);
+        points.push(runPoint);
 
         // run_angle to 180°
-        generatePoints(run_angle[windSpeedIdx], 180, 
+        generatePoints(run_angle[windSpeedIdx] + CONSTANTS.ANGLE_INCREMENT, 180, 
             () => run_vmg[windSpeedIdx]);
 
         return new CatmullRomCurve3(points, true);

@@ -8,12 +8,14 @@ import { useAIS } from './AISContext';
 import AISBoat from './AISBoat';
 import configService from '../../settings/ConfigService';
 
-// --- Constants ---
+/**
+ * Earth radius in meters - used for coordinate calculations
+ * @constant {number}
+ */
 const EARTH_RADIUS_METERS = 6371000;
 
-// --- Helper Functions ---
 /**
- * Find a mesh with material in an object hierarchy
+ * Recursively searches for a mesh with material in a 3D object hierarchy
  * @param {Object} obj - The 3D object to search
  * @returns {Object|null} - The object with material or null if not found
  */
@@ -27,7 +29,9 @@ const findMaterial = (obj) => {
 };
 
 /**
- * Convert latitude/longitude to XY coordinates relative to a home position
+ * Converts latitude/longitude to XY coordinates relative to a home position
+ * Uses the Earth radius and basic spherical trigonometry to calculate distances
+ * 
  * @param {number} lat - Latitude in degrees
  * @param {number} lon - Longitude in degrees
  * @param {number} homeLat - Reference latitude in degrees
@@ -41,6 +45,7 @@ const relativeLatLonToXY = (lat, lon, homeLat, homeLon) => {
     return { x: 0, y: 0 };
   }
   
+  // Convert degree differences to radians
   const dLat = (lat - homeLat) * (Math.PI / 180);
   const dLon = (lon - homeLon) * (Math.PI / 180);
   
@@ -52,44 +57,81 @@ const relativeLatLonToXY = (lat, lon, homeLat, homeLon) => {
   return { x, y };
 };
 
+/**
+ * Predicts the future position of a boat based on its speed and course
+ * Used to extrapolate position for vessels with stale AIS data
+ * 
+ * @param {Object} boatData - The boat's current position and movement data
+ * @param {number} elapsedTime - Time in seconds since the last position update
+ * @returns {Object} - The predicted change in position {deltaX, deltaY} in meters
+ */
 const predictPosition = (boatData, elapsedTime) => {
   // Get the current scaling factor from the configuration
   const scalingFactor = configService.get('aisLengthScalingFactor') || 0.7;
   
+  // Only predict if we have both speed and course data
   if (boatData.sog != null && boatData.cog != null) {
-    const speed = boatData.sog * 0.51444; // Convert knots to m/s
+    // Convert speed from knots to meters per second
+    const speed = boatData.sog * 0.51444;
+    
+    // Calculate position delta using speed, time elapsed, and direction
+    // Math.sin for X component (east-west movement)
     const deltaX =
       speed *
       elapsedTime *
       Math.sin((boatData.cog * Math.PI) / 180) *
       scalingFactor;
+      
+    // Math.cos for Y component (north-south movement)
     const deltaY =
       speed *
       elapsedTime *
       Math.cos((boatData.cog * Math.PI) / 180) *
       scalingFactor;
+      
     return { deltaX, deltaY };
   }
+  
+  // Return zero change if we don't have sufficient data
   return { deltaX: 0, deltaY: 0 };
 };
 
+/**
+ * Updates the 3D position of a boat model in the scene
+ * Can use smooth interpolation for visual enhancement
+ * 
+ * @param {Object} boat - The 3D boat object to update
+ * @param {number} targetX - Target X coordinate in meters
+ * @param {number} targetY - Target Y coordinate in meters
+ * @param {boolean} interpolate - Whether to smoothly interpolate to the target position
+ */
 const updatePosition = (boat, targetX, targetY, interpolate = true) => {
   // Get the current scaling factor from the configuration
   const scalingFactor = configService.get('aisLengthScalingFactor') || 0.7;
   
-  // Apply the scaling factor uniformly.
-  // X is already inverted in relativeLatLonToXY function
+  // Apply the scaling factor to convert real-world meters to scene units
+  // X is already inverted in relativeLatLonToXY function for proper orientation
   const scaledX = targetX * scalingFactor;
-  const scaledZ = targetY * scalingFactor;
+  const scaledZ = targetY * scalingFactor; // Y coordinate maps to Z in Three.js
   
   if (interpolate) {
+    // Smooth interpolation - move 10% of the remaining distance each frame
     boat.position.x += (scaledX - boat.position.x) * 0.1;
     boat.position.z += (scaledZ - boat.position.z) * 0.1;
   } else {
-    boat.position.set(scaledX, 0, scaledZ);
+    // Immediate position update
+    boat.position.set(scaledX, 0, scaledZ); // Y=0 keeps boats at water level
   }
 };
 
+/**
+ * Updates the rotation of a boat model to match its heading or course
+ * Handles coordinate system conversions between maritime and 3D space
+ * 
+ * @param {Object} boat - The 3D boat object to update
+ * @param {number} targetAngle - Target angle in degrees (maritime convention)
+ * @param {boolean} interpolate - Whether to smoothly interpolate the rotation
+ */
 const updateRotation = (boat, targetAngle, interpolate = true) => {
   // In Three.js, rotating around Y axis is counter-clockwise looking down from above
   // But maritime angles increase clockwise from north, so we need to negate the angle
@@ -99,48 +141,63 @@ const updateRotation = (boat, targetAngle, interpolate = true) => {
   const radianAngle = (negatedAngle * Math.PI / 180) % (2 * Math.PI);
   
   if (interpolate) {
-    // Proper interpolation without accumulation
-    boat.children[0].rotation.y = boat.children[0].rotation.y + (radianAngle - boat.children[0].rotation.y) * 0.1;
+    // Smooth interpolation - rotate 10% of the remaining angle each frame
+    // Applied to the boat's child object which contains the actual 3D model
+    boat.children[0].rotation.y = boat.children[0].rotation.y + 
+                                 (radianAngle - boat.children[0].rotation.y) * 0.1;
   } else {
+    // Immediate rotation update
     boat.children[0].rotation.y = radianAngle;
   }
   
-  // Log rotation for debugging (remove in production)
+  // Log rotation for debugging (uncomment in development)
+  // Only log when crossing 45-degree boundaries to avoid console spam
   if (boat.mmsi && Math.abs(targetAngle % 45) < 1) {
     console.log(`Boat ${boat.mmsi} rotation: ${targetAngle}° (${radianAngle} rad)`);
   }
 };
 
-// --- Main Component ---
+/**
+ * AISView component - Renders all AIS boat targets on the 3D display
+ * Provides touch-optimized interaction for boat selection and information display
+ * 
+ * @param {Object} props - Component props
+ * @param {Function} props.onUpdateInfoPanel - Callback to update the info panel content
+ */
 const AISView = ({ onUpdateInfoPanel }) => {
   const { aisData, vesselIds } = useAIS();
-  const boatRefs = useRef({});
-  const myPositionRef = useRef(null);
+  const boatRefs = useRef({});          // Refs to all boat 3D objects for direct manipulation
+  const myPositionRef = useRef(null);   // Reference to user's own boat position
   const { getSignalKValue } = useOcearoContext();
   
-  // State for the global infoPanel (now click-based for touchscreen optimization)
+  // State for the selected boat (using click events rather than hover for touchscreen optimization)
   const [selectedBoat, setSelectedBoat] = useState(null);
   
-  // Store my boat's rotation angle for use in calculations
+  // Store user's boat rotation angle for relative position calculations
   const myRotationRef = useRef(0);
 
-  // Get the scaling factor from configuration
+  /**
+   * Gets the current length scaling factor from configuration
+   * This is used to scale real-world distances to scene units
+   * 
+   * @returns {number} The current scaling factor
+   */
   const getLengthScalingFactor = () => {
     return configService.get('aisLengthScalingFactor') || 0.7; // Default to 0.7 if not set
   };
 
-  // Define thresholds (in real meters) and convert them into displayed coordinates.
-  // For example, we want the boat to appear red if its displayed distance is below 500m
-  // and to switch to white only if it goes above 550m.
-  const lowerThreshold = 500; // in meters
-  const upperThreshold = 550; // in meters
+  // Proximity alert settings - defines when boats change color based on distance
+  // Uses hysteresis (different thresholds for switching to red vs. back to white)
+  // to prevent rapid color changes when a boat is near the threshold distance
+  const lowerThreshold = 500; // in meters - switch to red when closer than this
+  const upperThreshold = 550; // in meters - switch back to white when farther than this
   const displayedLowerThreshold = lowerThreshold * getLengthScalingFactor();
   const displayedUpperThreshold = upperThreshold * getLengthScalingFactor();
 
-  // Define maximum displayed distance (in displayed coordinates)
+  // Maximum range for displaying boats (in scene units)
   const maxDisplayedDistance = 3000 * getLengthScalingFactor();
 
-  // Use a ref to track if we've initialized boats to avoid unnecessary re-renders
+  // Optimization to avoid unnecessary re-renders
   const initializedRef = useRef(false);
 
   useFrame(() => {
@@ -397,7 +454,16 @@ const AISView = ({ onUpdateInfoPanel }) => {
       });
   }, [vesselIds, aisData, maxDisplayedDistance, selectedBoat]);
 
-  // Format boat data for display
+  /**
+   * Formats boat data for display in the info panel
+   * Handles unit conversion and null/undefined values
+   * 
+   * @param {string} label - The label for the data field
+   * @param {*} value - The data value to format
+   * @param {string} unit - Optional unit to append to the value
+   * @param {boolean} isAngle - Whether this is an angle value that may need conversion
+   * @returns {string|null} - Formatted string or null if value is not available
+   */
   const formatBoatData = (label, value, unit = '', isAngle = false) => {
     // If value is undefined, null, empty string, or 0 length string, return null
     if (value === undefined || value === null || value === '' || 
@@ -419,11 +485,16 @@ const AISView = ({ onUpdateInfoPanel }) => {
     return `${label}: ${value}${unit}`;
   };
 
-  // Format MMSI by removing prefixes
+  /**
+   * Formats MMSI numbers by removing standard prefixes
+   * 
+   * @param {string} mmsi - The raw MMSI identifier
+   * @returns {string|null} - Cleaned MMSI or null if not available
+   */
   const formatMMSI = (mmsi) => {
     if (!mmsi) return null;
     
-    // Remove common prefixes
+    // Remove common prefixes to display just the numeric identifier
     const prefixes = ['urn:mrn:imo:mmsi:', 'urn:mrn:signalk:uuid:'];
     let formattedMMSI = mmsi;
     
@@ -437,7 +508,12 @@ const AISView = ({ onUpdateInfoPanel }) => {
     return formattedMMSI;
   };
   
-  // Calculate distance from user's boat to the hovered boat in nautical miles
+  /**
+   * Calculates the distance from user's boat to another boat in nautical miles
+   * 
+   * @param {Object} boatData - The target boat's data including position
+   * @returns {number|null} - Distance in nautical miles (rounded to 1 decimal)
+   */
   const calculateDistanceNM = (boatData) => {
     if (!boatData || !myPositionRef.current) return null;
     
@@ -453,7 +529,7 @@ const AISView = ({ onUpdateInfoPanel }) => {
       myPosition.longitude
     );
     
-    // Calculate distance in meters
+    // Calculate straight-line distance using Pythagorean theorem
     const distanceMeters = Math.sqrt(x * x + y * y);
     
     // Convert to nautical miles (1 nautical mile = 1852 meters)
@@ -464,8 +540,9 @@ const AISView = ({ onUpdateInfoPanel }) => {
   };
   
   // Prepare info panel content if a boat is selected
+  // Note: 'Name' field will only be displayed if it exists (touchscreen optimization)
   const infoPanelContent = selectedBoat ? [
-    formatBoatData('Name', selectedBoat.name || 'Unknown'),
+    formatBoatData('Name', selectedBoat.name),  // Only show Name if it exists
     formatBoatData('MMSI', formatMMSI(selectedBoat.mmsi)),
     formatBoatData('Distance', calculateDistanceNM(selectedBoat), ' NM'),
     formatBoatData('Length', selectedBoat.length, 'm'),
@@ -478,24 +555,34 @@ const AISView = ({ onUpdateInfoPanel }) => {
     formatBoatData('Callsign', selectedBoat.callsign),
     formatBoatData('Destination', selectedBoat.destination)
   ]
-    .filter(item => item !== null) // Filter out null values (unavailable info)
-    .join('\n') : ''; // Join with newlines for proper formatting
+    .filter(item => item !== null) // Remove any unavailable information
+    .join('\n') : ''; // Format with newlines for display
 
-  // Send info panel content to parent component when selectedBoat changes
+  // Update parent component with info panel content whenever selection changes
   React.useEffect(() => {
     if (onUpdateInfoPanel) {
       onUpdateInfoPanel(infoPanelContent);
     }
   }, [selectedBoat, infoPanelContent, onUpdateInfoPanel]);
 
+  /**
+   * The component render function returns:
+   * 1. Array of AISBoat components (rendered via the boats memoized value)
+   * 2. An invisible marker for the info panel position in 3D space
+   * 
+   * The info panel content is managed via the onUpdateInfoPanel callback
+   * UI interactions are optimized for touchscreen devices using click events
+   */
   return (
     <>
+      {/* Render all visible AIS boat targets */}
       {boats}
       
-      {/* InfoPanel now moved to parent (ThreeDMainView) component */}
+      {/* InfoPanel content is passed to parent component via callback */}
+      {/* This marker is just a reference point in 3D space */}
       {selectedBoat && (
         <group position={[0, 1, 0]}>
-          {/* 3D position marker for the InfoPanel - will be at fixed position */}
+          {/* Invisible position marker for the InfoPanel */}
           <mesh scale={[0.1, 0.1, 0.1]} visible={false}>
             <boxGeometry />
             <meshBasicMaterial color="yellow" />
