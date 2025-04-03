@@ -8,6 +8,7 @@ import React, { useMemo } from 'react';
 import { Ring, Sphere, Text } from '@react-three/drei';
 import { DoubleSide, MathUtils } from 'three';
 import { oGreen, oRed, oNight, useOcearoContext } from '../../context/OcearoContext';
+import configService from '../../settings/ConfigService';
 
 /**
  * StaticMarkers Component
@@ -38,9 +39,16 @@ const StaticMarkers = React.memo(({ radius, isOuter, markerColorPrimary, markerC
       const currentMarkerColor = isGreenZone ? markerColorGreen : isRedZone ? markerColorRed : markerColorPrimary;
 
       if (!isOuter && isMainMarker) {
-        const label = deg === 0 ? "N" : deg.toString();
+        // Add cardinal directions (N, S, W, E) at their respective degrees
+        let label;
+        if (deg === 0) label = "N";
+        else if (deg === 90) label = "E";
+        else if (deg === 180) label = "S";
+        else if (deg === 270) label = "W";
+        else label = deg.toString();
+        
         markersArray.push(
-          <Text characters="N0123456789"
+          <Text characters="NESW0123456789"
             key={`text-${deg}`}
             position={[x, 0.01, z]}
             color={markerColorPrimary}
@@ -119,16 +127,14 @@ const CompassDial = ({ outerRadius, innerRadius }) => {
   const markerColorRed = oRed;
 
   // Get context values and night mode setting
-  const { nightMode, getSignalKValue } = useOcearoContext();
+  const { nightMode, getSignalKValue, getBoatRotationAngle } = useOcearoContext();
   const dialColor = nightMode ? oNight : 0xffffff;
   
-  // Get heading data from SignalK values
-  const heading = getSignalKValue('navigation.headingTrue') || getSignalKValue('navigation.headingMagnetic');
-  const courseOverGroundAngle = getSignalKValue('navigation.courseOverGroundTrue')
-   || getSignalKValue('navigation.courseOverGroundMagnetic');
-
-  // Use course over ground if available, otherwise use heading
-  const compassHeading = courseOverGroundAngle || heading || 0;
+  // Get rotation angle using the shared OcearoContext method (returns radians)
+  const compassHeading = getBoatRotationAngle();
+  
+  // Get compass orientation preference from settings
+  const isNorthUp = configService.get('compassNorthUp');
 
   // Memoize the static properties
   const staticProps = useMemo(() => ({
@@ -155,15 +161,22 @@ const CompassDial = ({ outerRadius, innerRadius }) => {
         Compass rotation calculation:  
         1. In Three.js, Y-rotation of 0 points to -Z axis
         2. We rotate clockwise using the heading value directly
-        3. We add Math.PI (180°) to position North at the bottom of the compass
-        4. This creates a standard marine compass with:
+        3. We add Math.PI (180°) to position North at the bottom of the compass for standard marine view
+           OR we don't add it for North at top (aeronautical/land navigation style)
+        4. This creates either:
+           Standard marine compass (North at bottom):
            - North (0°) at the bottom
            - East (90°) on the left
            - South (180°) at the top
            - West (270°) on the right
-        5. The rotation is clockwise, matching standard compass behavior
+           OR North-up compass:
+           - North (0°) at the top
+           - East (90°) on the right
+           - South (180°) at the bottom
+           - West (270°) on the left
+        5. The rotation is always clockwise, matching standard compass behavior
       */}
-      <group rotation={[0, compassHeading + Math.PI, 0]}>
+      <group rotation={[0, compassHeading + (isNorthUp ? 0 : Math.PI), 0]}>
         <StaticRing
           innerRadius={staticProps.innerRadius}
           outerRadius={staticProps.outerRadius}

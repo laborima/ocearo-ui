@@ -13,6 +13,7 @@ const ConfigPage = ({ onSave }) => {
     const [signalKUrlSet, setSignalKUrlSet] = useState(false);
     const [selectedBoat, setSelectedBoat] = useState(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [saveIndicator, setSaveIndicator] = useState({ visible: false, message: '' });
 
     // Track changes by comparing current config with initial config
     const checkForChanges = useCallback(
@@ -46,12 +47,14 @@ const ConfigPage = ({ onSave }) => {
         // Auto-save when settings change
         const updatedConfig = { ...newConfig };
         
-        // Apply special logic from handleSave
-        if (!signalKUrlSet) {
+        // Preserve signalKUrl if it's been set before
+        // Only apply the computed URL if signalKUrlSet is false AND we're not currently setting the URL
+        if (!signalKUrlSet && !updates.hasOwnProperty('signalkUrl')) {
             updatedConfig.signalkUrl = computedSignalKUrl;
             updatedConfig.username = '';
             updatedConfig.password = '';
         } else if (!useAuthentication) {
+            // Keep URL but clear auth if authentication is disabled
             updatedConfig.username = '';
             updatedConfig.password = '';
         }
@@ -60,16 +63,22 @@ const ConfigPage = ({ onSave }) => {
         configService.saveConfig(updatedConfig);
         onSave?.(updatedConfig);
         setHasUnsavedChanges(false);
+        
+        // Show save indicator
+        setSaveIndicator({ visible: true, message: 'Settings saved automatically' });
+        setTimeout(() => setSaveIndicator({ visible: false, message: '' }), 2000);
     };
 
     const handleSave = () => {
         const updatedConfig = { ...config };
 
+        // Consistent with updateConfig logic
         if (!signalKUrlSet) {
             updatedConfig.signalkUrl = computedSignalKUrl;
             updatedConfig.username = '';
             updatedConfig.password = '';
         } else if (!useAuthentication) {
+            // Keep URL but clear auth
             updatedConfig.username = '';
             updatedConfig.password = '';
         }
@@ -77,6 +86,10 @@ const ConfigPage = ({ onSave }) => {
         configService.saveConfig(updatedConfig);
         onSave?.(updatedConfig);
         setHasUnsavedChanges(false);
+        
+        // Show save indicator
+        setSaveIndicator({ visible: true, message: 'Settings saved' });
+        setTimeout(() => setSaveIndicator({ visible: false, message: '' }), 2000);
     };
 
     const handleReset = () => {
@@ -97,7 +110,14 @@ const ConfigPage = ({ onSave }) => {
 
     return (
         <div className="p-4 text-white">
-            <h1 className="text-2xl font-bold mb-4">Ocearo Configuration</h1>
+            <h1 className="text-2xl font-bold mb-4 flex justify-between items-center">
+                Ocearo Configuration
+                {saveIndicator.visible && (
+                    <span className="text-sm font-normal bg-green-500 text-white px-3 py-1 rounded-full animate-pulse">
+                        {saveIndicator.message}
+                    </span>
+                )}
+            </h1>
 
             <div className="space-y-4">
                 {/* Connection Settings */}
@@ -216,6 +236,30 @@ const ConfigPage = ({ onSave }) => {
                     </div>
                 </div>
 
+                {/* Display Settings */}
+                <div className="space-y-4">
+                    <h2 className="text-xl font-semibold">Display Settings</h2>
+
+                    <div>
+                        <label className="flex items-center text-base">
+                            <input
+                                type="checkbox"
+                                className="mr-3 h-5 w-5" // Larger checkbox for better touch interaction
+                                checked={config.compassNorthUp || false}
+                                onChange={(e) => updateConfig({ compassNorthUp: e.target.checked })}
+                            />
+                            <span>
+                                Compass Mode: North at Top
+                                <div className="text-sm text-gray-400">
+                                    {config.compassNorthUp ? 
+                                        "North at top (land navigation style)" : 
+                                        "North at bottom (marine navigation style)"}
+                                </div>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
                 {/* Advanced Settings */}
                 <div className="space-y-4">
                     <h2 className="text-xl font-semibold">Advanced Settings</h2>
@@ -238,19 +282,33 @@ const ConfigPage = ({ onSave }) => {
                     <div className="space-y-2">
                         <label className="block text-sm font-medium">
                             AIS Length Scaling Factor
-                            <div className="text-xs text-gray-500">Controls the scaling of AIS boats on the map (default: 0.7)</div>
+                            <div className="text-xs text-gray-500">Controls the scaling of AIS boats on the map (0.1 - 2.0)</div>
                         </label>
-                        <input
-                            type="number"
-                            className="w-full p-2 border rounded text-black"
-                            value={config.aisLengthScalingFactor || 0.7}
-                            step="0.1"
-                            min="0.1"
-                            max="2.0"
-                            onChange={(e) => updateConfig({
-                                aisLengthScalingFactor: parseFloat(e.target.value)
-                            })}
-                        />
+                        <div className="flex items-center space-x-4">
+                            <span className="text-sm">0.1</span>
+                            <input
+                                type="range"
+                                className="w-full h-10 appearance-none bg-gray-700 rounded-lg outline-none cursor-pointer"
+                                style={{
+                                    WebkitAppearance: 'none',
+                                    appearance: 'none',
+                                    height: '20px',
+                                    background: 'linear-gradient(to right, #1E3A8A, #3B82F6)',
+                                    borderRadius: '10px',
+                                }}
+                                min="0.1"
+                                max="2.0"
+                                step="0.1"
+                                value={config.aisLengthScalingFactor || 0.7}
+                                onChange={(e) => updateConfig({
+                                    aisLengthScalingFactor: parseFloat(e.target.value)
+                                })}
+                            />
+                            <span className="text-sm">2.0</span>
+                            <span className="text-base font-semibold bg-blue-500 px-3 py-1 rounded-lg min-w-[3.5rem] text-center">
+                                {config.aisLengthScalingFactor || 0.7}
+                            </span>
+                        </div>
                     </div>
 
                     {selectedBoat && config.debugMode && (
@@ -262,13 +320,6 @@ const ConfigPage = ({ onSave }) => {
                 </div>
                 {/* Action Buttons */}
                 <div className="flex space-x-4 pt-4">
-                    <button
-                        onClick={handleSave}
-                        disabled={!hasUnsavedChanges}
-                        className={`px-4 py-2 rounded ${hasUnsavedChanges ? 'bg-oBlue text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-                    >
-                        {hasUnsavedChanges ? 'Save Changes' : 'Saved'}
-                    </button>
                     <button
                         onClick={handleReset}
                         className="bg-oRed text-white px-4 py-2 rounded hover:bg-red-600"
