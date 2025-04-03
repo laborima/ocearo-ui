@@ -1,6 +1,7 @@
 import { Text } from '@react-three/drei';
 import React, { forwardRef, useState, useEffect } from 'react';
 
+
 /**
  * Dynamically imports a 3D boat model component based on the boat type
  * @param {string} boatType - The type of boat to load (e.g., 'windsurf', 'sailboat')

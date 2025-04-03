@@ -3,16 +3,10 @@ import { useFrame } from '@react-three/fiber';
 import { Color } from 'three';
 import { Text } from '@react-three/drei';
 
-import { useOcearoContext } from '../../context/OcearoContext';
+import { useOcearoContext, toKnots, toDegrees } from '../../context/OcearoContext';
 import { useAIS } from './AISContext';
 import AISBoat from './AISBoat';
 import configService from '../../settings/ConfigService';
-
-/**
- * Earth radius in meters - used for coordinate calculations
- * @constant {number}
- */
-const EARTH_RADIUS_METERS = 6371000;
 
 /**
  * Recursively searches for a mesh with material in a 3D object hierarchy
@@ -29,74 +23,6 @@ const findMaterial = (obj) => {
 };
 
 /**
- * Converts latitude/longitude to XY coordinates relative to a home position
- * Uses the Earth radius and basic spherical trigonometry to calculate distances
- * 
- * @param {number} lat - Latitude in degrees
- * @param {number} lon - Longitude in degrees
- * @param {number} homeLat - Reference latitude in degrees
- * @param {number} homeLon - Reference longitude in degrees
- * @returns {Object} - {x, y} coordinates in meters
- */
-const relativeLatLonToXY = (lat, lon, homeLat, homeLon) => {
-  // Skip invalid coordinates
-  if (lat === undefined || lon === undefined || 
-      homeLat === undefined || homeLon === undefined) {
-    return { x: 0, y: 0 };
-  }
-  
-  // Convert degree differences to radians
-  const dLat = (lat - homeLat) * (Math.PI / 180);
-  const dLon = (lon - homeLon) * (Math.PI / 180);
-  
-  // Calculate position with X inverted for correct port/starboard orientation
-  // Maritime convention: positive X is to the right, but Three.js works with negative X for right
-  const x = -EARTH_RADIUS_METERS * dLon * Math.cos(homeLat * (Math.PI / 180));
-  const y = EARTH_RADIUS_METERS * dLat;
-  
-  return { x, y };
-};
-
-/**
- * Predicts the future position of a boat based on its speed and course
- * Used to extrapolate position for vessels with stale AIS data
- * 
- * @param {Object} boatData - The boat's current position and movement data
- * @param {number} elapsedTime - Time in seconds since the last position update
- * @returns {Object} - The predicted change in position {deltaX, deltaY} in meters
- */
-const predictPosition = (boatData, elapsedTime) => {
-  // Get the current scaling factor from the configuration
-  const scalingFactor = configService.get('aisLengthScalingFactor') || 0.7;
-  
-  // Only predict if we have both speed and course data
-  if (boatData.sog != null && boatData.cog != null) {
-    // Convert speed from knots to meters per second
-    const speed = boatData.sog * 0.51444;
-    
-    // Calculate position delta using speed, time elapsed, and direction
-    // Math.sin for X component (east-west movement)
-    const deltaX =
-      speed *
-      elapsedTime *
-      Math.sin((boatData.cog * Math.PI) / 180) *
-      scalingFactor;
-      
-    // Math.cos for Y component (north-south movement)
-    const deltaY =
-      speed *
-      elapsedTime *
-      Math.cos((boatData.cog * Math.PI) / 180) *
-      scalingFactor;
-      
-    return { deltaX, deltaY };
-  }
-  
-  // Return zero change if we don't have sufficient data
-  return { deltaX: 0, deltaY: 0 };
-};
-
-/**
  * Updates the 3D position of a boat model in the scene
  * Can use smooth interpolation for visual enhancement
  * 
@@ -109,18 +35,20 @@ const updatePosition = (boat, targetX, targetY, interpolate = true) => {
   // Get the current scaling factor from the configuration
   const scalingFactor = configService.get('aisLengthScalingFactor') || 0.7;
   
-  // Apply the scaling factor to convert real-world meters to scene units
-  // X is already inverted in relativeLatLonToXY function for proper orientation
-  const scaledX = targetX * scalingFactor;
-  const scaledZ = targetY * scalingFactor; // Y coordinate maps to Z in Three.js
+  // Convert maritime coordinates to Three.js coordinates:
+  // 1. Apply scaling factor to convert real-world meters to scene units
+  // 2. Map X coordinate to X in Three.js
+  // 3. Map Y coordinate to Z in Three.js
+  const sceneX = targetX * scalingFactor;
+  const sceneZ = targetY * scalingFactor;
   
   if (interpolate) {
     // Smooth interpolation - move 10% of the remaining distance each frame
-    boat.position.x += (scaledX - boat.position.x) * 0.1;
-    boat.position.z += (scaledZ - boat.position.z) * 0.1;
+    boat.position.x += (sceneX - boat.position.x) * 0.1;
+    boat.position.z += (sceneZ - boat.position.z) * 0.1;
   } else {
     // Immediate position update
-    boat.position.set(scaledX, 0, scaledZ); // Y=0 keeps boats at water level
+    boat.position.set(sceneX, 0, sceneZ); // Y=0 keeps boats at water level
   }
 };
 
@@ -129,31 +57,22 @@ const updatePosition = (boat, targetX, targetY, interpolate = true) => {
  * Handles coordinate system conversions between maritime and 3D space
  * 
  * @param {Object} boat - The 3D boat object to update
- * @param {number} targetAngle - Target angle in degrees (maritime convention)
+ * @param {number} targetAngle - Target angle in radians (maritime convention)
  * @param {boolean} interpolate - Whether to smoothly interpolate the rotation
  */
 const updateRotation = (boat, targetAngle, interpolate = true) => {
   // In Three.js, rotating around Y axis is counter-clockwise looking down from above
   // But maritime angles increase clockwise from north, so we need to negate the angle
-  const negatedAngle = -targetAngle;
-  
-  // Convert angle to radians and normalize between 0 and 2π
-  const radianAngle = (negatedAngle * Math.PI / 180) % (2 * Math.PI);
+  const threeJsAngle = -targetAngle;
   
   if (interpolate) {
     // Smooth interpolation - rotate 10% of the remaining angle each frame
     // Applied to the boat's child object which contains the actual 3D model
     boat.children[0].rotation.y = boat.children[0].rotation.y + 
-                                 (radianAngle - boat.children[0].rotation.y) * 0.1;
+                                 (threeJsAngle - boat.children[0].rotation.y) * 0.1;
   } else {
     // Immediate rotation update
-    boat.children[0].rotation.y = radianAngle;
-  }
-  
-  // Log rotation for debugging (uncomment in development)
-  // Only log when crossing 45-degree boundaries to avoid console spam
-  if (boat.mmsi && Math.abs(targetAngle % 45) < 1) {
-    console.log(`Boat ${boat.mmsi} rotation: ${targetAngle}° (${radianAngle} rad)`);
+    boat.children[0].rotation.y = threeJsAngle;
   }
 };
 
@@ -168,7 +87,7 @@ const AISView = ({ onUpdateInfoPanel }) => {
   const { aisData, vesselIds } = useAIS();
   const boatRefs = useRef({});          // Refs to all boat 3D objects for direct manipulation
   const myPositionRef = useRef(null);   // Reference to user's own boat position
-  const { getSignalKValue } = useOcearoContext();
+  const { getSignalKValue, getBoatRotationAngle, getAISBoatRotationAngle, convertLatLonToXY } = useOcearoContext();
   
   // State for the selected boat (using click events rather than hover for touchscreen optimization)
   const [selectedBoat, setSelectedBoat] = useState(null);
@@ -202,27 +121,12 @@ const AISView = ({ onUpdateInfoPanel }) => {
 
   useFrame(() => {
     const myPosition = getSignalKValue('navigation.position');
-    const mySpeed = getSignalKValue('navigation.speedOverGround'); // in m/s
     
-    // Convert radians to degrees for all angular values
-    const radToDeg = (rad) => rad * (180 / Math.PI);
-    
-    // Get heading and COG in radians, then convert to degrees
-    const headingRad = getSignalKValue('navigation.headingTrue') || getSignalKValue('navigation.headingMagnetic');
-    const cogRad = getSignalKValue('navigation.courseOverGroundTrue') || getSignalKValue('navigation.courseOverGroundMagnetic');
-    
-    const heading = headingRad ? radToDeg(headingRad) : null;
-    const courseOverGroundAngle = cogRad ? radToDeg(cogRad) : null;
-  
-    const myRotationAngle = courseOverGroundAngle || heading || 0;
+    // Use the getBoatRotationAngle method from OcearoContext (returns radians)
+    const myRotationAngle = getBoatRotationAngle();
     
     // Store my rotation angle in a ref for use in boat rotation calculations
     myRotationRef.current = myRotationAngle;
-    
-    // Debug the rotation value
-    if (myRotationAngle !== 0) {
-      console.log(`My boat rotation angle: ${myRotationAngle.toFixed(1)}° (converted from ${(myRotationAngle * Math.PI / 180).toFixed(2)} radians)`);
-    }
 
     // Update position reference for use elsewhere in the component
     myPositionRef.current = myPosition;
@@ -248,36 +152,32 @@ const AISView = ({ onUpdateInfoPanel }) => {
       
       const lastUpdate = boatData.lastUpdate || currentTime;
 
-      // Convert AIS position to local coordinates (in meters)
-      const { x: targetX, y: targetY } = relativeLatLonToXY(
-        boatData.latitude,
-        boatData.longitude,
-        myPosition.latitude,
-        myPosition.longitude
+      // Convert AIS position to local coordinates (in meters) using OcearoContext function
+      const { x: targetX, y: targetY } = convertLatLonToXY(
+        { lat: boatData.latitude, lon: boatData.longitude },
+        { lat: myPosition.latitude, lon: myPosition.longitude }
       );
 
-      // Predict movement if the data is stale
-      let deltaX = 0,
-        deltaY = 0;
-      if (mySpeed != null && mySpeed > 0 && currentTime - lastUpdate > 1000) {
-        const elapsedTime = (currentTime - lastUpdate) / 1000;
-        ({ deltaX, deltaY } = predictPosition(boatData, elapsedTime));
-      }
 
-      // Predicted position (in real meters)
-      // Note: We don't invert X here because updatePosition will handle the inversion
-      const predictedX = targetX + deltaX;
-      const predictedY = targetY + deltaY;
+      // Update position using actual coordinates
+      updatePosition(boat, targetX, targetY, true);
+      
+      // Use the getAISBoatRotationAngle method from OcearoContext for consistent rotation calculation (returns radians)
+      const absoluteRotationAngle = getAISBoatRotationAngle(boatData);
+      
+      // Always use interpolation for smoother rotation
+      // Use absolute rotation angle so boats are aligned to north
+      updateRotation(boat, absoluteRotationAngle, true);
 
       // Calculate displayed distance (using the same scaling factor)
       // Note: For distance calculation, the sign of X doesn't matter as we're squaring it
       const displayedDistance = Math.sqrt(
-        (predictedX * getLengthScalingFactor()) ** 2 +
-          (predictedY * getLengthScalingFactor()) ** 2
+        (targetX * getLengthScalingFactor()) ** 2 +
+          (targetY * getLengthScalingFactor()) ** 2
       );
 
       // Skip boats at origin (0,0) relative position
-      if (predictedX === 0 && predictedY === 0) {
+      if (targetX === 0 && targetY === 0) {
         boat.visible = false;
         return;
       }
@@ -301,38 +201,6 @@ const AISView = ({ onUpdateInfoPanel }) => {
         }
 
 
-        // Update position and rotation - always use interpolation for smoother movement
-        updatePosition(boat, predictedX, predictedY, true);
-        
-        // Determine heading or course using the same logic as CompassDial
-        // First try to use COG (true or magnetic) - convert from radians to degrees
-        const radToDeg = (rad) => rad * (180 / Math.PI);
-        
-        // AIS angles are in radians, so we need to convert them to degrees
-        const courseAngle = boatData.cog !== null ? radToDeg(boatData.cog) : 
-                           boatData.cogMagnetic !== null ? radToDeg(boatData.cogMagnetic) : null;
-        
-        // If no COG available, try to use heading (true or magnetic)
-        const headingAngle = boatData.heading !== null ? radToDeg(boatData.heading) : 
-                            boatData.headingMagnetic !== null ? radToDeg(boatData.headingMagnetic) : null;
-        
-        // Use course if available, otherwise use heading, or default to 0
-        const absoluteRotationAngle = courseAngle !== null ? courseAngle : 
-                                    headingAngle !== null ? headingAngle : 0;
-        
-        // Calculate the relative rotation by subtracting my boat's rotation angle
-        // This makes the AIS boat rotation display relative to the user's boat orientation
-        const relativeRotationAngle = absoluteRotationAngle - myRotationRef.current;
-        
-        // Debug rotation angles periodically for significant changes
-        if (boat.mmsi && Math.abs(absoluteRotationAngle - (boat.lastLoggedAngle || 0)) > 10) {
-          console.log(`Boat ${boat.mmsi} - Absolute angle: ${absoluteRotationAngle.toFixed(1)}°, Relative: ${relativeRotationAngle.toFixed(1)}°`);
-          boat.lastLoggedAngle = absoluteRotationAngle;
-        }
-        
-        // Always use interpolation for smoother rotation
-        updateRotation(boat, relativeRotationAngle, true);
-
         // Instead of continuously updating the color,
         // we swap the entire material between red and white.
         const mesh = findMaterial(boat.children[0]);
@@ -350,11 +218,9 @@ const AISView = ({ onUpdateInfoPanel }) => {
           if (targetColor === 'red' && boat.currentMaterial !== 'red') {
             mesh.material = boat.redMaterial;
             boat.currentMaterial = 'red';
-            console.log(`Swapped material to red for boat ${boatData.mmsi}`);
           } else if (targetColor === 'white' && boat.currentMaterial !== 'white') {
             mesh.material = boat.whiteMaterial;
             boat.currentMaterial = 'white';
-            console.log(`Swapped material to white for boat ${boatData.mmsi}`);
           }
           // Update currentColor for hysteresis tracking
           boat.currentColor = targetColor;
@@ -402,11 +268,9 @@ const AISView = ({ onUpdateInfoPanel }) => {
         const vesselData = aisData[vessel.mmsi];
         
         // Calculate relative position from our boat
-        const position = relativeLatLonToXY(
-          vesselData.latitude,
-          vesselData.longitude,
-          myPosition.latitude,
-          myPosition.longitude
+        const position = convertLatLonToXY(
+          { lat: vesselData.latitude, lon: vesselData.longitude },
+          { lat: myPosition.latitude, lon: myPosition.longitude }
         );
         
         // Skip boats with (0,0) relative position (likely invalid data or same position as our boat)
@@ -418,7 +282,7 @@ const AISView = ({ onUpdateInfoPanel }) => {
         const scalingFactor = configService.get('aisLengthScalingFactor') || 0.7;
         
         // Apply the scaling factor to match the display scale
-        // X is already inverted in relativeLatLonToXY function
+        // X is already inverted in convertLatLonToXY function
         const scaledX = position.x * scalingFactor;
         const scaledY = position.y * scalingFactor;
         
@@ -438,7 +302,7 @@ const AISView = ({ onUpdateInfoPanel }) => {
                 boatRefs.current[vessel.mmsi] = el;
               }
             }}
-            position={[scaledX, 0, scaledY]} // Use proper orientation for 3D space
+            position={[scaledX, 0, scaledY]} // Use proper orientation for 3D space with inverted X and Y to fix left/right and top/bottom
             visible={isInDisplayZone} // Only visible if in the display zone
             boatData={{...vessel, ...vesselData}} // Merge vessel info with position data
             onHover={(boat) => {
@@ -464,7 +328,7 @@ const AISView = ({ onUpdateInfoPanel }) => {
    * @param {boolean} isAngle - Whether this is an angle value that may need conversion
    * @returns {string|null} - Formatted string or null if value is not available
    */
-  const formatBoatData = (label, value, unit = '', isAngle = false) => {
+  const formatBoatData = (label, value, unit = '', isAngle = false, isSpeed = false) => {
     // If value is undefined, null, empty string, or 0 length string, return null
     if (value === undefined || value === null || value === '' || 
         (typeof value === 'string' && value.trim().length === 0)) {
@@ -472,14 +336,15 @@ const AISView = ({ onUpdateInfoPanel }) => {
     }
     
     // If it's an angle value (COG or heading) and in radians, convert to degrees
-    if (isAngle) {
-      // Check if value is likely in radians (between -2π and 2π)
-      if (Math.abs(value) <= 2 * Math.PI) {
-        value = Math.round((value * 180 / Math.PI + 360) % 360);
-      } else {
-        // Already in degrees, just round it
-        value = Math.round(value);
-      }
+    if (isAngle && value !== null) {
+      // SignalK provides angles in radians, always convert to degrees
+      value = toDegrees(value);
+    }
+    
+    // If it's a speed value in m/s, convert to knots for display
+    if (isSpeed && value !== null) {
+      // SignalK provides speeds in m/s, convert to knots
+      value = toKnots(value);
     }
     
     return `${label}: ${value}${unit}`;
@@ -521,12 +386,10 @@ const AISView = ({ onUpdateInfoPanel }) => {
     if (!myPosition?.latitude || !myPosition?.longitude || 
         !boatData.latitude || !boatData.longitude) return null;
     
-    // Calculate distance in meters using the relativeLatLonToXY function
-    const { x, y } = relativeLatLonToXY(
-      boatData.latitude,
-      boatData.longitude,
-      myPosition.latitude,
-      myPosition.longitude
+    // Calculate distance in meters using the convertLatLonToXY function
+    const { x, y } = convertLatLonToXY(
+      { lat: boatData.latitude, lon: boatData.longitude },
+      { lat: myPosition.latitude, lon: myPosition.longitude }
     );
     
     // Calculate straight-line distance using Pythagorean theorem
@@ -547,7 +410,7 @@ const AISView = ({ onUpdateInfoPanel }) => {
     formatBoatData('Distance', calculateDistanceNM(selectedBoat), ' NM'),
     formatBoatData('Length', selectedBoat.length, 'm'),
     formatBoatData('Type', selectedBoat.shipType),
-    formatBoatData('SOG', selectedBoat.sog, ' kts'),
+    formatBoatData('SOG', selectedBoat.sog, ' kts', false, true),
     formatBoatData('COG', selectedBoat.cog, '°', true),
     formatBoatData('Heading', selectedBoat.heading, '°', true),
     formatBoatData('Beam', selectedBoat.beam, 'm'),
@@ -575,8 +438,11 @@ const AISView = ({ onUpdateInfoPanel }) => {
    */
   return (
     <>
-      {/* Render all visible AIS boat targets */}
-      {boats}
+      {/* Rotate the entire AIS view group based on current rotation angle */}
+      <group rotation={[0, -myRotationRef.current, 0]}>
+        {/* Render all visible AIS boat targets */}
+        {boats}
+      </group>
       
       {/* InfoPanel content is passed to parent component via callback */}
       {/* This marker is just a reference point in 3D space */}
