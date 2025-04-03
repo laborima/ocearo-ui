@@ -12,6 +12,52 @@ export const oYellow = '#ffbe00';
 export const oGreen = '#0fcd4f';
 export const oNight = '#ef4444';
 
+/**
+ * Convert radians to degrees
+ * @param {number} rad - Angle in radians
+ * @returns {number} - Angle in degrees
+ */
+export const radToDeg = (rad) => rad === null || rad === undefined ? null : rad * (180 / Math.PI);
+
+/**
+ * Convert radians to degrees and format as rounded integer with normalization to 0-360 range
+ * @param {number} rad - Angle in radians
+ * @returns {number} - Angle in degrees (0-360)
+ */
+export const toDegrees = (rad) => {
+  if (rad === null || rad === undefined) return null;
+  return Math.round((rad * 180 / Math.PI + 360) % 360);
+};
+
+/**
+ * Convert degrees to radians
+ * @param {number} deg - Angle in degrees
+ * @returns {number} - Angle in radians
+ */
+export const degToRad = (deg) => deg === null || deg === undefined ? null : deg * (Math.PI / 180);
+
+/**
+ * Convert meters per second to knots
+ * @param {number} mps - Speed in meters per second
+ * @returns {string} - Speed in knots, formatted to 1 decimal place
+ */
+export const toKnots = (mps) => {
+  if (mps === null || mps === undefined) return null;
+  return (mps * MS_TO_KNOTS).toFixed(1);
+};
+
+/**
+ * Constants for maritime navigation and coordinate conversion
+ */
+
+/**
+ * Conversion factor from m/s to knots (1 m/s = 1.94384 knots)
+ * @constant {number}
+ */
+export const MS_TO_KNOTS = 1.94384;
+export const EARTH_RADIUS_METERS = 6371000;
+export const KNOTS_TO_MPS = 0.51444; // Convert knots to meters per second
+
 
 
 // Utility functions
@@ -95,6 +141,87 @@ export const OcearoContextProvider = ({ children }) => {
     const [signalkData, setSignalKData] = useState({}); // State to hold SignalK data
     const [nightMode, setNightMode] = useState(false); // Night mode state
     const [states, setStates] = useState(INITIAL_STATES);
+    
+    /**
+     * Get the value of a SignalK data path
+     * @param {string} path - The SignalK data path
+     * @returns {*} - The value at the specified path, or null if not found
+     */
+    const getSignalKValue = (path) => {
+        return signalkData[path] || null;
+    };
+    
+    /**
+     * Get the user's boat rotation angle in degrees
+     * First tries to use course over ground, then falls back to heading
+     * @returns {number} - Rotation angle in radian
+     */
+    const getBoatRotationAngle = () => {
+        // Get heading and COG in radians
+       // Get heading data from SignalK values
+        const heading = getSignalKValue('navigation.headingTrue') || getSignalKValue('navigation.headingMagnetic');
+        const courseOverGroundAngle = getSignalKValue('navigation.courseOverGroundTrue')
+        || getSignalKValue('navigation.courseOverGroundMagnetic');
+
+        // Use course over ground if available, otherwise use heading
+        return courseOverGroundAngle || heading || 0;
+    };
+    
+    /**
+     * Get the rotation angle for a boat based on its AIS data
+     * First tries to use COG, then falls back to heading
+     * @param {Object} boatData - The boat's AIS data
+     * @returns {number} - Rotation angle in radian
+     */
+    const getAISBoatRotationAngle = (boatData) => {
+        if (!boatData) return 0;
+        
+        // Use course over ground if available, otherwise use heading
+        return boatData.cog !== null && boatData.cog !== undefined ? boatData.cog : 
+               boatData.cogMagnetic !== null && boatData.cogMagnetic !== undefined ? boatData.cogMagnetic : 
+               boatData.heading !== null && boatData.heading !== undefined ? boatData.heading : 
+               boatData.headingMagnetic !== null && boatData.headingMagnetic !== undefined ? boatData.headingMagnetic : 
+               0; // Default to 0 if no heading data
+    };
+    
+    /**
+     * Convert latitude/longitude coordinates to X/Y coordinates relative to a reference position
+     * @param {Object} position - Position with lat and lon properties
+     * @param {Object} referencePosition - Reference position with lat and lon properties
+     * @returns {Object} - {x, y} coordinates in meters (maritime coordinate system)
+     */
+    const convertLatLonToXY = (position, referencePosition) => {
+        if (!position || !referencePosition) return { x: 0, y: 0 };
+        
+        // Convert latitude and longitude from degrees to radians
+        const lat1 = referencePosition.lat * Math.PI / 180;
+        const lon1 = referencePosition.lon * Math.PI / 180;
+        const lat2 = position.lat * Math.PI / 180;
+        const lon2 = position.lon * Math.PI / 180;
+        
+        // Calculate differences
+        const dLon = lon2 - lon1;
+        
+        // Calculate bearing in radians
+        const y = Math.sin(dLon) * Math.cos(lat2);
+        const x = Math.cos(lat1) * Math.sin(lat2) - 
+                  Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+        const bearing = Math.atan2(y, x);
+        
+        // Calculate distance using Haversine formula
+        const a = Math.sin((lat2 - lat1) / 2) * Math.sin((lat2 - lat1) / 2) +
+                  Math.cos(lat1) * Math.cos(lat2) * 
+                  Math.sin((lon2 - lon1) / 2) * Math.sin((lon2 - lon1) / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = EARTH_RADIUS_METERS * c;
+        
+        // Convert polar (distance, bearing) to cartesian (x, y)
+        // Maritime convention: positive X is to starboard (right), positive Y is forward
+        const eastWest = distance * Math.sin(bearing);  // X axis
+        const northSouth = -distance * Math.cos(bearing); // Y axis
+        
+        return { x: eastWest, y: northSouth };
+    };
 
 
     // Method to toggle any state (e.g., autopilot, anchorWatch)
@@ -287,12 +414,13 @@ export const OcearoContextProvider = ({ children }) => {
 
     // General method to retrieve SignalK values
 
-    const getSignalKValue = (path) => signalkData[path] || null;
-
     return (
         <OcearoContext.Provider
             value={{
                 getSignalKValue,
+                getBoatRotationAngle,
+                getAISBoatRotationAngle,
+                convertLatLonToXY,
                 nightMode,
                 setNightMode,
                 states,

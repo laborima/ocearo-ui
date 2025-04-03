@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, forwardRef, useMemo, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useOcearoContext } from '../context/OcearoContext';
+import { useOcearoContext, toDegrees, toKnots } from '../context/OcearoContext';
 import configService from '../settings/ConfigService';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -236,20 +236,63 @@ const SailBoat3D = forwardRef(({ showSail = false, onUpdateInfoPanel, ...props }
    
     // Format data for InfoPanel display
     const formatInfoPanelContent = (data) => {
-        // Convert radians to degrees and format
-        const toDegrees = (rad) => Math.round((rad * 180 / Math.PI + 360) % 360);
         
-        return [
-            `Name: ${data.name}`,
-            `Wind: ${data.trueWindSpeed.toFixed(1)}kn @ ${toDegrees(data.trueWindAngle)}°`,
-            `App Wind: ${data.appWindSpeed.toFixed(1)}kn @ ${toDegrees(data.appWindAngle)}°`,
-            `Speed: ${data.speedThroughWater.toFixed(1)}kn`,
-            `Heading: ${toDegrees(data.headingTrue)}°`,
-            `COG: ${toDegrees(data.courseOverGroundTrue)}°`,
-            `VMG: ${data.velocityMadeGood.toFixed(1)}kn`,
-            `Polar: ${(data.polarSpeedRatio * 100).toFixed(0)}%`,
-            `Position: ${data.position.latitude.toFixed(4)}°, ${data.position.longitude.toFixed(4)}°`
-        ].join('\n');
+        // Create array of formatted strings, filtering out empty/zero values
+        const result = [];
+        
+        // Only add name if it exists and isn't empty
+        if (data.name) {
+            result.push(`Name: ${data.name}`);
+        }
+        
+        // Only add wind data if speed exists and isn't zero
+        if (data.trueWindSpeed) {
+            // SignalK provides wind speed in m/s
+            result.push(`Wind: ${toKnots(data.trueWindSpeed)}kn @ ${toDegrees(data.trueWindAngle)}°`);
+        }
+        
+        // Only add apparent wind data if speed exists and isn't zero
+        if (data.appWindSpeed) {
+            // SignalK provides apparent wind speed in m/s
+            result.push(`App Wind: ${toKnots(data.appWindSpeed)}kn @ ${toDegrees(data.appWindAngle)}°`);
+        }
+        
+        // Only add speed if it exists and isn't zero
+        if (data.speedThroughWater) {
+            // SignalK provides boat speed in m/s
+            result.push(`Speed: ${toKnots(data.speedThroughWater)}kn`);
+        }
+        
+        // Only add heading if it exists
+        if (data.headingTrue !== undefined && data.headingTrue !== null) {
+            // SignalK provides heading in radians
+            result.push(`Heading: ${toDegrees(data.headingTrue)}°`);
+        }
+        
+        // Only add COG if it exists
+        if (data.courseOverGroundTrue !== undefined && data.courseOverGroundTrue !== null) {
+            // SignalK provides COG in radians
+            result.push(`COG: ${toDegrees(data.courseOverGroundTrue)}°`);
+        }
+        
+        // Only add VMG if it exists and isn't zero
+        if (data.velocityMadeGood) {
+            // SignalK provides VMG in m/s
+            result.push(`VMG: ${toKnots(data.velocityMadeGood)}kn`);
+        }
+        
+        // Only add Polar if it exists and isn't zero
+        if (data.polarSpeedRatio) {
+            // Ratio is already a percentage (0-1 range)
+            result.push(`Polar: ${(data.polarSpeedRatio * 100).toFixed(0)}%`);
+        }
+        
+        // Only add Position if both latitude and longitude exist
+        if (data.position && data.position.latitude !== undefined && data.position.longitude !== undefined) {
+            result.push(`Position: ${data.position.latitude.toFixed(4)}°, ${data.position.longitude.toFixed(4)}°`);
+        }
+        
+        return result.join('\n');
     };
     
     // Handle touch/click events for touchscreen optimization
