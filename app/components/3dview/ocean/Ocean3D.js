@@ -6,9 +6,8 @@ import { Sky } from "three/examples/jsm/objects/Sky.js";
 import { useOcearoContext } from "../../context/OcearoContext";
 import { useTexture } from "@react-three/drei";
 
+// Extend the Water and Sky components for use in JSX
 extend({ Water, Sky });
-
-
 
 function Ocean3D() {
   const { nightMode } = useOcearoContext();
@@ -17,13 +16,11 @@ function Ocean3D() {
   const moonRef = useRef();
   const gl = useThree((state) => state.gl);
   const scene = useThree((state) => state.scene);
-  const renderer = gl;
   const sun = useMemo(() => new THREE.Vector3(), []);
   
   // Load moon texture
   const moonTexture = useTexture("assets/moon.jpg");
   
-
   // Load and memoize waterNormals texture
   const waterNormals = useLoader(THREE.TextureLoader, "assets/waternormals.jpg");
   useMemo(() => {
@@ -31,19 +28,19 @@ function Ocean3D() {
   }, [waterNormals]);
 
   // Memoize plane geometry and water configuration to avoid unnecessary re-creations
-  const geom = useMemo(() => new THREE.PlaneGeometry(5000, 5000, 32, 32), []); // Reduced plane size and segments
+  const geom = useMemo(() => new THREE.PlaneGeometry(10000, 10000, 32, 32), []); // Increased plane size to hide borders
   const config = useMemo(() => ({
-    textureWidth: 256, // Reduced texture size for performance
+    textureWidth: 256,
     textureHeight: 256,
     waterNormals,
-    sunDirection: new THREE.Vector3(), // Direction vers le haut plus prononcée
+    sunDirection: new THREE.Vector3(),
     sunColor: nightMode ? 0xc0e8ff : 0xffffff, // Cooler color for night mode (moonlight)
     waterColor: nightMode ? 0x001a2e : 0x0077cc, // Darker blue water at night
     distortionScale: 2.0, // Lower distortion for clearer water
-    format: gl.encoding,
+    format: gl.outputColorSpace, // Updated from encoding to outputColorSpace
     reflectivity: 0, // No reflections
-  }), [waterNormals, gl.encoding, nightMode]);
-
+  }), [waterNormals, gl.outputColorSpace, nightMode]);
+  
   // Setup sky and sun/moon
   useFrame(() => {
     // Adjust sun/moon position parameters based on night mode
@@ -78,9 +75,9 @@ function Ocean3D() {
         ref.current.material.uniforms['sunDirection'].value.copy(sun).normalize();
       }
     }
-  }, []);
+  });
   
-  // Set up the scene background and environment
+  // Set up scene background and fog
   useEffect(() => {
     // Set background color based on night mode
     if (nightMode) {
@@ -91,14 +88,22 @@ function Ocean3D() {
       scene.background = new THREE.Color(0x87ceeb);
     }
     
+    // Add fog to hide the water edges
+    const fogColor = nightMode ? new THREE.Color(0x001220) : new THREE.Color(0x87CEEB);
+    scene.fog = new THREE.FogExp2(fogColor, 0.00015);
+    
+    // Configure modern Three.js rendering
+    gl.outputColorSpace = THREE.SRGBColorSpace; // Updated from sRGBEncoding
+    
     return () => {
       // Cleanup when component unmounts
       scene.background = null;
       scene.environment = null;
+      scene.fog = null;
     };
-  }, [scene, nightMode]);
+  }, [scene, nightMode, gl]);
 
-  // Throttled frame update with even lower frequency
+  // Throttled water animation frame update
   let elapsedTime = 0;
   useFrame((state, delta) => {
     elapsedTime += delta;
@@ -116,7 +121,7 @@ function Ocean3D() {
       {!nightMode && (
         <sky
           ref={skyRef}
-          scale={10000}
+          scale={450000}
         />
       )}
       
@@ -139,7 +144,7 @@ function Ocean3D() {
         ref={ref}
         args={[geom, config]}
         rotation-x={-Math.PI / 2}
-        position={[0, -0.5, 0]} // Lowered the water position
+        position={[0, -1, 0]} // Slightly lower position to better hide edges
       />
     </>
   );
