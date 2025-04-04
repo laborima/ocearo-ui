@@ -8,9 +8,9 @@ const ConfigPage = ({ onSave }) => {
 
     const [config, setConfig] = useState(initialConfig);
     const [useAuthentication, setUseAuthentication] = useState(
-        !!initialConfig.username || !!initialConfig.password
+        initialConfig.useAuthentication || !!initialConfig.username || !!initialConfig.password
     );
-    const [signalKUrlSet, setSignalKUrlSet] = useState(false);
+    const [signalKUrlSet, setSignalKUrlSet] = useState(initialConfig.signalKUrlSet || false);
     const [selectedBoat, setSelectedBoat] = useState(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [saveIndicator, setSaveIndicator] = useState({ visible: false, message: '' });
@@ -28,6 +28,10 @@ const ConfigPage = ({ onSave }) => {
         const loadConfiguration = async () => {
             const configFromService = configService.getAll();
             setConfig(configFromService);
+            
+            // Initialize states from config
+            setSignalKUrlSet(configFromService.signalKUrlSet || false);
+            setUseAuthentication(configFromService.useAuthentication || !!configFromService.username || !!configFromService.password);
 
             if (configFromService.selectedBoat) {
                 const currentBoat = boats.find((boat) => boat.name === configFromService.selectedBoat);
@@ -47,9 +51,18 @@ const ConfigPage = ({ onSave }) => {
         // Auto-save when settings change
         const updatedConfig = { ...newConfig };
         
-        // Preserve signalKUrl if it's been set before
-        // Only apply the computed URL if signalKUrlSet is false AND we're not currently setting the URL
-        if (!signalKUrlSet && !updates.hasOwnProperty('signalkUrl')) {
+        // Handle SignalK URL settings
+        if (updates.hasOwnProperty('signalKUrlSet')) {
+            // When toggling the signalKUrlSet checkbox
+            if (updates.signalKUrlSet === false) {
+                // If turning off custom URL, use computed URL
+                updatedConfig.signalkUrl = computedSignalKUrl;
+                updatedConfig.username = '';
+                updatedConfig.password = '';
+            }
+            // If turning on custom URL, keep the current URL (don't overwrite)
+        } else if (!signalKUrlSet && !updates.hasOwnProperty('signalkUrl')) {
+            // Only apply computed URL if signalKUrlSet is false and we're not setting URL
             updatedConfig.signalkUrl = computedSignalKUrl;
             updatedConfig.username = '';
             updatedConfig.password = '';
@@ -72,16 +85,21 @@ const ConfigPage = ({ onSave }) => {
     const handleSave = () => {
         const updatedConfig = { ...config };
 
-        // Consistent with updateConfig logic
+        // Should match updateConfig logic
         if (!signalKUrlSet) {
+            // Only use computed URL when signalKUrlSet is false
             updatedConfig.signalkUrl = computedSignalKUrl;
             updatedConfig.username = '';
             updatedConfig.password = '';
         } else if (!useAuthentication) {
-            // Keep URL but clear auth
+            // Keep custom URL but clear auth credentials
             updatedConfig.username = '';
             updatedConfig.password = '';
         }
+        
+        // Always save the state of configuration switches
+        updatedConfig.signalKUrlSet = signalKUrlSet;
+        updatedConfig.useAuthentication = useAuthentication;
 
         configService.saveConfig(updatedConfig);
         onSave?.(updatedConfig);
@@ -96,7 +114,9 @@ const ConfigPage = ({ onSave }) => {
         const defaultConfig = configService.getDefaultConfig();
         setConfig(defaultConfig);
         setUseAuthentication(false);
+        defaultConfig.useAuthentication = false;
         setSignalKUrlSet(false);
+        defaultConfig.signalKUrlSet = false;
         configService.saveConfig(defaultConfig);
         setHasUnsavedChanges(false);
     };
@@ -132,7 +152,7 @@ const ConfigPage = ({ onSave }) => {
                                 checked={signalKUrlSet}
                                 onChange={(e) => {
                                     setSignalKUrlSet(e.target.checked);
-                                    checkForChanges(config);
+                                    updateConfig({ signalKUrlSet: e.target.checked });
                                 }}
                             />
                             Set SignalK URL
@@ -160,7 +180,7 @@ const ConfigPage = ({ onSave }) => {
                                         checked={useAuthentication}
                                         onChange={(e) => {
                                             setUseAuthentication(e.target.checked);
-                                            checkForChanges(config);
+                                            updateConfig({ useAuthentication: e.target.checked });
                                         }}
                                     />
                                     Use Authentication

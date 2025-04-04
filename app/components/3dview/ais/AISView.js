@@ -316,7 +316,7 @@ const AISView = ({ onUpdateInfoPanel }) => {
           />
         );
       });
-  }, [vesselIds, aisData, maxDisplayedDistance, selectedBoat]);
+  }, [vesselIds, aisData, maxDisplayedDistance, selectedBoat, convertLatLonToXY]);
 
   /**
    * Formats boat data for display in the info panel
