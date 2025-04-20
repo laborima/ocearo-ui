@@ -4,7 +4,7 @@ class ConfigService {
   constructor() {
     // Default configuration
     this.defaultConfig = {
-      signalkUrl: 'https://demo.signalk.org:443',
+      signalkUrl: 'http://localhost:3000',
       username: '',
       password: '',
       debugMode: false,
