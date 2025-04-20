@@ -167,62 +167,57 @@ export const OcearoContextProvider = ({ children }) => {
         return courseOverGroundAngle || heading || 0;
     };
     
-    /**
-     * Get the rotation angle for a boat based on its AIS data
-     * First tries to use COG, then falls back to heading
-     * @param {Object} boatData - The boat's AIS data
-     * @returns {number} - Rotation angle in radian
-     */
-    const getAISBoatRotationAngle = (boatData) => {
-        if (!boatData) return 0;
-        
-        // Use course over ground if available, otherwise use heading
-        return boatData.cog !== null && boatData.cog !== undefined ? boatData.cog : 
-               boatData.cogMagnetic !== null && boatData.cogMagnetic !== undefined ? boatData.cogMagnetic : 
-               boatData.heading !== null && boatData.heading !== undefined ? boatData.heading : 
-               boatData.headingMagnetic !== null && boatData.headingMagnetic !== undefined ? boatData.headingMagnetic : 
-               0; // Default to 0 if no heading data
-    };
+    
     
     /**
-     * Convert latitude/longitude coordinates to X/Y coordinates relative to a reference position
-     * @param {Object} position - Position with lat and lon properties
-     * @param {Object} referencePosition - Reference position with lat and lon properties
-     * @returns {Object} - {x, y} coordinates in meters (maritime coordinate system)
-     */
-    const convertLatLonToXY = (position, referencePosition) => {
-        if (!position || !referencePosition) return { x: 0, y: 0 };
-        
-        // Convert latitude and longitude from degrees to radians
-        const lat1 = referencePosition.lat * Math.PI / 180;
-        const lon1 = referencePosition.lon * Math.PI / 180;
-        const lat2 = position.lat * Math.PI / 180;
-        const lon2 = position.lon * Math.PI / 180;
-        
-        // Calculate differences
-        const dLon = lon2 - lon1;
-        
-        // Calculate bearing in radians
-        const y = Math.sin(dLon) * Math.cos(lat2);
-        const x = Math.cos(lat1) * Math.sin(lat2) - 
-                  Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-        const bearing = Math.atan2(y, x);
-        
-        // Calculate distance using Haversine formula
-        const a = Math.sin((lat2 - lat1) / 2) * Math.sin((lat2 - lat1) / 2) +
-                  Math.cos(lat1) * Math.cos(lat2) * 
-                  Math.sin((lon2 - lon1) / 2) * Math.sin((lon2 - lon1) / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const distance = EARTH_RADIUS_METERS * c;
-        
-        // Convert polar (distance, bearing) to cartesian (x, y)
-        // Maritime convention: positive X is to starboard (right), positive Y is forward
-        const eastWest = distance * Math.sin(bearing);  // X axis
-        const northSouth = -distance * Math.cos(bearing); // Y axis
-        
-        return { x: eastWest, y: northSouth };
-    };
+         * Convert latitude/longitude coordinates to X/Y coordinates relative to a reference position
+         * @param {Object} position - Position with lat and lon properties
+         * @param {Object} referencePosition - Reference position with lat and lon properties
+         * @returns {Object} - {x, y} coordinates in meters { x: Easting, y: Northing }
+         */
+        const convertLatLonToXY = (position, referencePosition) => {
+            // Define Earth radius if not defined elsewhere
+            const EARTH_RADIUS_METERS = 6371000;
 
+            if (!position?.lat || !position?.lon || !referencePosition?.lat || !referencePosition?.lon) {
+                 console.warn("Invalid input to convertLatLonToXY", position, referencePosition);
+                 return { x: 0, y: 0 };
+            }
+
+            // Convert latitude and longitude from degrees to radians
+            const lat1 = referencePosition.lat * Math.PI / 180;
+            const lon1 = referencePosition.lon * Math.PI / 180;
+            const lat2 = position.lat * Math.PI / 180;
+            const lon2 = position.lon * Math.PI / 180;
+
+            // Calculate differences
+            const dLon = lon2 - lon1;
+            const dLat = lat2 - lat1; // Needed for Haversine
+
+            // Calculate bearing in radians (needed for Cartesian conversion)
+            // Note: atan2(y, x) gives angle from +X axis, bearing needs angle from +Y (North)
+            const y_bear = Math.sin(dLon) * Math.cos(lat2);
+            const x_bear = Math.cos(lat1) * Math.sin(lat2) -
+                           Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+            const bearing = Math.atan2(y_bear, x_bear); // Bearing relative to North, clockwise
+
+            // Calculate distance using Haversine formula
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(lat1) * Math.cos(lat2) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const distance = EARTH_RADIUS_METERS * c;
+
+            // Convert polar (distance, bearing) to cartesian (x, y)
+            // Standard convention: X = Easting, Y = Northing
+            const easting = distance * Math.sin(bearing);  // X axis (East component)
+            const northing = distance * Math.cos(bearing); // Y axis (North component) <-- REMOVED NEGATION
+
+            // Optional: Update or remove the internal comment if it was confusing
+            // e.g., // Returns Easting (x) and Northing (y) in meters
+
+            return { x: easting, y: northing }; // Return Easting, Northing
+        };
 
     // Method to toggle any state (e.g., autopilot, anchorWatch)
     const toggleState = (key, value = undefined) => {
@@ -419,7 +414,6 @@ export const OcearoContextProvider = ({ children }) => {
             value={{
                 getSignalKValue,
                 getBoatRotationAngle,
-                getAISBoatRotationAngle,
                 convertLatLonToXY,
                 nightMode,
                 setNightMode,

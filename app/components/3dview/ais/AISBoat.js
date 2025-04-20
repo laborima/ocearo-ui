@@ -38,7 +38,7 @@ const BASE_MODEL_LENGTH = 10;
  * AISBoat component - Renders a 3D boat model with information display
  * Optimized for touchscreen interaction using click events instead of hover
  */
-const AISBoat = forwardRef(({ position, visible, boatData, onHover }, ref) => {
+const AISBoat = forwardRef(({ position, visible, boatData, onClick }, ref) => {
     // State to hold the dynamically loaded boat component
     const [BoatComponent, setBoatComponent] = useState(null);
     // Determine which boat model to use based on AIS data
@@ -64,25 +64,6 @@ const AISBoat = forwardRef(({ position, visible, boatData, onHover }, ref) => {
         return null;
     }
 
-    /**
-     * Formats boat data with label and unit for display
-     * @param {string} label - The label for the data field
-     * @param {*} value - The value to display
-     * @param {string} unit - Optional unit to append to the value
-     * @returns {string} - Formatted string with newline
-     */
-    const formatBoatData = (label, value, unit = '') => {
-        const displayValue = value !== undefined && value !== null ? `${value}${unit}` : 'N/A';
-        return `${label}: ${displayValue}\n`;
-    };
-
-    // Prepare the basic info to display above the boat
-    // If name exists, display it with label, otherwise just show MMSI without a label
-    const basicInfo = [
-        boatData.name 
-            ? formatBoatData('Name', boatData.name, '') 
-            : `MMSI ${boatData.mmsi.replace('urn:mrn:imo:mmsi:', '')}\n`
-    ].join('');
 
     // Calculate the scale factor for the boat model based on actual boat length
     // Set minimum boat length for better visibility on the map
@@ -96,18 +77,15 @@ const AISBoat = forwardRef(({ position, visible, boatData, onHover }, ref) => {
             ref={ref} 
             position={position} 
             visible={visible}
-        >
-            {/* Clickable boat model group */}
-            <group 
+    
                 onClick={(e) => {
                     e.stopPropagation();
                     // Toggle the info panel for this boat on click (touchscreen optimized)
                     if (BoatComponent) {
                         // Call the onHover callback (which actually handles click events)
                         // despite the name, this toggles the info panel
-                        onHover && onHover(boatData);
+                        onClick && onClick(boatData);
                     }
-                    console.log('Clicked on boat:', boatData.name || boatData.mmsi);
                 }}
             >
                 {/* Render the actual boat model with proper scaling */}
@@ -116,25 +94,6 @@ const AISBoat = forwardRef(({ position, visible, boatData, onHover }, ref) => {
                 />
             </group>
 
-            {/* Label that appears above the boat */}
-            <group position={[1.5, 4, 0]}>
-                <Text
-                    position={[0, 0, 0]}
-                    fontSize={0.4}
-                    maxWidth={3}
-                    lineHeight={1.2}
-                    textAlign="left"
-                    color="white"
-                    anchorX="center"
-                    anchorY="middle"
-                    font="fonts/Roboto-Bold.ttf"
-                    renderOrder={1000} // Ensure text renders on top of other elements
-                    depthTest={false}  // Make sure text is always visible regardless of depth
-                >
-                    {basicInfo}
-                </Text>
-            </group>
-        </group>
     );
 });
 
