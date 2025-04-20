@@ -95,7 +95,7 @@ const RightPane = ({ view }) => {
 
         switch (view) {
             case 'manual':
-                return <PDFList path="boats/default/docs" />;
+                return <PDFList path="docs" />;
             case 'settings':
                 return <ConfigPage />;
             case 'mediaplayer':

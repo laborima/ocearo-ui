@@ -1,7 +1,5 @@
 import React, { Suspense, useRef, useState, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Html, Environment } from '@react-three/drei';
-import * as THREE from 'three';
 import SailBoat3D from './SailBoat3D';
 import { Trail } from './ocean/Trail3D';
 import Ocean3D from './ocean/Ocean3D';
@@ -10,15 +8,11 @@ import ThreeDCompassView from './ThreeDCompassView';
 import { useOcearoContext } from '../context/OcearoContext';
 import { AISProvider } from './ais/AISContext';
 import PolarProjection from './polar/Polar3D';
-import LayLines3D from './compass/LayLines3D';
 import BoatLighting from './BoatLighting';
-import configService from '../settings/ConfigService';
 
 const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
-    const { states, getSignalKValue } = useOcearoContext(); // Application state from context
+    const { states } = useOcearoContext(); // Application state from context
     const isCompassLayerVisible = false; // Compass visibility
-    const config = configService.getAll(); // Load config from the service
-
     const sailBoatRef = useRef();
 
 
