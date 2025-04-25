@@ -13,6 +13,8 @@ class ConfigService {
       metallicEffect: false,
       aisLengthScalingFactor: 0.7, // Default value for AIS boat scaling
       compassNorthUp: false, // Default: North at bottom (standard marine compass)
+      showCustomUrls: false, // Toggle for custom external URLs section
+      customExternalUrls: {} // For storing custom external URL overrides
     };
 
     this.configKey = 'ocearoConfig'; // Key used to store the config

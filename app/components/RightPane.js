@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useOcearoContext } from './context/OcearoContext';
 import configService from './settings/ConfigService';
@@ -16,7 +16,7 @@ const MediaPlayer = dynamic(() => import('./mediaplayer/MediaPlayer'), {
   loading: () => <div className="w-full h-full flex justify-center items-center">Loading media player...</div>
 });
 
-const BatteryMonitor = dynamic(() => import('./settings/BatteryMonitor'), {
+const BatteryMonitor = dynamic(() => import('./battery/BatteryMonitor'), {
   loading: () => <div className="w-full h-full flex justify-center items-center">Loading battery monitor...</div>
 });
 
@@ -32,7 +32,7 @@ const DEFAULT_POSITION = {
 const EXTERNAL_URLS = {
     navigation: (signalkUrl) => `${signalkUrl}/@signalk/freeboard-sk/`,
     instrument: (signalkUrl) => `${signalkUrl}/@mxtommy/kip/`,
-    grafana: (signalkUrl) => signalkUrl.replace(':3000', ':3001') + '/grafana',
+    dashboard: (signalkUrl) => signalkUrl.replace(':3000', ':3001') + '/grafana',
     webcam1: () => 'https://pv.viewsurf.com/2080/Chatelaillon-Port?i=NzU4Mjp1bmRlZmluZWQ',
     webcam2: () => 'https://pv.viewsurf.com/1478/Chatelaillon-Plage&lt?i=NTkyMDp1bmRlZmluZWQ',
     weather: (_, position) => position && `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=kt&zoom=10&overlay=wind&product=ecmwf&level=surface&lat=${position.latitude}&lon=${position.longitude}&message=true`
@@ -75,6 +75,28 @@ const RightPane = ({ view }) => {
 
     // URL generation
     const iframeSrc = useMemo(() => {
+        // Check if there's a custom URL for this view
+        const config = configService.getAll();
+        const customUrls = config.customExternalUrls || {};
+        
+        // Use custom URL if available and custom URLs are enabled
+        if (config.showCustomUrls && customUrls[view]) {
+            try {
+                // If custom URL is a function string, evaluate it
+                if (typeof customUrls[view] === 'string' && customUrls[view].includes('${signalkUrl}')) {
+                    return customUrls[view].replace('${signalkUrl}', signalkUrl)
+                        .replace('${latitude}', myPosition?.latitude || DEFAULT_POSITION.latitude)
+                        .replace('${longitude}', myPosition?.longitude || DEFAULT_POSITION.longitude);
+                }
+                // Otherwise just use it as a static URL
+                return customUrls[view];
+            } catch (err) {
+                console.error('Error using custom URL:', err);
+                // Fall back to default URL generator
+            }
+        }
+        
+        // Use default URL generator
         const urlGenerator = EXTERNAL_URLS[view];
         if (!urlGenerator) return null;
 

@@ -263,11 +263,11 @@ export const OcearoContextProvider = ({ children }) => {
                         ...prev,
                         'steering.rudderAngle': MathUtils.degToRad(randomAngle),
                         // Override the apparent wind angle with our incrementing value
-                        'environment.wind.angleApparent': MathUtils.degToRad(currentWindAngle),
+                        //nt.wind.angleApparent': MathUtils.degToRad(currentWindAngle),
                         // Keep other wind data from sample data
-                        'environment.wind.angleTrueWater': SAMPLE_DATA.wind['environment.wind.angleTrueWater'],
-                        'environment.wind.speedTrue': SAMPLE_DATA.wind['environment.wind.speedTrue'],
-                        'environment.wind.speedApparent': SAMPLE_DATA.wind['environment.wind.speedApparent'],
+                       // 'environment.wind.angleTrueWater': SAMPLE_DATA.wind['environment.wind.angleTrueWater'],
+                        //'environment.wind.speedTrue': SAMPLE_DATA.wind['environment.wind.speedTrue'],
+                       // 'environment.wind.speedApparent': SAMPLE_DATA.wind['environment.wind.speedApparent'],
                         ...SAMPLE_DATA.temperature,
                         ...SAMPLE_DATA.environment,
                         ...SAMPLE_DATA.performance,
@@ -278,8 +278,7 @@ export const OcearoContextProvider = ({ children }) => {
             };
             
             try {
-                // Only attempt to connect if not in debug mode
-                if (!debugMode) {
+
                     const [hostname, port] = signalkUrl.replace(/https?:\/\//, '').split(':');
                     const client = new Client({
                         hostname: hostname || 'localhost',
@@ -313,7 +312,7 @@ export const OcearoContextProvider = ({ children }) => {
                             }
                         });
                     });
-                }
+                
                 
                 // Set up interval for sample data if debugMode is enabled
                 if (debugMode) {

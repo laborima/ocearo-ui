@@ -113,10 +113,16 @@ const ConfigPage = ({ onSave }) => {
     const handleReset = () => {
         const defaultConfig = configService.getDefaultConfig();
         setConfig(defaultConfig);
+        // Reset authentication settings
         setUseAuthentication(false);
         defaultConfig.useAuthentication = false;
+        // Reset SignalK URL settings
         setSignalKUrlSet(false);
         defaultConfig.signalKUrlSet = false;
+        // Reset custom URLs settings
+        defaultConfig.showCustomUrls = false;
+        defaultConfig.customExternalUrls = {}; // Reset to empty object to use default URLs
+        // Save the reset configuration
         configService.saveConfig(defaultConfig);
         setHasUnsavedChanges(false);
     };
@@ -233,6 +239,13 @@ const ConfigPage = ({ onSave }) => {
                         </select>
                     </div>
 
+                    {selectedBoat && (
+                        <div className="space-y-2 text-sm text-gray-400">
+                            <div>3D Model: {selectedBoat.modelPath}</div>
+                            <div>Features: {selectedBoat.capabilities?.join(', ')}</div>
+                        </div>
+                    )}
+
                     <div>
                         <label className="block font-medium mb-1">Vessel Color:</label>
                         <input
@@ -278,27 +291,7 @@ const ConfigPage = ({ onSave }) => {
                             </span>
                         </label>
                     </div>
-                </div>
 
-                {/* Advanced Settings */}
-                <div className="space-y-4">
-                    <h2 className="text-xl font-semibold">Advanced Settings</h2>
-
-                    <div>
-                        <label className="flex items-center">
-                            <input
-                                type="checkbox"
-                                className="mr-2"
-                                checked={config.debugMode || false}
-                                onChange={(e) => updateConfig({
-                                    debugMode: e.target.checked,
-                                    signalkUrl: computedSignalKUrl
-                                })}
-                            />
-                            Debug Mode
-                        </label>
-                    </div>
-                    
                     <div className="space-y-2">
                         <label className="block text-sm font-medium">
                             AIS Length Scaling Factor
@@ -330,13 +323,147 @@ const ConfigPage = ({ onSave }) => {
                             </span>
                         </div>
                     </div>
+                </div>
 
-                    {selectedBoat && config.debugMode && (
-                        <div className="space-y-2 text-sm text-gray-400">
-                            <div>3D Model: {selectedBoat.modelPath}</div>
-                            <div>Features: {selectedBoat.capabilities?.join(', ')}</div>
+                {/* Advanced Settings */}
+                <div className="space-y-4">
+                    <h2 className="text-xl font-semibold">Advanced Settings</h2>
+
+                    <div>
+                        <label className="flex items-center">
+                            <input
+                                type="checkbox"
+                                className="mr-2"
+                                checked={config.debugMode || false}
+                                onChange={(e) => updateConfig({
+                                    debugMode: e.target.checked,
+                                    signalkUrl: computedSignalKUrl
+                                })}
+                            />
+                            Debug Mode
+                        </label>
+                    </div>
+                    
+                    <div>
+                        <label className="flex items-center">
+                            <input
+                                type="checkbox"
+                                className="mr-2"
+                                checked={config.showCustomUrls || false}
+                                onChange={(e) => updateConfig({
+                                    showCustomUrls: e.target.checked
+                                })}
+                            />
+                            Set Custom External Tools URLs
+                        </label>
+                    </div>
+                    
+                    {config.showCustomUrls && (
+                        <div className="space-y-4 p-4 border border-gray-700 rounded-lg">
+                            <h3 className="text-lg font-medium">Custom External URLs</h3>
+                            <p className="text-sm text-gray-400 mb-4">
+                                Customize URLs for external tools. Use <code>{'${signalkUrl}'}</code> as placeholder for the SignalK URL, 
+                                and <code>{'${latitude}'}</code> or <code>{'${longitude}'}</code> for position values.
+                                Leave empty to use the default URL.
+                            </p>
+                            
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block font-medium mb-1">Navigation URL:</label>
+                                    <input
+                                        type="text"
+                                        className="border p-2 w-full text-black rounded"
+                                        placeholder={"${signalkUrl}/@signalk/freeboard-sk/"}
+                                        value={(config.customExternalUrls?.navigation) || ''}
+                                        onChange={(e) => {
+                                            const customExternalUrls = { ...config.customExternalUrls } || {};
+                                            customExternalUrls.navigation = e.target.value;
+                                            updateConfig({ customExternalUrls });
+                                        }}
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label className="block font-medium mb-1">Instrument URL:</label>
+                                    <input
+                                        type="text"
+                                        className="border p-2 w-full text-black rounded"
+                                        placeholder={"${signalkUrl}/@mxtommy/kip/"}
+                                        value={(config.customExternalUrls?.instrument) || ''}
+                                        onChange={(e) => {
+                                            const customExternalUrls = { ...config.customExternalUrls } || {};
+                                            customExternalUrls.instrument = e.target.value;
+                                            updateConfig({ customExternalUrls });
+                                        }}
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label className="block font-medium mb-1">Dashboard URL:</label>
+                                    <input
+                                        type="text"
+                                        className="border p-2 w-full text-black rounded"
+                                        placeholder={"${signalkUrl}/grafana"} 
+                                        value={(config.customExternalUrls?.dashboard) || ''}
+                                        onChange={(e) => {
+                                            const customExternalUrls = { ...config.customExternalUrls } || {};
+                                            customExternalUrls.dashboard = e.target.value;
+                                            updateConfig({ customExternalUrls });
+                                        }}
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label className="block font-medium mb-1">Webcam 1 URL:</label>
+                                    <input
+                                        type="text"
+                                        className="border p-2 w-full text-black rounded"
+                                        placeholder="https://example.com/webcam1"
+                                        value={(config.customExternalUrls?.webcam1) || ''}
+                                        onChange={(e) => {
+                                            const customExternalUrls = { ...config.customExternalUrls } || {};
+                                            customExternalUrls.webcam1 = e.target.value;
+                                            updateConfig({ customExternalUrls });
+                                        }}
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label className="block font-medium mb-1">Webcam 2 URL:</label>
+                                    <input
+                                        type="text"
+                                        className="border p-2 w-full text-black rounded"
+                                        placeholder="https://example.com/webcam2"
+                                        value={(config.customExternalUrls?.webcam2) || ''}
+                                        onChange={(e) => {
+                                            const customExternalUrls = { ...config.customExternalUrls } || {};
+                                            customExternalUrls.webcam2 = e.target.value;
+                                            updateConfig({ customExternalUrls });
+                                        }}
+                                    />
+                                </div>
+                                
+                                <div>
+                                    <label className="block font-medium mb-1">Weather URL:</label>
+                                    <input
+                                        type="text"
+                                        className="border p-2 w-full text-black rounded"
+                                        placeholder={"https://embed.windy.com/embed.html?location=coordinates&lat=${latitude}&lon=${longitude}"}
+                                        value={(config.customExternalUrls?.weather) || ''}
+                                        onChange={(e) => {
+                                            const customExternalUrls = { ...config.customExternalUrls } || {};
+                                            customExternalUrls.weather = e.target.value;
+                                            updateConfig({ customExternalUrls });
+                                        }}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     )}
+                    
+                   
+
+                   
                 </div>
                 {/* Action Buttons */}
                 <div className="flex space-x-4 pt-4">
