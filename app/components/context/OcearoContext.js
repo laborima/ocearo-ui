@@ -133,6 +133,38 @@ const SAMPLE_DATA = {
         'navigation.racing.timeStbdDown': 65,
         'navigation.racing.timeStbdUp': 75,
     },
+    electrical: {
+        // Battery data for LFD75 12V 64Ah (RC 141Min, CCA 650A, MCA 813A)
+        'electrical.batteries.1.name': 'House Battery',
+        'electrical.batteries.1.location': 'Under Starboard Bed',
+        'electrical.batteries.1.capacity.nominal': 768, // 64Ah × 12V = 768 Wh (in Joules - multiply by 3600)
+        'electrical.batteries.1.capacity.actual': 707, // 92% of nominal (degraded over time)
+        'electrical.batteries.1.capacity.remaining': 601, // 85% of actual capacity
+        'electrical.batteries.1.capacity.dischargeLimit': 0.2, // Don't discharge below 20%
+        'electrical.batteries.1.capacity.timeRemaining': 9860, // Time in seconds until discharge limit (at current rate)
+        'electrical.batteries.1.lifetimeDischarge': 540000, // Lifetime discharge in Ah (converted to Coulombs)
+        'electrical.batteries.1.lifetimeRecharge': 545000, // Lifetime recharge in Ah (converted to Coulombs)
+        'electrical.batteries.1.voltage.ripple': 0.05, // Voltage ripple in V
+        'electrical.batteries.1.chemistry': 'LiFePO4',
+        'electrical.batteries.1.manufacturer.name': 'Mastervolt',
+        'electrical.batteries.1.manufacturer.model': 'LFD75',
+        'electrical.batteries.1.manufacturer.URL': 'https://www.mastervolt.com',
+        'electrical.batteries.1.dateInstalled': '2023-06-15T00:00:00Z',
+        'electrical.batteries.1.associatedBus': 'House Bus',
+        
+        // Second battery for testing multi-battery selection
+        'electrical.batteries.2.name': 'Engine Start Battery',
+        'electrical.batteries.2.location': 'Engine Compartment',
+        'electrical.batteries.2.capacity.nominal': 600, // 50Ah × 12V = 600 Wh (in Joules)
+        'electrical.batteries.2.capacity.actual': 582, // 97% of nominal
+        'electrical.batteries.2.chemistry': 'AGM',
+        'electrical.batteries.2.manufacturer.name': 'Optima',
+        'electrical.batteries.2.manufacturer.model': 'BlueTop',
+        
+        // Switches and systems status
+        'navigation.lights': false,
+        'steering.autopilot.state': 'auto', // 'auto' or 'standby'
+    },
 };
 
 
@@ -273,6 +305,7 @@ export const OcearoContextProvider = ({ children }) => {
                         ...SAMPLE_DATA.performance,
                         ...SAMPLE_DATA.navigation,
                         ...SAMPLE_DATA.racing,
+                        ...SAMPLE_DATA.electrical,
                     }));
                 }, SAMPLE_DATA_INTERVAL);
             };
