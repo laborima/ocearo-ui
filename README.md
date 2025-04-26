@@ -2,7 +2,9 @@
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![License](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
+
 # Ocearo UI
+
 
 **Sailing Made Smarter**
 
@@ -45,18 +47,17 @@ Inspired by Tesla's autopilot UI, this system delivers a futuristic and streamli
 
 ![Anchored View](docs/parking.png)
 
-### **Man Overboard (MOB) View**
-- Features 3D visualization to pinpoint the location and direction of the person overboard, ensuring precise and timely rescue operations.
-
-*Currently in progress.*
-
 ### **Other Views**
 Additional visuals enhance the system's functionality:
 
 ![Other Views](docs/ais.png)  
+![Other Views](docs/ocean.png)
 ![Other Views](docs/meteo.png)  
 ![Other Views](docs/navigation.png)  
 ![Other Views](docs/instruments.png)
+![Other Views](docs/webcam.png)
+![Other Views](docs/battery.png)
+![Other Views](docs/performances.png)
 
 ---
 
@@ -67,12 +68,28 @@ Ocean Robot's roadmap includes advanced features aimed at enhancing safety and e
   - Integration with advanced camera systems (e.g., **see.ai**) to detect floating objects
 - **Future Enhancements**:
   - Camera-based monitoring of sail indicators (*penons*) for optimal sail trim suggestions
+  - 3D Bathymetry visualization
+  - 3D Laylines visualization
+  - 3D Start lines visualization
   
 ---
 
 Check out the live demo: https://laborima.github.io/ocearo-ui/
 
 Or install it in Signal K using the NPM package: https://www.npmjs.com/package/ocearo-ui
+
+---
+
+## **Contributing**
+
+Your support and involvement make Ocearo UI better! Here are some ways you can contribute:
+
+* Report bugs: Help me squash issues by letting me know when something isn't working as expected.
+* Suggest features: Share your ideas for new features or improvements your feedback shapes the project!
+* Contribute code: Submit pull requests to add features, fix bugs, or improve documentation.
+* Support the project: Help fund the purchase of webcams, and sensors by buying me a coffee.
+
+[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/laborima)
 
 ---
 
@@ -172,6 +189,11 @@ Each tide entry consists of:
 - **Height**: Tide height in meters
 - **Coefficient**: If applicable, the coefficient value (otherwise "---")
 
+### Setup SSL for PWA
+
+For complete documentation on setting up SSL, see:
+
+[doc/ssl.md](doc/ssl.md)
 
 
 ### Setup Polar Data
@@ -193,7 +215,7 @@ Save the downloaded file under:
 Create an `index.json` file and place it under:
 
 ```
-/public/boats/default/docs/index.json
+/public/docs/index.json
 ```
 
 #### JSON Format
@@ -219,11 +241,10 @@ Create an `index.json` file and place it under:
 ]
 ```
 
-
-
 ## **Deploying to OpenPlotter**
 
-Adapt and run the deployment script deploy.sh or:
+The recommended way is to use the npm published package.
+If you want to deploy your own build, you can either adapt and run the provided `deploy.sh` script, or use the following manual steps:
 
 ```bash
 git clone https://github.com/laborima/ocearo-ui.git
