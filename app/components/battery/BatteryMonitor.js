@@ -121,7 +121,7 @@ const BatteryMonitor = () => {
       lifetimeDischarge,
       lifetimeRecharge
     };
-  }, [getSignalKValue]);
+  }, [getSignalKValue, selectedBattery]);
 
   // Initialize with 60 data points for smoother graphs
   const [batteryData, setBatteryData] = useState(() =>
@@ -206,7 +206,7 @@ const BatteryMonitor = () => {
       lifetimeDischarge,
       lifetimeRecharge
     };
-  }, [getSignalKValue, batteryData]);
+  }, [getSignalKValue, batteryData, selectedBattery]);
 
   // Reference to renderer for performance stats
   const rendererRef = useRef(null);
@@ -388,9 +388,10 @@ const BatteryMonitor = () => {
         <div className="p-4 flex flex-col flex-1 min-h-0 rightPaneBg">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-white flex items-center">
-              {currentBatteryData.stateOfCharge.toFixed(1)}% consumed
+              Battery information  {currentBatteryData.stateOfCharge.toFixed(0)}%
+              
               <button 
-                className="ml-2 bg-gray-800 rounded-full w-6 h-6 flex items-center justify-center text-gray-400 hover:bg-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500"
+                className="ml-2 bg-oGray2 rounded-full w-6 h-6 flex items-center justify-center text-gray-400 hover:bg-oGray focus:outline-none focus:ring-1 focus:ring-green-500"
                 onClick={() => setShowBatteryDetails(!showBatteryDetails)}
                 aria-label="Battery details"
               >
@@ -400,7 +401,7 @@ const BatteryMonitor = () => {
             
             <div className="flex items-center space-x-2">
               <select 
-                className="bg-gray-800 px-2 py-1 rounded text-white text-sm border border-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500"
+                className="bg-oGray2 px-2 py-1 rounded text-white text-sm border border-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500"
                 value={selectedBattery}
                 onChange={(e) => setSelectedBattery(e.target.value)}
               >
@@ -415,7 +416,7 @@ const BatteryMonitor = () => {
           
           {/* Battery Details Popup */}
           {showBatteryDetails && (
-            <div className="bg-gray-800 p-4 rounded-lg mb-6 relative">
+            <div className="bg-oGray2 p-4 rounded-lg mb-6 relative">
               <button 
                 className="absolute top-2 right-2 text-gray-400 hover:text-white"
                 onClick={() => setShowBatteryDetails(false)}
@@ -487,19 +488,19 @@ const BatteryMonitor = () => {
                   <div className="text-gray-400 text-xs mb-2">CAPACITY</div>
                   <div className="grid grid-cols-3 gap-3">
                     {currentBatteryData.nominalCapacity && (
-                      <div className="bg-gray-700 p-2 rounded-lg text-center">
+                      <div className="bg-oGray p-2 rounded-lg text-center">
                         <div className="text-xs text-gray-400">NOMINAL</div>
                         <div className="text-sm text-white">{(currentBatteryData.nominalCapacity / 3600).toFixed(1)} Wh</div>
                       </div>
                     )}
                     {currentBatteryData.actualCapacity && (
-                      <div className="bg-gray-700 p-2 rounded-lg text-center">
+                      <div className="bg-oGray p-2 rounded-lg text-center">
                         <div className="text-xs text-gray-400">ACTUAL</div>
                         <div className="text-sm text-white">{(currentBatteryData.actualCapacity / 3600).toFixed(1)} Wh</div>
                       </div>
                     )}
                     {currentBatteryData.remainingCapacity && (
-                      <div className="bg-gray-700 p-2 rounded-lg text-center">
+                      <div className="bg-oGray p-2 rounded-lg text-center">
                         <div className="text-xs text-gray-400">REMAINING</div>
                         <div className="text-sm text-white">{(currentBatteryData.remainingCapacity / 3600).toFixed(1)} Wh</div>
                       </div>
@@ -514,13 +515,13 @@ const BatteryMonitor = () => {
                   <div className="text-gray-400 text-xs mb-2">LIFETIME STATISTICS</div>
                   <div className="grid grid-cols-2 gap-3">
                     {currentBatteryData.lifetimeDischarge && (
-                      <div className="bg-gray-700 p-2 rounded-lg">
+                      <div className="bg-oGray p-2 rounded-lg">
                         <div className="text-xs text-gray-400">DISCHARGE</div>
                         <div className="text-sm text-white">{(currentBatteryData.lifetimeDischarge / 3600).toFixed(0)} Ah</div>
                       </div>
                     )}
                     {currentBatteryData.lifetimeRecharge && (
-                      <div className="bg-gray-700 p-2 rounded-lg">
+                      <div className="bg-oGray p-2 rounded-lg">
                         <div className="text-xs text-gray-400">RECHARGE</div>
                         <div className="text-sm text-white">{(currentBatteryData.lifetimeRecharge / 3600).toFixed(0)} Ah</div>
                       </div>
@@ -533,11 +534,10 @@ const BatteryMonitor = () => {
           
           <div className="flex-1 flex flex-col justify-between">
             {/* Battery percentage and graph visualization */}
-            <div className="relative bg-gray-800 rounded-lg p-4 mb-6">
+            <div className="relative bg-oGray2 rounded-lg p-4 mb-6">
               <div className="mb-2 flex justify-between items-center">
                 <div>
                   <span className="text-gray-400 text-sm">BATTERY PERCENTAGE</span>
-                  <div className="text-2xl font-bold text-white">{currentBatteryData.stateOfCharge.toFixed(0)}%</div>
                 </div>
                 <div className={`px-3 py-1 rounded-lg text-sm ${isCharging ? 'bg-green-900 text-green-400' : 'bg-red-900 text-red-400'}`}>
                   <FontAwesomeIcon icon={isCharging ? faChargingStation : faBatteryFull} className="mr-2" />
@@ -545,29 +545,70 @@ const BatteryMonitor = () => {
                 </div>
               </div>
               
-              {/* Battery Graph with color gradient */}
-              <div className="h-24 relative mt-4 overflow-hidden rounded-lg">
-                <div className="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-r from-orange-500 via-green-500 to-green-600 opacity-30"></div>
-            
-                {/* Line representing battery level */}
-                <div className="absolute top-0 left-0 right-0 border-b-2 border-white border-opacity-70">
-                  <div className="absolute -right-1 -top-1 w-2 h-2 bg-white rounded-full"></div>
+              {/* Battery Progress Bar with color gradient */}
+              <div className="h-24 relative mt-4 flex flex-col justify-between">
+                {/* State of charge & discharge limit info */}
+                <div className="flex justify-between text-xs text-gray-400 mb-1">
+                  <span>State of Charge</span>
+                  {currentBatteryData.dischargeLimit && (
+                    <span>Discharge Limit: {(currentBatteryData.dischargeLimit * 100).toFixed(0)}%</span>
+                  )}
                 </div>
                 
-                {/* Time markers */}
-                <div className="absolute bottom-2 left-1 text-xs text-white">0 h</div>
-                <div className="absolute bottom-2 right-1 text-xs text-white">
-                  {currentBatteryData.timeRemaining 
-                    ? `${(currentBatteryData.timeRemaining / 3600).toFixed(1)} h` 
-                    : isCharging 
+                {/* Main progress bar container */}
+                <div className="h-10 bg-oGray relative rounded-lg overflow-hidden">
+                  {/* Background gradient representing full range */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 opacity-20"></div>
+                  
+                  {/* Discharge limit marker if available */}
+                  {currentBatteryData.dischargeLimit && (
+                    <div className="absolute h-full border-r-2 border-yellow-500 border-dashed" 
+                         style={{left: `${currentBatteryData.dischargeLimit * 100}%`}}>
+                      <div className="absolute -right-1 top-0 w-2 h-2 bg-yellow-500 rounded-full"></div>
+                    </div>
+                  )}
+                  
+                  {/* Actual battery level progress bar */}
+                  <div 
+                    className={`h-full ${isCharging ? 'bg-gradient-to-r from-green-600 to-green-400' : 'bg-gradient-to-r from-orange-500 via-yellow-400 to-green-500'}`}
+                    style={{width: `${currentBatteryData.stateOfCharge}%`}}
+                  >
+                    {/* Current position marker */}
+                    <div className="absolute top-0 h-full border-r-2 border-white" 
+                         style={{left: `${currentBatteryData.stateOfCharge}%`}}>
+                      <div className="absolute -right-1 top-0 w-2 h-2 bg-white rounded-full"></div>
+                      <div className="absolute -right-6 -top-6 bg-oGray2 px-1 py-0.5 rounded text-xs text-white">
+                        {currentBatteryData.stateOfCharge.toFixed(0)}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Time remaining information */}
+                <div className="flex justify-between mt-2">
+                  <div className="text-xs text-white flex items-center">
+                    <div className="w-3 h-3 bg-red-500 rounded-full mr-1"></div>
+                    Empty
+                  </div>
+                  
+                  <div className="text-xs text-white bg-oGray2 px-2 py-1 rounded">
+                    {isCharging 
                       ? 'Charging' 
-                      : `${(currentBatteryData.stateOfCharge / (currentBatteryData.current / 100)).toFixed(1)} h`
-                  }
+                      : currentBatteryData.timeRemaining 
+                        ? `Time remaining: ${(currentBatteryData.timeRemaining / 3600).toFixed(1)} h` 
+                        : `Est. time: ${(currentBatteryData.stateOfCharge / (currentBatteryData.current / 100)).toFixed(1)} h`
+                    }
+                  </div>
+                  
+                  <div className="text-xs text-white flex items-center">
+                    <div className="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
+                    Full
+                  </div>
                 </div>
               </div>
             </div>
                         {/* Consumption metrics - Boat-specific */}
-            <div className="bg-gray-800 rounded-lg p-4">
+            <div className="bg-oGray2 rounded-lg p-4">
               <div className="text-gray-400 text-sm font-medium mb-2">POWER CONSUMPTION</div>
               
               {/* Autopilot consumption */}
@@ -586,7 +627,7 @@ const BatteryMonitor = () => {
                       "0.0"}%
                   </div>
                 </div>
-                <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-2 bg-oGray rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-blue-500" 
                     style={{width: `${currentBatteryData.autopilotState ? Math.min(80, currentBatteryData.current * 0.8) : 0}%`}}
@@ -605,7 +646,7 @@ const BatteryMonitor = () => {
                     {(currentBatteryData.current * 0.3).toFixed(1)}%
                   </div>
                 </div>
-                <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-2 bg-oGray rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-cyan-500" 
                     style={{width: `${Math.min(60, currentBatteryData.current * 0.6)}%`}}
@@ -627,7 +668,7 @@ const BatteryMonitor = () => {
                     {(currentBatteryData.navigationLightsOn ? 0.2 : 0).toFixed(1)}%
                   </div>
                 </div>
-                <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-2 bg-oGray rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-amber-500" 
                     style={{width: `${(currentBatteryData.navigationLightsOn ? 15 : 0)}%`}}
@@ -647,7 +688,7 @@ const BatteryMonitor = () => {
                       {(currentBatteryData.temperature * 0.01).toFixed(1)}%
                     </div>
                   </div>
-                  <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-2 bg-oGray rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-orange-500" 
                       style={{width: `${Math.min(30, currentBatteryData.temperature * 0.5)}%`}}
@@ -676,18 +717,18 @@ const BatteryMonitor = () => {
             
             {/* Technical stats */}
             <div className="grid grid-cols-3 gap-4 mt-6 text-center">
-              <div className="bg-gray-800 p-3 rounded-lg">
+              <div className="bg-oGray2 p-3 rounded-lg">
                 <div className="text-xs text-gray-400">VOLTAGE</div>
                 <div className="text-lg font-bold text-white">{currentBatteryData.voltage.toFixed(1)}V</div>
                 {currentBatteryData.voltageRipple && (
                   <div className="text-xs text-gray-400 mt-1">Ripple: {currentBatteryData.voltageRipple.toFixed(2)}V</div>
                 )}
               </div>
-              <div className="bg-gray-800 p-3 rounded-lg">
+              <div className="bg-oGray2 p-3 rounded-lg">
                 <div className="text-xs text-gray-400">CURRENT</div>
                 <div className="text-lg font-bold text-white">{currentBatteryData.current.toFixed(1)}A</div>
               </div>
-              <div className="bg-gray-800 p-3 rounded-lg">
+              <div className="bg-oGray2 p-3 rounded-lg">
                 <div className="text-xs text-gray-400">POWER</div>
                 <div className="text-lg font-bold text-white">{(currentBatteryData.voltage * currentBatteryData.current).toFixed(0)}W</div>
               </div>
@@ -705,28 +746,28 @@ const BatteryMonitor = () => {
             <h2 className="text-xl font-bold text-white">
               Consumption Graph
             </h2>
-            <div className="flex space-x-2 bg-gray-800 rounded-lg overflow-hidden p-1">
+            <div className="flex space-x-2 bg-oGray2 rounded-lg overflow-hidden p-1">
               <button 
-                className={`px-3 py-1 rounded text-sm transition-all ${activeView === 'voltage' ? 'bg-gray-700 text-white' : 'text-gray-400'}`}
+                className={`px-3 py-1 rounded text-sm transition-all ${activeView === 'voltage' ? 'bg-oGray text-white' : 'text-gray-400'}`}
                 onClick={() => setActiveView('voltage')}
               >
                 Voltage
               </button>
               <button 
-                className={`px-3 py-1 rounded text-sm transition-all ${activeView === 'current' ? 'bg-gray-700 text-white' : 'text-gray-400'}`}
+                className={`px-3 py-1 rounded text-sm transition-all ${activeView === 'current' ? 'bg-oGray text-white' : 'text-gray-400'}`}
                 onClick={() => setActiveView('current')}
               >
                 Current
               </button>
               <button 
-                className={`px-3 py-1 rounded text-sm transition-all ${activeView === 'soc' ? 'bg-gray-700 text-white' : 'text-gray-400'}`}
+                className={`px-3 py-1 rounded text-sm transition-all ${activeView === 'soc' ? 'bg-oGray text-white' : 'text-gray-400'}`}
                 onClick={() => setActiveView('soc')}
               >
                 SoC %
               </button>
               {hasTemperatureData && (
                 <button 
-                  className={`px-3 py-1 rounded text-sm transition-all ${activeView === 'temperature' ? 'bg-gray-700 text-white' : 'text-gray-400'}`}
+                  className={`px-3 py-1 rounded text-sm transition-all ${activeView === 'temperature' ? 'bg-oGray text-white' : 'text-gray-400'}`}
                   onClick={() => setActiveView('temperature')}
                 >
                   Temp
@@ -736,8 +777,8 @@ const BatteryMonitor = () => {
           </div>
           
           {/* Graph section with area background */}
-          <div className="bg-gray-800 rounded-lg p-4 mb-6">
-            <div className="h-72 relative px-4 pb-6 pt-2 overflow-hidden bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg">
+          <div className="bg-oGray2 rounded-lg p-4 mb-6">
+            <div className="h-72 relative px-4 pb-6 pt-2 overflow-hidden">
               {activeView === 'voltage' && (
                 <LineChart 
                   data={batteryData} 
@@ -790,7 +831,7 @@ const BatteryMonitor = () => {
           </div>
           
           {/* Consumption metrics breakdown */}
-          <div className="bg-gray-800 rounded-lg p-4">
+          <div className="bg-oGray2 rounded-lg p-4">
             <div className="text-gray-400 text-sm font-medium mb-4">DETAILED CONSUMPTION BREAKDOWN</div>
             
             <div className="grid grid-cols-1 gap-6">
@@ -801,7 +842,7 @@ const BatteryMonitor = () => {
                     <div className="text-lg font-bold text-white">-0.9%</div>
                   </div>
                   <div className="w-1/2">
-                    <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-2 bg-oGray rounded-full overflow-hidden">
                       <div className="h-full bg-green-500" style={{width: '20%'}}></div>
                     </div>
                   </div>
@@ -817,7 +858,7 @@ const BatteryMonitor = () => {
                     </div>
                   </div>
                   <div className="w-1/2">
-                    <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-2 bg-oGray rounded-full overflow-hidden">
                       <div className="h-full bg-blue-500" style={{width: '35%'}}></div>
                     </div>
                   </div>
@@ -833,7 +874,7 @@ const BatteryMonitor = () => {
                     </div>
                   </div>
                   <div className="w-1/2">
-                    <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-2 bg-oGray rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-orange-500" 
                         style={{width: hasTemperatureData ? `${Math.min(50, currentBatteryData.temperature)}%` : '10%'}}
@@ -854,27 +895,27 @@ const BatteryMonitor = () => {
             <h2 className="text-xl font-bold text-white">
               Performance Metrics
             </h2>
-            <div className="flex space-x-2 bg-gray-800 rounded-lg overflow-hidden p-1">
+            <div className="flex space-x-2 bg-oGray2 rounded-lg overflow-hidden p-1">
               <button 
-                className={`px-3 py-1 rounded text-sm transition-all ${activePerformanceView === 'fps' ? 'bg-gray-700 text-white' : 'text-gray-400'}`}
+                className={`px-3 py-1 rounded text-sm transition-all ${activePerformanceView === 'fps' ? 'bg-oGray text-white' : 'text-gray-400'}`}
                 onClick={() => setActivePerformanceView('fps')}
               >
                 FPS
               </button>
               <button 
-                className={`px-3 py-1 rounded text-sm transition-all ${activePerformanceView === 'drawCalls' ? 'bg-gray-700 text-white' : 'text-gray-400'}`}
+                className={`px-3 py-1 rounded text-sm transition-all ${activePerformanceView === 'drawCalls' ? 'bg-oGray text-white' : 'text-gray-400'}`}
                 onClick={() => setActivePerformanceView('drawCalls')}
               >
                 Calls
               </button>
               <button 
-                className={`px-3 py-1 rounded text-sm transition-all ${activePerformanceView === 'triangles' ? 'bg-gray-700 text-white' : 'text-gray-400'}`}
+                className={`px-3 py-1 rounded text-sm transition-all ${activePerformanceView === 'triangles' ? 'bg-oGray text-white' : 'text-gray-400'}`}
                 onClick={() => setActivePerformanceView('triangles')}
               >
                 Triangles
               </button>
               <button 
-                className={`px-3 py-1 rounded text-sm transition-all ${activePerformanceView === 'memory' ? 'bg-gray-700 text-white' : 'text-gray-400'}`}
+                className={`px-3 py-1 rounded text-sm transition-all ${activePerformanceView === 'memory' ? 'bg-oGray text-white' : 'text-gray-400'}`}
                 onClick={() => setActivePerformanceView('memory')}
               >
                 Memory
@@ -883,8 +924,8 @@ const BatteryMonitor = () => {
           </div>
           
           {/* Graph section with area background */}
-          <div className="bg-gray-800 rounded-lg p-4 mb-6">
-            <div className="h-72 relative px-4 pb-6 pt-2 overflow-hidden bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg">
+          <div className="bg-oGray2 rounded-lg p-4 mb-6">
+            <div className="h-72 relative px-4 pb-6 pt-2 overflow-hidden rounded-lg">
               {activePerformanceView === 'fps' && (
                 <LineChart 
                   data={performanceData} 
@@ -937,7 +978,7 @@ const BatteryMonitor = () => {
           </div>
           
           {/* Performance metrics dashboard */}
-          <div className="bg-gray-800 rounded-lg p-4">
+          <div className="bg-oGray2 rounded-lg p-4">
             <div className="text-gray-400 text-sm font-medium mb-4">HARDWARE PERFORMANCE STATS</div>
             
             <div className="grid grid-cols-2 gap-4">
@@ -950,7 +991,7 @@ const BatteryMonitor = () => {
                     </div>
                   </div>
                   <div className="w-1/2">
-                    <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-2 bg-oGray rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-cyan-500" 
                         style={{width: `${Math.min(100, performanceData[performanceData.length - 1].fps / 60 * 100)}%`}}
@@ -969,7 +1010,7 @@ const BatteryMonitor = () => {
                     </div>
                   </div>
                   <div className="w-1/2">
-                    <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-2 bg-oGray rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-purple-500" 
                         style={{width: `${Math.min(100, 100 - performanceData[performanceData.length - 1].ms / 33.33 * 100)}%`}}

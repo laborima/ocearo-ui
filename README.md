@@ -2,7 +2,9 @@
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![License](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
+
 # Ocearo UI
+
 
 **Sailing Made Smarter**
 
@@ -54,6 +56,8 @@ Additional visuals enhance the system's functionality:
 ![Other Views](docs/navigation.png)  
 ![Other Views](docs/instruments.png)
 ![Other Views](docs/webcam.png)
+![Other Views](docs/battery.png)
+![Other Views](docs/performances.png)
 
 ---
 
@@ -64,12 +68,28 @@ Ocean Robot's roadmap includes advanced features aimed at enhancing safety and e
   - Integration with advanced camera systems (e.g., **see.ai**) to detect floating objects
 - **Future Enhancements**:
   - Camera-based monitoring of sail indicators (*penons*) for optimal sail trim suggestions
+  - 3D Bathymetry visualization
+  - 3D Laylines visualization
+  - 3D Start lines visualization
   
 ---
 
 Check out the live demo: https://laborima.github.io/ocearo-ui/
 
 Or install it in Signal K using the NPM package: https://www.npmjs.com/package/ocearo-ui
+
+---
+
+## **Contributing**
+
+Your support and involvement make Ocearo UI better! Here are some ways you can contribute:
+
+* Report bugs: Help me squash issues by letting me know when something isn't working as expected.
+* Suggest features: Share your ideas for new features or improvements your feedback shapes the project!
+* Contribute code: Submit pull requests to add features, fix bugs, or improve documentation.
+* Support the project: Help fund the purchase of webcams, and sensors by buying me a coffee.
+
+[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/laborima)
 
 ---
 
@@ -223,9 +243,8 @@ Create an `index.json` file and place it under:
 
 ## **Deploying to OpenPlotter**
 
-**Development:** The recommended way is to use the npm published package.
-
-**Direct deployment:** If you want to deploy your own build, you can either adapt and run the provided `deploy.sh` script, or use the following manual steps:
+The recommended way is to use the npm published package.
+If you want to deploy your own build, you can either adapt and run the provided `deploy.sh` script, or use the following manual steps:
 
 ```bash
 git clone https://github.com/laborima/ocearo-ui.git

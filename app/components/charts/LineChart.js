@@ -59,7 +59,7 @@ const LineChart = ({ data, dataKey, color, scale, label, unit, showPoints = fals
         {gridLines.map((line, i) => (
           <div
             key={i}
-            className="absolute w-full border-t border-gray-300 opacity-20"
+            className="absolute w-full border-t border-gray-300 opacity-40"
             style={{ top: `${line.position}%` }}
           >
             <span className={`absolute  text-xs ${nightMode ? 'text-oNight' : 'text-white'}`}>
@@ -83,11 +83,11 @@ const LineChart = ({ data, dataKey, color, scale, label, unit, showPoints = fals
       </div>
       
       {/* Chart background - make the active area stand out */}
-      <div className={`absolute inset-0 ${fillGradient ? 'rightPaneBg bg-opacity-30' : 'bg-gray-800 bg-opacity-10'} rounded-lg`}></div>
+      <div className={`absolute inset-0 ${fillGradient ? 'rightPaneBg bg-opacity-30' : 'bg-oGray2 bg-opacity-10'} rounded-lg`}></div>
       
       {/* Data range indicator */}
       {useAutoscale && (
-        <div className="absolute top-0 right-0 bg-gray-800 bg-opacity-70 px-2 py-1 rounded-md text-xs text-white">
+        <div className="absolute top-0 right-0 bg-oGray2 bg-opacity-70 px-2 py-1 rounded-md text-xs text-white">
           {displayMin.toFixed(1)} - {displayMax.toFixed(1)}{unit}
         </div>
       )}
