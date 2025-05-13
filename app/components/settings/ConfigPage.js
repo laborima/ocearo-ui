@@ -292,6 +292,25 @@ const ConfigPage = ({ onSave }) => {
                         </label>
                     </div>
 
+                    <div>
+                        <label className="flex items-center text-base">
+                            <input
+                                type="checkbox"
+                                className="mr-3 h-5 w-5" // Larger checkbox for better touch interaction
+                                checked={config.showAttitudeIndicator !== false}
+                                onChange={(e) => updateConfig({ showAttitudeIndicator: e.target.checked })}
+                            />
+                            <span>
+                                Show Attitude Indicator
+                                <div className="text-sm text-gray-400">
+                                    {config.showAttitudeIndicator !== false ? 
+                                        "Display roll, pitch, and yaw indicator" : 
+                                        "Hide attitude indicator"}
+                                </div>
+                            </span>
+                        </label>
+                    </div>
+
                     <div className="space-y-2">
                         <label className="block text-sm font-medium">
                             AIS Length Scaling Factor
