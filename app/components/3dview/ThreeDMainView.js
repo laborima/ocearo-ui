@@ -19,6 +19,7 @@ const ThreeDBoatRudderIndicator = dynamic(() => import('./ThreeDBoatRudderIndica
 const ThreeDBoatTideLevelIndicator = dynamic(() => import('./ThreeDBoatTideLevelIndicator'));
 const ThreeDBoatPositionDateIndicator = dynamic(() => import('./ThreeDBoatPositionDateIndicator'));
 const ThreeDBoatSeaLevelIndicator = dynamic(() => import('./ThreeDBoatSeaLevelIndicator'));
+const ThreeDBoatAttitudeIndicator = dynamic(() => import('./ThreeDBoatAttitudeIndicator'));
 const InfoPanel = dynamic(() => import('./InfoPanel'));
 
 // Component to expose Three.js renderer and info for performance monitoring
@@ -50,8 +51,17 @@ const RendererExposer = () => {
 };
 
 const ThreeDMainView = () => {
-    const { states } = useOcearoContext(); // Access global context, including nightMode
+    const { states } = useOcearoContext(); // Access global context
     const [infoPanelContent, setInfoPanelContent] = useState(null);
+    const [showAttitudeIndicator, setShowAttitudeIndicator] = useState(true);
+    
+    // Get configuration directly using the configService
+    useEffect(() => {
+        // Import here to avoid circular dependencies
+        const configService = require('../settings/ConfigService').default;
+        const config = configService.getAll();
+        setShowAttitudeIndicator(config.showAttitudeIndicator !== false);
+    }, []);
 
     return (
         <div className="w-full h-full relative ">
@@ -72,7 +82,13 @@ const ThreeDMainView = () => {
                 <div className="mb-2">
                     <InfoPanel content={infoPanelContent} />
                 </div>
-                <ThreeDBoatThanksIndicator />
+              
+                <div className="flex items-center">
+                    <span className="text-white mr-2 align-top">{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    <ThreeDBoatThanksIndicator />
+                </div>
+                {/* Only render the attitude indicator if showAttitudeIndicator is true */}
+                {showAttitudeIndicator && <ThreeDBoatAttitudeIndicator />}
             </div>
 
             {/* See Level Indicator (left-side) */}

@@ -10,7 +10,9 @@ export const oBlue = '#09bfff';
 export const oRed = '#cc000c';
 export const oYellow = '#ffbe00';
 export const oGreen = '#0fcd4f';
-export const oNight = '#ef4444';
+export const oNight = '#ef4444';   
+export const oGray = '#989898';
+export const oGray2 = '#424242';
 
 /**
  * Convert radians to degrees
@@ -115,7 +117,7 @@ const SAMPLE_DATA = {
         'navigation.headingTrue': MathUtils.degToRad(0),
         'navigation.courseOverGround': MathUtils.degToRad(20),
         'navigation.courseGreatCircle.nextPoint.bearingTrue': MathUtils.degToRad(30),
-        'navigation.attitude.roll': MathUtils.degToRad(5),
+        'navigation.attitude': { "roll":MathUtils.degToRad(5), "pitch": MathUtils.degToRad(2), "yaw": MathUtils.degToRad(2) },
     },
     racing: {
         'navigation.racing.layline': MathUtils.degToRad(10),
@@ -134,33 +136,36 @@ const SAMPLE_DATA = {
         'navigation.racing.timeStbdUp': 75,
     },
     electrical: {
-        // Battery data for LFD75 12V 64Ah (RC 141Min, CCA 650A, MCA 813A)
+        // Battery data for VARTA Professional Dual Purpose RA 595 985
         'electrical.batteries.1.name': 'House Battery',
         'electrical.batteries.1.location': 'Under Starboard Bed',
-        'electrical.batteries.1.capacity.nominal': 768, // 64Ah × 12V = 768 Wh (in Joules - multiply by 3600)
-        'electrical.batteries.1.capacity.actual': 707, // 92% of nominal (degraded over time)
-        'electrical.batteries.1.capacity.remaining': 601, // 85% of actual capacity
+        'electrical.batteries.1.capacity.nominal': 768, // 64Ah × 12V = 768 Wh
+        'electrical.batteries.1.capacity.actual': 707, // 92% of nominal (ex. légèrement dégradée)
+        'electrical.batteries.1.capacity.remaining': 601, // 85% of actual
         'electrical.batteries.1.capacity.dischargeLimit': 0.2, // Don't discharge below 20%
-        'electrical.batteries.1.capacity.timeRemaining': 9860, // Time in seconds until discharge limit (at current rate)
-        'electrical.batteries.1.lifetimeDischarge': 540000, // Lifetime discharge in Ah (converted to Coulombs)
-        'electrical.batteries.1.lifetimeRecharge': 545000, // Lifetime recharge in Ah (converted to Coulombs)
-        'electrical.batteries.1.voltage.ripple': 0.05, // Voltage ripple in V
-        'electrical.batteries.1.chemistry': 'LiFePO4',
-        'electrical.batteries.1.manufacturer.name': 'Mastervolt',
-        'electrical.batteries.1.manufacturer.model': 'LFD75',
-        'electrical.batteries.1.manufacturer.URL': 'https://www.mastervolt.com',
-        'electrical.batteries.1.dateInstalled': '2023-06-15T00:00:00Z',
+        'electrical.batteries.1.capacity.timeRemaining': 9860, // In seconds
+        'electrical.batteries.1.lifetimeDischarge': 540000, // In Ah converted to Coulombs
+        'electrical.batteries.1.lifetimeRecharge': 545000,
+        'electrical.batteries.1.voltage.ripple': 0.05,
+        'electrical.batteries.1.chemistry': 'LeadAcid',
+        'electrical.batteries.1.manufacturer.name': 'VARTA',
+        'electrical.batteries.1.manufacturer.model': 'Professional Dual Purpose RA 595 985',
+        'electrical.batteries.1.manufacturer.URL': 'https://www.varta-automotive.com',
+        'electrical.batteries.1.dateInstalled': '2020-06-15T00:00:00Z',
         'electrical.batteries.1.associatedBus': 'House Bus',
-        
-        // Second battery for testing multi-battery selection
-        'electrical.batteries.2.name': 'Engine Start Battery',
-        'electrical.batteries.2.location': 'Engine Compartment',
-        'electrical.batteries.2.capacity.nominal': 600, // 50Ah × 12V = 600 Wh (in Joules)
-        'electrical.batteries.2.capacity.actual': 582, // 97% of nominal
-        'electrical.batteries.2.chemistry': 'AGM',
-        'electrical.batteries.2.manufacturer.name': 'Optima',
-        'electrical.batteries.2.manufacturer.model': 'BlueTop',
-        
+
+        // Engine battery - VARTA E11 Blue Dynamic
+        'electrical.batteries.0.name': 'Engine Start Battery',
+        'electrical.batteries.0.location': 'Engine Compartment',
+        'electrical.batteries.0.capacity.nominal': 888, // 74Ah × 12V = 888 Wh
+        'electrical.batteries.0.capacity.actual': 861, // 97% of nominal
+        'electrical.batteries.0.chemistry': 'LeadAcid',
+        'electrical.batteries.0.manufacturer.name': 'VARTA',
+        'electrical.batteries.0.manufacturer.model': 'Blue Dynamic E11',
+        'electrical.batteries.0.manufacturer.URL': 'https://www.varta-automotive.com',
+        'electrical.batteries.0.dateInstalled': '2022-04-10T00:00:00Z',
+        'electrical.batteries.0.associatedBus': 'Start Bus',
+
         // Switches and systems status
         'navigation.lights': false,
         'steering.autopilot.state': 'auto', // 'auto' or 'standby'

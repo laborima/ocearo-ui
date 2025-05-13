@@ -29,8 +29,8 @@ const BatteryMonitor = () => {
     // This is a simplified version that checks for battery.1, battery.2, etc.
     const batteries = [];
     
-    // Check for at least 3 potential batteries (adjust as needed)
-    for (let i = 1; i <= 3; i++) {
+    // Check for batteries 0 and 1 (service and starter batteries)
+    for (let i = 0; i <= 2; i++) {
       const batteryName = getSignalKValue(`electrical.batteries.${i}.name`);
       const batteryVoltage = getSignalKValue(`electrical.batteries.${i}.voltage`);
       
@@ -330,19 +330,8 @@ const BatteryMonitor = () => {
   
   return (
     <div className="flex flex-col h-full rightPaneBg overflow-auto">
-      {/* User Info and Time Strip */}
-      <div className="flex justify-between items-center px-4 py-2 bg-oGray2 bg-opacity-50 border-b border-gray-800">
-        <div className="flex items-center">
-          <FontAwesomeIcon icon={faBatteryFull} className="mr-2 text-green-500" />
-          <span className="text-white font-medium">Energy</span>
-        </div>
-        <div className="flex items-center space-x-4">
-          <span className="text-white">{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-          <span className="bg-black px-2 py-1 rounded text-white text-sm">
-            {currentBatteryData.temperature ? `${currentBatteryData.temperature.toFixed(0)}°C` : '--°C'}
-          </span>
-        </div>
-      </div>
+
+     
 
       {/* Tab Navigation - Modern Style */}
       <div className="flex border-b border-gray-800">
@@ -839,11 +828,52 @@ const BatteryMonitor = () => {
                 <div className="flex justify-between items-center">
                   <div>
                     <div className="text-sm text-gray-400">REAL/NOMINAL</div>
-                    <div className="text-lg font-bold text-white">-0.9%</div>
+                    <div className="text-lg font-bold text-white">
+                      {(() => {
+                        // Calculate the real to nominal ratio
+                        const nominalCapacity = currentBatteryData.nominalCapacity;
+                        const actualCapacity = currentBatteryData.actualCapacity;
+                        const stateOfHealth = currentBatteryData.stateOfHealth;
+                        
+                        if (nominalCapacity && actualCapacity) {
+                          // Calculate percentage difference between actual and nominal capacity
+                          const difference = ((actualCapacity / nominalCapacity) - 1) * 100;
+                          return `${difference.toFixed(1)}%`;
+                        } else if (stateOfHealth) {
+                          // If we have state of health, use it (typically 0-100%)
+                          // SOH of 100% means no degradation, so difference is 0%
+                          const difference = stateOfHealth - 100;
+                          return `${difference.toFixed(1)}%`;
+                        }
+                        
+                        // Fallback value if no data is available
+                        return "-0.9%";
+                      })()}
+                    </div>
                   </div>
                   <div className="w-1/2">
                     <div className="h-2 bg-oGray rounded-full overflow-hidden">
-                      <div className="h-full bg-green-500" style={{width: '20%'}}></div>
+                      <div 
+                        className="h-full bg-green-500" 
+                        style={{
+                          width: (() => {
+                            const nominalCapacity = currentBatteryData.nominalCapacity;
+                            const actualCapacity = currentBatteryData.actualCapacity;
+                            const stateOfHealth = currentBatteryData.stateOfHealth;
+                            
+                            if (nominalCapacity && actualCapacity) {
+                              // Set progress bar width based on actual/nominal ratio (0-100%)
+                              return `${Math.min(100, Math.max(0, (actualCapacity / nominalCapacity) * 100))}%`;
+                            } else if (stateOfHealth) {
+                              // Use state of health for the progress bar
+                              return `${Math.min(100, Math.max(0, stateOfHealth))}%`;
+                            }
+                            
+                            // Default fallback width
+                            return '20%';
+                          })()
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -854,7 +884,7 @@ const BatteryMonitor = () => {
                   <div>
                     <div className="text-sm text-gray-400">AVERAGE CONSUMPTION</div>
                     <div className="text-lg font-bold text-white">
-                      {(currentBatteryData.voltage * currentBatteryData.current / 100).toFixed(1)} kWh/100km
+                      {(currentBatteryData.voltage * currentBatteryData.current / 1000).toFixed(1)} kWh/hour
                     </div>
                   </div>
                   <div className="w-1/2">

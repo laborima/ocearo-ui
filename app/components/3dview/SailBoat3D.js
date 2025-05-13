@@ -120,13 +120,18 @@ const SailBoat3D = forwardRef(({ showSail = false, onUpdateInfoPanel, ...props }
     useFrame(() => {
         if (!boatRef.current) return;
 
-        const inclination = getSignalKValue('navigation.attitude.roll') || 0;
+        // Get attitude values from SignalK (in radians)
+        const attitude = getSignalKValue('navigation.attitude') || { roll: 0, pitch: 0, yaw: 0 };
         const rudderAngleRadians = getSignalKValue('steering.rudderAngle') || 0;
         const rudderAngle = (rudderAngleRadians * 180) / Math.PI;
 
-        // Update boat inclination
-        if (boatRef.current.rotation.z !== inclination) {
-            boatRef.current.rotation.z = inclination;
+        // Update boat attitude
+        if (boatRef.current) {
+            boatRef.current.rotation.set(
+                attitude.pitch,  // X rotation (pitch)
+                2* Math.PI  - attitude.yaw,    // Y rotation (yaw)
+                2* Math.PI  - attitude.roll    // Z rotation (roll)
+            );
         }
 
         // Update rudder rotation

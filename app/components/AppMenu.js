@@ -11,7 +11,8 @@ import {
     faExpand,
     faBatteryFull,
     faHeadphones,
-    faSyncAlt
+    faSyncAlt,
+    faChartLine
 } from '@fortawesome/free-solid-svg-icons';
 import { VIEW_MODES } from '../page';
 
@@ -45,11 +46,16 @@ const AppMenu = ({
                 {currentViewMode !== VIEW_MODES.APP && (
                     <MenuButton icon={faExpand} label="Full View" onClick={() => toggleViewMode(VIEW_MODES.APP)} />
                 )}
+                {/* <MenuButton 
+                    icon={faChartLine} 
+                    label="Dashboard" 
+                    onClick={() => handleSetRightView('dashboard')} 
+                /> */}
                 {currentViewMode !== VIEW_MODES.BOAT && (
                     <MenuButton icon={faShip} label="Boat View" onClick={() => toggleViewMode(VIEW_MODES.BOAT)} />
                 )}
 
-                {/* Navigation Buttons */}
+               
                 <MenuButton
                     icon={faHandsHelping}
                     label="Manual"
