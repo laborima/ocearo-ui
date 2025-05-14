@@ -130,8 +130,8 @@ const RightPane = ({ view }) => {
                 return <MediaPlayer />;
             case 'battery':
                 return <BatteryMonitor />;
-            case 'dashboard':
-                return <Dashboard />;
+/*            case 'dashboard':
+                return <Dashboard />;*/
             default:
                 return iframeSrc && (
                     <iframe
