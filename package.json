@@ -1,6 +1,6 @@
 {
   "name": "ocearo-ui",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "private": false,
   "description": "Ocean Robot UI: 3D visualization dashboard for signalk",
   "license": "Apache-2.0",

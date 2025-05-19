@@ -129,7 +129,7 @@ const SailBoat3D = forwardRef(({ showSail = false, onUpdateInfoPanel, ...props }
         if (boatRef.current) {
             boatRef.current.rotation.set(
                 attitude.pitch,  // X rotation (pitch)
-                2* Math.PI  - attitude.yaw,    // Y rotation (yaw)
+                0/*2* Math.PI  - attitude.yaw*/,    // Y rotation (yaw)
                 2* Math.PI  - attitude.roll    // Z rotation (roll)
             );
         }
@@ -204,7 +204,14 @@ const SailBoat3D = forwardRef(({ showSail = false, onUpdateInfoPanel, ...props }
             ),
             Sailboat: () => (
                 <mesh geometry={nodes.sailboat.geometry} material={materials.texture} position={[0, -1.5, 0]} rotation={[-Math.PI, 0.011, -Math.PI]} scale={0.219} />
-            )
+            ),
+            RM1080: () => (
+                <>
+                  <mesh geometry={nodes.Body_1.geometry} material={materials.PaletteMaterial003} />
+                  <mesh geometry={nodes.Body_2.geometry} material={materials.PaletteMaterial001} />
+                  <mesh geometry={nodes.Body_3.geometry} material={materials.PaletteMaterial002} />
+                </>  
+                  )
         };
 
         return meshComponents[selectedBoat.name] || meshComponents.Default;
