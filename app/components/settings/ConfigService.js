@@ -14,7 +14,8 @@ class ConfigService {
       aisLengthScalingFactor: 0.7, // Default value for AIS boat scaling
       compassNorthUp: false, // Default: North at bottom (standard marine compass)
       showCustomUrls: false, // Toggle for custom external URLs section
-      customExternalUrls: {} // For storing custom external URL overrides
+      customExternalUrls: {}, 
+      currentView: 'default'
     };
 
     this.configKey = 'ocearoConfig'; // Key used to store the config
@@ -119,6 +120,21 @@ class ConfigService {
     }
   }
 
+  /**
+   * Get the current selected view
+   * @returns {string} The current view identifier
+   */
+  getCurrentView() {
+    return this.config.currentView || this.defaultConfig.currentView;
+  }
+
+  /**
+   * Set the current selected view and persist it
+   * @param {string} viewId - The view identifier to set as current
+   */
+  setCurrentView(viewId) {
+    this.set('currentView', viewId);
+  }
 
 }
 

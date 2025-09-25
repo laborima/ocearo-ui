@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import Draggable from 'react-draggable';
 import { OcearoContextProvider } from './components/context/OcearoContext';
 import ErrorBoundary from './ErrorBoundary';
+import configService from './components/settings/ConfigService';
 
 // Dynamically import components for code splitting
 const RightPane = dynamic(() => import('./components/RightPane'), {
@@ -45,7 +46,7 @@ export default function Home() {
     
     // State management
     const [currentViewMode, setCurrentViewMode] = useState(null);
-    const [rightView, setRightView] = useState('navigation');
+    const [rightView, setRightView] = useState(() => configService.getCurrentView() || 'navigation');
     const [showAppMenu, setShowAppMenu] = useState(false);
     const [isSettingsView, setIsSettingsView] = useState(false);
 
@@ -109,6 +110,7 @@ export default function Home() {
             toggleViewMode(VIEW_MODES.APP);
         }
         setRightView(view);
+        configService.setCurrentView(view);
     }, [currentViewMode, toggleViewMode]);
 
     const toggleSettings = useCallback(() => {
