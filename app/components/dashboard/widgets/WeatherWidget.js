@@ -9,8 +9,7 @@ import {
   faCloudRain, 
   faCloudShowersHeavy,
   faSnowflake,
-  faWind,
-  faThermometerHalf
+  faWind
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function WeatherWidget() {
@@ -97,8 +96,8 @@ export default function WeatherWidget() {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={getWeatherIcon(weatherData.condition)} className="text-oBlue" />
-        <span className="text-white font-medium">Weather</span>
+        <FontAwesomeIcon icon={getWeatherIcon(weatherData.condition)} className="text-oBlue text-lg" />
+        <span className="text-white font-medium text-lg">Weather</span>
       </div>
       
       {/* Content */}
@@ -109,10 +108,10 @@ export default function WeatherWidget() {
             icon={getWeatherIcon(weatherData.condition)} 
             className={`text-4xl mb-2 ${getWeatherColor(weatherData.condition)}`} 
           />
-          <div className="text-2xl font-bold text-white mb-1">
+          <div className="text-3xl font-bold text-white mb-1">
             {weatherData.temperature}°C
           </div>
-          <div className="text-sm text-gray-300">
+          <div className="text-base text-gray-300">
             {getWeatherDescription(weatherData.condition)}
           </div>
         </div>
@@ -121,18 +120,18 @@ export default function WeatherWidget() {
         <div className="grid grid-cols-2 gap-3 mb-4">
           {/* Humidity */}
           <div className="text-center">
-            <div className="text-gray-400 text-xs mb-1">Humidity</div>
-            <div className="text-white font-medium">{weatherData.humidity}%</div>
+            <div className="text-gray-400 text-sm mb-1">Humidity</div>
+            <div className="text-white font-medium text-lg">{weatherData.humidity}%</div>
           </div>
           
           {/* Pressure */}
           <div className="text-center">
-            <div className="text-gray-400 text-xs mb-1">Pressure</div>
+            <div className="text-gray-400 text-sm mb-1">Pressure</div>
             <div className="flex items-center justify-center space-x-1">
-              <span className="text-white font-medium">{weatherData.pressure}</span>
+              <span className="text-white font-medium text-lg">{weatherData.pressure}</span>
               <span className={`text-xs ${pressureTrend.color}`}>{pressureTrend.trend}</span>
             </div>
-            <div className="text-gray-400 text-xs">hPa</div>
+            <div className="text-gray-400 text-sm">hPa</div>
           </div>
         </div>
 
@@ -151,22 +150,6 @@ export default function WeatherWidget() {
                 {getWindDirection(weatherData.windDirection)} ({weatherData.windDirection}°)
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Additional info */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-400">Feels like:</span>
-            <span className="text-white">{Math.round(weatherData.temperature - 2)}°C</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-400">Pressure trend:</span>
-            <span className={pressureTrend.color}>{pressureTrend.text}</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-400">Visibility:</span>
-            <span className="text-white">Good</span>
           </div>
         </div>
       </div>

@@ -66,7 +66,7 @@ export default function AttitudeWidget() {
 
       // Sea - enhanced gradient
       const seaGradient = ctx.createLinearGradient(0, 0, 0, h);
-      seaGradient.addColorStop(0, '#1e40af');
+      seaGradient.addColorStop(0,  colors.oBlue);
       seaGradient.addColorStop(1, colors.rightPaneBg);
       ctx.beginPath(); 
       ctx.rect(-w, 0, w * 2, h * 2);
@@ -114,7 +114,7 @@ export default function AttitudeWidget() {
       // Inner ring
       ctx.beginPath(); 
       ctx.arc(cx, cy, cx - sw(20), 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(66, 66, 66, 0.5)'; 
+      ctx.strokeStyle = colors.oGray2; 
       ctx.lineWidth = slw(2); 
       ctx.stroke();
 

@@ -27,24 +27,35 @@ export default function UVIndexWidget() {
     return { level: 'Extreme', color: 'text-purple-400', bg: 'bg-purple-900' };
   };
 
+  const getUVColor = (uv) => {
+    const index = parseFloat(uv);
+    if (index <= 2) return 'text-oGreen';
+    if (index <= 5) return 'text-oYellow';
+    if (index <= 7) return 'text-orange-400';
+    if (index <= 10) return 'text-oRed';
+    return 'text-purple-400';
+  };
+
   const uvInfo = getUVInfo(uvIndex);
 
   return (
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faSun} className="text-oYellow" />
-        <span className="text-white font-medium">UV Index</span>
+        <FontAwesomeIcon icon={faSun} className="text-oBlue text-lg" />
+        <span className="text-white font-medium text-lg">UV Index</span>
       </div>
       
       {/* Content */}
       <div className="flex-1 flex flex-col justify-center items-center">
-        {/* UV Index value */}
-        <div className="text-center mb-4">
-          <div className={`text-4xl font-bold ${uvInfo.color}`}>
+        {/* Main UV display */}
+        <div className="text-center mb-6">
+          <div className="text-5xl font-bold text-white mb-2">
             {uvIndex}
           </div>
-          <div className="text-gray-400 text-sm mt-1">UV Index</div>
+          <div className={`text-base font-medium ${getUVColor(uvIndex)}`}>
+            {uvInfo.level}
+          </div>
         </div>
 
         {/* Risk level indicator */}

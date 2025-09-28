@@ -33,19 +33,19 @@ export default function DepthWidget() {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faWater} className="text-oBlue" />
-        <span className="text-white font-medium">Depth</span>
+        <FontAwesomeIcon icon={faWater} className="text-oBlue text-lg" />
+        <span className="text-white font-medium text-lg">Depth</span>
       </div>
       
       {/* Content */}
       <div className="flex-1 flex flex-col justify-center">
         {/* Main depth reading */}
         <div className="text-center mb-6">
-          <div className="text-4xl font-bold text-white mb-2">
+          <div className="text-5xl font-bold text-white mb-2">
             {depthData.belowKeel}
-            <span className="text-lg text-gray-400 ml-1">m</span>
+            <span className="text-xl text-gray-400 ml-1">m</span>
           </div>
-          <div className={`text-sm font-medium ${getDepthColor(depthData.belowKeel)}`}>
+          <div className={`text-base font-medium ${getDepthColor(depthData.belowKeel)}`}>
             {getDepthStatus(depthData.belowKeel)}
           </div>
         </div>
@@ -53,14 +53,14 @@ export default function DepthWidget() {
         {/* Depth readings */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="text-center">
-            <div className="text-gray-400 text-sm mb-1">Below Keel</div>
+            <div className="text-gray-400 text-base mb-1">Below Keel</div>
             <div className={`text-2xl font-bold ${getDepthColor(depthData.belowKeel)}`}>
               {depthData.belowKeel}m
             </div>
           </div>
           
           <div className="text-center">
-            <div className="text-gray-400 text-sm mb-1">Below Surface</div>
+            <div className="text-gray-400 text-base mb-1">Below Surface</div>
             <div className={`text-2xl font-bold ${getDepthColor(depthData.belowSurface)}`}>
               {depthData.belowSurface}m
             </div>

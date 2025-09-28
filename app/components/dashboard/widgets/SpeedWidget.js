@@ -4,7 +4,7 @@ import { useOcearoContext, toDegrees } from '../../context/OcearoContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTachometerAlt, faCompass, faWater, faWind } from '@fortawesome/free-solid-svg-icons';
 
-export default function SpeedWidget() {
+const SpeedWidget = React.memo(() => {
   const { getSignalKValue } = useOcearoContext();
   
   const speedData = useMemo(() => {
@@ -43,19 +43,19 @@ export default function SpeedWidget() {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faTachometerAlt} className="text-oBlue" />
-        <span className="text-white font-medium">Speed</span>
+        <FontAwesomeIcon icon={faTachometerAlt} className="text-oBlue text-lg" />
+        <span className="text-white font-medium text-lg">Speed</span>
       </div>
       
       {/* Content */}
       <div className="flex-1 flex flex-col justify-center">
         {/* Main speed display */}
         <div className="text-center mb-6">
-          <div className="text-4xl font-bold text-white mb-2">
+          <div className="text-5xl font-bold text-white mb-2">
             {speedData.sog}
-            <span className="text-lg text-gray-400 ml-1">kts</span>
+            <span className="text-xl text-gray-400 ml-1">kts</span>
           </div>
-          <div className={`text-sm font-medium ${getSpeedColor(speedData.sog)}`}>
+          <div className={`text-base font-medium ${getSpeedColor(speedData.sog)}`}>
             {getSpeedStatus(speedData.sog)}
           </div>
         </div>
@@ -65,25 +65,25 @@ export default function SpeedWidget() {
           {/* Speed Over Ground */}
           <div className="text-center">
             <div className="flex items-center justify-center space-x-1 mb-1">
-              <FontAwesomeIcon icon={faCompass} className="text-oBlue text-xs" />
-              <div className="text-gray-400 text-sm">SOG</div>
+              <FontAwesomeIcon icon={faCompass} className="text-oBlue text-sm" />
+              <div className="text-gray-400 text-base">SOG</div>
             </div>
-            <div className={`text-xl font-bold ${getSpeedColor(speedData.sog)}`}>
+            <div className={`text-2xl font-bold ${getSpeedColor(speedData.sog)}`}>
               {speedData.sog}
             </div>
-            <div className="text-gray-400 text-xs">knots</div>
+            <div className="text-gray-400 text-sm">knots</div>
           </div>
           
           {/* Speed Through Water */}
           <div className="text-center">
             <div className="flex items-center justify-center space-x-1 mb-1">
-              <FontAwesomeIcon icon={faWater} className="text-oBlue text-xs" />
-              <div className="text-gray-400 text-sm">STW</div>
+              <FontAwesomeIcon icon={faWater} className="text-oBlue text-sm" />
+              <div className="text-gray-400 text-base">STW</div>
             </div>
-            <div className={`text-xl font-bold ${getSpeedColor(speedData.stw)}`}>
+            <div className={`text-2xl font-bold ${getSpeedColor(speedData.stw)}`}>
               {speedData.stw}
             </div>
-            <div className="text-gray-400 text-xs">knots</div>
+            <div className="text-gray-400 text-sm">knots</div>
           </div>
         </div>
 
@@ -137,4 +137,8 @@ export default function SpeedWidget() {
       </div>
     </div>
   );
-}
+});
+
+SpeedWidget.displayName = 'SpeedWidget';
+
+export default SpeedWidget;

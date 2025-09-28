@@ -119,30 +119,30 @@ export default function TideWidget() {
   };
 
   return (
-    <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
+    <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col min-h-0">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <svg className="w-5 h-5 text-oBlue" viewBox="0 0 24 24" fill="none">
+        <svg className="w-6 h-6 text-oBlue" viewBox="0 0 24 24" fill="none">
           <path d="M3 11h18M3 6h18M3 16h18M3 21h18" 
                 stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
         </svg>
-        <span className="text-white font-medium">Tide Information</span>
+        <span className="text-white font-medium text-lg">Tide Information</span>
       </div>
       
       {/* Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Current tide level */}
         <div className="text-center mb-4">
-          <div className="text-3xl font-bold text-oBlue">
+          <div className="text-4xl font-bold text-oBlue">
             {(level || 2.1).toFixed(1)}m
           </div>
-          <div className="text-gray-400 text-sm">
+          <div className="text-gray-400 text-base">
             {isRising ? '↗ Rising' : '↘ Falling'}
           </div>
         </div>
 
         {/* Visual tide chart - SVG curve */}
-        <div className="flex-1 relative mb-4">
+        <div className="flex-1 relative mb-4 min-h-0">
           {(() => {
             const width = 320; // logical width of the SVG viewBox
             const height = 128; // logical height of the SVG viewBox
@@ -238,16 +238,16 @@ export default function TideWidget() {
         </div>
 
         {/* Tide times */}
-        <div className="grid grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-2 gap-4 text-base">
           <div className="text-center">
             <div className="text-gray-400">Next High</div>
-            <div className="text-white font-medium">{timeHigh || '14:25'}</div>
-            <div className="text-oBlue text-xs">{(high || 4.2).toFixed(1)}m</div>
+            <div className="text-white font-medium text-lg">{timeHigh || '14:25'}</div>
+            <div className="text-oBlue text-sm">{(high || 4.2).toFixed(1)}m</div>
           </div>
           <div className="text-center">
             <div className="text-gray-400">Next Low</div>
-            <div className="text-white font-medium">{timeLow || '20:15'}</div>
-            <div className="text-orange-400 text-xs">{(low || 0.8).toFixed(1)}m</div>
+            <div className="text-white font-medium text-lg">{timeLow || '20:15'}</div>
+            <div className="text-orange-400 text-sm">{(low || 0.8).toFixed(1)}m</div>
           </div>
         </div>
 

@@ -51,8 +51,8 @@ export default function BatteryWidget() {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faBolt} className="text-oBlue" />
-        <span className="text-white font-medium">Battery Status</span>
+        <FontAwesomeIcon icon={faBolt} className="text-oBlue text-lg" />
+        <span className="text-white font-medium text-lg">Battery Status</span>
       </div>
       
       {/* Content */}
@@ -61,15 +61,15 @@ export default function BatteryWidget() {
         <div className="grid grid-cols-2 gap-4 mb-6">
           {/* House Battery */}
           <div className="text-center">
-            <div className="text-gray-400 text-sm mb-2">House</div>
+            <div className="text-gray-400 text-base mb-2">House</div>
             <FontAwesomeIcon 
               icon={getBatteryIcon(batteryData.house.percentage)} 
               className={`text-2xl mb-2 ${getBatteryColor(batteryData.house.percentage)}`} 
             />
-            <div className="text-white text-lg font-bold">
+            <div className="text-white text-xl font-bold">
               {batteryData.house.voltage}V
             </div>
-            <div className={`text-sm ${getBatteryColor(batteryData.house.percentage)}`}>
+            <div className={`text-base ${getBatteryColor(batteryData.house.percentage)}`}>
               {Math.round(batteryData.house.percentage)}%
             </div>
             <div className="text-gray-400 text-xs">
@@ -79,15 +79,15 @@ export default function BatteryWidget() {
           
           {/* Starter Battery */}
           <div className="text-center">
-            <div className="text-gray-400 text-sm mb-2">Starter</div>
+            <div className="text-gray-400 text-base mb-2">Starter</div>
             <FontAwesomeIcon 
               icon={getBatteryIcon(batteryData.starter.percentage)} 
               className={`text-2xl mb-2 ${getBatteryColor(batteryData.starter.percentage)}`} 
             />
-            <div className="text-white text-lg font-bold">
+            <div className="text-white text-xl font-bold">
               {batteryData.starter.voltage}V
             </div>
-            <div className={`text-sm ${getBatteryColor(batteryData.starter.percentage)}`}>
+            <div className={`text-base ${getBatteryColor(batteryData.starter.percentage)}`}>
               {Math.round(batteryData.starter.percentage)}%
             </div>
             <div className="text-gray-400 text-xs">

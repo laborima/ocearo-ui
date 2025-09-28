@@ -4,7 +4,7 @@ import { useOcearoContext } from '../../context/OcearoContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClock, faGlobe, faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
 
-export default function TimeWidget() {
+const TimeWidget = React.memo(() => {
   const { getSignalKValue } = useOcearoContext();
   const [currentTime, setCurrentTime] = useState(new Date());
   
@@ -63,18 +63,18 @@ export default function TimeWidget() {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faClock} className="text-oBlue" />
-        <span className="text-white font-medium">Time & Date</span>
+        <FontAwesomeIcon icon={faClock} className="text-oBlue text-lg" />
+        <span className="text-white font-medium text-lg">Time & Date</span>
       </div>
       
       {/* Content */}
       <div className="flex-1 flex flex-col justify-center">
         {/* Main time display */}
         <div className="text-center mb-6">
-          <div className="text-4xl font-bold text-white mb-2 font-mono">
+          <div className="text-5xl font-bold text-white mb-2 font-mono">
             {formatTime(currentTime)}
           </div>
-          <div className="text-sm text-gray-300">
+          <div className="text-base text-gray-300">
             {formatDate(currentTime)}
           </div>
         </div>
@@ -141,4 +141,8 @@ export default function TimeWidget() {
       </div>
     </div>
   );
-}
+});
+
+TimeWidget.displayName = 'TimeWidget';
+
+export default TimeWidget;

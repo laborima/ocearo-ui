@@ -4,7 +4,7 @@ import { useOcearoContext } from '../../context/OcearoContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRadar, faShip, faLocationDot } from '@fortawesome/free-solid-svg-icons';
 
-export default function AISRadarWidget() {
+const AISRadarWidget = React.memo(() => {
   const { getSignalKValue } = useOcearoContext();
   const [radarRange, setRadarRange] = useState(5); // nautical miles
   const [sweepAngle, setSweepAngle] = useState(0);
@@ -41,12 +41,12 @@ export default function AISRadarWidget() {
   };
 
   return (
-    <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
+    <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col min-h-0">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
-          <FontAwesomeIcon icon={faRadar} className="text-oBlue" />
-          <span className="text-white font-medium">AIS Radar</span>
+          <FontAwesomeIcon icon={faRadar} className="text-oBlue text-lg" />
+          <span className="text-white font-medium text-lg">AIS Radar</span>
         </div>
         
         {/* Range selector */}
@@ -63,8 +63,8 @@ export default function AISRadarWidget() {
       </div>
       
       {/* Radar Display */}
-      <div className="flex-1 relative">
-        <div className="w-full h-32 relative bg-black rounded-lg overflow-hidden">
+      <div className="flex-1 relative min-h-0">
+        <div className="w-full h-full min-h-24 relative bg-black rounded-lg overflow-hidden">
           <svg className="w-full h-full" viewBox="0 0 200 200">
             {/* Radar circles */}
             {[1, 2, 3, 4].map(ring => (
@@ -133,7 +133,7 @@ export default function AISRadarWidget() {
         </div>
         
         {/* Range indicators */}
-        <div className="absolute top-2 left-2 text-xs text-gray-400">
+        <div className="absolute top-2 left-2 text-sm text-gray-400">
           <div>Range: {radarRange} NM</div>
           <div>Targets: {aisData.length}</div>
         </div>
@@ -141,15 +141,15 @@ export default function AISRadarWidget() {
 
       {/* Target List */}
       <div className="mt-4 space-y-2">
-        <div className="text-sm text-gray-400 mb-2">Closest Targets</div>
+        <div className="text-base text-gray-400 mb-2">Closest Targets</div>
         {aisData.slice(0, 3).map(target => (
-          <div key={target.id} className="flex items-center justify-between text-xs">
+          <div key={target.id} className="flex items-center justify-between text-sm">
             <div className="flex items-center space-x-2">
               <FontAwesomeIcon 
                 icon={getTargetIcon(target.type)} 
                 className={`${getTargetColor(target)} text-xs`} 
               />
-              <span className="text-white">{target.name}</span>
+              <span className="text-white text-base">{target.name}</span>
             </div>
             <div className="flex space-x-3 text-gray-400">
               <span>{target.distance.toFixed(1)} NM</span>
@@ -163,4 +163,8 @@ export default function AISRadarWidget() {
       </div>
     </div>
   );
-}
+});
+
+AISRadarWidget.displayName = 'AISRadarWidget';
+
+export default AISRadarWidget;

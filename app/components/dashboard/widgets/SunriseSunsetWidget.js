@@ -32,8 +32,8 @@ export default function SunriseSunsetWidget() {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faSun} className="text-oYellow" />
-        <span className="text-white font-medium">Sun Times</span>
+        <FontAwesomeIcon icon={faSun} className="text-oBlue text-lg" />
+        <span className="text-white font-medium text-lg">Sun Times</span>
       </div>
       
       {/* Content */}
@@ -56,19 +56,19 @@ export default function SunriseSunsetWidget() {
         {/* Times display */}
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center">
-            <div className="flex items-center justify-center mb-2">
-              <FontAwesomeIcon icon={faArrowUp} className="text-oYellow mr-2" />
-              <span className="text-gray-400 text-sm">Sunrise</span>
+            <div className="text-gray-400 text-base mb-2">Sunrise</div>
+            <div className="text-3xl font-bold text-oYellow mb-1">
+              {sunrise}
             </div>
-            <div className="text-white text-xl font-bold">{sunrise}</div>
+            <div className="text-gray-400 text-sm">Local Time</div>
           </div>
           
           <div className="text-center">
-            <div className="flex items-center justify-center mb-2">
-              <FontAwesomeIcon icon={faArrowDown} className="text-orange-500 mr-2" />
-              <span className="text-gray-400 text-sm">Sunset</span>
+            <div className="text-gray-400 text-base mb-2">Sunset</div>
+            <div className="text-3xl font-bold text-orange-400 mb-1">
+              {sunset}
             </div>
-            <div className="text-white text-xl font-bold">{sunset}</div>
+            <div className="text-gray-400 text-sm">Local Time</div>
           </div>
         </div>
       </div>

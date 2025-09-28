@@ -9,14 +9,10 @@ export default function VisibilityWidget() {
   
   const visibilityData = useMemo(() => {
     const visibility = getSignalKValue('environment.outside.visibility') || 8000; // meters
-    const humidity = getSignalKValue('environment.outside.humidity') || 0.65;
-    const temperature = getSignalKValue('environment.outside.temperature') || 288.15; // Kelvin
-    
+     
     return {
       distance: Math.round(visibility / 100) / 10, // km with 1 decimal
-      distanceNM: Math.round((visibility / 1852) * 10) / 10, // nautical miles
-      humidity: Math.round(humidity * 100),
-      temperature: Math.round((temperature - 273.15) * 10) / 10 // Celsius
+      distanceNM: Math.round((visibility / 1852) * 10) / 10 // nautical miles
     };
   }, [getSignalKValue]);
 
@@ -60,8 +56,8 @@ export default function VisibilityWidget() {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faEye} className="text-oBlue" />
-        <span className="text-white font-medium">Visibility</span>
+        <FontAwesomeIcon icon={faEye} className="text-oBlue text-lg" />
+        <span className="text-white font-medium text-lg">Visibility</span>
       </div>
       
       {/* Content */}
@@ -72,11 +68,11 @@ export default function VisibilityWidget() {
             icon={getVisibilityIcon(visibilityData.distance)} 
             className={`text-4xl mb-3 ${getVisibilityColor(visibilityData.distance)}`} 
           />
-          <div className="text-3xl font-bold text-white mb-1">
+          <div className="text-4xl font-bold text-white mb-1">
             {visibilityData.distance}
-            <span className="text-lg text-gray-400 ml-1">km</span>
+            <span className="text-xl text-gray-400 ml-1">km</span>
           </div>
-          <div className={`text-sm font-medium ${getVisibilityColor(visibilityData.distance)}`}>
+          <div className={`text-base font-medium ${getVisibilityColor(visibilityData.distance)}`}>
             {getVisibilityStatus(visibilityData.distance)}
           </div>
         </div>
@@ -84,15 +80,15 @@ export default function VisibilityWidget() {
         {/* Distance readings */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="text-center">
-            <div className="text-gray-400 text-sm mb-1">Kilometers</div>
-            <div className={`text-xl font-bold ${getVisibilityColor(visibilityData.distance)}`}>
+            <div className="text-gray-400 text-base mb-1">Kilometers</div>
+            <div className={`text-2xl font-bold ${getVisibilityColor(visibilityData.distance)}`}>
               {visibilityData.distance} km
             </div>
           </div>
           
           <div className="text-center">
-            <div className="text-gray-400 text-sm mb-1">Nautical Miles</div>
-            <div className={`text-xl font-bold ${getVisibilityColor(visibilityData.distance)}`}>
+            <div className="text-gray-400 text-base mb-1">Nautical Miles</div>
+            <div className={`text-2xl font-bold ${getVisibilityColor(visibilityData.distance)}`}>
               {visibilityData.distanceNM} NM
             </div>
           </div>
@@ -121,17 +117,7 @@ export default function VisibilityWidget() {
           <div className="text-center text-sm text-gray-300">
             {getVisibilityDescription(visibilityData.distance)}
           </div>
-          
-          <div className="grid grid-cols-2 gap-4 text-xs text-gray-400">
-            <div className="text-center">
-              <div>Humidity</div>
-              <div className="text-white">{visibilityData.humidity}%</div>
-            </div>
-            <div className="text-center">
-              <div>Temperature</div>
-              <div className="text-white">{visibilityData.temperature}°C</div>
-            </div>
-          </div>
+      
           
           <div className="text-center text-xs text-gray-400 mt-2">
             Range: 0-20+ km

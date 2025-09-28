@@ -10,7 +10,7 @@ const TEMPERATURE_CONFIG = {
   transform: value => convertTemperature(value || 0)
 };
 
-export default function TemperatureWidget() {
+const TemperatureWidget = React.memo(() => {
   const { getSignalKValue } = useOcearoContext();
   
   const airTemp = useMemo(() => {
@@ -38,33 +38,33 @@ export default function TemperatureWidget() {
   };
 
   return (
-    <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
+    <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col min-h-0">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faThermometerHalf} className="text-oBlue" />
-        <span className="text-white font-medium">Temperature</span>
+        <FontAwesomeIcon icon={faThermometerHalf} className="text-oBlue text-lg" />
+        <span className="text-white font-medium text-lg">Temperature</span>
       </div>
       
       {/* Content */}
-      <div className="flex-1 flex flex-col justify-center">
+      <div className="flex-1 flex flex-col justify-center min-h-0">
         {/* Temperature readings */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           {/* Air Temperature */}
           <div className="text-center">
-            <div className="text-gray-400 text-sm mb-1">Air</div>
-            <div className={`text-3xl font-bold ${getTemperatureColor(airTemp)}`}>
+            <div className="text-gray-400 text-base mb-1">Air</div>
+            <div className={`text-4xl font-bold ${getTemperatureColor(airTemp)}`}>
               {airTemp}°
             </div>
-            <div className="text-gray-400 text-xs">Celsius</div>
+            <div className="text-gray-400 text-sm">Celsius</div>
           </div>
           
           {/* Sea Temperature */}
           <div className="text-center">
-            <div className="text-gray-400 text-sm mb-1">Sea</div>
-            <div className={`text-3xl font-bold ${getTemperatureColor(seaTemp)}`}>
+            <div className="text-gray-400 text-base mb-1">Sea</div>
+            <div className={`text-4xl font-bold ${getTemperatureColor(seaTemp)}`}>
               {seaTemp}°
             </div>
-            <div className="text-gray-400 text-xs">Celsius</div>
+            <div className="text-gray-400 text-sm">Celsius</div>
           </div>
         </div>
 
@@ -72,46 +72,50 @@ export default function TemperatureWidget() {
         <div className="space-y-3 mb-4">
           {/* Air temperature bar */}
           <div className="flex items-center space-x-2">
-            <div className="text-gray-400 text-xs w-8">Air</div>
-            <div className="flex-1 bg-gray-600 rounded-full h-2">
+            <div className="text-gray-400 text-sm w-10">Air</div>
+            <div className="flex-1 bg-gray-600 rounded-full h-3">
               <div 
-                className={`h-2 rounded-full transition-all duration-500 ${
+                className={`h-3 rounded-full transition-all duration-500 ${
                   airTemp < 10 ? 'bg-oBlue' : airTemp > 25 ? 'bg-oRed' : 'bg-oGreen'
                 }`}
                 style={{ width: `${Math.min(100, Math.max(0, (airTemp + 10) * 2.5))}%` }}
               />
             </div>
-            <div className="text-gray-400 text-xs w-8">{airTemp}°</div>
+            <div className="text-gray-400 text-sm w-10">{airTemp}°</div>
           </div>
           
           {/* Sea temperature bar */}
           <div className="flex items-center space-x-2">
-            <div className="text-gray-400 text-xs w-8">Sea</div>
-            <div className="flex-1 bg-gray-600 rounded-full h-2">
+            <div className="text-gray-400 text-sm w-10">Sea</div>
+            <div className="flex-1 bg-gray-600 rounded-full h-3">
               <div 
-                className={`h-2 rounded-full transition-all duration-500 ${
+                className={`h-3 rounded-full transition-all duration-500 ${
                   seaTemp < 10 ? 'bg-oBlue' : seaTemp > 25 ? 'bg-oRed' : 'bg-oGreen'
                 }`}
                 style={{ width: `${Math.min(100, Math.max(0, (seaTemp + 10) * 2.5))}%` }}
               />
             </div>
-            <div className="text-gray-400 text-xs w-8">{seaTemp}°</div>
+            <div className="text-gray-400 text-sm w-10">{seaTemp}°</div>
           </div>
         </div>
 
         {/* Status and difference */}
         <div className="text-center space-y-2">
-          <div className={`text-sm font-medium ${getTemperatureColor((airTemp + seaTemp) / 2)}`}>
+          <div className={`text-base font-medium ${getTemperatureColor((airTemp + seaTemp) / 2)}`}>
             {getTemperatureStatus(airTemp, seaTemp)}
           </div>
-          <div className="text-gray-400 text-xs">
+          <div className="text-gray-400 text-sm">
             Difference: {Math.abs(airTemp - seaTemp).toFixed(1)}°C
           </div>
-          <div className="text-gray-400 text-xs">
+          <div className="text-gray-400 text-sm">
             Range: -10°C to 40°C
           </div>
         </div>
       </div>
     </div>
   );
-}
+});
+
+TemperatureWidget.displayName = 'TemperatureWidget';
+
+export default TemperatureWidget;

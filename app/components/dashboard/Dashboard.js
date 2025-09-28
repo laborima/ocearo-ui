@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLeaf, faCompass, faChartLine } from '@fortawesome/free-solid-svg-icons';
+import { faLeaf, faCompass, faCog, faExpand, faCompress } from '@fortawesome/free-solid-svg-icons';
 import SunriseSunsetWidget from './widgets/SunriseSunsetWidget';
 import UVIndexWidget from './widgets/UVIndexWidget';
 import HumidityWidget from './widgets/HumidityWidget';
@@ -20,103 +20,239 @@ import WeatherWidget from './widgets/WeatherWidget';
 import SpeedWidget from './widgets/SpeedWidget';
 import TimeWidget from './widgets/TimeWidget';
 
+const WidgetWrapper = React.memo(({ children, widgetName, className = "", fullscreenWidget, toggleFullscreen }) => (
+  <div className={`relative group ${className}`}>
+    {children}
+    <button
+      onClick={() => toggleFullscreen(widgetName)}
+      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black bg-opacity-50 hover:bg-opacity-70 rounded p-1 text-white text-xs"
+      title={fullscreenWidget === widgetName ? "Exit fullscreen" : "Fullscreen"}
+    >
+      <FontAwesomeIcon icon={fullscreenWidget === widgetName ? faCompress : faExpand} />
+    </button>
+  </div>
+));
+
+WidgetWrapper.displayName = 'WidgetWrapper';
+
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('environment');
+  const [fullscreenWidget, setFullscreenWidget] = useState(null);
 
-  const renderEnvironmentTab = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 h-full">
-      {/* Environment widgets */}
-      <div>
+  const toggleFullscreen = React.useCallback((widgetName) => {
+    setFullscreenWidget(prev => prev === widgetName ? null : widgetName);
+  }, []);
+
+  const renderEnvironmentTab = React.useMemo(() => (
+    <div className={`${fullscreenWidget ? 'flex h-full' : 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 h-full auto-rows-fr'}`}>
+      {/* Environment widgets - 6 total */}
+      <WidgetWrapper 
+        widgetName="temperature" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'temperature' ? 'hidden' : fullscreenWidget === 'temperature' ? 'w-full h-full' : ''}
+      >
         <TemperatureWidget />
-      </div>
-      <div>
-        <TideWidget /> 
-      </div>
-      <div>
-        <AirQualityWidget />
-      </div>
-      <div>
-        <PressureWidget />
-      </div>
-      <div>
-        <UVIndexWidget />
-      </div>
-      <div>
-        <HumidityWidget />
-      </div>
-      <div>
-        <SunriseSunsetWidget />
-      </div>
-      <div>
-        <VisibilityWidget />
-      </div>
-      <div>
+      </WidgetWrapper>
+      <WidgetWrapper 
+        widgetName="weather" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'weather' ? 'hidden' : fullscreenWidget === 'weather' ? 'w-full h-full' : ''}
+      >
         <WeatherWidget />
-      </div>
+      </WidgetWrapper>
+      <WidgetWrapper 
+        widgetName="tide" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'tide' ? 'hidden' : fullscreenWidget === 'tide' ? 'w-full h-full' : ''}
+      >
+        <TideWidget />
+      </WidgetWrapper>
+      <WidgetWrapper 
+        widgetName="visibility" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'visibility' ? 'hidden' : fullscreenWidget === 'visibility' ? 'w-full h-full' : ''}
+      >
+        <VisibilityWidget />
+      </WidgetWrapper>
+      <WidgetWrapper 
+        widgetName="airquality" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'airquality' ? 'hidden' : fullscreenWidget === 'airquality' ? 'w-full h-full' : ''}
+      >
+        <AirQualityWidget />
+      </WidgetWrapper>
+      <WidgetWrapper 
+        widgetName="pressure" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'pressure' ? 'hidden' : fullscreenWidget === 'pressure' ? 'w-full h-full' : ''}
+      >
+        <PressureWidget />
+      </WidgetWrapper>
     </div>
-  );
+  ), [fullscreenWidget, toggleFullscreen]);
 
-  const renderNavigationTab = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 h-full">
-      {/* Navigation widgets */}
-      <div>
+  const renderNavigationTab = React.useMemo(() => (
+    <div className={`${fullscreenWidget ? 'flex h-full' : 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 h-full auto-rows-fr'}`}>
+      {/* Navigation widgets - 6 total */}
+      <WidgetWrapper 
+        widgetName="boat3d" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'boat3d' ? 'hidden' : fullscreenWidget === 'boat3d' ? 'w-full h-full' : ''}
+      >
         <BoatWidget3D />
-      </div>
-      <div>
+      </WidgetWrapper>
+      <WidgetWrapper 
+        widgetName="attitude" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'attitude' ? 'hidden' : fullscreenWidget === 'attitude' ? 'w-full h-full' : ''}
+      >
         <AttitudeWidget />
-      </div>
-      <div>
+      </WidgetWrapper>
+      <WidgetWrapper 
+        widgetName="speed" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'speed' ? 'hidden' : fullscreenWidget === 'speed' ? 'w-full h-full' : ''}
+      >
         <SpeedWidget />
-      </div>
-      <div>
+      </WidgetWrapper>
+      <WidgetWrapper 
+        widgetName="depth" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'depth' ? 'hidden' : fullscreenWidget === 'depth' ? 'w-full h-full' : ''}
+      >
         <DepthWidget />
-      </div>
-      <div>
+      </WidgetWrapper>
+      <WidgetWrapper 
+        widgetName="aisradar" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'aisradar' ? 'hidden' : fullscreenWidget === 'aisradar' ? 'w-full h-full' : ''}
+      >
         <AISRadarWidget />
-      </div>
-      <div>
-        <BatteryWidget />
-      </div>
-      <div>
-        <TankLevelsWidget />
-      </div>
-      <div>
+      </WidgetWrapper>
+      <WidgetWrapper 
+        widgetName="time" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'time' ? 'hidden' : fullscreenWidget === 'time' ? 'w-full h-full' : ''}
+      >
         <TimeWidget />
-      </div>
+      </WidgetWrapper>
     </div>
-  );
+  ), [fullscreenWidget, toggleFullscreen]);
+
+  const renderSystemTab = React.useMemo(() => (
+    <div className={`${fullscreenWidget ? 'flex h-full' : 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 h-full auto-rows-fr'}`}>
+      {/* System widgets - 5 total */}
+      <WidgetWrapper 
+        widgetName="battery" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'battery' ? 'hidden' : fullscreenWidget === 'battery' ? 'w-full h-full' : ''}
+      >
+        <BatteryWidget />
+      </WidgetWrapper>
+      <WidgetWrapper 
+        widgetName="tanks" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'tanks' ? 'hidden' : fullscreenWidget === 'tanks' ? 'w-full h-full' : ''}
+      >
+        <TankLevelsWidget />
+      </WidgetWrapper>
+      <WidgetWrapper 
+        widgetName="humidity" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'humidity' ? 'hidden' : fullscreenWidget === 'humidity' ? 'w-full h-full' : ''}
+      >
+        <HumidityWidget />
+      </WidgetWrapper>
+      <WidgetWrapper 
+        widgetName="uvindex" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'uvindex' ? 'hidden' : fullscreenWidget === 'uvindex' ? 'w-full h-full' : ''}
+      >
+        <UVIndexWidget />
+      </WidgetWrapper>
+      <WidgetWrapper 
+        widgetName="sunrise" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'sunrise' ? 'hidden' : fullscreenWidget === 'sunrise' ? 'w-full h-full' : ''}
+      >
+        <SunriseSunsetWidget />
+      </WidgetWrapper>
+    </div>
+  ), [fullscreenWidget, toggleFullscreen]);
+
+
+  const renderTabContent = React.useMemo(() => {
+    switch (activeTab) {
+      case 'environment':
+        return renderEnvironmentTab;
+      case 'navigation':
+        return renderNavigationTab;
+      case 'system':
+        return renderSystemTab;
+      default:
+        return renderEnvironmentTab;
+    }
+  }, [activeTab, renderEnvironmentTab, renderNavigationTab, renderSystemTab]);
 
   return (
-    <div className="flex flex-col h-full rightPaneBg overflow-auto">
-      {/* Tab Navigation */}
-      <div className="flex border-b border-gray-600 bg-oGray2">
+    <div className="flex flex-col h-full rightPaneBg overflow-hidden">
+      {/* Tab Navigation - Modern Style */}
+      <div className="flex border-b border-gray-800">
         <button
           onClick={() => setActiveTab('environment')}
-          className={`flex items-center space-x-2 px-6 py-3 font-medium transition-colors ${
+          className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center transition-all ${
             activeTab === 'environment'
-              ? 'text-oBlue border-b-2 border-oBlue bg-oGray1'
-              : 'text-gray-400 hover:text-white hover:bg-oGray1'
+              ? 'text-green-500 border-b-2 border-green-500'
+              : 'text-gray-400 hover:text-gray-300'
           }`}
         >
-          <FontAwesomeIcon icon={faLeaf} />
-          <span>Environment</span>
+          <FontAwesomeIcon icon={faLeaf} className="mr-2" />
+          Environment
         </button>
         <button
           onClick={() => setActiveTab('navigation')}
-          className={`flex items-center space-x-2 px-6 py-3 font-medium transition-colors ${
+          className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center transition-all ${
             activeTab === 'navigation'
-              ? 'text-oBlue border-b-2 border-oBlue bg-oGray1'
-              : 'text-gray-400 hover:text-white hover:bg-oGray1'
+              ? 'text-green-500 border-b-2 border-green-500'
+              : 'text-gray-400 hover:text-gray-300'
           }`}
         >
-          <FontAwesomeIcon icon={faCompass} />
-          <span>Navigation</span>
+          <FontAwesomeIcon icon={faCompass} className="mr-2" />
+          Navigation
+        </button>
+        <button
+          onClick={() => setActiveTab('system')}
+          className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center transition-all ${
+            activeTab === 'system'
+              ? 'text-green-500 border-b-2 border-green-500'
+              : 'text-gray-400 hover:text-gray-300'
+          }`}
+        >
+          <FontAwesomeIcon icon={faCog} className="mr-2" />
+          System
         </button>
       </div>
     
       {/* Dashboard Content */}
-      <div className="flex-1 p-4">
-        {activeTab === 'environment' ? renderEnvironmentTab() : renderNavigationTab()}
+      <div className="flex-1 p-4 min-h-0">
+        {renderTabContent}
       </div>
     </div>
   );

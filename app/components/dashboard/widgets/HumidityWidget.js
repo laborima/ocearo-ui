@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { useOcearoContext } from '../../context/OcearoContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDroplet, faThermometerHalf } from '@fortawesome/free-solid-svg-icons';
+import { faTint, faThermometerHalf } from '@fortawesome/free-solid-svg-icons';
 
 const HUMIDITY_CONFIG = {
   humidity: {
@@ -18,12 +18,15 @@ const HUMIDITY_CONFIG = {
 export default function HumidityWidget() {
   const { getSignalKValue } = useOcearoContext();
   
-  const { humidityPercentage, dewPointCelsius } = useMemo(() => {
+  const { humidity, humidityPercentage, dewPointCelsius } = useMemo(() => {
     const humidityValue = getSignalKValue(HUMIDITY_CONFIG.humidity.path);
     const dewPointValue = getSignalKValue(HUMIDITY_CONFIG.dewPoint.path);
     
+    const humidityPercent = humidityValue !== null ? HUMIDITY_CONFIG.humidity.transform(humidityValue) : '65';
+    
     return {
-      humidityPercentage: humidityValue !== null ? HUMIDITY_CONFIG.humidity.transform(humidityValue) : '65',
+      humidity: humidityPercent,
+      humidityPercentage: humidityPercent,
       dewPointCelsius: dewPointValue !== null ? HUMIDITY_CONFIG.dewPoint.transform(dewPointValue) : '18.5'
     };
   }, [getSignalKValue]);
@@ -36,22 +39,33 @@ export default function HumidityWidget() {
     return 'text-oGreen';
   };
 
+  // Determine humidity status text
+  const getHumidityStatus = (humidity) => {
+    const h = parseInt(humidity);
+    if (h < 30) return 'Too Dry';
+    if (h > 70) return 'Too Humid';
+    if (h < 40 || h > 60) return 'Moderate';
+    return 'Optimal';
+  };
+
   return (
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faDroplet} className="text-oBlue" />
-        <span className="text-white font-medium">Humidity</span>
+        <FontAwesomeIcon icon={faTint} className="text-oBlue text-lg" />
+        <span className="text-white font-medium text-lg">Humidity</span>
       </div>
       
       {/* Content */}
       <div className="flex-1 flex flex-col justify-center">
-        {/* Main humidity value */}
-        <div className="text-center mb-4">
-          <div className={`text-4xl font-bold ${getHumidityColor(humidityPercentage)}`}>
-            {humidityPercentage}%
+        {/* Main humidity display */}
+        <div className="text-center mb-6">
+          <div className="text-5xl font-bold text-white mb-2">
+            {humidity}%
           </div>
-          <div className="text-gray-400 text-sm mt-1">Relative Humidity</div>
+          <div className={`text-base font-medium ${getHumidityColor(humidity)}`}>
+            {getHumidityStatus(humidity)}
+          </div>
         </div>
 
         {/* Visual representation */}
