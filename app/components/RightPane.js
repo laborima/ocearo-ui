@@ -20,11 +20,19 @@ const BatteryMonitor = dynamic(() => import('./battery/BatteryMonitor'), {
   loading: () => <div className="w-full h-full flex justify-center items-center">Loading battery monitor...</div>
 });
 
+const MotorView = dynamic(() => import('./engines/MotorView'), {
+  loading: () => <div className="w-full h-full flex justify-center items-center">Loading engine monitor...</div>
+});
 
-/*const Dashboard = dynamic(() => import('./dashboard/Dashboard'), {
+
+const Dashboard = dynamic(() => import('./dashboard/Dashboard'), {
   loading: () => <div className="w-full h-full flex justify-center items-center">Loading dashboard...</div>
 });
-*/
+
+const LogbookView = dynamic(() => import('./logbook/LogbookView'), {
+  loading: () => <div className="w-full h-full flex justify-center items-center">Loading logbook...</div>
+});
+
 
 // Constants
 const POSITION_UPDATE_INTERVAL = 10000; // 10 seconds
@@ -130,8 +138,12 @@ const RightPane = ({ view }) => {
                 return <MediaPlayer />;
             case 'battery':
                 return <BatteryMonitor />;
-/*            case 'dashboard':
-                return <Dashboard />;*/
+            case 'motor':
+                return <MotorView />;
+            case 'dashboard':
+                return <Dashboard />;
+            case 'logbook':
+                return <LogbookView />;
             default:
                 return iframeSrc && (
                     <iframe

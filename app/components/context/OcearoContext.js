@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import Client from '@signalk/client';
 import configService from '../settings/ConfigService'; // Import the ConfigService
+import { updateOcearoCoreMode, isOcearoCoreEnabled, handleOcearoCoreError } from '../utils/OcearoCoreUtils';
 import { MathUtils } from 'three';
 
 const OcearoContext = createContext();
@@ -204,70 +205,136 @@ export const OcearoContextProvider = ({ children }) => {
         return courseOverGroundAngle || heading || 0;
     };
     
-    
-    
     /**
-         * Convert latitude/longitude coordinates to X/Y coordinates relative to a reference position
-         * @param {Object} position - Position with lat and lon properties
-         * @param {Object} referencePosition - Reference position with lat and lon properties
-         * @returns {Object} - {x, y} coordinates in meters { x: Easting, y: Northing }
-         */
-        const convertLatLonToXY = (position, referencePosition) => {
-            // Define Earth radius if not defined elsewhere
-            const EARTH_RADIUS_METERS = 6371000;
+     * Convert latitude/longitude coordinates to X/Y coordinates relative to a reference position
+     * @param {Object} position - Position with lat and lon properties
+     * @param {Object} referencePosition - Reference position with lat and lon properties
+     * @returns {Object} - {x, y} coordinates in meters { x: Easting, y: Northing }
+     */
+    const convertLatLonToXY = (position, referencePosition) => {
+        // Define Earth radius if not defined elsewhere
+        const EARTH_RADIUS_METERS = 6371000;
 
-            if (!position?.lat || !position?.lon || !referencePosition?.lat || !referencePosition?.lon) {
-                 console.warn("Invalid input to convertLatLonToXY", position, referencePosition);
-                 return { x: 0, y: 0 };
-            }
+        if (!position?.lat || !position?.lon || !referencePosition?.lat || !referencePosition?.lon) {
+            console.warn("Invalid input to convertLatLonToXY", position, referencePosition);
+            return { x: 0, y: 0 };
+        }
 
-            // Convert latitude and longitude from degrees to radians
-            const lat1 = referencePosition.lat * Math.PI / 180;
-            const lon1 = referencePosition.lon * Math.PI / 180;
-            const lat2 = position.lat * Math.PI / 180;
-            const lon2 = position.lon * Math.PI / 180;
+        // Convert latitude and longitude from degrees to radians
+        const lat1 = referencePosition.lat * Math.PI / 180;
+        const lon1 = referencePosition.lon * Math.PI / 180;
+        const lat2 = position.lat * Math.PI / 180;
+        const lon2 = position.lon * Math.PI / 180;
 
-            // Calculate differences
-            const dLon = lon2 - lon1;
-            const dLat = lat2 - lat1; // Needed for Haversine
+        // Calculate differences
+        const dLon = lon2 - lon1;
+        const dLat = lat2 - lat1; // Needed for Haversine
 
-            // Calculate bearing in radians (needed for Cartesian conversion)
-            // Note: atan2(y, x) gives angle from +X axis, bearing needs angle from +Y (North)
-            const y_bear = Math.sin(dLon) * Math.cos(lat2);
-            const x_bear = Math.cos(lat1) * Math.sin(lat2) -
-                           Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-            const bearing = Math.atan2(y_bear, x_bear); // Bearing relative to North, clockwise
+        // Calculate bearing in radians (needed for Cartesian conversion)
+        // Note: atan2(y, x) gives angle from +X axis, bearing needs angle from +Y (North)
+        const y_bear = Math.sin(dLon) * Math.cos(lat2);
+        const x_bear = Math.cos(lat1) * Math.sin(lat2) -
+                       Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+        const bearing = Math.atan2(y_bear, x_bear); // Bearing relative to North, clockwise
 
-            // Calculate distance using Haversine formula
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                      Math.cos(lat1) * Math.cos(lat2) *
-                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        // Calculate distance using Haversine formula
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1) * Math.cos(lat2) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             const distance = EARTH_RADIUS_METERS * c;
 
-            // Convert polar (distance, bearing) to cartesian (x, y)
-            // Standard convention: X = Easting, Y = Northing
-            const easting = distance * Math.sin(bearing);  // X axis (East component)
-            const northing = distance * Math.cos(bearing); // Y axis (North component) <-- REMOVED NEGATION
 
-            // Optional: Update or remove the internal comment if it was confusing
-            // e.g., // Returns Easting (x) and Northing (y) in meters
+                // Convert polar (distance, bearing) to cartesian (x, y)
+                // Standard convention: X = Easting, Y = Northing
+                const easting = distance * Math.sin(bearing);  // X axis (East component)
+                const northing = distance * Math.cos(bearing); // Y axis (North component) <-- REMOVED NEGATION
 
-            return { x: easting, y: northing }; // Return Easting, Northing
-        };
+                // Optional: Update or remove the internal comment if it was confusing
+                // e.g., // Returns Easting (x) and Northing (y) in meters
 
+                return { x: easting, y: northing }; // Return Easting, Northing
+            };
+
+
+    
+    // Function to get sail visibility state based on navigation mode
+    const getSailVisibility = () => {
+        const navigationState = getSignalKValue('navigation.state');
+        // Hide sails when in motoring mode
+        return navigationState !== 'motoring';
+    };
+   
     // Method to toggle any state (e.g., autopilot, anchorWatch)
-    const toggleState = (key, value = undefined) => {
+    const toggleState = async (key, value = undefined) => {
+        const newValue = value !== undefined ? value : !states[key];
+
         setStates((prevState) => ({
             ...prevState,
-            [key]: value !== undefined ? value : !prevState[key], // Set explicitly or toggle
+            [key]: newValue,
         }));
+
+        // Handle anchorWatch specific logic
+        if (key === 'anchorWatch') {
+            try {
+                if (newValue) {
+                    // Set anchored mode in OcearoCore
+                    if (isOcearoCoreEnabled()) {
+                        await updateOcearoCoreMode('anchored');
+                    }
+                } else {
+                    // Determine navigation mode based on engine state
+                    const engineState = getSignalKValue('propulsion.main.state') || getSignalKValue('propulsion.main.revolutions');
+                    const navigationMode = (engineState === 'running' || (typeof engineState === 'number' && engineState > 0)) ? 'motoring' : 'sailing';
+                    
+                    if (isOcearoCoreEnabled()) {
+                        await updateOcearoCoreMode(navigationMode);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to update OcearoCore mode for anchorWatch:', handleOcearoCoreError(error));
+            }
+        }
+
+        // Handle parkingMode specific logic
+        if (key === 'parkingMode') {
+            try {
+                if (newValue) {
+                    // When activating parkingMode, set docking mode in OcearoCore
+                    if (isOcearoCoreEnabled()) {
+                        await updateOcearoCoreMode('moored');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to update OcearoCore mode for parkingMode:', handleOcearoCoreError(error));
+            }
+        }
+
+        // Handle racing mode logic
+        if (key === 'racing') {
+            try {
+                if (newValue) {
+                    // When activating racing mode, set racing mode in OcearoCore
+                    if (isOcearoCoreEnabled()) {
+                        await updateOcearoCoreMode('racing');
+                    }
+                } else {
+                    // When deactivating racing mode, return to navigation mode
+                    if (isOcearoCoreEnabled()) {
+                        await updateOcearoCoreMode('sailing');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to update OcearoCore mode for racing:', handleOcearoCoreError(error));
+            }
+        }
     };
 
     // Use useRef to persist client between renders
     const clientRef = useRef(null);
     const sampleDataIntervalRef = useRef(null);
 
+    // Initialize SignalK client connection
     useEffect(() => {
         let isMounted = true;
 
@@ -276,6 +343,7 @@ export const OcearoContextProvider = ({ children }) => {
          * Ensures debug data is available even if the connection fails
          */
         const connectSignalKClient = async () => {
+         
             const config = configService.getAll(); // Load config from the service
             const { signalkUrl, debugMode } = config;
             
@@ -285,73 +353,73 @@ export const OcearoContextProvider = ({ children }) => {
                 if (sampleDataIntervalRef.current) {
                     clearInterval(sampleDataIntervalRef.current);
                 }
-                
+
                 // Track the wind angle for incremental changes
                 let currentWindAngle = 0;
-                
+
                 // Create new interval for sample data
                 sampleDataIntervalRef.current = setInterval(() => {
                     const randomAngle = Math.floor(Math.random() * 91) - 45;
-                    
+
                     // Increment the wind angle by 5 degrees each interval
                     currentWindAngle = (currentWindAngle + 5) % 360;
-                    
+
                     setSignalKData(prev => ({
                         ...prev,
                         'steering.rudderAngle': MathUtils.degToRad(randomAngle),
                         // Override the apparent wind angle with our incrementing value
                         //nt.wind.angleApparent': MathUtils.degToRad(currentWindAngle),
                         // Keep other wind data from sample data
-                       // 'environment.wind.angleTrueWater': SAMPLE_DATA.wind['environment.wind.angleTrueWater'],
-                        //'environment.wind.speedTrue': SAMPLE_DATA.wind['environment.wind.speedTrue'],
-                       // 'environment.wind.speedApparent': SAMPLE_DATA.wind['environment.wind.speedApparent'],
+                        // 'environment.wind.angleTrueWater': SAMPLE_DATA.wind['environment.wind.angleTrueWater'],
+                        // 'environment.wind.speedTrue': SAMPLE_DATA.wind['environment.wind.speedTrue'],
+                        // 'environment.wind.speedApparent': SAMPLE_DATA.wind['environment.wind.speedApparent'],
                         ...SAMPLE_DATA.temperature,
                         ...SAMPLE_DATA.environment,
                         ...SAMPLE_DATA.performance,
                         ...SAMPLE_DATA.navigation,
                         ...SAMPLE_DATA.racing,
                         ...SAMPLE_DATA.electrical,
-                    }));
+                      }));
                 }, SAMPLE_DATA_INTERVAL);
             };
             
             try {
 
                     const [hostname, port] = signalkUrl.replace(/https?:\/\//, '').split(':');
-                    const client = new Client({
-                        hostname: hostname || 'localhost',
-                        port: parseInt(port) || 3000,
-                        useTLS: signalkUrl.startsWith('https'),
+            const client = new Client({
+                hostname: hostname || 'localhost',
+                port: parseInt(port) || 3000,
+                useTLS: signalkUrl.startsWith('https'),
                         reconnect: true,
                         autoConnect: false,
                         notifications: false,
                         deltaStreamBehaviour: 'self',
                         sendMeta: 'all',
                         wsKeepaliveInterval: 10
-                    });
+            });
 
-                    clientRef.current = client; // Store client in ref
+            clientRef.current = client; // Store client in ref
 
-                    // Connect to the client
-                    await client.connect();
+            // Connect to the client
+            await client.connect();
 
-                    // Listen for delta updates from SignalK server
-                    client.on('delta', (delta) => {
+            // Listen for delta updates from SignalK server
+            client.on('delta', (delta) => {
                         if (!isMounted) return;
                         delta.updates.forEach((update) => {
-                            if (update.values) {
-                                update.values.forEach((value) => {
-                                    // Update SignalK data state
-                                    setSignalKData((prevData) => ({
-                                        ...prevData,
-                                        [value.path]: value.value,
-                                    }));
-                                });
-                            }
+                    if (update.values) {
+                        update.values.forEach((value) => {
+                            // Update SignalK data state
+                            setSignalKData((prevData) => ({
+                                ...prevData,
+                                [value.path]: value.value,
+                            }));
                         });
-                    });
-                
-                
+                    }
+                });
+            });
+
+
                 // Set up interval for sample data if debugMode is enabled
                 if (debugMode) {
                     setupDebugDataInterval();
@@ -365,107 +433,130 @@ export const OcearoContextProvider = ({ children }) => {
             }
         };
 
+
         const fetchTideData = async () => {
             const date = new Date();
             const year = date.getFullYear();
             const month = (date.getMonth() + 1).toString().padStart(2, '0');
             const filePath = `tides/larochelle/${month}_${year}.json`;
-
+        
             const response = await fetch(filePath);
-            if (response.ok) {
-                const tideData = await response.json();
-
-                const today = date.toISOString().split('T')[0];
-                if (tideData[today]) {
-                    let closestHighTide = null;
-                    let closestLowTide = null;
-                    const now = new Date();
-                    const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
-
-                    tideData[today].forEach(([type, time, height, coef]) => {
-                        const [hours, minutes] = time.split(':').map(Number);
-                        const tideTimeInMinutes = hours * 60 + minutes;
-
-                        if (type === 'tide.high' && (!closestHighTide || Math.abs(currentTimeInMinutes - tideTimeInMinutes) < Math.abs(currentTimeInMinutes - closestHighTide.timeInMinutes))) {
-                            closestHighTide = { height: parseFloat(height), time, timeInMinutes: tideTimeInMinutes, coef };
-                        } else if (type === 'tide.low' && (!closestLowTide || Math.abs(currentTimeInMinutes - tideTimeInMinutes) < Math.abs(currentTimeInMinutes - closestLowTide.timeInMinutes))) {
-                            closestLowTide = { height: parseFloat(height), time, timeInMinutes: tideTimeInMinutes };
-                        }
-                    });
-
-                    if (closestHighTide && closestLowTide) {
-                        const nowTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-                        const currentTideHeight = calculateTideHeightUsingTwelfths(
-                            closestHighTide.height,
-                            closestLowTide.height,
-                            nowTime,
-                            closestHighTide.time,
-                            closestLowTide.time
-                        );
-
-                        setSignalKData((prevData) => ({
-                            ...prevData,
-                            'environment.tide.heightNow': currentTideHeight,
-                            'environment.tide.heightHigh': closestHighTide.height,
-                            'environment.tide.heightLow': closestLowTide.height,
-                            'environment.tide.timeLow': closestLowTide.time,
-                            'environment.tide.timeHigh': closestHighTide.time,
-                            'environment.tide.coeffNow': closestHighTide.coef
-                        }));
-
-                    } else {
-                        throw new Error("Tide data for today is incomplete.");
-                    }
-                }
-            } else {
+            if (!response.ok) {
                 console.warn("No tide data found");
+                return;
             }
-
+        
+            const tideData = await response.json();
+            const today = date.toISOString().split('T')[0];
+            if (!tideData[today]) return;
+        
+            const now = new Date();
+            const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
+        
+            let lastTide = null;
+            let nextTide = null;
+        
+            const sortedTides = tideData[today].map(([type, time, height, coef]) => {
+                const [hours, minutes] = time.split(':').map(Number);
+                return {
+                    type,
+                    height: parseFloat(height),
+                    time,
+                    timeInMinutes: hours * 60 + minutes,
+                    coef
+                };
+            }).sort((a, b) => a.timeInMinutes - b.timeInMinutes);
+        
+            for (const tide of sortedTides) {
+                if (tide.timeInMinutes <= currentTimeInMinutes) {
+                    lastTide = tide;
+                } else {
+                    nextTide = tide;
+                    break;
+                }
+            }
+        
+            if (!lastTide || !nextTide) {
+                throw new Error("Impossible de déterminer la tendance de marée");
+            }
+    
+            const isRising = lastTide.type === "tide.low" && nextTide.type === "tide.high";
+        
+            let closestHighTide, closestLowTide;
+            if (isRising) {
+                closestHighTide = nextTide.type === "tide.high" ? nextTide : null;
+                closestLowTide = lastTide.type === "tide.low" ? lastTide : null;
+            } else {
+                closestHighTide = lastTide.type === "tide.high" ? lastTide : null;
+                closestLowTide = nextTide.type === "tide.low" ? nextTide : null;
+            }
+        
+            if (closestHighTide && closestLowTide) {
+                const nowTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                const currentTideHeight = calculateTideHeightUsingTwelfths(
+                    closestHighTide.height,
+                    closestLowTide.height,
+                    nowTime,
+                    closestHighTide.time,
+                    closestLowTide.time
+                );
+        
+                setSignalKData((prevData) => ({
+                    ...prevData,
+                    "environment.tide.heightNow": currentTideHeight,
+                    "environment.tide.heightHigh": closestHighTide.height,
+                    "environment.tide.heightLow": closestLowTide.height,
+                    "environment.tide.timeLow": closestLowTide.time,
+                    "environment.tide.timeHigh": closestHighTide.time,
+                    "environment.tide.coeffNow": closestHighTide.coef
+                }));
+            } else {
+                throw new Error("Tide data for today is incomplete.");
+            }
         };
-
+        
 
 
         // Initialize SignalK client connection
         connectSignalKClient();
 
-        fetchTideData();
+            fetchTideData();
 
 
-        // Cleanup function to disconnect from SignalK and clear interval on unmount
-        return () => {
-            isMounted = false;
-            if (clientRef.current) {
-                clientRef.current.disconnect();
-            }
-            if (sampleDataIntervalRef.current) {
-                clearInterval(sampleDataIntervalRef.current);
-            }
-        };
-    }, []); // Empty dependency array means this runs once on mount
+            // Cleanup function to disconnect from SignalK and clear interval on unmount
+            return () => {
+                isMounted = false;
+                if (clientRef.current) {
+                    clientRef.current.disconnect();
+                }
+                if (sampleDataIntervalRef.current) {
+                    clearInterval(sampleDataIntervalRef.current);
+                }
+            };
+        }, []); // Empty dependency array means this runs once on mount
 
 
-    // General method to retrieve SignalK values
+        // General method to retrieve SignalK values
 
-    return (
-        <OcearoContext.Provider
-            value={{
-                getSignalKValue,
-                getBoatRotationAngle,
-                convertLatLonToXY,
-                nightMode,
-                setNightMode,
-                states,
-                toggleState,
-            }}
-        >
-            {children}
-        </OcearoContext.Provider>
-    );
-};
+        return (
+            <OcearoContext.Provider
+                value={{
+                    getSignalKValue,
+                    getBoatRotationAngle,
+                    convertLatLonToXY,
+                    nightMode,
+                    setNightMode,
+                    states,
+                    toggleState,
+                }}
+            >
+                {children}
+            </OcearoContext.Provider>
+        );
+    };
 
 // Hook to access the Ocearo context throughout the application
 export const useOcearoContext = () => useContext(OcearoContext);
-
 
 /**
  * Calculates the tide height at a specific time using the Rule of Twelfths.

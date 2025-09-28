@@ -12,9 +12,12 @@ import {
     faBatteryFull,
     faHeadphones,
     faSyncAlt,
-    faChartLine
+    faChartLine,
+    faExclamationTriangle,
+    faBook
 } from '@fortawesome/free-solid-svg-icons';
 import { VIEW_MODES } from '../page';
+import { isOcearoCoreEnabled } from './utils/OcearoCoreUtils';
 
 const AppMenu = ({
     currentViewMode,
@@ -23,7 +26,8 @@ const AppMenu = ({
     toggleFullscreen,
     setShowAppMenu,
 }) => {
-
+    // Check if Jarvis is enabled
+    const jarvisEnabled = isOcearoCoreEnabled();
 
     const MenuButton = ({ icon, label, onClick }) => (
         <button
@@ -46,11 +50,18 @@ const AppMenu = ({
                 {currentViewMode !== VIEW_MODES.APP && (
                     <MenuButton icon={faExpand} label="Full View" onClick={() => toggleViewMode(VIEW_MODES.APP)} />
                 )}
-                {/* <MenuButton 
+                <MenuButton 
                     icon={faChartLine} 
                     label="Dashboard" 
                     onClick={() => handleSetRightView('dashboard')} 
-                /> */}
+                /> 
+                {jarvisEnabled && (
+                    <MenuButton 
+                        icon={faBook} 
+                        label="Logbook" 
+                        onClick={() => handleSetRightView('logbook')} 
+                    />
+                )}
                 {currentViewMode !== VIEW_MODES.BOAT && (
                     <MenuButton icon={faShip} label="Boat View" onClick={() => toggleViewMode(VIEW_MODES.BOAT)} />
                 )}
@@ -96,6 +107,12 @@ const AppMenu = ({
                     icon={faBatteryFull}
                     label="Battery"
                     onClick={() => handleSetRightView('battery')}
+                />
+
+                <MenuButton
+                    icon={faExclamationTriangle}
+                    label="Engine"
+                    onClick={() => handleSetRightView('motor')}
                 />
 
                 <MenuButton
