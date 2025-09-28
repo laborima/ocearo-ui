@@ -25,7 +25,7 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@react-three/drei": "^9.120.5",
     "@react-three/fiber": "^8.17.10",
-    "@signalk/client": "^2.3.0",
+    "@signalk/client": "^2.4.0",
     "next": "14.2",
     "react": "^18",
     "react-dom": "^18",
