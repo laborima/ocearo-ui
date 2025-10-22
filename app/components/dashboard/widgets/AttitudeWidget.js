@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { useOcearoContext, toDegrees, oBlue, oRed, oYellow, oGreen, oNight } from '../../context/OcearoContext';
+import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCompass, faPlane, faWater } from '@fortawesome/free-solid-svg-icons';
 
@@ -18,19 +19,30 @@ const colors = {
 export default function AttitudeWidget() {
   const canvasRef = useRef(null);
   const { getSignalKValue } = useOcearoContext();
+  const debugMode = configService.get('debugMode');
 
   // Get attitude data for display
   const attitudeData = useMemo(() => {
-    const attitude = getSignalKValue('navigation.attitude') || { roll: 0, pitch: 0, yaw: 0 };
-    const heading = getSignalKValue('navigation.headingTrue') || 0;
+    const attitude = getSignalKValue('navigation.attitude');
+    const heading = getSignalKValue('navigation.headingTrue');
+
+    const hasData = attitude !== null || heading !== null;
+
+    if (!hasData && !debugMode) {
+      return { hasData: false };
+    }
+
+    const attitudeValue = attitude || (debugMode ? { roll: 0, pitch: 0, yaw: 0 } : { roll: 0, pitch: 0, yaw: 0 });
+    const headingValue = heading || (debugMode ? 0 : 0);
     
     return {
-      roll: toDegrees(attitude.roll) || 0,
-      pitch: toDegrees(attitude.pitch) || 0,
-      yaw: toDegrees(attitude.yaw) || 0,
-      heading: toDegrees(heading) || 0
+      hasData: true,
+      roll: attitudeValue.roll !== undefined ? toDegrees(attitudeValue.roll) || 0 : 0,
+      pitch: attitudeValue.pitch !== undefined ? toDegrees(attitudeValue.pitch) || 0 : 0,
+      yaw: attitudeValue.yaw !== undefined ? toDegrees(attitudeValue.yaw) || 0 : 0,
+      heading: headingValue !== null ? toDegrees(headingValue) || 0 : 0
     };
-  }, [getSignalKValue]);
+  }, [getSignalKValue, debugMode]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -213,6 +225,23 @@ export default function AttitudeWidget() {
       cancelAnimationFrame(animationFrameId);
     };
   }, [attitudeData]);
+
+  if (!attitudeData.hasData) {
+    return (
+      <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
+        <div className="flex items-center space-x-2 mb-4">
+          <FontAwesomeIcon icon={faCompass} className="text-oBlue" />
+          <span className="text-white font-medium">Attitude & Heading</span>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
+            <div className="text-sm text-gray-500">No attitude data available</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">

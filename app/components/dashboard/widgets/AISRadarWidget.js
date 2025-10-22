@@ -1,30 +1,74 @@
 'use client';
 import React, { useMemo, useState, useEffect } from 'react';
 import { useOcearoContext } from '../../context/OcearoContext';
+import { useAIS } from '../../3dview/ais/AISContext';
+import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRadar, faShip, faLocationDot } from '@fortawesome/free-solid-svg-icons';
+import { faTowerBroadcast, faShip, faLocationDot } from '@fortawesome/free-solid-svg-icons';
 
 const AISRadarWidget = React.memo(() => {
   const { getSignalKValue } = useOcearoContext();
+  const { aisData: aisDataRaw, vesselIds } = useAIS();
   const [radarRange, setRadarRange] = useState(5); // nautical miles
   const [sweepAngle, setSweepAngle] = useState(0);
+  const debugMode = configService.get('debugMode');
   
   // Simulate radar sweep animation
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSweepAngle(prev => (prev + 6) % 360);
-    }, 100);
-    return () => clearInterval(interval);
-  }, []);
+    let animationId;
+
+    const animate = () => {
+      setSweepAngle(prev => (prev + 2) % 360);
+      animationId = requestAnimationFrame(animate);
+    };
+
+    animationId = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, []); // Empty dependency array is correct - animation should run continuously
 
   const aisData = useMemo(() => {
-    // Mock AIS targets - in real implementation, this would come from SignalK
-    return [
-      { id: 1, name: 'VESSEL_A', distance: 2.3, bearing: 45, type: 'cargo', cpa: 0.8 },
-      { id: 2, name: 'VESSEL_B', distance: 4.1, bearing: 120, type: 'fishing', cpa: 1.2 },
-      { id: 3, name: 'VESSEL_C', distance: 1.8, bearing: 280, type: 'pleasure', cpa: 0.3 },
-    ];
-  }, []);
+    if (!aisDataRaw || Object.keys(aisDataRaw).length === 0) {
+      return [];
+    }
+
+    const myPosition = getSignalKValue('navigation.position');
+    const myHeading = getSignalKValue('navigation.headingTrue') || getSignalKValue('navigation.headingMagnetic') || 0;
+
+    if (!myPosition) return [];
+
+    return vesselIds
+      .filter(vessel => vessel.distanceMeters && vessel.distanceMeters <= radarRange * 1852)
+      .map(vessel => {
+        const distanceNM = vessel.distanceMeters / 1852;
+        // Bearing calculation with 180° rotation to align with 3D view
+        // sceneX=East(+)/West(-), sceneZ=South(+)/North(-)
+        const bearing = Math.atan2(
+          vessel.sceneX,
+          -vessel.sceneZ
+        ) * 180 / Math.PI;
+        // Apply 180° rotation to match 3D view orientation
+        const absoluteBearing = (bearing + 180 + 360) % 360;
+        
+        // Calculate CPA (simplified - actual implementation would need course and speed)
+        const cpa = distanceNM * Math.abs(Math.sin((absoluteBearing - myHeading) * Math.PI / 180));
+
+        return {
+          id: vessel.mmsi,
+          name: vessel.name || `MMSI ${vessel.mmsi}`,
+          distance: Math.round(distanceNM * 10) / 10,
+          bearing: Math.round(absoluteBearing),
+          type: vessel.shipType || 'unknown',
+          cpa: Math.round(cpa * 10) / 10
+        };
+      })
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 10);
+  }, [aisDataRaw, vesselIds, radarRange, getSignalKValue]);
 
   const getTargetColor = (target) => {
     if (target.cpa < 0.5) return 'text-oRed';
@@ -40,12 +84,15 @@ const AISRadarWidget = React.memo(() => {
     }
   };
 
+  // Check if we should show N/A
+  const showNA = !debugMode && aisData.length === 0;
+
   return (
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col min-h-0">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
-          <FontAwesomeIcon icon={faRadar} className="text-oBlue text-lg" />
+          <FontAwesomeIcon icon={faTowerBroadcast} className="text-oBlue text-lg" />
           <span className="text-white font-medium text-lg">AIS Radar</span>
         </div>
         
@@ -53,7 +100,7 @@ const AISRadarWidget = React.memo(() => {
         <select 
           value={radarRange} 
           onChange={(e) => setRadarRange(Number(e.target.value))}
-          className="bg-oGray1 text-white text-xs rounded px-2 py-1 border border-gray-600"
+          className="bg-oBlue text-white text-xs font-semibold rounded px-3 py-1 border border-white shadow focus:outline-none focus:ring-2 focus:ring-white/70 hover:bg-oBlue/80 transition"
         >
           <option value={1}>1 NM</option>
           <option value={2}>2 NM</option>
@@ -64,6 +111,14 @@ const AISRadarWidget = React.memo(() => {
       
       {/* Radar Display */}
       <div className="flex-1 relative min-h-0">
+        {showNA ? (
+          <div className="w-full h-full min-h-24 flex items-center justify-center bg-black rounded-lg">
+            <div className="text-center">
+              <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
+              <div className="text-sm text-gray-500">No AIS data available</div>
+            </div>
+          </div>
+        ) : (
         <div className="w-full h-full min-h-24 relative bg-black rounded-lg overflow-hidden">
           <svg className="w-full h-full" viewBox="0 0 200 200">
             {/* Radar circles */}
@@ -131,15 +186,19 @@ const AISRadarWidget = React.memo(() => {
             />
           </svg>
         </div>
+        )}
         
         {/* Range indicators */}
+        {!showNA && (
         <div className="absolute top-2 left-2 text-sm text-gray-400">
           <div>Range: {radarRange} NM</div>
           <div>Targets: {aisData.length}</div>
         </div>
+        )}
       </div>
 
       {/* Target List */}
+      {!showNA && aisData.length > 0 && (
       <div className="mt-4 space-y-2">
         <div className="text-base text-gray-400 mb-2">Closest Targets</div>
         {aisData.slice(0, 3).map(target => (
@@ -161,6 +220,7 @@ const AISRadarWidget = React.memo(() => {
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 });

@@ -7,6 +7,8 @@ class ConfigService {
       signalkUrl: 'http://localhost:3000',
       username: '',
       password: '',
+      useAuthentication: false,
+      signalKUrlSet: false,
       debugMode: false,
       selectedBoat: 'Default',
       primaryColor: null,

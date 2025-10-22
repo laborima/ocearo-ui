@@ -30,6 +30,13 @@ const LogbookView = () => {
   const [displayTimeZone, setDisplayTimeZone] = useState('UTC');
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [showEntryModal, setShowEntryModal] = useState(false);
+  const [entryForm, setEntryForm] = useState({
+    text: '',
+    author: 'manual'
+  });
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [analysisType, setAnalysisType] = useState(null);
 
   // Check if OcearoCore is enabled from config
   const config = configService.getAll();
@@ -103,6 +110,17 @@ const LogbookView = () => {
   ];
 
   /**
+   * Show add entry modal
+   */
+  const showAddEntryModal = useCallback(() => {
+    setEntryForm({
+      text: '',
+      author: 'manual'
+    });
+    setShowEntryModal(true);
+  }, []);
+
+  /**
    * Add a new logbook entry through OcearoCore proxy
    */
   const addEntry = useCallback(async () => {
@@ -127,21 +145,22 @@ const LogbookView = () => {
         engine: {
           hours: getSignalKValue('propulsion.main.runTime') || 0
         },
-        author: 'manual',
-        text: 'Manual entry'
+        author: entryForm.author || 'manual',
+        text: entryForm.text || 'Manual entry'
       };
 
       // Use OcearoCore proxy to add the entry
       await addLogbookEntry(newEntry);
       
-      // Refresh entries after successful addition
+      // Close modal and refresh entries
+      setShowEntryModal(false);
       fetchLogbookEntriesData();
     } catch (err) {
       console.error('Error adding entry:', err);
       const errorMessage = handleOcearoCoreError(err, 'Add logbook entry');
       setError(errorMessage);
     }
-  }, [getSignalKValue, fetchLogbookEntriesData]);
+  }, [getSignalKValue, fetchLogbookEntriesData, entryForm]);
 
   /**
    * Add entry using OcearoCore AI
@@ -175,32 +194,89 @@ const LogbookView = () => {
   /**
    * Get OcearoCore analysis of logbook data
    */
-  const getOcearoCoreAnalysis = useCallback(async () => {
+  const getOcearoCoreAnalysis = useCallback(async (type) => {
     if (!ocearoCoreEnabled) {
       setError('OcearoCore is not enabled');
       return;
     }
 
     try {
-      setLoading(true);
-      
-      // Use the last 10 entries for analysis
-      const recentEntries = entries.slice(-10);
-      
-      // Call OcearoCore API for logbook analysis
-      const analysis = await analyzeLogbookWithOcearoCore(recentEntries);
-      
-      // Handle analysis display (navigate to analysis tab)
+      setAnalysisLoading(true);
+      setAnalysisResult(null);
+      setAnalysisType(type);
+      setError(null);
       setActiveTab('analysis');
+      
+      // Call OcearoCore /analyze endpoint with the selected type
+      const response = await fetch(`${configService.getComputedSignalKUrl()}/plugins/ocearo-core/analyze`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => response.statusText);
+        throw new Error(`Analysis failed: ${errorText}`);
+      }
+
+      const analysis = await response.json();
+      
+      // Store analysis results
+      setAnalysisResult(analysis);
       console.log('OcearoCore Analysis:', analysis);
       
     } catch (err) {
       const errorMessage = handleOcearoCoreError(err, 'OcearoCore analysis');
       setError(errorMessage);
     } finally {
-      setLoading(false);
+      setAnalysisLoading(false);
     }
-  }, [ocearoCoreEnabled, entries]);
+  }, [ocearoCoreEnabled]);
+
+  /**
+   * Get logbook-specific analysis
+   */
+  const getLogbookAnalysis = useCallback(async () => {
+    if (!ocearoCoreEnabled) {
+      setError('OcearoCore is not enabled');
+      return;
+    }
+
+    try {
+      setAnalysisLoading(true);
+      setAnalysisResult(null);
+      setAnalysisType('logbook');
+      setError(null);
+      setActiveTab('analysis');
+      
+      // Call OcearoCore /logbook/analyze endpoint
+      const response = await fetch(`${configService.getComputedSignalKUrl()}/plugins/ocearo-core/logbook/analyze`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => response.statusText);
+        throw new Error(`Logbook analysis failed: ${errorText}`);
+      }
+
+      const analysis = await response.json();
+      
+      // Store analysis results
+      setAnalysisResult(analysis);
+      console.log('Logbook Analysis:', analysis);
+      
+    } catch (err) {
+      const errorMessage = handleOcearoCoreError(err, 'Logbook analysis');
+      setError(errorMessage);
+    } finally {
+      setAnalysisLoading(false);
+    }
+  }, [ocearoCoreEnabled]);
 
   /**
    * Edit an existing entry
@@ -276,7 +352,7 @@ const LogbookView = () => {
           )}
           <button 
             className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-50"
-            onClick={addEntry}
+            onClick={showAddEntryModal}
             disabled={loading}
           >
             <FontAwesomeIcon icon={faPlus} className="mr-2" />
@@ -433,37 +509,219 @@ const LogbookView = () => {
    */
   const renderAnalysis = () => (
     <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-bold text-white">Logbook Analysis</h3>
-        {ocearoCoreEnabled && (
-          <button 
-            className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-50"
-            onClick={getOcearoCoreAnalysis}
-            disabled={loading}
-          >
-            <FontAwesomeIcon icon={faRobot} className="mr-2" />
-            Get OcearoCore Analysis
-          </button>
-        )}
+      <div className="mb-4">
+        <h3 className="text-xl font-bold text-white mb-2">Logbook Analysis</h3>
+        <p className="text-gray-400 text-sm">Select an analysis type to get AI-powered insights</p>
       </div>
 
-      <div className="bg-oGray2 rounded-lg p-6">
-        <div className="text-center text-gray-400">
-          <FontAwesomeIcon icon={faChartLine} size="3x" className="mb-4" />
-          <h4 className="text-xl text-white mb-2">Analysis Coming Soon</h4>
-          <p>
-            This section will display detailed analysis of your logbook entries,
-            including route optimization, weather patterns, and performance metrics.
-          </p>
-          {ocearoCoreEnabled && (
-            <p className="mt-4 text-green-400">
-              Click "Get OcearoCore Analysis" above to generate AI-powered insights.
-            </p>
-          )}
+      {ocearoCoreEnabled && (
+        <div className="bg-oGray2 rounded-lg p-4 mb-4">
+          <h4 className="text-white font-medium mb-3">Analysis Options:</h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <button
+              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg transition-colors disabled:opacity-50 flex flex-col items-center"
+              onClick={getLogbookAnalysis}
+              disabled={analysisLoading}
+            >
+              <FontAwesomeIcon icon={faBook} className="mb-2" size="lg" />
+              <span className="text-sm font-medium">Logbook</span>
+            </button>
+            <button
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg transition-colors disabled:opacity-50 flex flex-col items-center"
+              onClick={() => getOcearoCoreAnalysis('weather')}
+              disabled={analysisLoading}
+            >
+              <FontAwesomeIcon icon={faCloudSun} className="mb-2" size="lg" />
+              <span className="text-sm font-medium">Weather</span>
+            </button>
+            <button
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg transition-colors disabled:opacity-50 flex flex-col items-center"
+              onClick={() => getOcearoCoreAnalysis('sail')}
+              disabled={analysisLoading}
+            >
+              <FontAwesomeIcon icon={faCompass} className="mb-2" size="lg" />
+              <span className="text-sm font-medium">Sail</span>
+            </button>
+            <button
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg transition-colors disabled:opacity-50 flex flex-col items-center"
+              onClick={() => getOcearoCoreAnalysis('alerts')}
+              disabled={analysisLoading}
+            >
+              <FontAwesomeIcon icon={faRobot} className="mb-2" size="lg" />
+              <span className="text-sm font-medium">Alerts</span>
+            </button>
+            <button
+              className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-3 rounded-lg transition-colors disabled:opacity-50 flex flex-col items-center"
+              onClick={() => getOcearoCoreAnalysis('status')}
+              disabled={analysisLoading}
+            >
+              <FontAwesomeIcon icon={faTachometerAlt} className="mb-2" size="lg" />
+              <span className="text-sm font-medium">Status</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+
+      {error && (
+        <div className="bg-red-900 text-red-400 p-3 rounded-lg mb-4">
+          {error}
+        </div>
+      )}
+
+      {/* Loading indicator with progress bar */}
+      {analysisLoading && (
+        <div className="bg-oGray2 rounded-lg p-6 mb-4">
+          <div className="text-center">
+            <FontAwesomeIcon icon={faRobot} size="3x" className="text-green-500 mb-4 animate-pulse" />
+            <h4 className="text-xl text-white mb-3">Analyzing {analysisType}...</h4>
+            <div className="w-full bg-gray-700 rounded-full h-2 mb-4">
+              <div className="bg-green-500 h-2 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+            </div>
+            <p className="text-gray-400 text-sm">Please wait while OcearoCore processes the data</p>
+          </div>
+        </div>
+      )}
+
+      {/* Analysis Results */}
+      {analysisResult && !analysisLoading && (
+        <div className="bg-oGray2 rounded-lg p-6 mb-4">
+          <div className="flex items-center mb-4">
+            <FontAwesomeIcon icon={faChartLine} className="text-green-500 mr-3" size="lg" />
+            <h4 className="text-xl text-white font-bold">Analysis Results: {analysisType}</h4>
+          </div>
+          
+          <div className="space-y-4">
+            {/* Display analysis text */}
+            {analysisResult.analysis && (
+              <div className="bg-oGray rounded-lg p-4">
+                <h5 className="text-white font-medium mb-2">Summary:</h5>
+                <p className="text-gray-300 whitespace-pre-wrap">{analysisResult.analysis}</p>
+              </div>
+            )}
+
+            {/* Display speech text if available */}
+            {analysisResult.speechText && (
+              <div className="bg-blue-900 bg-opacity-30 rounded-lg p-4 border border-blue-700">
+                <h5 className="text-blue-400 font-medium mb-2 flex items-center">
+                  <FontAwesomeIcon icon={faRobot} className="mr-2" />
+                  Spoken Analysis:
+                </h5>
+                <p className="text-gray-300 whitespace-pre-wrap">{analysisResult.speechText}</p>
+              </div>
+            )}
+
+            {/* Display raw data if available */}
+            {analysisResult.data && (
+              <div className="bg-oGray rounded-lg p-4">
+                <h5 className="text-white font-medium mb-2">Data:</h5>
+                <pre className="text-gray-300 text-xs overflow-auto">
+                  {JSON.stringify(analysisResult.data, null, 2)}
+                </pre>
+              </div>
+            )}
+
+            {/* Display timestamp */}
+            {analysisResult.timestamp && (
+              <div className="text-gray-500 text-sm text-right">
+                Generated: {new Date(analysisResult.timestamp).toLocaleString()}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Placeholder when no analysis */}
+      {!analysisResult && !analysisLoading && (
+        <div className="bg-oGray2 rounded-lg p-6">
+          <div className="text-center text-gray-400">
+            <FontAwesomeIcon icon={faChartLine} size="3x" className="mb-4" />
+            <h4 className="text-xl text-white mb-2">Analysis Results</h4>
+            <p>
+              This section will display detailed analysis of your logbook entries,
+              including route optimization, weather patterns, and performance metrics.
+            </p>
+            {ocearoCoreEnabled && (
+              <p className="mt-4 text-green-400">
+                Select an analysis option above to generate AI-powered insights.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
+
+  /**
+   * Render add/edit entry modal
+   */
+  const renderEntryModal = () => {
+    if (!showEntryModal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowEntryModal(false)}>
+        <div className="bg-oGray2 rounded-lg p-6 max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold text-white">
+              {selectedEntry ? 'Edit Entry' : 'Add Logbook Entry'}
+            </h3>
+            <button
+              onClick={() => setShowEntryModal(false)}
+              className="text-gray-400 hover:text-white"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-white mb-2">Author</label>
+              <input
+                type="text"
+                value={entryForm.author}
+                onChange={(e) => setEntryForm({ ...entryForm, author: e.target.value })}
+                className="w-full bg-oGray text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-green-500 focus:outline-none"
+                placeholder="Enter author name"
+              />
+            </div>
+
+            <div>
+              <label className="block text-white mb-2">Remarks</label>
+              <textarea
+                value={entryForm.text}
+                onChange={(e) => setEntryForm({ ...entryForm, text: e.target.value })}
+                className="w-full bg-oGray text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-green-500 focus:outline-none"
+                rows="4"
+                placeholder="Enter logbook entry remarks"
+              />
+            </div>
+
+            <div className="bg-oGray rounded-lg p-3">
+              <p className="text-gray-400 text-sm">
+                Current vessel data (position, course, speed, wind, etc.) will be automatically captured when you save this entry.
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowEntryModal(false)}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={addEntry}
+                disabled={loading || !entryForm.text.trim()}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                Save Entry
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col h-full rightPaneBg overflow-auto">
@@ -516,6 +774,9 @@ const LogbookView = () => {
         {!loading && activeTab === 'logbook' && renderLogbookTable()}
         {!loading && activeTab === 'analysis' && renderAnalysis()}
       </div>
+
+      {/* Entry Modal */}
+      {renderEntryModal()}
     </div>
   );
 };

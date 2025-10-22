@@ -1,4 +1,3 @@
-'use client';
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLeaf, faCompass, faCog, faExpand, faCompress } from '@fortawesome/free-solid-svg-icons';
@@ -19,6 +18,7 @@ import VisibilityWidget from './widgets/VisibilityWidget';
 import WeatherWidget from './widgets/WeatherWidget';
 import SpeedWidget from './widgets/SpeedWidget';
 import TimeWidget from './widgets/TimeWidget';
+import { AISProvider } from '../3dview/ais/AISContext';
 
 const WidgetWrapper = React.memo(({ children, widgetName, className = "", fullscreenWidget, toggleFullscreen }) => (
   <div className={`relative group ${className}`}>
@@ -138,7 +138,9 @@ export default function Dashboard() {
         toggleFullscreen={toggleFullscreen}
         className={fullscreenWidget && fullscreenWidget !== 'aisradar' ? 'hidden' : fullscreenWidget === 'aisradar' ? 'w-full h-full' : ''}
       >
-        <AISRadarWidget />
+        <AISProvider>
+          <AISRadarWidget />
+        </AISProvider>
       </WidgetWrapper>
       <WidgetWrapper 
         widgetName="time" 

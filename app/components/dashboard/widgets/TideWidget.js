@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useOcearoContext } from '../../context/OcearoContext';
+import configService from '../../settings/ConfigService';
 
 const computeIsRising = (currentTime, timeLow, timeHigh) => {
   if (!timeLow || !timeHigh) return false;
@@ -22,7 +23,9 @@ const computeIsRising = (currentTime, timeLow, timeHigh) => {
 
 export default function TideWidget() {
   const { getSignalKValue } = useOcearoContext();
+  const debugMode = configService.get('debugMode');
   const [tideData, setTideData] = useState({
+    hasData: false,
     level: 0,
     high: 0,
     low: 0,
@@ -54,13 +57,26 @@ export default function TideWidget() {
 
     if (isDataComplete) {
       setTideData({
+        hasData: true,
         ...newTideData,
         isRising: computeIsRising(currentTime, newTideData.timeLow, newTideData.timeHigh)
       });
+    } else if (!debugMode) {
+      setTideData({
+        hasData: false,
+        level: 0,
+        high: 0,
+        low: 0,
+        timeLow: '--:--',
+        timeHigh: '--:--',
+        coefficient: 0,
+        isRising: false
+      });
     }
-  }, [getSignalKValue]);
+  }, [getSignalKValue, debugMode]);
 
   const {
+    hasData,
     level,
     high,
     low,
@@ -117,6 +133,26 @@ export default function TideWidget() {
     // Convert to degrees (180 degrees represents the range from low to high)
     return percentage * 1.8;
   };
+
+  if (!hasData && !debugMode) {
+    return (
+      <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
+        <div className="flex items-center space-x-2 mb-4">
+          <svg className="w-6 h-6 text-oBlue" viewBox="0 0 24 24" fill="none">
+            <path d="M3 11h18M3 6h18M3 16h18M3 21h18" 
+                  stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          <span className="text-white font-medium text-lg">Tide Information</span>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
+            <div className="text-sm text-gray-500">No tide data available</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col min-h-0">

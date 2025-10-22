@@ -148,7 +148,7 @@ const BatteryIndicator = ({ batteryLevel, batteryNumber, voltage }) => {
  * Allows toggling between battery and tank views
  */
 const ThreeDBoatTankIndicator = () => {
-    const { nightMode, getSignalKValue } = useOcearoContext();
+    const { nightMode, getSignalKValue, getTankData } = useOcearoContext();
     const [displayMode, setDisplayMode] = useState(INDICATOR_TYPES.BATTERIES);
 
     // Fetch battery data
@@ -168,12 +168,18 @@ const ThreeDBoatTankIndicator = () => {
         ].filter(battery => battery.level !== null);
     }, [getSignalKValue]);
 
-    // Fetch tank data
-    const tankLevels = useMemo(() => ({
-        FRESH_WATER: getSignalKValue(TANK_TYPES.FRESH_WATER.path) || 40,
-        FUEL: getSignalKValue(TANK_TYPES.FUEL.path) || 75,
-        BLACK_WATER: getSignalKValue(TANK_TYPES.BLACK_WATER.path) || 20
-    }), [getSignalKValue]);
+    // Fetch tank data using centralized helper
+    const tankLevels = useMemo(() => {
+        const freshWater = getTankData('freshWater', 0);
+        const fuel = getTankData('fuel', 0);
+        const blackWater = getTankData('blackWater', 0);
+        
+        return {
+            FRESH_WATER: freshWater.currentLevel !== null ? freshWater.currentLevel * 100 : 40,
+            FUEL: fuel.currentLevel !== null ? fuel.currentLevel * 100 : 75,
+            BLACK_WATER: blackWater.currentLevel !== null ? blackWater.currentLevel * 100 : 20
+        };
+    }, [getTankData]);
 
     // Toggle between battery and tank display
     const toggleDisplayMode = () => {

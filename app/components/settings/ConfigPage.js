@@ -59,6 +59,7 @@ const ConfigPage = ({ onSave }) => {
                 updatedConfig.signalkUrl = computedSignalKUrl;
                 updatedConfig.username = '';
                 updatedConfig.password = '';
+                updatedConfig.useAuthentication = false;
             }
             // If turning on custom URL, keep the current URL (don't overwrite)
         } else if (!signalKUrlSet && !updates.hasOwnProperty('signalkUrl')) {
@@ -66,10 +67,16 @@ const ConfigPage = ({ onSave }) => {
             updatedConfig.signalkUrl = computedSignalKUrl;
             updatedConfig.username = '';
             updatedConfig.password = '';
-        } else if (!useAuthentication) {
-            // Keep URL but clear auth if authentication is disabled
-            updatedConfig.username = '';
-            updatedConfig.password = '';
+        }
+        
+        // Handle authentication toggle separately
+        if (updates.hasOwnProperty('useAuthentication')) {
+            updatedConfig.useAuthentication = updates.useAuthentication;
+            if (!updates.useAuthentication) {
+                // Clear auth credentials when authentication is disabled
+                updatedConfig.username = '';
+                updatedConfig.password = '';
+            }
         }
         
         // Save the config
@@ -354,10 +361,14 @@ const ConfigPage = ({ onSave }) => {
                                 type="checkbox"
                                 className="mr-2"
                                 checked={config.debugMode || false}
-                                onChange={(e) => updateConfig({
-                                    debugMode: e.target.checked,
-                                    signalkUrl: computedSignalKUrl
-                                })}
+                                onChange={(e) => {
+                                    const updates = { debugMode: e.target.checked };
+                                    // Only update SignalK URL if it's not manually set
+                                    if (!signalKUrlSet && e.target.checked) {
+                                        updates.signalkUrl = 'https://demo.signalk.org:443';
+                                    }
+                                    updateConfig(updates);
+                                }}
                             />
                             Debug Mode
                         </label>

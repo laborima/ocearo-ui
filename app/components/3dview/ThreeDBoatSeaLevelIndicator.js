@@ -19,7 +19,7 @@ const TEXT_COLORS = {
 };
 
 const ThreeDBoatSeaLevelIndicator = () => {
-  const { nightMode, getSignalKValue } = useOcearoContext();
+  const { nightMode, getDepthData } = useOcearoContext();
   const [depth, setDepth] = useState(null);
   const [barHeight, setBarHeight] = useState(240); // Default height (equivalent to h-60)
 
@@ -41,11 +41,12 @@ const ThreeDBoatSeaLevelIndicator = () => {
     return () => window.removeEventListener('resize', updateBarHeight);
   }, []);
 
-  // Fetch depth data from SignalK
+  // Fetch depth data from SignalK using common helper
   useEffect(() => {
-    const rawDepth = getSignalKValue('environment.depth.belowTransducer');
-    setDepth(rawDepth !== undefined && rawDepth !== null ? Number(rawDepth.toFixed(1)) : null);
-  }, [getSignalKValue]);
+    const depthData = getDepthData();
+    // Use belowKeel which already has fallback to belowTransducer
+    setDepth(depthData.belowKeel);
+  }, [getDepthData]);
 
   // Calculate depth percentage for progress bar
   const depthPercentage = useMemo(() => {

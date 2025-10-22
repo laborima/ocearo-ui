@@ -154,6 +154,8 @@ const SAMPLE_DATA = {
         'electrical.batteries.1.manufacturer.URL': 'https://www.varta-automotive.com',
         'electrical.batteries.1.dateInstalled': '2020-06-15T00:00:00Z',
         'electrical.batteries.1.associatedBus': 'House Bus',
+        'electrical.batteries.1.voltage': 12.6,
+        'electrical.batteries.1.current': -2.3,
 
         // Engine battery - VARTA E11 Blue Dynamic
         'electrical.batteries.0.name': 'Engine Start Battery',
@@ -166,10 +168,65 @@ const SAMPLE_DATA = {
         'electrical.batteries.0.manufacturer.URL': 'https://www.varta-automotive.com',
         'electrical.batteries.0.dateInstalled': '2022-04-10T00:00:00Z',
         'electrical.batteries.0.associatedBus': 'Start Bus',
+        'electrical.batteries.0.voltage': 12.4,
+        'electrical.batteries.0.current': 0.1,
+
+        // Alternators
+        'electrical.alternators.0.voltage': 14.2,
+        'electrical.alternators.0.current': 35.5,
 
         // Switches and systems status
         'navigation.lights': false,
         'steering.autopilot.state': 'auto', // 'auto' or 'standby'
+    },
+    propulsion: {
+        // Main Engine (instance 0) - Comprehensive data
+        'propulsion.0.revolutions': 25, // 25 Hz = 1500 RPM
+        'propulsion.0.runTime': 125000, // ~34.7 hours in seconds
+        'propulsion.0.coolantTemperature': 353.15, // 80°C in Kelvin
+        'propulsion.0.coolantPressure': 180000, // 1.8 bar in Pascals
+        'propulsion.0.oilPressure': 350000, // 3.5 bar in Pascals
+        'propulsion.0.oilTemperature': 363.15, // 90°C in Kelvin
+        'propulsion.0.exhaustTemperature': 623.15, // 350°C in Kelvin
+        'propulsion.0.intakeManifoldTemperature': 313.15, // 40°C in Kelvin
+        'propulsion.0.boostPressure': 150000, // 1.5 bar in Pascals
+        'propulsion.0.load': 0.45, // 45% load
+        'propulsion.0.torque': 0.52, // 52% torque
+        'propulsion.0.state': 'started',
+        'propulsion.0.fuel.rate': 0.000002778, // 10 L/h in m³/s (10 / (1000 * 3600))
+        'propulsion.0.fuel.pressure': 280000, // 2.8 bar in Pascals
+        'propulsion.0.fuel.economyRate': 0.45, // L/NM
+        'propulsion.0.transmission.gear': 1, // Forward gear
+        'propulsion.0.transmission.oilPressure': 320000, // 3.2 bar in Pascals
+        'propulsion.0.transmission.oilTemperature': 343.15, // 70°C in Kelvin
+        'propulsion.0.tilt': 0, // Neutral tilt in radians
+        
+        // Starboard Engine (instance 1) - For dual engine setups
+        'propulsion.1.revolutions': 26, // 26 Hz = 1560 RPM
+        'propulsion.1.runTime': 128000, // ~35.5 hours in seconds
+        'propulsion.1.coolantTemperature': 355.15, // 82°C in Kelvin
+        'propulsion.1.coolantPressure': 185000, // 1.85 bar in Pascals
+        'propulsion.1.oilPressure': 360000, // 3.6 bar in Pascals
+        'propulsion.1.oilTemperature': 365.15, // 92°C in Kelvin
+        'propulsion.1.exhaustTemperature': 633.15, // 360°C in Kelvin
+        'propulsion.1.intakeManifoldTemperature': 315.15, // 42°C in Kelvin
+        'propulsion.1.boostPressure': 155000, // 1.55 bar in Pascals
+        'propulsion.1.load': 0.48, // 48% load
+        'propulsion.1.torque': 0.54, // 54% torque
+        'propulsion.1.state': 'started',
+        'propulsion.1.fuel.rate': 0.000002917, // 10.5 L/h in m³/s
+        'propulsion.1.fuel.pressure': 285000, // 2.85 bar in Pascals
+        'propulsion.1.transmission.gear': 1, // Forward gear
+        'propulsion.1.transmission.oilPressure': 325000, // 3.25 bar in Pascals
+        'propulsion.1.transmission.oilTemperature': 345.15, // 72°C in Kelvin
+        'propulsion.1.tilt': 0, // Neutral tilt in radians
+    },
+    tanks: {
+        // Fuel tanks
+        'tanks.fuel.0.currentLevel': 0.75, // 75% full
+        'tanks.fuel.0.capacity': 200, // 200 liters
+        'tanks.fuel.0.currentVolume': 150, // 150 liters
+        'tanks.fuel.0.type': 'fuel',
     },
 };
 
@@ -186,7 +243,111 @@ export const OcearoContextProvider = ({ children }) => {
      * @returns {*} - The value at the specified path, or null if not found
      */
     const getSignalKValue = (path) => {
-        return signalkData[path] || null;
+        if (Object.prototype.hasOwnProperty.call(signalkData, path)) {
+            return signalkData[path];
+        }
+        return null;
+    };
+    
+    /**
+     * Get depth data with automatic fallback from multiple SignalK paths
+     * 
+     * This helper centralizes depth data retrieval and provides intelligent fallbacks
+     * between different depth measurement types commonly used in marine systems.
+     * 
+     * SignalK paths checked (in priority order):
+     * - environment.depth.belowKeel (preferred for navigation)
+     * - environment.depth.belowSurface (total water depth)
+     * - environment.depth.belowTransducer (raw sensor reading)
+     * 
+     * Fallback logic:
+     * - belowKeel: Uses belowKeel if available, otherwise falls back to belowTransducer
+     * - belowSurface: Uses belowSurface if available, otherwise estimates from belowTransducer + 1.5m offset
+     * - belowTransducer: Returns raw transducer reading if available
+     * 
+     * @returns {Object} Depth measurements in meters (rounded to 1 decimal)
+     * @returns {number|null} return.belowKeel - Depth below keel (safe navigation depth)
+     * @returns {number|null} return.belowSurface - Depth below water surface (total depth)
+     * @returns {number|null} return.belowTransducer - Depth from transducer sensor
+     */
+    const getDepthData = () => {
+        const depthKeel = getSignalKValue('environment.depth.belowKeel');
+        const depthSurface = getSignalKValue('environment.depth.belowSurface');
+        const depthTransducer = getSignalKValue('environment.depth.belowTransducer');
+        
+        // Use belowKeel if available, otherwise fallback to belowTransducer
+        const keel = depthKeel ?? depthTransducer ?? null;
+        
+        // Use belowSurface if available, otherwise calculate from transducer
+        // Typical offset is ~1.5m (transducer to waterline)
+        const surface = depthSurface ?? (depthTransducer !== null ? depthTransducer + 1.5 : null) ?? null;
+        
+        return {
+            belowKeel: keel !== null ? Math.round(keel * 10) / 10 : null,
+            belowSurface: surface !== null ? Math.round(surface * 10) / 10 : null,
+            belowTransducer: depthTransducer !== null ? Math.round(depthTransducer * 10) / 10 : null
+        };
+    };
+    
+    /**
+     * Get tank data with automatic fallback from multiple SignalK path formats
+     * 
+     * This helper centralizes tank data retrieval and provides intelligent fallbacks
+     * between different tank instance naming conventions (numeric vs named).
+     * 
+     * SignalK standard format: tanks.<type>.<instance>.<property>
+     * 
+     * Tank types: fuel, freshWater, wasteWater, blackWater, lubrication, liveWell, baitWell
+     * 
+     * Fallback logic for each tank type:
+     * - First tries numeric instance (0, 1, 2, etc.) - SignalK standard
+     * - Then tries named instance ('main', 'port', 'starboard') - non-standard fallback
+     * 
+     * @param {string} tankType - Tank type ('fuel', 'freshWater', 'wasteWater', 'blackWater', 'lubrication', etc.)
+     * @param {number|string} [instance=0] - Tank instance (number or name like 'main', 'port', 'starboard')
+     * @returns {Object} Complete tank data object
+     * @returns {string|null} return.name - Tank name
+     * @returns {string|null} return.type - Tank type (petrol, diesel, fresh water, greywater, blackwater, etc.)
+     * @returns {number|null} return.capacity - Tank capacity in cubic meters (m³)
+     * @returns {number|null} return.currentLevel - Current level as ratio (0.0 to 1.0)
+     * @returns {number|null} return.currentVolume - Current volume in cubic meters (m³)
+     * @returns {number|null} return.pressure - Pressure in Pascals (Pa)
+     * @returns {number|null} return.temperature - Temperature in Kelvin (K)
+     */
+    const getTankData = (tankType, instance = 0) => {
+        // Helper to get property with fallback
+        const getProperty = (property) => {
+            // Try numeric instance first (SignalK standard)
+            let value = getSignalKValue(`tanks.${tankType}.${instance}.${property}`);
+            
+            // Fallback to named instances if not found and instance is 0
+            if (value === null && instance === 0) {
+                value = getSignalKValue(`tanks.${tankType}.main.${property}`) 
+                     ?? getSignalKValue(`tanks.${tankType}.port.${property}`);
+            } else if (value === null && instance === 1) {
+                value = getSignalKValue(`tanks.${tankType}.starboard.${property}`);
+            }
+            
+            return value;
+        };
+        
+        const currentLevel = getProperty('currentLevel');
+        const currentVolume = getProperty('currentVolume');
+        const capacity = getProperty('capacity');
+        
+        return {
+            name: getProperty('name'),
+            type: getProperty('type'),
+            capacity: capacity,
+            currentLevel: currentLevel !== null ? Math.round(currentLevel * 1000) / 1000 : null,
+            currentVolume: currentVolume,
+            pressure: getProperty('pressure'),
+            temperature: getProperty('temperature'),
+            // Calculate volume from level if not provided
+            calculatedVolume: (currentLevel !== null && capacity !== null) 
+                ? Math.round(currentLevel * capacity * 1000) / 1000 
+                : null
+        };
     };
     
     /**
@@ -379,6 +540,8 @@ export const OcearoContextProvider = ({ children }) => {
                         ...SAMPLE_DATA.navigation,
                         ...SAMPLE_DATA.racing,
                         ...SAMPLE_DATA.electrical,
+                        ...SAMPLE_DATA.propulsion,
+                        ...SAMPLE_DATA.tanks,
                       }));
                 }, SAMPLE_DATA_INTERVAL);
             };
@@ -542,6 +705,8 @@ export const OcearoContextProvider = ({ children }) => {
             <OcearoContext.Provider
                 value={{
                     getSignalKValue,
+                    getDepthData,
+                    getTankData,
                     getBoatRotationAngle,
                     convertLatLonToXY,
                     nightMode,

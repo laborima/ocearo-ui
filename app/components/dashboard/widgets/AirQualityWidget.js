@@ -1,6 +1,7 @@
 'use client';
 import React, { useMemo } from 'react';
 import { useOcearoContext } from '../../context/OcearoContext';
+import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWind } from '@fortawesome/free-solid-svg-icons';
 
@@ -19,16 +20,24 @@ const AIR_QUALITY_CONFIG = {
 
 export default function AirQualityWidget() {
   const { getSignalKValue } = useOcearoContext();
+  const debugMode = configService.get('debugMode');
   
-  const { co2, pm25 } = useMemo(() => {
+  const airQualityData = useMemo(() => {
     const co2Value = getSignalKValue(AIR_QUALITY_CONFIG.co2.path);
     const pm25Value = getSignalKValue(AIR_QUALITY_CONFIG.pm25.path);
+
+    const hasData = co2Value !== null || pm25Value !== null;
+
+    if (!hasData && !debugMode) {
+      return { hasData: false };
+    }
     
     return {
-      co2: co2Value !== null ? AIR_QUALITY_CONFIG.co2.transform(co2Value) : 420,
-      pm25: pm25Value !== null ? AIR_QUALITY_CONFIG.pm25.transform(pm25Value) : 12
+      hasData: true,
+      co2: co2Value !== null ? AIR_QUALITY_CONFIG.co2.transform(co2Value) : (debugMode ? 420 : null),
+      pm25: pm25Value !== null ? AIR_QUALITY_CONFIG.pm25.transform(pm25Value) : (debugMode ? 12 : null)
     };
-  }, [getSignalKValue]);
+  }, [getSignalKValue, debugMode]);
   
   const getAirQualityInfo = (co2Level) => {
     if (co2Level <= 800) return { level: 'Good', color: 'text-oGreen', bg: 'bg-green-900' };
@@ -38,7 +47,25 @@ export default function AirQualityWidget() {
     return { level: 'Hazardous', color: 'text-red-300', bg: 'bg-red-900' };
   };
 
-  const airQualityInfo = getAirQualityInfo(co2);
+  if (!airQualityData.hasData) {
+    return (
+      <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
+        <div className="flex items-center space-x-2 mb-4">
+          <FontAwesomeIcon icon={faWind} className="text-oBlue" />
+          <span className="text-white font-medium">Air Quality</span>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
+            <div className="text-sm text-gray-500">No air quality data available</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const { co2, pm25 } = airQualityData;
+  const airQualityInfo = co2 !== null ? getAirQualityInfo(co2) : { level: 'Unknown', color: 'text-gray-500', bg: 'bg-gray-700' };
 
   return (
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
@@ -53,7 +80,7 @@ export default function AirQualityWidget() {
         {/* CO2 Level */}
         <div className="text-center">
           <div className={`text-3xl font-bold ${airQualityInfo.color}`}>
-            {co2}
+            {co2 !== null ? co2 : 'N/A'}
           </div>
           <div className="text-gray-400 text-sm">CO₂ (ppm)</div>
           
@@ -61,7 +88,7 @@ export default function AirQualityWidget() {
           <div className="w-full bg-oGray rounded-full h-2 mt-2">
             <div 
               className="bg-oBlue h-2 rounded-full transition-all duration-500"
-              style={{ width: `${Math.min((co2 / 2000) * 100, 100)}%` }}
+              style={{ width: `${co2 !== null ? Math.min((co2 / 2000) * 100, 100) : 0}%` }}
             ></div>
           </div>
         </div>
@@ -78,7 +105,7 @@ export default function AirQualityWidget() {
         {/* PM2.5 Level */}
         <div className="text-center">
           <div className="text-xl font-bold text-white">
-            {pm25}
+            {pm25 !== null ? pm25 : 'N/A'}
           </div>
           <div className="text-gray-400 text-xs">PM2.5 (µg/m³)</div>
         </div>

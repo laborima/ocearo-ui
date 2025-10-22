@@ -11,9 +11,13 @@ import configService from '../settings/ConfigService';
 const getOcearoCoreConfig = () => {
   const config = configService.getAll();
   return {
-    enabled: config.ocearoCoreEnabled || false,
-    baseUrl: config.signalkUrl || 'http://localhost:3000',
-    timeout: 10000 // 10 second timeout
+    enabled: config.ocearoCoreEnabled || true,
+    baseUrl: (typeof configService.getComputedSignalKUrl === 'function')
+      ? configService.getComputedSignalKUrl()
+      : (config.signalkUrl || 'http://localhost:3000'),
+    timeout: 10000, // 10 second timeout
+    username: config.username || '',
+    password: config.password || ''
   };
 };
 
@@ -40,13 +44,30 @@ const makeOcearoCoreApiCall = async (endpoint, options = {}) => {
 
   try {
     const url = `${config.baseUrl}/plugins/ocearo-core${endpoint}`;
-    
+
+    // Build headers with optional Basic Auth if username is provided
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers
+    };
+
+    if (config.username) {
+      try {
+        // btoa is available in browsers; guard in case of environment issues
+        const token = typeof btoa === 'function'
+          ? btoa(`${config.username}:${config.password || ''}`)
+          : Buffer.from(`${config.username}:${config.password || ''}`).toString('base64');
+        headers['Authorization'] = `Basic ${token}`;
+      } catch (_) {
+        // If encoding fails, skip adding the header
+      }
+    }
+
     const response = await fetch(url, {
       signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      },
+      headers,
+      // Include credentials so cookies/session are sent when same-origin
+      credentials: 'include',
       ...options
     });
 
@@ -313,19 +334,26 @@ export const handleOcearoCoreError = (error, context = 'OcearoCore operation') =
     return 'OcearoCore service is not responding (timeout)';
   }
   
+  // Check for logbook-specific errors
+  if (error.message.includes('Logbook service unavailable') || 
+      error.message.includes('Logbook plugin not installed') ||
+      error.message.includes('Logbook server not available')) {
+    return 'SignalK-Logbook plugin is not installed. Please install it from the SignalK App Store to use logbook features.';
+  }
+  
   if (error.message.includes('503')) {
-    return 'OcearoCore service is not available';
+    return 'Service temporarily unavailable. Please try again later.';
   }
   
   if (error.message.includes('404')) {
-    return 'OcearoCore feature not found or not installed';
+    return 'Feature not found or not installed';
   }
   
   if (error.message.includes('500')) {
-    return 'OcearoCore internal server error';
+    return 'Internal server error. Check server logs for details.';
   }
   
-  return error.message || 'Unknown OcearoCore error occurred';
+  return error.message || 'Unknown error occurred';
 };
 
 /**
@@ -369,7 +397,7 @@ export const checkOcearoCoreHealth = async () => {
   }
 };
 
-export default {
+const OcearoCoreUtils = {
   // Core functions
   isOcearoCoreEnabled,
   getOcearoCoreStatus,
@@ -401,3 +429,5 @@ export default {
   batchOcearoCoreOperations,
   checkOcearoCoreHealth
 };
+
+export default OcearoCoreUtils;

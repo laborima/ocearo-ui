@@ -1,6 +1,7 @@
 'use client';
 import React, { useMemo } from 'react';
 import { useOcearoContext } from '../../context/OcearoContext';
+import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSun } from '@fortawesome/free-solid-svg-icons';
 
@@ -11,11 +12,22 @@ const UV_CONFIG = {
 
 export default function UVIndexWidget() {
   const { getSignalKValue } = useOcearoContext();
+  const debugMode = configService.get('debugMode');
   
-  const uvIndex = useMemo(() => {
+  const uvData = useMemo(() => {
     const value = getSignalKValue(UV_CONFIG.path);
-    return value !== null ? UV_CONFIG.transform(value) : '3.2';
-  }, [getSignalKValue]);
+
+    const hasData = value !== null;
+
+    if (!hasData && !debugMode) {
+      return { hasData: false };
+    }
+
+    return {
+      hasData: true,
+      uvIndex: value !== null ? UV_CONFIG.transform(value) : (debugMode ? '3.2' : null)
+    };
+  }, [getSignalKValue, debugMode]);
 
   // Determine UV risk level and color
   const getUVInfo = (uv) => {
@@ -36,7 +48,25 @@ export default function UVIndexWidget() {
     return 'text-purple-400';
   };
 
-  const uvInfo = getUVInfo(uvIndex);
+  if (!uvData.hasData) {
+    return (
+      <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
+        <div className="flex items-center space-x-2 mb-4">
+          <FontAwesomeIcon icon={faSun} className="text-oBlue text-lg" />
+          <span className="text-white font-medium text-lg">UV Index</span>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
+            <div className="text-sm text-gray-500">No UV index data available</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const { uvIndex } = uvData;
+  const uvInfo = uvIndex !== null ? getUVInfo(uvIndex) : { level: 'Unknown', color: 'text-gray-500', bg: 'bg-gray-700' };
 
   return (
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
@@ -51,9 +81,9 @@ export default function UVIndexWidget() {
         {/* Main UV display */}
         <div className="text-center mb-6">
           <div className="text-5xl font-bold text-white mb-2">
-            {uvIndex}
+            {uvIndex !== null ? uvIndex : 'N/A'}
           </div>
-          <div className={`text-base font-medium ${getUVColor(uvIndex)}`}>
+          <div className={`text-base font-medium ${uvIndex !== null ? getUVColor(uvIndex) : 'text-gray-500'}`}>
             {uvInfo.level}
           </div>
         </div>

@@ -125,13 +125,15 @@ const TimeWidget = React.memo(() => {
 
         {/* Position info */}
         <div className="space-y-2">
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-400">Latitude:</span>
-            <span className="text-white font-mono">{latDeg}°</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-400">Longitude:</span>
-            <span className="text-white font-mono">{lonDeg}°</span>
+          <div className="flex flex-wrap justify-between text-xs gap-y-1">
+            <div className="flex items-center space-x-2">
+              <span className="text-gray-400">Latitude:</span>
+              <span className="text-white font-mono">{latDeg}°</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-gray-400">Longitude:</span>
+              <span className="text-white font-mono">{lonDeg}°</span>
+            </div>
           </div>
           <div className="flex justify-between text-xs">
             <span className="text-gray-400">Timezone:</span>

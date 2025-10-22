@@ -1,20 +1,31 @@
 'use client';
 import React, { useMemo } from 'react';
 import { useOcearoContext } from '../../context/OcearoContext';
+import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faFog, faSun, faCloud } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faSmog, faSun, faCloud } from '@fortawesome/free-solid-svg-icons';
 
 export default function VisibilityWidget() {
   const { getSignalKValue } = useOcearoContext();
+  const debugMode = configService.get('debugMode');
   
   const visibilityData = useMemo(() => {
-    const visibility = getSignalKValue('environment.outside.visibility') || 8000; // meters
+    const visibility = getSignalKValue('environment.outside.visibility');
+
+    const hasData = visibility !== null;
+
+    if (!hasData && !debugMode) {
+      return { hasData: false };
+    }
+
+    const visValue = visibility || (debugMode ? 8000 : null);
      
     return {
-      distance: Math.round(visibility / 100) / 10, // km with 1 decimal
-      distanceNM: Math.round((visibility / 1852) * 10) / 10 // nautical miles
+      hasData: true,
+      distance: visValue !== null ? Math.round(visValue / 100) / 10 : null,
+      distanceNM: visValue !== null ? Math.round((visValue / 1852) * 10) / 10 : null
     };
-  }, [getSignalKValue]);
+  }, [getSignalKValue, debugMode]);
 
   const getVisibilityStatus = (distance) => {
     if (distance < 1) return 'Dense Fog';
@@ -34,7 +45,7 @@ export default function VisibilityWidget() {
   };
 
   const getVisibilityIcon = (distance) => {
-    if (distance < 2) return faFog;
+    if (distance < 2) return faSmog;
     if (distance < 10) return faCloud;
     return faSun;
   };
@@ -51,6 +62,23 @@ export default function VisibilityWidget() {
     if (distance < 40) return 'Clear';
     return 'Very clear';
   };
+
+  if (!visibilityData.hasData) {
+    return (
+      <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
+        <div className="flex items-center space-x-2 mb-4">
+          <FontAwesomeIcon icon={faEye} className="text-oBlue text-lg" />
+          <span className="text-white font-medium text-lg">Visibility</span>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
+            <div className="text-sm text-gray-500">No visibility data available</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
