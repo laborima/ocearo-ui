@@ -11,8 +11,12 @@ const UV_CONFIG = {
 };
 
 export default function UVIndexWidget() {
-  const { getSignalKValue } = useOcearoContext();
+  const { getSignalKValue, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
+  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
+  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
+  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
   
   const uvData = useMemo(() => {
     const value = getSignalKValue(UV_CONFIG.path);
@@ -52,13 +56,13 @@ export default function UVIndexWidget() {
     return (
       <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
         <div className="flex items-center space-x-2 mb-4">
-          <FontAwesomeIcon icon={faSun} className="text-oBlue text-lg" />
-          <span className="text-white font-medium text-lg">UV Index</span>
+          <FontAwesomeIcon icon={faSun} className={`${accentIconClass} text-lg`} />
+          <span className={`${primaryTextClass} font-medium text-lg`}>UV Index</span>
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className="text-sm text-gray-500">No UV index data available</div>
+            <div className={`text-sm ${mutedTextClass}`}>No UV index data available</div>
           </div>
         </div>
       </div>
@@ -72,18 +76,18 @@ export default function UVIndexWidget() {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faSun} className="text-oBlue text-lg" />
-        <span className="text-white font-medium text-lg">UV Index</span>
+        <FontAwesomeIcon icon={faSun} className={`${accentIconClass} text-lg`} />
+        <span className={`${primaryTextClass} font-medium text-lg`}>UV Index</span>
       </div>
       
       {/* Content */}
       <div className="flex-1 flex flex-col justify-center items-center">
         {/* Main UV display */}
         <div className="text-center mb-6">
-          <div className="text-5xl font-bold text-white mb-2">
+          <div className={`text-5xl font-bold ${primaryTextClass} mb-2`}>
             {uvIndex !== null ? uvIndex : 'N/A'}
           </div>
-          <div className={`text-base font-medium ${uvIndex !== null ? getUVColor(uvIndex) : 'text-gray-500'}`}>
+          <div className={`text-base font-medium ${uvIndex !== null ? getUVColor(uvIndex) : mutedTextClass}`}>
             {uvInfo.level}
           </div>
         </div>
@@ -104,7 +108,7 @@ export default function UVIndexWidget() {
             <div className="flex-1 bg-red-500"></div>
             <div className="flex-1 bg-purple-500"></div>
           </div>
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
+          <div className={`flex justify-between text-xs ${secondaryTextClass} mt-1`}>
             <span>0</span>
             <span>2</span>
             <span>5</span>

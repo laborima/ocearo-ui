@@ -58,6 +58,10 @@ Additional visuals enhance the system's functionality:
 ![Other Views](docs/webcam.png)
 ![Other Views](docs/battery.png)
 ![Other Views](docs/performances.png)
+![Other Views](docs/dashboard1.png)
+![Other Views](docs/dashboard2.png)
+![Other Views](docs/dashboard3.png)
+![Other Views](docs/engine.png)
 
 ---
 

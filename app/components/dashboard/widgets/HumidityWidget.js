@@ -17,8 +17,12 @@ const HUMIDITY_CONFIG = {
 };
 
 export default function HumidityWidget() {
-  const { getSignalKValue } = useOcearoContext();
+  const { getSignalKValue, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
+  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
+  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
+  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
   
   const humidityData = useMemo(() => {
     const humidityValue = getSignalKValue(HUMIDITY_CONFIG.humidity.path);
@@ -61,13 +65,13 @@ export default function HumidityWidget() {
     return (
       <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
         <div className="flex items-center space-x-2 mb-4">
-          <FontAwesomeIcon icon={faTint} className="text-oBlue text-lg" />
-          <span className="text-white font-medium text-lg">Humidity</span>
+          <FontAwesomeIcon icon={faTint} className={`${accentIconClass} text-lg`} />
+          <span className={`${primaryTextClass} font-medium text-lg`}>Humidity</span>
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className="text-sm text-gray-500">No humidity data available</div>
+            <div className={`text-sm ${mutedTextClass}`}>No humidity data available</div>
           </div>
         </div>
       </div>
@@ -80,18 +84,18 @@ export default function HumidityWidget() {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faTint} className="text-oBlue text-lg" />
-        <span className="text-white font-medium text-lg">Humidity</span>
+        <FontAwesomeIcon icon={faTint} className={`${accentIconClass} text-lg`} />
+        <span className={`${primaryTextClass} font-medium text-lg`}>Humidity</span>
       </div>
       
       {/* Content */}
       <div className="flex-1 flex flex-col justify-center">
         {/* Main humidity display */}
         <div className="text-center mb-6">
-          <div className="text-5xl font-bold text-white mb-2">
+          <div className={`text-5xl font-bold ${primaryTextClass} mb-2`}>
             {humidity !== null ? `${humidity}%` : 'N/A'}
           </div>
-          <div className={`text-base font-medium ${humidity !== null ? getHumidityColor(humidity) : 'text-gray-500'}`}>
+          <div className={`text-base font-medium ${humidity !== null ? getHumidityColor(humidity) : mutedTextClass}`}>
             {humidity !== null ? getHumidityStatus(humidity) : 'Unknown'}
           </div>
         </div>
@@ -104,7 +108,7 @@ export default function HumidityWidget() {
               style={{ width: `${humidityPercentage !== null ? humidityPercentage : 0}%` }}
             ></div>
           </div>
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
+          <div className={`flex justify-between text-xs ${secondaryTextClass} mt-1`}>
             <span>0%</span>
             <span>50%</span>
             <span>100%</span>
@@ -113,9 +117,9 @@ export default function HumidityWidget() {
 
         {/* Dew point */}
         <div className="flex items-center justify-center space-x-2 text-sm">
-          <FontAwesomeIcon icon={faThermometerHalf} className="text-oBlue" />
-          <span className="text-gray-400">Dew Point:</span>
-          <span className="text-white font-medium">{dewPointCelsius !== null ? `${dewPointCelsius}°C` : 'N/A'}</span>
+          <FontAwesomeIcon icon={faThermometerHalf} className={accentIconClass} />
+          <span className={`${secondaryTextClass}`}>Dew Point:</span>
+          <span className={`${primaryTextClass} font-medium`}>{dewPointCelsius !== null ? `${dewPointCelsius}°C` : 'N/A'}</span>
         </div>
       </div>
     </div>

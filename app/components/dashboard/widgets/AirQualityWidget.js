@@ -19,9 +19,13 @@ const AIR_QUALITY_CONFIG = {
 };
 
 export default function AirQualityWidget() {
-  const { getSignalKValue } = useOcearoContext();
+  const { getSignalKValue, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
-  
+  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
+  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
+  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
+
   const airQualityData = useMemo(() => {
     const co2Value = getSignalKValue(AIR_QUALITY_CONFIG.co2.path);
     const pm25Value = getSignalKValue(AIR_QUALITY_CONFIG.pm25.path);
@@ -51,13 +55,13 @@ export default function AirQualityWidget() {
     return (
       <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
         <div className="flex items-center space-x-2 mb-4">
-          <FontAwesomeIcon icon={faWind} className="text-oBlue" />
-          <span className="text-white font-medium">Air Quality</span>
+          <FontAwesomeIcon icon={faWind} className={accentIconClass} />
+          <span className={`${primaryTextClass} font-medium`}>Air Quality</span>
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className="text-sm text-gray-500">No air quality data available</div>
+            <div className={`text-sm ${mutedTextClass}`}>No air quality data available</div>
           </div>
         </div>
       </div>
@@ -71,8 +75,8 @@ export default function AirQualityWidget() {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faWind} className="text-oBlue" />
-        <span className="text-white font-medium">Air Quality</span>
+        <FontAwesomeIcon icon={faWind} className={accentIconClass} />
+        <span className={`${primaryTextClass} font-medium`}>Air Quality</span>
       </div>
       
       {/* Content */}
@@ -82,7 +86,7 @@ export default function AirQualityWidget() {
           <div className={`text-3xl font-bold ${airQualityInfo.color}`}>
             {co2 !== null ? co2 : 'N/A'}
           </div>
-          <div className="text-gray-400 text-sm">CO₂ (ppm)</div>
+          <div className={`${secondaryTextClass} text-sm`}>CO₂ (ppm)</div>
           
           {/* CO2 Progress bar */}
           <div className="w-full bg-oGray rounded-full h-2 mt-2">
@@ -104,14 +108,14 @@ export default function AirQualityWidget() {
 
         {/* PM2.5 Level */}
         <div className="text-center">
-          <div className="text-xl font-bold text-white">
+          <div className={`text-xl font-bold ${primaryTextClass}`}>
             {pm25 !== null ? pm25 : 'N/A'}
           </div>
-          <div className="text-gray-400 text-xs">PM2.5 (µg/m³)</div>
+          <div className={`${secondaryTextClass} text-xs`}>PM2.5 (µg/m³)</div>
         </div>
 
         {/* Reference scale */}
-        <div className="text-center text-xs text-gray-400">
+        <div className={`text-center text-xs ${secondaryTextClass}`}>
           <div>Good: &lt;800 ppm</div>
           <div>Moderate: 800-1000 ppm</div>
         </div>

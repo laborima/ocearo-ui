@@ -51,7 +51,7 @@ const RendererExposer = () => {
 };
 
 const ThreeDMainView = () => {
-    const { states } = useOcearoContext(); // Access global context
+    const { states, nightMode } = useOcearoContext(); // Access global context
     const [infoPanelContent, setInfoPanelContent] = useState(null);
     const [showAttitudeIndicator, setShowAttitudeIndicator] = useState(true);
     
@@ -84,7 +84,9 @@ const ThreeDMainView = () => {
                 </div>
               
                 <div className="flex items-center">
-                    <span className="text-white mr-2 align-top">{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    <span className={`${nightMode ? 'text-oNight' : 'text-white'} align-top`}>
+                        {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </span>
                     <ThreeDBoatThanksIndicator />
                 </div>
                 {/* Only render the attitude indicator if showAttitudeIndicator is true */}

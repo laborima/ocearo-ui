@@ -22,8 +22,13 @@ const computeIsRising = (currentTime, timeLow, timeHigh) => {
 };
 
 export default function TideWidget() {
-  const { getSignalKValue } = useOcearoContext();
+  const { getSignalKValue, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
+  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
+  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
+  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
+  const svgLabelClass = nightMode ? 'text-oNight' : 'text-black';
   const [tideData, setTideData] = useState({
     hasData: false,
     level: 0,
@@ -138,16 +143,16 @@ export default function TideWidget() {
     return (
       <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
         <div className="flex items-center space-x-2 mb-4">
-          <svg className="w-6 h-6 text-oBlue" viewBox="0 0 24 24" fill="none">
+          <svg className={`w-6 h-6 ${accentIconClass}`} viewBox="0 0 24 24" fill="none">
             <path d="M3 11h18M3 6h18M3 16h18M3 21h18" 
                   stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
-          <span className="text-white font-medium text-lg">Tide Information</span>
+          <span className={`${primaryTextClass} font-medium text-lg`}>Tide Information</span>
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className="text-sm text-gray-500">No tide data available</div>
+            <div className={`text-sm ${mutedTextClass}`}>No tide data available</div>
           </div>
         </div>
       </div>
@@ -158,11 +163,11 @@ export default function TideWidget() {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col min-h-0">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <svg className="w-6 h-6 text-oBlue" viewBox="0 0 24 24" fill="none">
+        <svg className={`w-6 h-6 ${accentIconClass}`} viewBox="0 0 24 24" fill="none">
           <path d="M3 11h18M3 6h18M3 16h18M3 21h18" 
                 stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
         </svg>
-        <span className="text-white font-medium text-lg">Tide Information</span>
+        <span className={`${primaryTextClass} font-medium text-lg`}>Tide Information</span>
       </div>
       
       {/* Content */}
@@ -172,7 +177,7 @@ export default function TideWidget() {
           <div className="text-4xl font-bold text-oBlue">
             {(level || 2.1).toFixed(1)}m
           </div>
-          <div className="text-gray-400 text-base">
+          <div className={`${secondaryTextClass} text-base`}>
             {isRising ? '↗ Rising' : '↘ Falling'}
           </div>
         </div>
@@ -196,6 +201,7 @@ export default function TideWidget() {
             const verticalShift = height * 0.08; // push the whole curve slightly downward
             const points = [];
             const samples = 32; // fewer samples; we'll smooth with Bezier
+            const currentLevelY = Math.max(0, Math.min(height, midY + verticalShift));
             for (let i = 0; i <= samples; i++) {
               const x = (i / samples) * width;
               const y = midY - amplitude * Math.sin((x / width) * cycles * 2 * Math.PI + phase) + verticalShift;
@@ -255,6 +261,9 @@ export default function TideWidget() {
                 {/* Curve stroke */}
                 <path d={strokePath} fill="none" stroke="url(#tideStroke)" strokeWidth="2.5" />
 
+                {/* Current water height indicator */}
+                <line x1="0" y1={currentLevelY} x2={width} y2={currentLevelY} stroke="#ff4d4f" strokeWidth="2" strokeLinecap="round" />
+
                 {/* Peak/trough markers */}
                 {markers.map((m, idx) => (
                   <g key={idx}>
@@ -265,9 +274,9 @@ export default function TideWidget() {
 
             
                 {/* Time labels */}
-                <text x="8" y={height - 20} className="fill-current text-black" fill="currentColor" fontSize="10">{timeLow || '--:--'}</text>
-                <text x={width / 2 - 14} y={height - 20} className="fill-current text-black" fill="currentColor" fontSize="10">{timeHigh || '--:--'}</text>
-                <text x={width - 42} y={height - 20} className="fill-current text-black" fill="currentColor" fontSize="10">{timeLow || '--:--'}</text>
+                <text x="8" y={height - 20} className={`fill-current ${svgLabelClass}`} fill="currentColor" fontSize="10">{timeLow || '--:--'}</text>
+                <text x={width / 2 - 14} y={height - 20} className={`fill-current ${svgLabelClass}`} fill="currentColor" fontSize="10">{timeHigh || '--:--'}</text>
+                <text x={width - 42} y={height - 20} className={`fill-current ${svgLabelClass}`} fill="currentColor" fontSize="10">{timeLow || '--:--'}</text>
               </svg>
             );
           })()}
@@ -276,13 +285,13 @@ export default function TideWidget() {
         {/* Tide times */}
         <div className="grid grid-cols-2 gap-4 text-base">
           <div className="text-center">
-            <div className="text-gray-400">Next High</div>
-            <div className="text-white font-medium text-lg">{timeHigh || '14:25'}</div>
+            <div className={secondaryTextClass}>Next High</div>
+            <div className={`${primaryTextClass} font-medium text-lg`}>{timeHigh || '14:25'}</div>
             <div className="text-oBlue text-sm">{(high || 4.2).toFixed(1)}m</div>
           </div>
           <div className="text-center">
-            <div className="text-gray-400">Next Low</div>
-            <div className="text-white font-medium text-lg">{timeLow || '20:15'}</div>
+            <div className={secondaryTextClass}>Next Low</div>
+            <div className={`${primaryTextClass} font-medium text-lg`}>{timeLow || '20:15'}</div>
             <div className="text-orange-400 text-sm">{(low || 0.8).toFixed(1)}m</div>
           </div>
         </div>
@@ -290,8 +299,8 @@ export default function TideWidget() {
         {/* Coefficient */}
         {coefficient && (
           <div className="text-center mt-2 text-xs">
-            <span className="text-gray-400">Coefficient: </span>
-            <span className="text-white">{coefficient}</span>
+            <span className={secondaryTextClass}>Coefficient: </span>
+            <span className={primaryTextClass}>{coefficient}</span>
           </div>
         )}
       </div>

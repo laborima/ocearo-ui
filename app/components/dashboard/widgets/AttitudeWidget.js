@@ -18,8 +18,12 @@ const colors = {
 
 export default function AttitudeWidget() {
   const canvasRef = useRef(null);
-  const { getSignalKValue } = useOcearoContext();
+  const { getSignalKValue, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
+  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
+  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
+  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
 
   // Get attitude data for display
   const attitudeData = useMemo(() => {
@@ -230,13 +234,13 @@ export default function AttitudeWidget() {
     return (
       <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
         <div className="flex items-center space-x-2 mb-4">
-          <FontAwesomeIcon icon={faCompass} className="text-oBlue" />
-          <span className="text-white font-medium">Attitude & Heading</span>
+          <FontAwesomeIcon icon={faCompass} className={accentIconClass} />
+          <span className={`${primaryTextClass} font-medium`}>Attitude & Heading</span>
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className="text-sm text-gray-500">No attitude data available</div>
+            <div className={`text-sm ${mutedTextClass}`}>No attitude data available</div>
           </div>
         </div>
       </div>
@@ -248,14 +252,14 @@ export default function AttitudeWidget() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
-          <FontAwesomeIcon icon={faCompass} className="text-oBlue" />
-          <span className="text-white font-medium">Attitude & Heading</span>
+          <FontAwesomeIcon icon={faCompass} className={accentIconClass} />
+          <span className={`${primaryTextClass} font-medium`}>Attitude & Heading</span>
         </div>
         
         {/* Quick heading display */}
         <div className="flex items-center space-x-2 text-sm">
           <FontAwesomeIcon icon={faCompass} className="text-oYellow text-xs" />
-          <span className="text-white font-bold">{Math.round(attitudeData.heading)}°</span>
+          <span className={`${primaryTextClass} font-bold`}>{Math.round(attitudeData.heading)}°</span>
         </div>
       </div>
       
@@ -282,25 +286,25 @@ export default function AttitudeWidget() {
         <div>
           <div className="flex items-center justify-center space-x-1 mb-1">
             <FontAwesomeIcon icon={faPlane} className="text-oRed text-xs transform rotate-90" />
-            <span className="text-gray-400">Roll</span>
+            <span className={`${secondaryTextClass}`}>Roll</span>
           </div>
-          <div className="text-white font-bold">{Math.round(attitudeData.roll)}°</div>
+          <div className={`${primaryTextClass} font-bold`}>{Math.round(attitudeData.roll)}°</div>
         </div>
         
         <div>
           <div className="flex items-center justify-center space-x-1 mb-1">
-            <FontAwesomeIcon icon={faPlane} className="text-oBlue text-xs" />
-            <span className="text-gray-400">Pitch</span>
+            <FontAwesomeIcon icon={faPlane} className={`${accentIconClass} text-xs`} />
+            <span className={`${secondaryTextClass}`}>Pitch</span>
           </div>
-          <div className="text-white font-bold">{Math.round(attitudeData.pitch)}°</div>
+          <div className={`${primaryTextClass} font-bold`}>{Math.round(attitudeData.pitch)}°</div>
         </div>
         
         <div>
           <div className="flex items-center justify-center space-x-1 mb-1">
             <FontAwesomeIcon icon={faCompass} className="text-oYellow text-xs" />
-            <span className="text-gray-400">Heading</span>
+            <span className={`${secondaryTextClass}`}>Heading</span>
           </div>
-          <div className="text-white font-bold">{Math.round(attitudeData.heading)}°</div>
+          <div className={`${primaryTextClass} font-bold`}>{Math.round(attitudeData.heading)}°</div>
         </div>
       </div>
     </div>

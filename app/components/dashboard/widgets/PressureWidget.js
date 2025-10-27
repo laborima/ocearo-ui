@@ -10,8 +10,12 @@ const PRESSURE_CONFIG = {
   transform: value => convertPressure(value || 0)
 };
 export default function PressureWidget() {
-  const { getSignalKValue } = useOcearoContext();
+  const { getSignalKValue, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
+  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
+  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
+  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
   
   const pressureData = useMemo(() => {
     const value = getSignalKValue(PRESSURE_CONFIG.path);
@@ -45,13 +49,13 @@ export default function PressureWidget() {
     return (
       <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
         <div className="flex items-center space-x-2 mb-4">
-          <FontAwesomeIcon icon={faGaugeHigh} className="text-oBlue" />
-          <span className="text-white font-medium">Barometric Pressure</span>
+          <FontAwesomeIcon icon={faGaugeHigh} className={accentIconClass} />
+          <span className={`${primaryTextClass} font-medium`}>Barometric Pressure</span>
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className="text-sm text-gray-500">No pressure data available</div>
+            <div className={`text-sm ${mutedTextClass}`}>No pressure data available</div>
           </div>
         </div>
       </div>
@@ -64,8 +68,8 @@ export default function PressureWidget() {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faGaugeHigh} className="text-oBlue" />
-        <span className="text-white font-medium">Barometric Pressure</span>
+        <FontAwesomeIcon icon={faGaugeHigh} className={accentIconClass} />
+        <span className={`${primaryTextClass} font-medium`}>Barometric Pressure</span>
       </div>
       
       {/* Content */}
@@ -99,19 +103,19 @@ export default function PressureWidget() {
           
           {/* Center value */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div className={`text-2xl font-bold ${pressureMbar !== null ? getPressureColor(pressureMbar) : 'text-gray-500'}`}>
+            <div className={`text-2xl font-bold ${pressureMbar !== null ? getPressureColor(pressureMbar) : mutedTextClass}`}>
               {pressureMbar !== null ? pressureMbar : 'N/A'}
             </div>
-            <div className="text-gray-400 text-xs">mbar</div>
+            <div className={`${secondaryTextClass} text-xs`}>mbar</div>
           </div>
         </div>
 
         {/* Status */}
         <div className="text-center">
-          <div className={`text-sm font-medium ${pressureMbar !== null ? getPressureColor(pressureMbar) : 'text-gray-500'}`}>
+          <div className={`text-sm font-medium ${pressureMbar !== null ? getPressureColor(pressureMbar) : mutedTextClass}`}>
             {pressureMbar !== null ? getPressureStatus(pressureMbar) : 'Unknown'}
           </div>
-          <div className="text-gray-400 text-xs mt-1">
+          <div className={`${secondaryTextClass} text-xs mt-1`}>
             Range: 950-1050 mbar
           </div>
         </div>

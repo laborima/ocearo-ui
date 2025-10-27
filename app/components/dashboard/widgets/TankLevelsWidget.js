@@ -6,8 +6,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGasPump, faTint, faOilCan, faToilet } from '@fortawesome/free-solid-svg-icons';
 
 export default function TankLevelsWidget() {
-  const { getTankData } = useOcearoContext();
+  const { getTankData, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
+  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
+  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
+  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
   
   const tankData = useMemo(() => {
     const fuel = getTankData('fuel', 0);
@@ -94,13 +98,13 @@ export default function TankLevelsWidget() {
     return (
       <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
         <div className="flex items-center space-x-2 mb-4">
-          <FontAwesomeIcon icon={faGasPump} className="text-oBlue text-lg" />
-          <span className="text-white font-medium text-lg">Tank Levels</span>
+          <FontAwesomeIcon icon={faGasPump} className={`${accentIconClass} text-lg`} />
+          <span className={`${primaryTextClass} font-medium text-lg`}>Tank Levels</span>
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className="text-sm text-gray-500">No tank data available</div>
+            <div className={`text-sm ${mutedTextClass}`}>No tank data available</div>
           </div>
         </div>
       </div>
@@ -111,8 +115,8 @@ export default function TankLevelsWidget() {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faGasPump} className="text-oBlue text-lg" />
-        <span className="text-white font-medium text-lg">Tank Levels</span>
+        <FontAwesomeIcon icon={faGasPump} className={`${accentIconClass} text-lg`} />
+        <span className={`${primaryTextClass} font-medium text-lg`}>Tank Levels</span>
       </div>
       
       {/* Content */}
@@ -136,12 +140,12 @@ export default function TankLevelsWidget() {
                 <div className="flex-1">
                   <div className="flex justify-between items-center mb-1">
                     <div className="flex flex-col">
-                      <span className="text-white text-base font-medium">{tank.displayName || tank.name}</span>
+                      <span className={`${primaryTextClass} text-base font-medium`}>{tank.displayName || tank.name}</span>
                       {tank.tankName && (
-                        <span className="text-xs text-gray-500">{tank.tankName}</span>
+                        <span className={`text-xs ${mutedTextClass}`}>{tank.tankName}</span>
                       )}
                       {tank.tankType && (
-                        <span className="text-xs text-gray-500 capitalize">{tank.tankType}</span>
+                        <span className={`text-xs ${mutedTextClass} capitalize`}>{tank.tankType}</span>
                       )}
                     </div>
                     <span className={`text-sm ${getTankColor(tank.level, isWaste)}`}>
@@ -157,11 +161,11 @@ export default function TankLevelsWidget() {
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
-                    <div className="text-gray-400 text-xs w-12">{percentage}%</div>
+                    <div className={`${secondaryTextClass} text-xs w-12`}>{percentage}%</div>
                   </div>
                   
                   {/* Tank volume and temperature */}
-                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                  <div className={`flex justify-between text-xs ${secondaryTextClass} mt-1`}>
                     <span>{liters}L / {tank.capacity}L</span>
                     {tank.temperature && (
                       <span>{Math.round(tank.temperature - 273.15)}°C</span>
@@ -177,14 +181,14 @@ export default function TankLevelsWidget() {
         <div className="mt-6 pt-4 border-t border-gray-600">
           <div className="grid grid-cols-2 gap-4 text-xs">
             <div className="text-center">
-              <div className="text-gray-400">Critical Tanks</div>
-              <div className="text-white font-medium">
+              <div className={secondaryTextClass}>Critical Tanks</div>
+              <div className={`${primaryTextClass} font-medium`}>
                 {Object.values(tankData).filter(tank => tank.level < 0.1).length}
               </div>
             </div>
             <div className="text-center">
-              <div className="text-gray-400">Low Tanks</div>
-              <div className="text-white font-medium">
+              <div className={secondaryTextClass}>Low Tanks</div>
+              <div className={`${primaryTextClass} font-medium`}>
                 {Object.values(tankData).filter(tank => tank.level < 0.25 && tank.level >= 0.1).length}
               </div>
             </div>

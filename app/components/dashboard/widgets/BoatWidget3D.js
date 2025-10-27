@@ -21,8 +21,12 @@ const BoatLighting = () => (
 );
 
 export default function BoatWidget3D() {
-  const { getSignalKValue } = useOcearoContext();
+  const { getSignalKValue, nightMode } = useOcearoContext();
   const [isLoading, setIsLoading] = useState(true);
+  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
+  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
+  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
   
   // Get boat data for display with reduced precision for performance
   const boatData = useMemo(() => {
@@ -48,19 +52,19 @@ export default function BoatWidget3D() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
-          <FontAwesomeIcon icon={faShip} className="text-oBlue" />
-          <span className="text-white font-medium">3D Boat View</span>
+          <FontAwesomeIcon icon={faShip} className={accentIconClass} />
+          <span className={`${primaryTextClass} font-medium`}>3D Boat View</span>
         </div>
         
         {/* Quick stats */}
         <div className="flex items-center space-x-4 text-sm">
           <div className="flex items-center space-x-1">
             <FontAwesomeIcon icon={faCompass} className="text-oYellow text-xs" />
-            <span className="text-white">{Math.round(boatData.heading)}°</span>
+            <span className={primaryTextClass}>{Math.round(boatData.heading)}°</span>
           </div>
           <div className="flex items-center space-x-1">
-            <FontAwesomeIcon icon={faWater} className="text-oBlue text-xs" />
-            <span className="text-white">{(boatData.speed * 1.94384).toFixed(1)} kts</span>
+            <FontAwesomeIcon icon={faWater} className={`${accentIconClass} text-xs`} />
+            <span className={primaryTextClass}>{(boatData.speed * 1.94384).toFixed(1)} kts</span>
           </div>
         </div>
       </div>
@@ -107,21 +111,21 @@ export default function BoatWidget3D() {
         </Canvas>
         
         {/* Overlay data */}
-        <div className="absolute top-2 left-2 bg-black bg-opacity-50 rounded p-2 text-white text-xs">
+        <div className={`absolute top-2 left-2 bg-black bg-opacity-50 rounded p-2 text-xs ${primaryTextClass}`}>
           <div>Heel: {Math.round(boatData.heel)}°</div>
           <div>Pitch: {Math.round(boatData.pitch)}°</div>
         </div>
         
-        <div className="absolute top-2 right-2 bg-black bg-opacity-50 rounded p-2 text-white text-xs">
+        <div className={`absolute top-2 right-2 bg-black bg-opacity-50 rounded p-2 text-xs ${primaryTextClass}`}>
           <div>Wind: {Math.round(boatData.windSpeed * 1.94384)} kts</div>
           <div>Angle: {Math.round(boatData.windAngle)}°</div>
         </div>
         
         {/* Loading fallback */}
         {isLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-oGray2 bg-opacity-90 text-white text-sm">
+          <div className={`absolute inset-0 flex items-center justify-center bg-oGray2 bg-opacity-90 ${primaryTextClass} text-sm`}>
             <div className="flex items-center space-x-2">
-              <FontAwesomeIcon icon={faShip} className="animate-pulse text-oBlue" />
+              <FontAwesomeIcon icon={faShip} className={`animate-pulse ${accentIconClass}`} />
               <span>Loading 3D View...</span>
             </div>
           </div>
@@ -131,16 +135,16 @@ export default function BoatWidget3D() {
       {/* Bottom info bar */}
       <div className="flex justify-between items-center mt-4 text-sm">
         <div className="flex items-center space-x-4">
-          <div className="text-gray-400">
-            <span className="text-white font-medium">{Math.round(boatData.heading)}°</span> HDG
+          <div className={secondaryTextClass}>
+            <span className={`${primaryTextClass} font-medium`}>{Math.round(boatData.heading)}°</span> HDG
           </div>
-          <div className="text-gray-400">
-            <span className="text-white font-medium">{(boatData.speed * 1.94384).toFixed(1)}</span> kts
+          <div className={secondaryTextClass}>
+            <span className={`${primaryTextClass} font-medium`}>{(boatData.speed * 1.94384).toFixed(1)}</span> kts
           </div>
         </div>
         
-        <div className="flex items-center space-x-2 text-gray-400">
-          <FontAwesomeIcon icon={faShip} className="text-oBlue" />
+        <div className={`flex items-center space-x-2 ${secondaryTextClass}`}>
+          <FontAwesomeIcon icon={faShip} className={accentIconClass} />
           <span className="text-xs">Real-time 3D</span>
         </div>
       </div>

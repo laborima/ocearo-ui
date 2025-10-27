@@ -6,8 +6,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBatteryFull, faBatteryHalf, faBatteryQuarter, faBolt } from '@fortawesome/free-solid-svg-icons';
 
 export default function BatteryWidget() {
-  const { getSignalKValue } = useOcearoContext();
+  const { getSignalKValue, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
+  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
+  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
+  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
   
   const batteryData = useMemo(() => {
     // Get battery data from SignalK (batteries.1 = house, batteries.0 = starter)
@@ -65,13 +69,13 @@ export default function BatteryWidget() {
     return (
       <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
         <div className="flex items-center space-x-2 mb-4">
-          <FontAwesomeIcon icon={faBolt} className="text-oBlue text-lg" />
-          <span className="text-white font-medium text-lg">Battery Status</span>
+          <FontAwesomeIcon icon={faBolt} className={`${accentIconClass} text-lg`} />
+          <span className={`${primaryTextClass} font-medium text-lg`}>Battery Status</span>
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className="text-sm text-gray-500">No battery data available</div>
+            <div className={`text-sm ${mutedTextClass}`}>No battery data available</div>
           </div>
         </div>
       </div>
@@ -82,8 +86,8 @@ export default function BatteryWidget() {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faBolt} className="text-oBlue text-lg" />
-        <span className="text-white font-medium text-lg">Battery Status</span>
+        <FontAwesomeIcon icon={faBolt} className={`${accentIconClass} text-lg`} />
+        <span className={`${primaryTextClass} font-medium text-lg`}>Battery Status</span>
       </div>
       
       {/* Content */}
@@ -92,36 +96,36 @@ export default function BatteryWidget() {
         <div className="grid grid-cols-2 gap-4 mb-6">
           {/* House Battery */}
           <div className="text-center">
-            <div className="text-gray-400 text-base mb-2">House</div>
+            <div className={`${secondaryTextClass} text-base mb-2`}>House</div>
             <FontAwesomeIcon 
               icon={getBatteryIcon(batteryData.house.percentage || 0)} 
               className={`text-2xl mb-2 ${batteryData.house.percentage !== null ? getBatteryColor(batteryData.house.percentage) : 'text-gray-500'}`} 
             />
-            <div className="text-white text-xl font-bold">
+            <div className={`${primaryTextClass} text-xl font-bold`}>
               {batteryData.house.voltage !== null ? `${batteryData.house.voltage}V` : 'N/A'}
             </div>
             <div className={`text-base ${batteryData.house.percentage !== null ? getBatteryColor(batteryData.house.percentage) : 'text-gray-500'}`}>
               {batteryData.house.percentage !== null ? `${Math.round(batteryData.house.percentage)}%` : 'N/A'}
             </div>
-            <div className="text-gray-400 text-xs">
+            <div className={`${secondaryTextClass} text-xs`}>
               {batteryData.house.current !== null ? `${batteryData.house.current > 0 ? '+' : ''}${batteryData.house.current}A` : 'N/A'}
             </div>
           </div>
           
           {/* Starter Battery */}
           <div className="text-center">
-            <div className="text-gray-400 text-base mb-2">Starter</div>
+            <div className={`${secondaryTextClass} text-base mb-2`}>Starter</div>
             <FontAwesomeIcon 
               icon={getBatteryIcon(batteryData.starter.percentage || 0)} 
               className={`text-2xl mb-2 ${batteryData.starter.percentage !== null ? getBatteryColor(batteryData.starter.percentage) : 'text-gray-500'}`} 
             />
-            <div className="text-white text-xl font-bold">
+            <div className={`${primaryTextClass} text-xl font-bold`}>
               {batteryData.starter.voltage !== null ? `${batteryData.starter.voltage}V` : 'N/A'}
             </div>
             <div className={`text-base ${batteryData.starter.percentage !== null ? getBatteryColor(batteryData.starter.percentage) : 'text-gray-500'}`}>
               {batteryData.starter.percentage !== null ? `${Math.round(batteryData.starter.percentage)}%` : 'N/A'}
             </div>
-            <div className="text-gray-400 text-xs">
+            <div className={`${secondaryTextClass} text-xs`}>
               {batteryData.starter.current !== null ? `${batteryData.starter.current > 0 ? '+' : ''}${batteryData.starter.current}A` : 'N/A'}
             </div>
           </div>
@@ -131,7 +135,7 @@ export default function BatteryWidget() {
         <div className="space-y-3 mb-4">
           {/* House battery bar */}
           <div className="flex items-center space-x-2">
-            <div className="text-gray-400 text-xs w-12">House</div>
+            <div className={`${secondaryTextClass} text-xs w-12`}>House</div>
             <div className="flex-1 bg-gray-600 rounded-full h-3">
               <div 
                 className={`h-3 rounded-full transition-all duration-500 ${
@@ -141,12 +145,12 @@ export default function BatteryWidget() {
                 style={{ width: `${batteryData.house.percentage !== null ? batteryData.house.percentage : 0}%` }}
               />
             </div>
-            <div className="text-gray-400 text-xs w-8">{batteryData.house.percentage !== null ? `${Math.round(batteryData.house.percentage)}%` : 'N/A'}</div>
+            <div className={`${secondaryTextClass} text-xs w-8`}>{batteryData.house.percentage !== null ? `${Math.round(batteryData.house.percentage)}%` : 'N/A'}</div>
           </div>
           
           {/* Starter battery bar */}
           <div className="flex items-center space-x-2">
-            <div className="text-gray-400 text-xs w-12">Start</div>
+            <div className={`${secondaryTextClass} text-xs w-12`}>Start</div>
             <div className="flex-1 bg-gray-600 rounded-full h-3">
               <div 
                 className={`h-3 rounded-full transition-all duration-500 ${
@@ -156,19 +160,19 @@ export default function BatteryWidget() {
                 style={{ width: `${batteryData.starter.percentage !== null ? batteryData.starter.percentage : 0}%` }}
               />
             </div>
-            <div className="text-gray-400 text-xs w-8">{batteryData.starter.percentage !== null ? `${Math.round(batteryData.starter.percentage)}%` : 'N/A'}</div>
+            <div className={`${secondaryTextClass} text-xs w-8`}>{batteryData.starter.percentage !== null ? `${Math.round(batteryData.starter.percentage)}%` : 'N/A'}</div>
           </div>
         </div>
 
         {/* Status and info */}
         <div className="text-center space-y-2">
-          <div className={`text-sm font-medium ${batteryData.house.percentage !== null && batteryData.starter.percentage !== null ? getBatteryColor(Math.min(batteryData.house.percentage, batteryData.starter.percentage)) : 'text-gray-500'}`}>
+          <div className={`text-sm font-medium ${batteryData.house.percentage !== null && batteryData.starter.percentage !== null ? getBatteryColor(Math.min(batteryData.house.percentage, batteryData.starter.percentage)) : mutedTextClass}`}>
             {batteryData.house.percentage !== null && batteryData.starter.percentage !== null ? getBatteryStatus(Math.min(batteryData.house.percentage, batteryData.starter.percentage)) : 'Unknown'}
           </div>
-          <div className="text-gray-400 text-xs">
+          <div className={`${secondaryTextClass} text-xs`}>
             Total Load: {batteryData.house.current !== null && batteryData.starter.current !== null ? `${Math.abs(batteryData.house.current + batteryData.starter.current).toFixed(1)}A` : 'N/A'}
           </div>
-          <div className="text-gray-400 text-xs">
+          <div className={`${secondaryTextClass} text-xs`}>
             Range: 11.0V - 13.0V
           </div>
         </div>

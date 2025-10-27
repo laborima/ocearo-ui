@@ -52,7 +52,7 @@ const TANK_TYPES = {
  * @param {number} level - The tank level percentage (0-100)
  * @param {string} type - The tank type key from TANK_TYPES
  */
-const TankIndicator = ({ level, type }) => {
+const TankIndicator = ({ level, type, styles }) => {
     const [showTooltip, setShowTooltip] = useState(false);
     const percentage = Math.max(0, Math.min(100, level));
     const { label, icon, color } = TANK_TYPES[type];
@@ -64,10 +64,10 @@ const TankIndicator = ({ level, type }) => {
             onMouseLeave={() => setShowTooltip(false)}
         >
             <div className="flex items-center space-x-2">
-                <span className="text-sm"><FontAwesomeIcon icon={icon} /></span>
-                <div className="relative w-8 h-4 bg-oGray rounded-sm border border-oGray flex items-center justify-center">
+                <span className={`text-sm ${styles.icon}`}><FontAwesomeIcon icon={icon} /></span>
+                <div className={`relative w-8 h-4 rounded-sm flex items-center justify-center ${styles.indicatorShell}`}>
                     {/* Battery terminal */}
-                    <div className="absolute -right-1 w-1 h-3 bg-oGray rounded-sm" />
+                    <div className={`absolute -right-1 w-1 h-3 rounded-sm ${styles.indicatorTerminal}`} />
                     {/* Fill level indicator */}
                     <div
                         className={`absolute left-0 top-0 h-full ${color} transition-all duration-300 rounded-sm`}
@@ -75,7 +75,7 @@ const TankIndicator = ({ level, type }) => {
                     />
                     {/* Percentage display */}
                     <span 
-                        className={`relative z-10 text-xs text-white font-bold ${percentage <= TANK_CONFIG.DANGER_THRESHOLD ? 'text-oRed animate-pulse' : ''}`}
+                        className={`relative z-10 text-xs font-bold ${styles.indicatorValue} ${percentage <= TANK_CONFIG.DANGER_THRESHOLD ? 'text-oRed animate-pulse' : ''}`}
                     >
                         {percentage}%
                     </span>
@@ -84,7 +84,7 @@ const TankIndicator = ({ level, type }) => {
             
             {/* Tooltip */}
             {showTooltip && (
-                <div className="absolute -left-20 top-6 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap z-20">
+                <div className={`absolute -left-20 top-6 px-2 py-1 rounded text-xs whitespace-nowrap z-20 ${styles.tooltip}`}>
                     {label}: {percentage}%
                 </div>
             )}
@@ -98,7 +98,7 @@ const TankIndicator = ({ level, type }) => {
  * @param {number} batteryNumber - The battery identifier number
  * @param {number} voltage - The battery voltage
  */
-const BatteryIndicator = ({ batteryLevel, batteryNumber, voltage }) => {
+const BatteryIndicator = ({ batteryLevel, batteryNumber, voltage, styles }) => {
     const [showTooltip, setShowTooltip] = useState(false);
     const percentage = Math.max(0, Math.min(100, batteryLevel));
     const isCharging = isBatteryCharging(voltage);
@@ -106,15 +106,15 @@ const BatteryIndicator = ({ batteryLevel, batteryNumber, voltage }) => {
 
     return (
         <div
-            className="flex items-center space-x-3  relative"
+            className="flex items-center space-x-3 relative"
             onMouseEnter={() => setShowTooltip(true)}
             onMouseLeave={() => setShowTooltip(false)}
         >
                 <div className="flex items-center space-x-2">
-                <span className="text-sm"><FontAwesomeIcon icon={faBolt} /></span>
-            <div className="relative w-8 h-4 bg-oGray rounded-sm border border-oGray flex items-center justify-center">
+                <span className={`text-sm ${styles.icon}`}><FontAwesomeIcon icon={faBolt} /></span>
+            <div className={`relative w-8 h-4 rounded-sm border flex items-center justify-center ${styles.indicatorShell}`}>
                 {/* Battery terminal */}
-                <div className="absolute -right-1 w-1 h-3 bg-oGray rounded-sm" />
+                <div className={`absolute -right-1 w-1 h-3 rounded-sm ${styles.indicatorTerminal}`} />
                 {/* Fill level indicator */}
                 <div
                     className={`absolute left-0 top-0 h-full ${batteryColor} transition-all duration-300 rounded-sm`}
@@ -122,10 +122,10 @@ const BatteryIndicator = ({ batteryLevel, batteryNumber, voltage }) => {
                 />
                 {/* Display charging icon or percentage */}
                 {isCharging ? (
-                    <span className="relative z-10 text-xs text-white font-bold">⚡︎</span>
+                    <span className={`relative z-10 text-xs font-bold ${styles.indicatorValue}`}>⚡︎</span>
                 ) : (
                     <span 
-                        className={`relative z-10 text-xs text-white font-bold ${percentage <= BATTERY_CONFIG.DANGER_THRESHOLD ? 'text-oRed animate-pulse' : ''}`}
+                        className={`relative z-10 text-xs font-bold ${styles.indicatorValue} ${percentage <= BATTERY_CONFIG.DANGER_THRESHOLD ? 'text-oRed animate-pulse' : ''}`}
                     >
                         {percentage}%
                     </span>
@@ -134,7 +134,7 @@ const BatteryIndicator = ({ batteryLevel, batteryNumber, voltage }) => {
 
             {/* Tooltip */}
             {showTooltip && (
-                <div className="absolute -left-20 top-6 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap z-20">
+                <div className={`absolute -left-20 top-6 px-2 py-1 rounded text-xs whitespace-nowrap z-20 ${styles.tooltip}`}>
                     Voltage: {voltage?.toFixed(1)}V {isCharging && '(Charging)'}
                 </div>
             )}
@@ -188,12 +188,19 @@ const ThreeDBoatTankIndicator = () => {
         );
     };
 
-    const textColor = nightMode ? 'text-oNight' : 'text-oGray';
+    const styles = useMemo(() => ({
+        container: nightMode ? 'text-oNight bg-white/5 hover:bg-white/10' : 'text-oGray hover:bg-gray-800/10',
+        icon: nightMode ? 'text-oNight' : 'text-oGray',
+        indicatorShell: nightMode ? 'bg-white/90 border border-oNight/30' : 'bg-oGray border border-oGray',
+        indicatorTerminal: nightMode ? 'bg-white/70' : 'bg-oGray',
+        indicatorValue: nightMode ? 'text-oNight' : 'text-white',
+        tooltip: nightMode ? 'bg-white text-oNight border border-oNight/30 shadow-lg shadow-oNight/10' : 'bg-gray-800 text-white'
+    }), [nightMode]);
     const isBatteryMode = displayMode === INDICATOR_TYPES.BATTERIES;
 
     return (
         <div
-            className={`${textColor} rounded-lg transition-all duration-300 hover:bg-gray-800/10 cursor-pointer`}
+            className={`${styles.container} rounded-lg transition-all duration-300 cursor-pointer`}
             onClick={toggleDisplayMode}
             role="button"
             tabIndex={0}
@@ -208,6 +215,7 @@ const ThreeDBoatTankIndicator = () => {
                             batteryLevel={battery.level}
                             batteryNumber={battery.number}
                             voltage={battery.voltage}
+                            styles={styles}
                         />
                     ))}
                 </div>
@@ -218,6 +226,7 @@ const ThreeDBoatTankIndicator = () => {
                             key={key}
                             type={key}
                             level={tankLevels[key]}
+                            styles={styles}
                         />
                     ))}
                 </div>

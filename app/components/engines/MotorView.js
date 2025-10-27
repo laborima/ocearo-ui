@@ -94,11 +94,26 @@ const MotorView = () => {
   // Get comprehensive engine data
   const getEngineData = useCallback(() => {
     const instance = selectedEngine;
+    const coolantTemperatureKelvin = getEngineValue('coolantTemperature');
+    const engineTemperatureKelvin = getEngineValue('temperature');
+    const portTemperatureKelvin = getSignalKValue('propulsion.port.temperature');
+    let effectiveCoolantTemperature = coolantTemperatureKelvin;
+    if (effectiveCoolantTemperature === null || effectiveCoolantTemperature === undefined) {
+      effectiveCoolantTemperature = engineTemperatureKelvin;
+    }
+    if (effectiveCoolantTemperature === null || effectiveCoolantTemperature === undefined) {
+      effectiveCoolantTemperature = portTemperatureKelvin;
+    }
+    const exhaustTemperatureKelvin = getEngineValue('exhaustTemperature');
+    const mainExhaustTemperatureKelvin = getSignalKValue('propulsion.main.exhaustTemperature');
+    const effectiveExhaustTemperature = (exhaustTemperatureKelvin !== null && exhaustTemperatureKelvin !== undefined)
+      ? exhaustTemperatureKelvin
+      : mainExhaustTemperatureKelvin;
     return {
       // Primary Engine Data
       rpm: MotorUtils.hzToRPM(getEngineValue('revolutions')),
       runTime: MotorUtils.formatEngineHours(getEngineValue('runTime')),
-      coolantTemp: MotorUtils.kelvinToCelsius(getEngineValue('coolantTemperature')),
+      coolantTemp: MotorUtils.kelvinToCelsius(effectiveCoolantTemperature),
       coolantPressure: MotorUtils.pascalsToBar(getEngineValue('coolantPressure')),
       boostPressure: MotorUtils.pascalsToBar(getEngineValue('boostPressure')),
       oilPressure: MotorUtils.pascalsToBar(getEngineValue('oilPressure')),
@@ -107,7 +122,7 @@ const MotorView = () => {
       fuelPressure: MotorUtils.pascalsToBar(getEngineValue('fuel.pressure')),
       load: MotorUtils.ratioToPercent(getEngineValue('load')),
       torque: MotorUtils.ratioToPercent(getEngineValue('torque')),
-      exhaustTemp: MotorUtils.kelvinToCelsius(getEngineValue('exhaustTemperature')),
+      exhaustTemp: MotorUtils.kelvinToCelsius(effectiveExhaustTemperature),
       intakeTemp: MotorUtils.kelvinToCelsius(getEngineValue('intakeManifoldTemperature')),
       tilt: MotorUtils.radiansToDegrees(getEngineValue('tilt')),
       state: getEngineValue('state'),
@@ -130,6 +145,10 @@ const MotorView = () => {
   }, [selectedEngine, getSignalKValue, getEngineValue]);
   
   const engineData = getEngineData();
+  const houseBatteryCurrentRaw = getSignalKValue('electrical.batteries.1.current');
+  const houseBatteryCurrent = typeof houseBatteryCurrentRaw === 'number'
+    ? Math.round(houseBatteryCurrentRaw * 10) / 10
+    : houseBatteryCurrentRaw;
 
   return (
     <div className="flex flex-col h-full rightPaneBg overflow-auto">
@@ -461,7 +480,7 @@ const MotorView = () => {
                   />
                   <BarGauge
                     label="Current"
-                    value={getSignalKValue('electrical.batteries.1.current')}
+                    value={houseBatteryCurrent}
                     unit="A"
                     min={-50}
                     max={50}

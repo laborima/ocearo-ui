@@ -14,8 +14,12 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function WeatherWidget() {
-  const { getSignalKValue } = useOcearoContext();
+  const { getSignalKValue, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
+  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
+  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
+  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
   
   const weatherData = useMemo(() => {
     const temperature = getSignalKValue('environment.outside.temperature');
@@ -115,13 +119,13 @@ export default function WeatherWidget() {
     return (
       <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
         <div className="flex items-center space-x-2 mb-4">
-          <FontAwesomeIcon icon={faCloudSun} className="text-oBlue text-lg" />
-          <span className="text-white font-medium text-lg">Weather</span>
+          <FontAwesomeIcon icon={faCloudSun} className={`${accentIconClass} text-lg`} />
+          <span className={`${primaryTextClass} font-medium text-lg`}>Weather</span>
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className="text-sm text-gray-500">No weather data available</div>
+            <div className={`text-sm ${mutedTextClass}`}>No weather data available</div>
           </div>
         </div>
       </div>
@@ -132,8 +136,8 @@ export default function WeatherWidget() {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={getWeatherIcon(weatherData.condition)} className="text-oBlue text-lg" />
-        <span className="text-white font-medium text-lg">Weather</span>
+        <FontAwesomeIcon icon={getWeatherIcon(weatherData.condition)} className={`${accentIconClass} text-lg`} />
+        <span className={`${primaryTextClass} font-medium text-lg`}>Weather</span>
       </div>
       
       {/* Content */}
@@ -144,10 +148,10 @@ export default function WeatherWidget() {
             icon={getWeatherIcon(weatherData.condition)} 
             className={`text-4xl mb-2 ${getWeatherColor(weatherData.condition)}`} 
           />
-          <div className="text-3xl font-bold text-white mb-1">
+          <div className={`text-3xl font-bold ${primaryTextClass} mb-1`}>
             {weatherData.temperature !== null ? `${weatherData.temperature}°C` : 'N/A'}
           </div>
-          <div className="text-base text-gray-300">
+          <div className={`text-base ${secondaryTextClass}`}>
             {getWeatherDescription(weatherData.condition)}
           </div>
         </div>
@@ -156,18 +160,18 @@ export default function WeatherWidget() {
         <div className="grid grid-cols-2 gap-3 mb-4">
           {/* Humidity */}
           <div className="text-center">
-            <div className="text-gray-400 text-sm mb-1">Humidity</div>
-            <div className="text-white font-medium text-lg">{weatherData.humidity !== null ? `${weatherData.humidity}%` : 'N/A'}</div>
+            <div className={`${secondaryTextClass} text-sm mb-1`}>Humidity</div>
+            <div className={`${primaryTextClass} font-medium text-lg`}>{weatherData.humidity !== null ? `${weatherData.humidity}%` : 'N/A'}</div>
           </div>
           
           {/* Pressure */}
           <div className="text-center">
-            <div className="text-gray-400 text-sm mb-1">Pressure</div>
+            <div className={`${secondaryTextClass} text-sm mb-1`}>Pressure</div>
             <div className="flex items-center justify-center space-x-1">
-              <span className="text-white font-medium text-lg">{weatherData.pressure !== null ? weatherData.pressure : 'N/A'}</span>
+              <span className={`${primaryTextClass} font-medium text-lg`}>{weatherData.pressure !== null ? weatherData.pressure : 'N/A'}</span>
               {pressureTrend && <span className={`text-xs ${pressureTrend.color}`}>{pressureTrend.trend}</span>}
             </div>
-            <div className="text-gray-400 text-sm">hPa</div>
+            <div className={`${secondaryTextClass} text-sm`}>hPa</div>
           </div>
         </div>
 
@@ -175,14 +179,14 @@ export default function WeatherWidget() {
         <div className="bg-oGray1 rounded-lg p-3 mb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <FontAwesomeIcon icon={faWind} className="text-oBlue text-sm" />
-              <span className="text-white text-sm font-medium">Wind</span>
+              <FontAwesomeIcon icon={faWind} className={`${accentIconClass} text-sm`} />
+              <span className={`${primaryTextClass} text-sm font-medium`}>Wind</span>
             </div>
             <div className="text-right">
-              <div className="text-white font-medium">
+              <div className={`${primaryTextClass} font-medium`}>
                 {weatherData.windSpeed !== null ? `${weatherData.windSpeed} kts` : 'N/A'}
               </div>
-              <div className="text-gray-400 text-xs">
+              <div className={`${secondaryTextClass} text-xs`}>
                 {weatherData.windDirection !== null ? `${getWindDirection(weatherData.windDirection)} (${weatherData.windDirection}°)` : 'N/A'}
               </div>
             </div>

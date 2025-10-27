@@ -6,8 +6,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faSmog, faSun, faCloud } from '@fortawesome/free-solid-svg-icons';
 
 export default function VisibilityWidget() {
-  const { getSignalKValue } = useOcearoContext();
+  const { getSignalKValue, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
+  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
+  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
+  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
   
   const visibilityData = useMemo(() => {
     const visibility = getSignalKValue('environment.outside.visibility');
@@ -67,13 +71,13 @@ export default function VisibilityWidget() {
     return (
       <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
         <div className="flex items-center space-x-2 mb-4">
-          <FontAwesomeIcon icon={faEye} className="text-oBlue text-lg" />
-          <span className="text-white font-medium text-lg">Visibility</span>
+          <FontAwesomeIcon icon={faEye} className={`${accentIconClass} text-lg`} />
+          <span className={`${primaryTextClass} font-medium text-lg`}>Visibility</span>
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className="text-sm text-gray-500">No visibility data available</div>
+            <div className={`text-sm ${mutedTextClass}`}>No visibility data available</div>
           </div>
         </div>
       </div>
@@ -84,8 +88,8 @@ export default function VisibilityWidget() {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faEye} className="text-oBlue text-lg" />
-        <span className="text-white font-medium text-lg">Visibility</span>
+        <FontAwesomeIcon icon={faEye} className={`${accentIconClass} text-lg`} />
+        <span className={`${primaryTextClass} font-medium text-lg`}>Visibility</span>
       </div>
       
       {/* Content */}
@@ -96,9 +100,9 @@ export default function VisibilityWidget() {
             icon={getVisibilityIcon(visibilityData.distance)} 
             className={`text-4xl mb-3 ${getVisibilityColor(visibilityData.distance)}`} 
           />
-          <div className="text-4xl font-bold text-white mb-1">
+          <div className={`text-4xl font-bold ${primaryTextClass} mb-1`}>
             {visibilityData.distance}
-            <span className="text-xl text-gray-400 ml-1">km</span>
+            <span className={`text-xl ${secondaryTextClass} ml-1`}>km</span>
           </div>
           <div className={`text-base font-medium ${getVisibilityColor(visibilityData.distance)}`}>
             {getVisibilityStatus(visibilityData.distance)}
@@ -108,14 +112,14 @@ export default function VisibilityWidget() {
         {/* Distance readings */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="text-center">
-            <div className="text-gray-400 text-base mb-1">Kilometers</div>
+            <div className={`${secondaryTextClass} text-base mb-1`}>Kilometers</div>
             <div className={`text-2xl font-bold ${getVisibilityColor(visibilityData.distance)}`}>
               {visibilityData.distance} km
             </div>
           </div>
           
           <div className="text-center">
-            <div className="text-gray-400 text-base mb-1">Nautical Miles</div>
+            <div className={`${secondaryTextClass} text-base mb-1`}>Nautical Miles</div>
             <div className={`text-2xl font-bold ${getVisibilityColor(visibilityData.distance)}`}>
               {visibilityData.distanceNM} NM
             </div>
@@ -125,7 +129,7 @@ export default function VisibilityWidget() {
         {/* Visual visibility bar */}
         <div className="mb-4">
           <div className="flex items-center space-x-2">
-            <div className="text-gray-400 text-xs w-8">0km</div>
+            <div className={`${secondaryTextClass} text-xs w-8`}>0km</div>
             <div className="flex-1 bg-gray-600 rounded-full h-3">
               <div 
                 className={`h-3 rounded-full transition-all duration-500 ${
@@ -136,18 +140,18 @@ export default function VisibilityWidget() {
                 style={{ width: `${Math.min(100, (visibilityData.distance / 20) * 100)}%` }}
               />
             </div>
-            <div className="text-gray-400 text-xs w-12">20km+</div>
+            <div className={`${secondaryTextClass} text-xs w-12`}>20km+</div>
           </div>
         </div>
 
         {/* Additional info */}
         <div className="space-y-2">
-          <div className="text-center text-sm text-gray-300">
+          <div className={`text-center text-sm ${nightMode ? 'text-oNight' : 'text-gray-300'}`}>
             {getVisibilityDescription(visibilityData.distance)}
           </div>
       
           
-          <div className="text-center text-xs text-gray-400 mt-2">
+          <div className={`text-center text-xs ${secondaryTextClass} mt-2`}>
             Range: 0-20+ km
           </div>
         </div>

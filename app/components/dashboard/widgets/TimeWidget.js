@@ -5,8 +5,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClock, faGlobe, faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
 
 const TimeWidget = React.memo(() => {
-  const { getSignalKValue } = useOcearoContext();
+  const { getSignalKValue, nightMode } = useOcearoContext();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
+  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
+  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
   
   useEffect(() => {
     const timer = setInterval(() => {
@@ -63,18 +67,18 @@ const TimeWidget = React.memo(() => {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faClock} className="text-oBlue text-lg" />
-        <span className="text-white font-medium text-lg">Time & Date</span>
+        <FontAwesomeIcon icon={faClock} className={`${accentIconClass} text-lg`} />
+        <span className={`${primaryTextClass} font-medium text-lg`}>Time & Date</span>
       </div>
       
       {/* Content */}
       <div className="flex-1 flex flex-col justify-center">
         {/* Main time display */}
         <div className="text-center mb-6">
-          <div className="text-5xl font-bold text-white mb-2 font-mono">
+          <div className={`text-5xl font-bold ${primaryTextClass} mb-2 font-mono`}>
             {formatTime(currentTime)}
           </div>
-          <div className="text-base text-gray-300">
+          <div className={`text-base ${secondaryTextClass}`}>
             {formatDate(currentTime)}
           </div>
         </div>
@@ -84,19 +88,19 @@ const TimeWidget = React.memo(() => {
           {/* Local Time */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <FontAwesomeIcon icon={faGlobe} className="text-oBlue text-sm" />
-              <span className="text-gray-400 text-sm">Local</span>
+              <FontAwesomeIcon icon={faGlobe} className={`${accentIconClass} text-sm`} />
+              <span className={`${secondaryTextClass} text-sm`}>Local</span>
             </div>
-            <div className="text-white font-mono">{formatTime(localTime, false)}</div>
+            <div className={`${primaryTextClass} font-mono`}>{formatTime(localTime, false)}</div>
           </div>
           
           {/* UTC Time */}
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <FontAwesomeIcon icon={faGlobe} className="text-gray-400 text-sm" />
-              <span className="text-gray-400 text-sm">UTC</span>
+              <FontAwesomeIcon icon={faGlobe} className={`${secondaryTextClass} text-sm`} />
+              <span className={`${secondaryTextClass} text-sm`}>UTC</span>
             </div>
-            <div className="text-white font-mono">{formatTime(utcTime, false)}</div>
+            <div className={`${primaryTextClass} font-mono`}>{formatTime(utcTime, false)}</div>
           </div>
         </div>
 
@@ -108,15 +112,15 @@ const TimeWidget = React.memo(() => {
                 icon={isDaytime ? faSun : faMoon} 
                 className={`${isDaytime ? 'text-oYellow' : 'text-blue-300'} text-sm`} 
               />
-              <span className="text-white text-sm font-medium">
+              <span className={`${primaryTextClass} text-sm font-medium`}>
                 {isDaytime ? 'Daytime' : 'Nighttime'}
               </span>
             </div>
             <div className="text-right">
-              <div className="text-gray-400 text-xs">
+              <div className={`${secondaryTextClass} text-xs`}>
                 {isDaytime ? 'Sunset' : 'Sunrise'}
               </div>
-              <div className="text-white text-sm">
+              <div className={`${primaryTextClass} text-sm`}>
                 {formatTime(isDaytime ? sunset : sunrise, false)}
               </div>
             </div>
@@ -127,17 +131,17 @@ const TimeWidget = React.memo(() => {
         <div className="space-y-2">
           <div className="flex flex-wrap justify-between text-xs gap-y-1">
             <div className="flex items-center space-x-2">
-              <span className="text-gray-400">Latitude:</span>
-              <span className="text-white font-mono">{latDeg}°</span>
+              <span className={`${secondaryTextClass}`}>Latitude:</span>
+              <span className={`${primaryTextClass} font-mono`}>{latDeg}°</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-gray-400">Longitude:</span>
-              <span className="text-white font-mono">{lonDeg}°</span>
+              <span className={`${secondaryTextClass}`}>Longitude:</span>
+              <span className={`${primaryTextClass} font-mono`}>{lonDeg}°</span>
             </div>
           </div>
           <div className="flex justify-between text-xs">
-            <span className="text-gray-400">Timezone:</span>
-            <span className="text-white">UTC{localOffset >= 0 ? '+' : ''}{localOffset}</span>
+            <span className={`${secondaryTextClass}`}>Timezone:</span>
+            <span className={`${primaryTextClass}`}>UTC{localOffset >= 0 ? '+' : ''}{localOffset}</span>
           </div>
         </div>
       </div>

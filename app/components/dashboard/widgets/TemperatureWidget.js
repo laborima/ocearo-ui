@@ -12,8 +12,12 @@ const TEMPERATURE_CONFIG = {
 };
 
 const TemperatureWidget = React.memo(() => {
-  const { getSignalKValue } = useOcearoContext();
+  const { getSignalKValue, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
+  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
+  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
+  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
   
   const temperatureData = useMemo(() => {
     const airValue = getSignalKValue(TEMPERATURE_CONFIG.airPath);
@@ -50,13 +54,13 @@ const TemperatureWidget = React.memo(() => {
     return (
       <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
         <div className="flex items-center space-x-2 mb-4">
-          <FontAwesomeIcon icon={faThermometerHalf} className="text-oBlue text-lg" />
-          <span className="text-white font-medium text-lg">Temperature</span>
+          <FontAwesomeIcon icon={faThermometerHalf} className={`${accentIconClass} text-lg`} />
+          <span className={`${primaryTextClass} font-medium text-lg`}>Temperature</span>
         </div>
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className="text-sm text-gray-500">No temperature data available</div>
+            <div className={`text-sm ${mutedTextClass}`}>No temperature data available</div>
           </div>
         </div>
       </div>
@@ -69,8 +73,8 @@ const TemperatureWidget = React.memo(() => {
     <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col min-h-0">
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faThermometerHalf} className="text-oBlue text-lg" />
-        <span className="text-white font-medium text-lg">Temperature</span>
+        <FontAwesomeIcon icon={faThermometerHalf} className={`${accentIconClass} text-lg`} />
+        <span className={`${primaryTextClass} font-medium text-lg`}>Temperature</span>
       </div>
       
       {/* Content */}
@@ -79,20 +83,20 @@ const TemperatureWidget = React.memo(() => {
         <div className="grid grid-cols-2 gap-4 mb-6">
           {/* Air Temperature */}
           <div className="text-center">
-            <div className="text-gray-400 text-base mb-1">Air</div>
+            <div className={`${secondaryTextClass} text-base mb-1`}>Air</div>
             <div className={`text-4xl font-bold ${airTemp !== null ? getTemperatureColor(airTemp) : 'text-gray-500'}`}>
               {airTemp !== null ? `${airTemp}°` : 'N/A'}
             </div>
-            <div className="text-gray-400 text-sm">Celsius</div>
+            <div className={`${secondaryTextClass} text-sm`}>Celsius</div>
           </div>
           
           {/* Sea Temperature */}
           <div className="text-center">
-            <div className="text-gray-400 text-base mb-1">Sea</div>
+            <div className={`${secondaryTextClass} text-base mb-1`}>Sea</div>
             <div className={`text-4xl font-bold ${seaTemp !== null ? getTemperatureColor(seaTemp) : 'text-gray-500'}`}>
               {seaTemp !== null ? `${seaTemp}°` : 'N/A'}
             </div>
-            <div className="text-gray-400 text-sm">Celsius</div>
+            <div className={`${secondaryTextClass} text-sm`}>Celsius</div>
           </div>
         </div>
 
@@ -100,7 +104,7 @@ const TemperatureWidget = React.memo(() => {
         <div className="space-y-3 mb-4">
           {/* Air temperature bar */}
           <div className="flex items-center space-x-2">
-            <div className="text-gray-400 text-sm w-10">Air</div>
+            <div className={`${secondaryTextClass} text-sm w-10`}>Air</div>
             <div className="flex-1 bg-gray-600 rounded-full h-3">
               <div 
                 className={`h-3 rounded-full transition-all duration-500 ${
@@ -109,12 +113,12 @@ const TemperatureWidget = React.memo(() => {
                 style={{ width: `${airTemp !== null ? Math.min(100, Math.max(0, (airTemp + 10) * 2.5)) : 0}%` }}
               />
             </div>
-            <div className="text-gray-400 text-sm w-10">{airTemp !== null ? `${airTemp}°` : 'N/A'}</div>
+            <div className={`${secondaryTextClass} text-sm w-10`}>{airTemp !== null ? `${airTemp}°` : 'N/A'}</div>
           </div>
           
           {/* Sea temperature bar */}
           <div className="flex items-center space-x-2">
-            <div className="text-gray-400 text-sm w-10">Sea</div>
+            <div className={`${secondaryTextClass} text-sm w-10`}>Sea</div>
             <div className="flex-1 bg-gray-600 rounded-full h-3">
               <div 
                 className={`h-3 rounded-full transition-all duration-500 ${
@@ -123,19 +127,19 @@ const TemperatureWidget = React.memo(() => {
                 style={{ width: `${seaTemp !== null ? Math.min(100, Math.max(0, (seaTemp + 10) * 2.5)) : 0}%` }}
               />
             </div>
-            <div className="text-gray-400 text-sm w-10">{seaTemp !== null ? `${seaTemp}°` : 'N/A'}</div>
+            <div className={`${secondaryTextClass} text-sm w-10`}>{seaTemp !== null ? `${seaTemp}°` : 'N/A'}</div>
           </div>
         </div>
 
         {/* Status and difference */}
         <div className="text-center space-y-2">
-          <div className={`text-base font-medium ${airTemp !== null && seaTemp !== null ? getTemperatureColor((airTemp + seaTemp) / 2) : 'text-gray-500'}`}>
+          <div className={`text-base font-medium ${airTemp !== null && seaTemp !== null ? getTemperatureColor((airTemp + seaTemp) / 2) : mutedTextClass}`}>
             {airTemp !== null && seaTemp !== null ? getTemperatureStatus(airTemp, seaTemp) : 'Unknown'}
           </div>
-          <div className="text-gray-400 text-sm">
+          <div className={`${secondaryTextClass} text-sm`}>
             Difference: {airTemp !== null && seaTemp !== null ? `${Math.abs(airTemp - seaTemp).toFixed(1)}°C` : 'N/A'}
           </div>
-          <div className="text-gray-400 text-sm">
+          <div className={`${secondaryTextClass} text-sm`}>
             Range: -10°C to 40°C
           </div>
         </div>

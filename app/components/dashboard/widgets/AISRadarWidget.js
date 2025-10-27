@@ -7,11 +7,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTowerBroadcast, faShip, faLocationDot } from '@fortawesome/free-solid-svg-icons';
 
 const AISRadarWidget = React.memo(() => {
-  const { getSignalKValue } = useOcearoContext();
+  const { getSignalKValue, nightMode } = useOcearoContext();
   const { aisData: aisDataRaw, vesselIds } = useAIS();
   const [radarRange, setRadarRange] = useState(5); // nautical miles
   const [sweepAngle, setSweepAngle] = useState(0);
   const debugMode = configService.get('debugMode');
+  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
+  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
+  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
   
   // Simulate radar sweep animation
   useEffect(() => {
@@ -92,8 +96,8 @@ const AISRadarWidget = React.memo(() => {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
-          <FontAwesomeIcon icon={faTowerBroadcast} className="text-oBlue text-lg" />
-          <span className="text-white font-medium text-lg">AIS Radar</span>
+          <FontAwesomeIcon icon={faTowerBroadcast} className={`${accentIconClass} text-lg`} />
+          <span className={`${primaryTextClass} font-medium text-lg`}>AIS Radar</span>
         </div>
         
         {/* Range selector */}
@@ -115,7 +119,7 @@ const AISRadarWidget = React.memo(() => {
           <div className="w-full h-full min-h-24 flex items-center justify-center bg-black rounded-lg">
             <div className="text-center">
               <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-              <div className="text-sm text-gray-500">No AIS data available</div>
+              <div className={`text-sm ${mutedTextClass}`}>No AIS data available</div>
             </div>
           </div>
         ) : (
@@ -190,7 +194,7 @@ const AISRadarWidget = React.memo(() => {
         
         {/* Range indicators */}
         {!showNA && (
-        <div className="absolute top-2 left-2 text-sm text-gray-400">
+        <div className={`absolute top-2 left-2 text-sm ${secondaryTextClass}`}>
           <div>Range: {radarRange} NM</div>
           <div>Targets: {aisData.length}</div>
         </div>
@@ -200,7 +204,7 @@ const AISRadarWidget = React.memo(() => {
       {/* Target List */}
       {!showNA && aisData.length > 0 && (
       <div className="mt-4 space-y-2">
-        <div className="text-base text-gray-400 mb-2">Closest Targets</div>
+        <div className={`text-base ${secondaryTextClass} mb-2`}>Closest Targets</div>
         {aisData.slice(0, 3).map(target => (
           <div key={target.id} className="flex items-center justify-between text-sm">
             <div className="flex items-center space-x-2">
@@ -208,9 +212,9 @@ const AISRadarWidget = React.memo(() => {
                 icon={getTargetIcon(target.type)} 
                 className={`${getTargetColor(target)} text-xs`} 
               />
-              <span className="text-white text-base">{target.name}</span>
+              <span className={`${primaryTextClass} text-base`}>{target.name}</span>
             </div>
-            <div className="flex space-x-3 text-gray-400">
+            <div className={`flex space-x-3 ${secondaryTextClass}`}>
               <span>{target.distance.toFixed(1)} NM</span>
               <span>{target.bearing}°</span>
               <span className={getTargetColor(target)}>

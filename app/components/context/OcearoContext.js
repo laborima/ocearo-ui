@@ -640,7 +640,7 @@ export const OcearoContextProvider = ({ children }) => {
             }
         
             if (!lastTide || !nextTide) {
-                throw new Error("Impossible de déterminer la tendance de marée");
+                throw new Error("Cannot determine tide trend");
             }
     
             const isRising = lastTide.type === "tide.low" && nextTide.type === "tide.high";
