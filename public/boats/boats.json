@@ -6,11 +6,6 @@
       "capabilities": ["navigation","rudder","sail","color"]
     },
     {
-      "name": "RM1080",
-      "modelPath": "rm1080",
-      "capabilities": ["navigation"]
-    },
-    {
       "name": "Optimist",
       "modelPath": "optimist",
       "capabilities": ["navigation","ais"]
