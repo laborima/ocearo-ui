@@ -5,6 +5,7 @@ import { Trail } from './ocean/Trail3D';
 import Ocean3D from './ocean/Ocean3D';
 import AISView from './ais/AISView';
 import ThreeDCompassView from './ThreeDCompassView';
+import LayLines3D from './compass/LayLines3D';
 import { useOcearoContext } from '../context/OcearoContext';
 import { AISProvider } from './ais/AISContext';
 import PolarProjection from './polar/Polar3D';
@@ -64,7 +65,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 <Trail />
 
                 {/* Laylines */}
-                {/*config.debugMode && <LayLines3D outerRadius={5.6} />*/}
+                {states.showLaylines3D && <LayLines3D outerRadius={5.6} />}
 
                 {states.showPolar && !states.showOcean && <PolarProjection /> }
 

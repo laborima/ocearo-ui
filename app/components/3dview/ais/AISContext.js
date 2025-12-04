@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import Client from '@signalk/client';
 import configService from '../../settings/ConfigService';
+import signalKService from '../../services/SignalKService';
 import { useOcearoContext } from '../../context/OcearoContext';
 
 const AISContext = createContext();
@@ -322,16 +323,10 @@ export const AISProvider = ({ children }) => {
                     throw new Error("SignalK URL is undefined or invalid.");
                 }
 
-                const [hostname, port] = signalkUrl.replace(/https?:\/\//, '').split(':');
-                console.log(`Connecting to SignalK at: ${hostname}, port: ${port}`);
+                console.log(`Connecting to SignalK at: ${signalkUrl}`);
 
-                const client = new Client({
-                    hostname: hostname || 'localhost',
-                    port: parseInt(port) || 3000,
-                    useTLS: signalkUrl.startsWith('https'),
-                    reconnect: true,
-                    autoConnect: false,
-                    notifications: false,
+                // Use SignalKService to create client with proper authentication
+                const client = signalKService.createClient({
                     subscriptions: [
                         {
                             context: 'vessels.*',

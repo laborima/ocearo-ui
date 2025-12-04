@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAnchor, faShip, faPersonFalling, faMoon, faWater, faParking, faSatellite, faCompass } from '@fortawesome/free-solid-svg-icons';
+import { faAnchor, faShip, faPersonFalling, faMoon, faWater, faParking, faSatellite, faCompass, faRulerCombined } from '@fortawesome/free-solid-svg-icons';
 import { useOcearoContext } from '../context/OcearoContext';
 import { useEffect, useRef } from 'react';
 
@@ -95,6 +95,16 @@ const ThreeDBoatToolbar = () => {
                     className="p-1"
                 >
                     <FontAwesomeIcon icon={faCompass} className={states.showPolar ? 'text-oBlue' : textColor} />
+                </button>
+            )}
+
+            {/* Laylines 3D - visible when autopilot is active */}
+            {states.autopilot && (
+                <button
+                    onClick={() => toggleState('showLaylines3D')}
+                    className="p-1"
+                >
+                    <FontAwesomeIcon icon={faRulerCombined} className={states.showLaylines3D ? 'text-oGreen' : textColor} />
                 </button>
             )}
 
