@@ -14,7 +14,8 @@ import {
     faSyncAlt,
     faChartLine,
     faExclamationTriangle,
-    faBook
+    faBook,
+    faCompass
 } from '@fortawesome/free-solid-svg-icons';
 import { VIEW_MODES } from '../page';
 import { isOcearoCoreEnabled } from './utils/OcearoCoreUtils';
@@ -62,6 +63,11 @@ const AppMenu = ({
                         onClick={() => handleSetRightView('logbook')} 
                     />
                 )}
+                <MenuButton 
+                    icon={faCompass} 
+                    label="Autopilot" 
+                    onClick={() => handleSetRightView('autopilot')} 
+                />
                 {currentViewMode !== VIEW_MODES.BOAT && (
                     <MenuButton icon={faShip} label="Boat View" onClick={() => toggleViewMode(VIEW_MODES.BOAT)} />
                 )}

@@ -33,6 +33,10 @@ const LogbookView = dynamic(() => import('./logbook/LogbookView'), {
   loading: () => <div className="w-full h-full flex justify-center items-center">Loading logbook...</div>
 });
 
+const AutopilotView = dynamic(() => import('./autopilot/AutopilotView'), {
+  loading: () => <div className="w-full h-full flex justify-center items-center">Loading autopilot...</div>
+});
+
 
 // Constants
 const POSITION_UPDATE_INTERVAL = 10000; // 10 seconds
@@ -144,6 +148,8 @@ const RightPane = ({ view }) => {
                 return <Dashboard />;
             case 'logbook':
                 return <LogbookView />;
+            case 'autopilot':
+                return <AutopilotView />;
             default:
                 return iframeSrc && (
                     <iframe
