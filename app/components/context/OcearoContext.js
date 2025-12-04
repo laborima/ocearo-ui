@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import Client from '@signalk/client';
-import configService from '../settings/ConfigService'; // Import the ConfigService
+import configService from '../settings/ConfigService';
+import signalKService from '../services/SignalKService';
 import { updateOcearoCoreMode, isOcearoCoreEnabled, handleOcearoCoreError } from '../utils/OcearoCoreUtils';
 import { MathUtils } from 'three';
 
@@ -79,7 +80,8 @@ const INITIAL_STATES = {
     mob: false,
     showOcean: false,
     ais: false,
-    showPolar: true
+    showPolar: true,
+    showLaylines3D: false
 };
 
 // Separate sample data into its own object for better organization
@@ -547,19 +549,11 @@ export const OcearoContextProvider = ({ children }) => {
             };
             
             try {
-
-                    const [hostname, port] = signalkUrl.replace(/https?:\/\//, '').split(':');
-            const client = new Client({
-                hostname: hostname || 'localhost',
-                port: parseInt(port) || 3000,
-                useTLS: signalkUrl.startsWith('https'),
-                        reconnect: true,
-                        autoConnect: false,
-                        notifications: false,
-                        deltaStreamBehaviour: 'self',
-                        sendMeta: 'all',
-                        wsKeepaliveInterval: 10
-            });
+                // Use SignalKService to create client with proper authentication
+                const client = signalKService.createClient({
+                    deltaStreamBehaviour: 'self',
+                    sendMeta: 'all'
+                });
 
             clientRef.current = client; // Store client in ref
 
