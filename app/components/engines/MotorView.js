@@ -6,13 +6,23 @@ import {
   faTachometerAlt, faClock, faTemperatureHalf, faGaugeHigh, faGasPump,
   faWrench, faCogs, faBolt, faExclamationTriangle, faCheckCircle,
   faCar, faOilCan, faFire, faSnowflake, faBatteryFull, faChartLine,
-  faWater, faRuler, faArrowUp, faArrowDown, faRotate, faFlask
+  faWater, faRuler, faArrowUp, faArrowDown, faRotate, faFlask, faPlus,
+  faEuroSign, faHistory
 } from '@fortawesome/free-solid-svg-icons';
 
 // Import utilities from MotorUtils.js
 import * as MotorUtils from '../utils/MotorUtils';
 // Import gauge components
 import { CircularGauge, BarGauge, CompactDataField, PrimaryGauge } from './GaugeComponents';
+// Import fuel log modal and utilities
+import FuelLogModal from './FuelLogModal';
+import { 
+  addFuelLogEntry, 
+  fetchFuelLogEntries, 
+  calculateFuelStats, 
+  estimateTankLevel,
+  handleOcearoCoreError 
+} from '../utils/OcearoCoreUtils';
 
 // Helper component for displaying individual data points
 const DataField = ({ label, value, unit, icon, statusClass = 'text-white' }) => {
@@ -38,6 +48,13 @@ const MotorView = () => {
   const [activeTab, setActiveTab] = useState('engine'); // engine, transmission, electrical, fuel, warnings
   const [availableEngines, setAvailableEngines] = useState([]);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
+  
+  // Fuel log state
+  const [showFuelLogModal, setShowFuelLogModal] = useState(false);
+  const [fuelLogEntries, setFuelLogEntries] = useState([]);
+  const [fuelStats, setFuelStats] = useState(null);
+  const [fuelLogLoading, setFuelLogLoading] = useState(false);
+  const [fuelLogError, setFuelLogError] = useState(null);
 
   // Get available engines
   const getAvailableEngines = useCallback(() => {
@@ -149,6 +166,68 @@ const MotorView = () => {
   const houseBatteryCurrent = typeof houseBatteryCurrentRaw === 'number'
     ? Math.round(houseBatteryCurrentRaw * 10) / 10
     : houseBatteryCurrentRaw;
+
+  // Get current engine hours in hours (runTime is in seconds)
+  const currentEngineHoursRaw = getEngineValue('runTime');
+  const currentEngineHours = currentEngineHoursRaw !== null 
+    ? currentEngineHoursRaw / 3600 
+    : null;
+
+  // Fetch fuel log entries on mount and when tab changes to fuel
+  const loadFuelLogEntries = useCallback(async () => {
+    setFuelLogLoading(true);
+    setFuelLogError(null);
+    try {
+      const entries = await fetchFuelLogEntries();
+      setFuelLogEntries(entries);
+      const stats = calculateFuelStats(entries, engineData.fuelCapacity);
+      setFuelStats(stats);
+    } catch (error) {
+      const errorMessage = handleOcearoCoreError(error, 'Fuel log fetch');
+      setFuelLogError(errorMessage);
+      setFuelLogEntries([]);
+      setFuelStats(null);
+    } finally {
+      setFuelLogLoading(false);
+    }
+  }, [engineData.fuelCapacity]);
+
+  useEffect(() => {
+    if (activeTab === 'fuel') {
+      loadFuelLogEntries();
+    }
+  }, [activeTab, loadFuelLogEntries]);
+
+  // Handle fuel log save
+  const handleFuelLogSave = useCallback(async (fuelData) => {
+    setFuelLogLoading(true);
+    setFuelLogError(null);
+    try {
+      const position = {
+        latitude: getSignalKValue('navigation.position.latitude'),
+        longitude: getSignalKValue('navigation.position.longitude')
+      };
+      await addFuelLogEntry(fuelData, position);
+      setShowFuelLogModal(false);
+      await loadFuelLogEntries();
+    } catch (error) {
+      const errorMessage = handleOcearoCoreError(error, 'Fuel log save');
+      setFuelLogError(errorMessage);
+    } finally {
+      setFuelLogLoading(false);
+    }
+  }, [getSignalKValue, loadFuelLogEntries]);
+
+  // Get last refill engine hours for the modal
+  const lastRefillEngineHours = fuelStats?.lastRefill?.engineHours || null;
+
+  // Calculate tank estimation based on fuel logs
+  const tankEstimation = estimateTankLevel(
+    fuelLogEntries,
+    currentEngineHours,
+    engineData.fuelCapacity,
+    engineData.fuelLevel !== null ? engineData.fuelLevel / 100 : null
+  );
 
   return (
     <div className="flex flex-col h-full rightPaneBg overflow-auto">
@@ -525,52 +604,69 @@ const MotorView = () => {
 
         {activeTab === 'fuel' && (
           <div className="space-y-6">
-            {/* Fuel Consumption */}
-            <div>
-              <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+            {/* Header with Log Fuel Button */}
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-bold text-white flex items-center">
                 <FontAwesomeIcon icon={faGasPump} className="mr-2 text-oYellow" />
                 Fuel System
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <CircularGauge
-                  label="Fuel Rate"
-                  value={engineData.fuelRate}
-                  unit="L/h"
-                  min={0}
-                  max={50}
-                  icon={faGasPump}
-                  size={180}
-                />
-                <CircularGauge
-                  label="Fuel Pressure"
-                  value={engineData.fuelPressure}
-                  unit="bar"
-                  min={0}
-                  max={5}
-                  icon={faGaugeHigh}
-                  warningThreshold={2.5}
-                  criticalThreshold={2}
-                  size={180}
-                />
-                <CircularGauge
-                  label="Tank Level"
-                  value={engineData.fuelLevel}
-                  unit="%"
-                  min={0}
-                  max={100}
-                  icon={faFlask}
-                  warningThreshold={30}
-                  criticalThreshold={15}
-                  size={180}
-                />
+              <button
+                onClick={() => setShowFuelLogModal(true)}
+                className="bg-oBlue hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center"
+                disabled={fuelLogLoading}
+              >
+                <FontAwesomeIcon icon={faPlus} className="mr-2" />
+                Log Refill
+              </button>
+            </div>
+
+            {/* Error Message */}
+            {fuelLogError && (
+              <div className="bg-red-900/30 border border-red-500 text-red-400 p-3 rounded-lg">
+                {fuelLogError}
               </div>
+            )}
+
+            {/* Fuel Consumption Gauges */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <CircularGauge
+                label="Fuel Rate"
+                value={engineData.fuelRate}
+                unit="L/h"
+                min={0}
+                max={50}
+                icon={faGasPump}
+                size={180}
+              />
+              <CircularGauge
+                label="Fuel Pressure"
+                value={engineData.fuelPressure}
+                unit="bar"
+                min={0}
+                max={5}
+                icon={faGaugeHigh}
+                warningThreshold={2.5}
+                criticalThreshold={2}
+                size={180}
+              />
+              <CircularGauge
+                label="Tank Level"
+                value={engineData.fuelLevel}
+                unit="%"
+                min={0}
+                max={100}
+                icon={faFlask}
+                warningThreshold={30}
+                criticalThreshold={15}
+                size={180}
+              />
             </div>
 
             {/* Fuel Tank Details */}
             <div>
-              <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center">
                 <FontAwesomeIcon icon={faFlask} className="mr-2 text-oBlue" />
-                Fuel Tank Details
+                Tank Details
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <BarGauge
@@ -611,6 +707,153 @@ const MotorView = () => {
                 </div>
               )}
             </div>
+
+            {/* Consumption Statistics */}
+            <div>
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center">
+                <FontAwesomeIcon icon={faChartLine} className="mr-2 text-oGreen" />
+                Consumption Statistics
+              </h3>
+              {fuelLogLoading ? (
+                <div className="text-center text-gray-400 py-4">Loading...</div>
+              ) : fuelStats && fuelStats.refillCount > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <CompactDataField
+                    label="Average Consumption"
+                    value={fuelStats.averageConsumption}
+                    unit="L/h"
+                    icon={faChartLine}
+                  />
+                  <CompactDataField
+                    label="Total Refills"
+                    value={fuelStats.refillCount}
+                    icon={faHistory}
+                  />
+                  <CompactDataField
+                    label="Total Liters"
+                    value={fuelStats.totalLiters}
+                    unit="L"
+                    icon={faGasPump}
+                  />
+                  <CompactDataField
+                    label="Total Cost"
+                    value={fuelStats.totalCost}
+                    unit="€"
+                    icon={faEuroSign}
+                  />
+                </div>
+              ) : (
+                <div className="bg-oGray2 rounded-lg p-4 text-center text-gray-400">
+                  <FontAwesomeIcon icon={faGasPump} className="text-3xl mb-2" />
+                  <p>No fuel log entries yet.</p>
+                  <p className="text-sm">Click &quot;Log Refill&quot; to start tracking your fuel consumption.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Tank Estimation based on logs */}
+            {tankEstimation && (tankEstimation.estimatedLiters !== null || tankEstimation.hoursRemaining !== null) && (
+              <div>
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center">
+                  <FontAwesomeIcon icon={faFlask} className="mr-2 text-purple-400" />
+                  Estimated Tank Level (based on logs)
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {tankEstimation.estimatedLiters !== null && (
+                    <CompactDataField
+                      label="Estimated Remaining"
+                      value={tankEstimation.estimatedLiters}
+                      unit="L"
+                      icon={faFlask}
+                    />
+                  )}
+                  {tankEstimation.estimatedPercent !== null && (
+                    <CompactDataField
+                      label="Estimated Level"
+                      value={tankEstimation.estimatedPercent}
+                      unit="%"
+                      icon={faFlask}
+                      warningThreshold={30}
+                      criticalThreshold={15}
+                      reversed={true}
+                    />
+                  )}
+                  {tankEstimation.hoursRemaining !== null && (
+                    <CompactDataField
+                      label="Hours Remaining"
+                      value={tankEstimation.hoursRemaining}
+                      unit="h"
+                      icon={faClock}
+                      warningThreshold={10}
+                      criticalThreshold={5}
+                      reversed={true}
+                    />
+                  )}
+                  {tankEstimation.hoursSinceLastRefill !== undefined && (
+                    <CompactDataField
+                      label="Hours Since Refill"
+                      value={tankEstimation.hoursSinceLastRefill}
+                      unit="h"
+                      icon={faClock}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Fuel Log Entries */}
+            {fuelLogEntries.length > 0 && (
+              <div>
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center">
+                  <FontAwesomeIcon icon={faHistory} className="mr-2 text-gray-400" />
+                  Recent Refills
+                </h3>
+                <div className="bg-oGray2 rounded-lg overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-oGray">
+                      <tr>
+                        <th className="text-white p-3 text-left">Date</th>
+                        <th className="text-white p-3 text-left">Liters</th>
+                        <th className="text-white p-3 text-left">Cost</th>
+                        <th className="text-white p-3 text-left">Engine Hours</th>
+                        <th className="text-white p-3 text-left">Additive</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {fuelLogEntries.slice(-5).reverse().map((entry, index) => {
+                        const fuel = entry.fuel || {};
+                        return (
+                          <tr key={entry.datetime || index} className="border-b border-gray-700 text-white">
+                            <td className="p-3">
+                              {new Date(entry.datetime).toLocaleDateString('fr-FR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </td>
+                            <td className="p-3">{fuel.liters} L</td>
+                            <td className="p-3">{fuel.cost} €</td>
+                            <td className="p-3">{fuel.engineHoursAtRefill} h</td>
+                            <td className="p-3">
+                              {fuel.additive ? (
+                                <span className="text-purple-400">
+                                  <FontAwesomeIcon icon={faFlask} className="mr-1" />
+                                  Yes
+                                </span>
+                              ) : (
+                                <span className="text-gray-500">No</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -848,6 +1091,16 @@ const MotorView = () => {
           </div>
         )}
       </div>
+
+      {/* Fuel Log Modal */}
+      <FuelLogModal
+        isOpen={showFuelLogModal}
+        onClose={() => setShowFuelLogModal(false)}
+        onSave={handleFuelLogSave}
+        currentEngineHours={currentEngineHours}
+        lastRefillEngineHours={lastRefillEngineHours}
+        loading={fuelLogLoading}
+      />
     </div>
   );
 };

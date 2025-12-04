@@ -10,12 +10,22 @@ import configService from '../settings/ConfigService';
  */
 const getOcearoCoreConfig = () => {
   const config = configService.getAll();
+  
+  // Determine the base URL - use configured URL if set, otherwise compute from window location
+  let baseUrl;
+  if (config.signalKUrlSet && config.signalkUrl) {
+    baseUrl = config.signalkUrl;
+  } else if (typeof configService.getComputedSignalKUrl === 'function') {
+    baseUrl = configService.getComputedSignalKUrl();
+  } else {
+    baseUrl = config.signalkUrl || 'http://localhost:3000';
+  }
+  
   return {
-    enabled: config.ocearoCoreEnabled || true,
-    baseUrl: (typeof configService.getComputedSignalKUrl === 'function')
-      ? configService.getComputedSignalKUrl()
-      : (config.signalkUrl || 'http://localhost:3000'),
+    enabled: config.ocearoCoreEnabled !== false,
+    baseUrl,
     timeout: 10000, // 10 second timeout
+    useAuthentication: config.useAuthentication || false,
     username: config.username || '',
     password: config.password || ''
   };
@@ -51,13 +61,19 @@ const makeOcearoCoreApiCall = async (endpoint, options = {}) => {
       ...options.headers
     };
 
-    if (config.username) {
+    let credentialsOption = 'include';
+
+    // Add Basic Auth header if authentication is enabled and username is provided
+    if (config.useAuthentication && config.username) {
       try {
         // btoa is available in browsers; guard in case of environment issues
         const token = typeof btoa === 'function'
           ? btoa(`${config.username}:${config.password || ''}`)
           : Buffer.from(`${config.username}:${config.password || ''}`).toString('base64');
         headers['Authorization'] = `Basic ${token}`;
+        
+        // If we have explicit credentials, prefer them over cookies to avoid "old cookie" issues
+        credentialsOption = 'omit';
       } catch (_) {
         // If encoding fails, skip adding the header
       }
@@ -66,8 +82,8 @@ const makeOcearoCoreApiCall = async (endpoint, options = {}) => {
     const response = await fetch(url, {
       signal: controller.signal,
       headers,
-      // Include credentials so cookies/session are sent when same-origin
-      credentials: 'include',
+      // Use omit if we have auth header, otherwise include to support session cookies
+      credentials: credentialsOption,
       ...options
     });
 
@@ -263,6 +279,172 @@ export const generateOcearoCoreLogbookEntry = async (currentData) => {
   });
 };
 
+// ===== FUEL LOG FUNCTIONS =====
+
+/**
+ * Add a fuel log entry to the logbook
+ * @param {Object} fuelData - Fuel refill data
+ * @param {number} fuelData.liters - Amount of fuel added in liters
+ * @param {number} fuelData.cost - Cost of the refill
+ * @param {boolean} fuelData.additive - Whether additive was added
+ * @param {number} fuelData.engineHours - Engine hours at refill
+ * @param {number} fuelData.previousEngineHours - Engine hours at previous refill
+ * @param {Object} position - Current GPS position
+ * @returns {Promise<Object>} - The created logbook entry
+ */
+export const addFuelLogEntry = async (fuelData, position = null) => {
+  if (!fuelData || typeof fuelData !== 'object') {
+    throw new Error('Fuel data is required and must be an object');
+  }
+
+  const entry = {
+    datetime: new Date().toISOString(),
+    type: 'fuel_refill',
+    position: position || { latitude: null, longitude: null },
+    fuel: {
+      liters: fuelData.liters,
+      cost: fuelData.cost,
+      additive: fuelData.additive || false,
+      engineHoursAtRefill: fuelData.engineHours,
+      previousEngineHours: fuelData.previousEngineHours || null,
+      hoursSinceLastRefill: fuelData.hoursSinceLastRefill || null
+    },
+    author: 'fuel_log',
+    text: `Fuel refill: ${fuelData.liters}L - ${fuelData.cost}€${fuelData.additive ? ' (with additive)' : ''} - Engine hours: ${fuelData.engineHours}h`
+  };
+
+  return await addLogbookEntry(entry);
+};
+
+/**
+ * Fetch fuel log entries from logbook
+ * @returns {Promise<Array>} - Array of fuel log entries
+ */
+export const fetchFuelLogEntries = async () => {
+  const entries = await fetchLogbookEntries();
+  return entries.filter(entry => entry.type === 'fuel_refill' || entry.author === 'fuel_log');
+};
+
+/**
+ * Calculate fuel consumption statistics from fuel log entries
+ * @param {Array} fuelEntries - Array of fuel log entries
+ * @param {number} tankCapacity - Tank capacity in liters
+ * @returns {Object} - Consumption statistics
+ */
+export const calculateFuelStats = (fuelEntries, tankCapacity = null) => {
+  if (!fuelEntries || fuelEntries.length === 0) {
+    return {
+      averageConsumption: null,
+      totalLiters: 0,
+      totalCost: 0,
+      refillCount: 0,
+      estimatedTankLevel: null,
+      lastRefill: null
+    };
+  }
+
+  const sortedEntries = [...fuelEntries].sort((a, b) => 
+    new Date(a.datetime) - new Date(b.datetime)
+  );
+
+  let totalLiters = 0;
+  let totalCost = 0;
+  let totalHours = 0;
+  let consumptionReadings = [];
+
+  for (let i = 0; i < sortedEntries.length; i++) {
+    const entry = sortedEntries[i];
+    const fuel = entry.fuel || {};
+    
+    totalLiters += fuel.liters || 0;
+    totalCost += fuel.cost || 0;
+
+    if (i > 0 && fuel.hoursSinceLastRefill && fuel.hoursSinceLastRefill > 0) {
+      const previousEntry = sortedEntries[i - 1];
+      const previousFuel = previousEntry.fuel || {};
+      const litersUsed = previousFuel.liters || 0;
+      const hours = fuel.hoursSinceLastRefill;
+      
+      if (litersUsed > 0 && hours > 0) {
+        consumptionReadings.push(litersUsed / hours);
+        totalHours += hours;
+      }
+    }
+  }
+
+  const averageConsumption = consumptionReadings.length > 0
+    ? consumptionReadings.reduce((a, b) => a + b, 0) / consumptionReadings.length
+    : null;
+
+  const lastEntry = sortedEntries[sortedEntries.length - 1];
+  const lastFuel = lastEntry?.fuel || {};
+
+  return {
+    averageConsumption: averageConsumption ? Math.round(averageConsumption * 10) / 10 : null,
+    totalLiters: Math.round(totalLiters * 10) / 10,
+    totalCost: Math.round(totalCost * 100) / 100,
+    refillCount: sortedEntries.length,
+    totalHours: Math.round(totalHours * 10) / 10,
+    lastRefill: lastEntry ? {
+      date: new Date(lastEntry.datetime),
+      liters: lastFuel.liters,
+      engineHours: lastFuel.engineHoursAtRefill
+    } : null
+  };
+};
+
+/**
+ * Estimate current tank level based on fuel logs and current engine hours
+ * @param {Array} fuelEntries - Array of fuel log entries
+ * @param {number} currentEngineHours - Current engine hours
+ * @param {number} tankCapacity - Tank capacity in liters
+ * @param {number} currentTankLevel - Current tank level from sensor (0-1 ratio)
+ * @returns {Object} - Tank level estimation
+ */
+export const estimateTankLevel = (fuelEntries, currentEngineHours, tankCapacity, currentTankLevel = null) => {
+  const stats = calculateFuelStats(fuelEntries, tankCapacity);
+  
+  if (!stats.lastRefill || !stats.averageConsumption || !currentEngineHours) {
+    return {
+      estimatedLiters: null,
+      estimatedPercent: null,
+      hoursRemaining: null,
+      basedOnSensor: currentTankLevel !== null,
+      sensorLevel: currentTankLevel !== null ? Math.round(currentTankLevel * 100) : null
+    };
+  }
+
+  const hoursSinceLastRefill = currentEngineHours - stats.lastRefill.engineHours;
+  const estimatedUsed = hoursSinceLastRefill * stats.averageConsumption;
+  
+  let estimatedRemaining;
+  if (currentTankLevel !== null && tankCapacity) {
+    estimatedRemaining = (currentTankLevel * tankCapacity) - estimatedUsed;
+  } else if (tankCapacity && stats.lastRefill.liters) {
+    estimatedRemaining = stats.lastRefill.liters - estimatedUsed;
+  } else {
+    estimatedRemaining = null;
+  }
+
+  const estimatedPercent = estimatedRemaining !== null && tankCapacity
+    ? Math.max(0, Math.min(100, (estimatedRemaining / tankCapacity) * 100))
+    : null;
+
+  const hoursRemaining = estimatedRemaining !== null && stats.averageConsumption > 0
+    ? Math.max(0, estimatedRemaining / stats.averageConsumption)
+    : null;
+
+  return {
+    estimatedLiters: estimatedRemaining !== null ? Math.round(estimatedRemaining * 10) / 10 : null,
+    estimatedPercent: estimatedPercent !== null ? Math.round(estimatedPercent) : null,
+    hoursRemaining: hoursRemaining !== null ? Math.round(hoursRemaining * 10) / 10 : null,
+    hoursSinceLastRefill: Math.round(hoursSinceLastRefill * 10) / 10,
+    estimatedUsed: Math.round(estimatedUsed * 10) / 10,
+    basedOnSensor: currentTankLevel !== null,
+    sensorLevel: currentTankLevel !== null ? Math.round(currentTankLevel * 100) : null
+  };
+};
+
 // ===== LOGBOOK PROXY FUNCTIONS =====
 
 /**
@@ -423,6 +605,12 @@ const OcearoCoreUtils = {
   // Logbook proxy functions
   fetchLogbookEntries,
   addLogbookEntry,
+  
+  // Fuel log functions
+  addFuelLogEntry,
+  fetchFuelLogEntries,
+  calculateFuelStats,
+  estimateTankLevel,
   
   // Utility functions
   handleOcearoCoreError,

@@ -14,7 +14,8 @@ import {
   collectCurrentVesselData,
   handleOcearoCoreError,
   fetchLogbookEntries,
-  addLogbookEntry
+  addLogbookEntry,
+  requestAnalysis
 } from '../utils/OcearoCoreUtils';
 
 /**
@@ -51,7 +52,23 @@ const LogbookView = () => {
     
     try {
       // Use OcearoCore proxy to fetch logbook entries
-      const transformedEntries = await fetchLogbookEntries();
+      const rawEntries = await fetchLogbookEntries();
+      
+      // Transform entries to ensure correct data types (Date objects, etc.)
+      const transformedEntries = rawEntries.map(entry => ({
+        ...entry,
+        date: new Date(entry.datetime || entry.date),
+        point: entry.point ? {
+          ...entry.point,
+          toString: () => {
+            if (typeof entry.point.latitude === 'number' && typeof entry.point.longitude === 'number') {
+              return `${entry.point.latitude.toFixed(6)}, ${entry.point.longitude.toFixed(6)}`;
+            }
+            return 'Invalid coordinates';
+          }
+        } : null
+      }));
+
       setEntries(transformedEntries);
     } catch (err) {
       console.error('Error fetching logbook entries:', err);
@@ -208,20 +225,7 @@ const LogbookView = () => {
       setActiveTab('analysis');
       
       // Call OcearoCore /analyze endpoint with the selected type
-      const response = await fetch(`${configService.getComputedSignalKUrl()}/plugins/ocearo-core/analyze`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ type })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => response.statusText);
-        throw new Error(`Analysis failed: ${errorText}`);
-      }
-
-      const analysis = await response.json();
+      const analysis = await requestAnalysis(type);
       
       // Store analysis results
       setAnalysisResult(analysis);
@@ -252,19 +256,7 @@ const LogbookView = () => {
       setActiveTab('analysis');
       
       // Call OcearoCore /logbook/analyze endpoint
-      const response = await fetch(`${configService.getComputedSignalKUrl()}/plugins/ocearo-core/logbook/analyze`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => response.statusText);
-        throw new Error(`Logbook analysis failed: ${errorText}`);
-      }
-
-      const analysis = await response.json();
+      const analysis = await analyzeLogbookWithOcearoCore();
       
       // Store analysis results
       setAnalysisResult(analysis);
@@ -591,31 +583,63 @@ const LogbookView = () => {
           </div>
           
           <div className="space-y-4">
-            {/* Display analysis text */}
-            {analysisResult.analysis && (
+            {/* Display main analysis text (handles various backend formats) */}
+            {(analysisResult.analysis || analysisResult.aiAnalysis || (typeof analysisResult.summary === 'string' ? analysisResult.summary : null)) && (
               <div className="bg-oGray rounded-lg p-4">
-                <h5 className="text-white font-medium mb-2">Summary:</h5>
-                <p className="text-gray-300 whitespace-pre-wrap">{analysisResult.analysis}</p>
+                <h5 className="text-white font-medium mb-2">Analysis Summary:</h5>
+                <p className="text-gray-300 whitespace-pre-wrap">
+                  {analysisResult.analysis || analysisResult.aiAnalysis || analysisResult.summary}
+                </p>
+              </div>
+            )}
+
+            {/* Display structured summary (e.g. weather conditions) */}
+            {analysisResult.summary && typeof analysisResult.summary === 'object' && (
+              <div className="bg-oGray rounded-lg p-4">
+                <h5 className="text-white font-medium mb-2">Conditions:</h5>
+                <div className="grid grid-cols-1 gap-2 text-gray-300 text-sm">
+                  {Object.entries(analysisResult.summary).map(([key, value]) => (
+                    <div key={key} className="flex">
+                      <span className="font-semibold w-24 capitalize">{key}:</span>
+                      <span>{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Display insights/recommendations */}
+            {(analysisResult.insights || analysisResult.recommendations) && (
+              <div className="bg-oGray rounded-lg p-4">
+                <h5 className="text-white font-medium mb-2">Insights & Recommendations:</h5>
+                <ul className="list-disc list-inside text-gray-300 space-y-1">
+                  {(analysisResult.insights || []).map((item, i) => (
+                    <li key={`insight-${i}`} className="text-blue-300">{item}</li>
+                  ))}
+                  {(analysisResult.recommendations || []).map((item, i) => (
+                    <li key={`rec-${i}`} className="text-green-300">{typeof item === 'string' ? item : item.message || JSON.stringify(item)}</li>
+                  ))}
+                </ul>
               </div>
             )}
 
             {/* Display speech text if available */}
-            {analysisResult.speechText && (
+            {(analysisResult.speechText || analysisResult.speech) && (
               <div className="bg-blue-900 bg-opacity-30 rounded-lg p-4 border border-blue-700">
                 <h5 className="text-blue-400 font-medium mb-2 flex items-center">
                   <FontAwesomeIcon icon={faRobot} className="mr-2" />
                   Spoken Analysis:
                 </h5>
-                <p className="text-gray-300 whitespace-pre-wrap">{analysisResult.speechText}</p>
+                <p className="text-gray-300 whitespace-pre-wrap">{analysisResult.speechText || analysisResult.speech}</p>
               </div>
             )}
 
-            {/* Display raw data if available */}
-            {analysisResult.data && (
+            {/* Display raw data or technical details if available */}
+            {(analysisResult.data || analysisResult.weatherData || analysisResult.assessment) && (
               <div className="bg-oGray rounded-lg p-4">
-                <h5 className="text-white font-medium mb-2">Data:</h5>
-                <pre className="text-gray-300 text-xs overflow-auto">
-                  {JSON.stringify(analysisResult.data, null, 2)}
+                <h5 className="text-white font-medium mb-2">Technical Data:</h5>
+                <pre className="text-gray-300 text-xs overflow-auto max-h-60">
+                  {JSON.stringify(analysisResult.data || analysisResult.assessment || analysisResult.weatherData, null, 2)}
                 </pre>
               </div>
             )}
