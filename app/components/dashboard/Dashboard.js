@@ -18,7 +18,9 @@ import VisibilityWidget from './widgets/VisibilityWidget';
 import WeatherWidget from './widgets/WeatherWidget';
 import SpeedWidget from './widgets/SpeedWidget';
 import TimeWidget from './widgets/TimeWidget';
+import CourseWidget from './widgets/CourseWidget';
 import { AISProvider } from '../3dview/ais/AISContext';
+import { NavigationContextProvider } from '../context/NavigationContext';
 
 const WidgetWrapper = React.memo(({ children, widgetName, className = "", fullscreenWidget, toggleFullscreen }) => (
   <div className={`relative group ${className}`}>
@@ -143,12 +145,14 @@ export default function Dashboard() {
         </AISProvider>
       </WidgetWrapper>
       <WidgetWrapper 
-        widgetName="time" 
+        widgetName="course" 
         fullscreenWidget={fullscreenWidget} 
         toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'time' ? 'hidden' : fullscreenWidget === 'time' ? 'w-full h-full' : ''}
+        className={fullscreenWidget && fullscreenWidget !== 'course' ? 'hidden' : fullscreenWidget === 'course' ? 'w-full h-full' : ''}
       >
-        <TimeWidget />
+        <NavigationContextProvider>
+          <CourseWidget />
+        </NavigationContextProvider>
       </WidgetWrapper>
     </div>
   ), [fullscreenWidget, toggleFullscreen]);
@@ -195,6 +199,14 @@ export default function Dashboard() {
         className={fullscreenWidget && fullscreenWidget !== 'sunrise' ? 'hidden' : fullscreenWidget === 'sunrise' ? 'w-full h-full' : ''}
       >
         <SunriseSunsetWidget />
+      </WidgetWrapper>
+      <WidgetWrapper 
+        widgetName="time" 
+        fullscreenWidget={fullscreenWidget} 
+        toggleFullscreen={toggleFullscreen}
+        className={fullscreenWidget && fullscreenWidget !== 'time' ? 'hidden' : fullscreenWidget === 'time' ? 'w-full h-full' : ''}
+      >
+        <TimeWidget />
       </WidgetWrapper>
     </div>
   ), [fullscreenWidget, toggleFullscreen]);
