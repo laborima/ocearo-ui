@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Client from '@signalk/client';
 import configService from '../../settings/ConfigService';
 import signalKService from '../../services/SignalKService';
 import { useOcearoContext } from '../../context/OcearoContext';
+import { useSignalKPath } from '../../hooks/useSignalK';
 
 const AISContext = createContext();
 
@@ -61,14 +62,14 @@ export const AISProvider = ({ children }) => {
     const lastUpdateRef = useRef({});
     const pendingVisibilityUpdateRef = useRef(null);
 
-    const { getSignalKValue, convertLatLonToXY } = useOcearoContext();
+    const { convertLatLonToXY } = useOcearoContext();
+    const myPosition = useSignalKPath('navigation.position');
 
     const updateVesselSpatialPropertiesRef = useRef();
     const scheduleVisibilityUpdateRef = useRef();
 
     // Helper function to update spatial properties
     const updateVesselSpatialProperties = useCallback((vessel) => {
-        const myPosition = getSignalKValue('navigation.position');
         if (vessel.latitude && vessel.longitude &&
             myPosition && myPosition.latitude && myPosition.longitude
          && vessel.latitude!=myPosition.latitude && vessel.longitude!=myPosition.longitude
@@ -96,7 +97,7 @@ export const AISProvider = ({ children }) => {
             return wasVisible !== vessel.visible;
         }
         return false;
-    }, [getSignalKValue, convertLatLonToXY]);
+    }, [myPosition, convertLatLonToXY]);
 
     // Function to update the vesselIds array based on current aisData
     const updateVisibleVessels = useCallback(() => {

@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useOcearoContext } from '../context/OcearoContext';
+import { useSignalKPaths } from '../hooks/useSignalK';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBook, faTimeline, faChartLine, faRobot, faPlus, faEdit, faTrash,
@@ -23,8 +24,25 @@ import {
  * Integrates with SignalK logbook API and includes OcearoCore functionality
  */
 const LogbookView = () => {
-  const { getSignalKValue } = useOcearoContext();
+  const { nightMode } = useOcearoContext();
   const [activeTab, setActiveTab] = useState('logbook');
+  
+  // Define paths for capturing vessel state during entry creation
+  const logbookPaths = useMemo(() => [
+    'navigation.position',
+    'navigation.courseOverGroundTrue',
+    'navigation.headingTrue',
+    'navigation.speedOverGround',
+    'environment.wind.speedTrue',
+    'environment.wind.angleTrueWater',
+    'environment.outside.pressure',
+    'environment.outside.temperature',
+    'navigation.log',
+    'propulsion.main.runTime'
+  ], []);
+
+  const skValues = useSignalKPaths(logbookPaths);
+
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -71,7 +89,9 @@ const LogbookView = () => {
 
       setEntries(transformedEntries);
     } catch (err) {
-      console.error('Error fetching logbook entries:', err);
+      if (err.name !== 'NetworkError' && err.name !== 'TimeoutError') {
+        console.error('Error fetching logbook entries:', err);
+      }
       const errorMessage = handleOcearoCoreError(err, 'Logbook fetch');
       setError(errorMessage);
       
@@ -142,25 +162,26 @@ const LogbookView = () => {
    */
   const addEntry = useCallback(async () => {
     try {
+      const position = skValues['navigation.position'] || {};
       const newEntry = {
         datetime: new Date().toISOString(),
         position: {
-          latitude: getSignalKValue('navigation.position.latitude') || 46.1591,
-          longitude: getSignalKValue('navigation.position.longitude') || -1.1522,
+          latitude: position.latitude || 46.1591,
+          longitude: position.longitude || -1.1522,
           source: 'GPS'
         },
-        course: getSignalKValue('navigation.courseOverGroundTrue') || getSignalKValue('navigation.headingTrue'),
+        course: skValues['navigation.courseOverGroundTrue'] || skValues['navigation.headingTrue'],
         speed: {
-          sog: getSignalKValue('navigation.speedOverGround') || 0
+          sog: skValues['navigation.speedOverGround'] || 0
         },
         wind: {
-          speed: getSignalKValue('environment.wind.speedTrue') || 0,
-          direction: getSignalKValue('environment.wind.angleTrueWater') || 0
+          speed: skValues['environment.wind.speedTrue'] || 0,
+          direction: skValues['environment.wind.angleTrueWater'] || 0
         },
-        barometer: getSignalKValue('environment.outside.pressure') || 1013,
-        log: getSignalKValue('navigation.log') || 0,
+        barometer: skValues['environment.outside.pressure'] ? skValues['environment.outside.pressure'] / 100 : 1013,
+        log: skValues['navigation.log'] || 0,
         engine: {
-          hours: getSignalKValue('propulsion.main.runTime') || 0
+          hours: skValues['propulsion.main.runTime'] ? skValues['propulsion.main.runTime'] / 3600 : 0
         },
         author: entryForm.author || 'manual',
         text: entryForm.text || 'Manual entry'
@@ -177,7 +198,7 @@ const LogbookView = () => {
       const errorMessage = handleOcearoCoreError(err, 'Add logbook entry');
       setError(errorMessage);
     }
-  }, [getSignalKValue, fetchLogbookEntriesData, entryForm]);
+  }, [skValues, fetchLogbookEntriesData, entryForm]);
 
   /**
    * Add entry using OcearoCore AI
@@ -191,8 +212,24 @@ const LogbookView = () => {
     try {
       setLoading(true);
       
-      // Collect current boat data for OcearoCore analysis
-      const currentData = collectCurrentVesselData(getSignalKValue);
+      // Collect current boat data for OcearoCore analysis using current values
+      const currentData = {
+        position: skValues['navigation.position'],
+        course: skValues['navigation.courseOverGroundTrue'] || skValues['navigation.headingTrue'],
+        speed: skValues['navigation.speedOverGround'],
+        wind: {
+          speed: skValues['environment.wind.speedTrue'],
+          direction: skValues['environment.wind.angleTrueWater']
+        },
+        weather: {
+          pressure: skValues['environment.outside.pressure'],
+          temperature: skValues['environment.outside.temperature']
+        },
+        engine: {
+          hours: skValues['propulsion.main.runTime']
+        },
+        log: skValues['navigation.log']
+      };
 
       // Call OcearoCore API to generate intelligent logbook entry
       await generateOcearoCoreLogbookEntry(currentData);
@@ -206,7 +243,7 @@ const LogbookView = () => {
     } finally {
       setLoading(false);
     }
-  }, [ocearoCoreEnabled, getSignalKValue, fetchLogbookEntriesData]);
+  }, [ocearoCoreEnabled, skValues, fetchLogbookEntriesData]);
 
   /**
    * Get OcearoCore analysis of logbook data

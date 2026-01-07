@@ -2,8 +2,9 @@
 
 import React, { useState, useCallback, useMemo, useEffect, useRef, Suspense } from 'react';
 import dynamic from 'next/dynamic';
-import Draggable from 'react-draggable';
+import { useDrag } from '@use-gesture/react';
 import { OcearoContextProvider } from './components/context/OcearoContext';
+import { WeatherContextProvider } from './components/context/WeatherContext';
 import ErrorBoundary from './ErrorBoundary';
 import configService from './components/settings/ConfigService';
 
@@ -43,6 +44,7 @@ const isLargeScreen = () => {
 export default function Home() {
     // Use refs for values that don't need to trigger re-renders
     const initialRenderComplete = useRef(false);
+    const nodeRef = useRef(null);
     
     // State management
     const [currentViewMode, setCurrentViewMode] = useState(null);
@@ -82,18 +84,18 @@ export default function Home() {
         setCurrentViewMode(view);
     }, []);
 
-    const handleDrag = useCallback((e, data) => {
+    const bind = useDrag(({ movement: [x] }) => {
         const totalWidth = window.innerWidth;
         const threshold = totalWidth / 5;
 
-        if (data.x > threshold) {
+        if (x > threshold) {
             toggleViewMode(VIEW_MODES.BOAT);
-        } else if (data.x < -threshold) {
+        } else if (x < -threshold) {
             toggleViewMode(VIEW_MODES.APP);
         } else {
             toggleViewMode(VIEW_MODES.SPLIT);
         }
-    }, [toggleViewMode]);
+    }, { axis: 'x' });
 
     const toggleFullscreen = useCallback(() => {
         if (!document.fullscreenElement) {
@@ -158,47 +160,45 @@ export default function Home() {
     return (
         <ErrorBoundary>
             <OcearoContextProvider>
-                <div className="h-screen flex flex-col bg-black relative overflow-hidden">
-                    <div className="flex flex-1 min-h-0">
-                        <div className={layoutClasses.leftPane}>
-                            <ThreeDMainView  />
-                        </div>
+                <WeatherContextProvider>
+                    <div className="h-screen flex flex-col bg-black relative overflow-hidden">
+                        <div className="flex flex-1 min-h-0">
+                            <div className={layoutClasses.leftPane}>
+                                <ThreeDMainView  />
+                            </div>
 
-                        <Draggable 
-                            axis="x"
-                            onDrag={handleDrag}
-                            position={{ x: 0, y: 0 }}
-                            handle=".handle"
-                            bounds="parent"
-                        >
-                            <div className="handle w-1 bg-leftPaneBg h-full cursor-col-resize transition-all duration-200 flex items-center justify-center">
+                            <div 
+                                ref={nodeRef} 
+                                {...bind()} 
+                                className="handle w-1 bg-leftPaneBg h-full cursor-col-resize transition-all duration-200 flex items-center justify-center touch-none"
+                            >
                                 <div className="rounded-full w-3 bg-gray-600 h-40 transition-all duration-200 hover:bg-gray-500" />
                             </div>
-                        </Draggable>
 
-                        <div className={layoutClasses.rightPane}>
-                            <RightPane view={rightView} />
+                            <div className={layoutClasses.rightPane}>
+                                <RightPane view={rightView} />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="w-full h-16 min-h-16 bg-black flex items-center justify-center shrink-0">
-                        <BottomNavigation
-                            setRightView={handleSetRightView}
-                            toggleAppMenu={toggleAppMenu}
-                            toggleSettings={toggleSettings}
-                        />
-                    </div>
+                        <div className="w-full h-16 min-h-16 bg-black flex items-center justify-center shrink-0">
+                            <BottomNavigation
+                                setRightView={handleSetRightView}
+                                toggleAppMenu={toggleAppMenu}
+                                toggleSettings={toggleSettings}
+                            />
+                        </div>
 
-                    {showAppMenu && (
-                        <AppMenu
-                            currentViewMode={currentViewMode}
-                            toggleViewMode={toggleViewMode}
-                            handleSetRightView={handleSetRightView}
-                            toggleFullscreen={toggleFullscreen}
-                            setShowAppMenu={setShowAppMenu}
-                        />
-                    )}
-                </div>
+                        {showAppMenu && (
+                            <AppMenu
+                                currentViewMode={currentViewMode}
+                                toggleViewMode={toggleViewMode}
+                                handleSetRightView={handleSetRightView}
+                                toggleFullscreen={toggleFullscreen}
+                                setShowAppMenu={setShowAppMenu}
+                            />
+                        )}
+                    </div>
+                </WeatherContextProvider>
             </OcearoContextProvider>
         </ErrorBoundary>
     );

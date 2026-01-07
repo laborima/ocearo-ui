@@ -99,7 +99,15 @@ const makeOcearoCoreApiCall = async (endpoint, options = {}) => {
     clearTimeout(timeoutId);
     
     if (error.name === 'AbortError') {
-      throw new Error('OcearoCore API request timed out');
+      const timeoutError = new Error('OcearoCore API request timed out');
+      timeoutError.name = 'TimeoutError';
+      throw timeoutError;
+    }
+
+    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+      const networkError = new Error(`OcearoCore server unreachable at ${config.baseUrl}`);
+      networkError.name = 'NetworkError';
+      throw networkError;
     }
     
     throw error;
@@ -478,6 +486,36 @@ export const addLogbookEntry = async (entry) => {
 /**
  * Collect current vessel data for OcearoCore analysis
  */
+export const collectCurrentVesselDataFromValues = (skValues) => {
+  const getVal = (path) => skValues[path] ?? null;
+  const position = getVal('navigation.position') || {};
+  
+  return {
+    position: {
+      latitude: position.latitude || null,
+      longitude: position.longitude || null
+    },
+    course: getVal('navigation.courseOverGroundTrue') || getVal('navigation.headingTrue'),
+    speed: getVal('navigation.speedOverGround'),
+    wind: {
+      speed: getVal('environment.wind.speedTrue'),
+      direction: getVal('environment.wind.angleTrueWater')
+    },
+    weather: {
+      pressure: getVal('environment.outside.pressure'),
+      temperature: getVal('environment.outside.temperature')
+    },
+    engine: {
+      hours: getVal('propulsion.main.runTime')
+    },
+    log: getVal('navigation.log')
+  };
+};
+
+/**
+ * Collect current vessel data for OcearoCore analysis (Legacy version using getSignalKValue)
+ * @deprecated Use collectCurrentVesselDataFromValues instead
+ */
 export const collectCurrentVesselData = (getSignalKValue) => {
   return {
     position: {
@@ -505,15 +543,21 @@ export const collectCurrentVesselData = (getSignalKValue) => {
  * Error handler for OcearoCore API calls
  */
 export const handleOcearoCoreError = (error, context = 'OcearoCore operation') => {
+  if (error.name === 'NetworkError') {
+    console.warn(`${context} failed: OcearoCore server unreachable.`, error.message);
+    return 'OcearoCore server unreachable. Please check if the service is running.';
+  }
+  
+  if (error.name === 'TimeoutError' || error.message.includes('timed out')) {
+    console.warn(`${context} failed: OcearoCore request timed out.`);
+    return 'OcearoCore service is not responding (timeout)';
+  }
+
   console.error(`${context} failed:`, error);
   
   // Return user-friendly error messages
   if (error.message.includes('not enabled')) {
     return 'OcearoCore is not enabled in the configuration';
-  }
-  
-  if (error.message.includes('timed out')) {
-    return 'OcearoCore service is not responding (timeout)';
   }
   
   // Check for logbook-specific errors
@@ -600,6 +644,7 @@ const OcearoCoreUtils = {
   getOcearoCoreLogbookStats,
   analyzeLogbookWithOcearoCore,
   generateOcearoCoreLogbookEntry,
+  collectCurrentVesselDataFromValues,
   collectCurrentVesselData,
   
   // Logbook proxy functions

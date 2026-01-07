@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLeaf, faCompass, faCog, faExpand, faCompress } from '@fortawesome/free-solid-svg-icons';
 import SunriseSunsetWidget from './widgets/SunriseSunsetWidget';
@@ -23,19 +24,37 @@ import { AISProvider } from '../3dview/ais/AISContext';
 import { NavigationContextProvider } from '../context/NavigationContext';
 
 const WidgetWrapper = React.memo(({ children, widgetName, className = "", fullscreenWidget, toggleFullscreen }) => (
-  <div className={`relative group ${className}`}>
+  <motion.div 
+    layout
+    variants={{
+      hidden: { opacity: 0, y: 20 },
+      show: { opacity: 1, y: 0 }
+    }}
+    transition={{ duration: 0.3 }}
+    className={`relative group ${className}`}
+  >
     {children}
     <button
       onClick={() => toggleFullscreen(widgetName)}
-      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black bg-opacity-50 hover:bg-opacity-70 rounded p-1 text-white text-xs"
+      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black bg-opacity-50 hover:bg-opacity-70 rounded p-1 text-white text-xs z-10"
       title={fullscreenWidget === widgetName ? "Exit fullscreen" : "Fullscreen"}
     >
       <FontAwesomeIcon icon={fullscreenWidget === widgetName ? faCompress : faExpand} />
     </button>
-  </div>
+  </motion.div>
 ));
 
 WidgetWrapper.displayName = 'WidgetWrapper';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05
+    }
+  }
+};
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('environment');
@@ -46,7 +65,12 @@ export default function Dashboard() {
   }, []);
 
   const renderEnvironmentTab = React.useMemo(() => (
-    <div className={`${fullscreenWidget ? 'flex h-full' : 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 h-full auto-rows-fr'}`}>
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className={`${fullscreenWidget ? 'flex h-full' : 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 h-full auto-rows-fr'}`}
+    >
       {/* Environment widgets - 6 total */}
       <WidgetWrapper 
         widgetName="temperature" 
@@ -96,11 +120,16 @@ export default function Dashboard() {
       >
         <PressureWidget />
       </WidgetWrapper>
-    </div>
+    </motion.div>
   ), [fullscreenWidget, toggleFullscreen]);
 
   const renderNavigationTab = React.useMemo(() => (
-    <div className={`${fullscreenWidget ? 'flex h-full' : 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 h-full auto-rows-fr'}`}>
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className={`${fullscreenWidget ? 'flex h-full' : 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 h-full auto-rows-fr'}`}
+    >
       {/* Navigation widgets - 6 total */}
       <WidgetWrapper 
         widgetName="boat3d" 
@@ -154,11 +183,16 @@ export default function Dashboard() {
           <CourseWidget />
         </NavigationContextProvider>
       </WidgetWrapper>
-    </div>
+    </motion.div>
   ), [fullscreenWidget, toggleFullscreen]);
 
   const renderSystemTab = React.useMemo(() => (
-    <div className={`${fullscreenWidget ? 'flex h-full' : 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 h-full auto-rows-fr'}`}>
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className={`${fullscreenWidget ? 'flex h-full' : 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 h-full auto-rows-fr'}`}
+    >
       {/* System widgets - 5 total */}
       <WidgetWrapper 
         widgetName="battery" 
@@ -208,7 +242,7 @@ export default function Dashboard() {
       >
         <TimeWidget />
       </WidgetWrapper>
-    </div>
+    </motion.div>
   ), [fullscreenWidget, toggleFullscreen]);
 
 
@@ -265,8 +299,19 @@ export default function Dashboard() {
       </div>
     
       {/* Dashboard Content */}
-      <div className="flex-1 p-4 min-h-0">
-        {renderTabContent}
+      <div className="flex-1 p-4 min-h-0 overflow-auto">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="h-full"
+          >
+            {renderTabContent}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

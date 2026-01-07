@@ -1,9 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOcearoContext } from '../context/OcearoContext';
+import { useSignalKPath } from '../hooks/useSignalK';
 
 const ThreeDBoatPositionDateIndicator = () => {
-  const { nightMode, getSignalKValue } = useOcearoContext();
-  const position = getSignalKValue('navigation.position');
+  const { nightMode } = useOcearoContext();
+  const position = useSignalKPath('navigation.position');
+  const [dateTime, setDateTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setDateTime(new Date());
+    }, 10000); // Update every 10 seconds is enough for this display
+    return () => clearInterval(timer);
+  }, []);
 
   const formatCoordinate = (value, isLatitude) => {
     if (value === undefined || value === null) return '--';
@@ -17,20 +26,19 @@ const ThreeDBoatPositionDateIndicator = () => {
   };
 
   const getCurrentDateTime = () => {
-    const now = new Date();
     try {
       const userLocale = navigator.language || 'en-US';
-      return now.toLocaleString(userLocale, {
+      return dateTime.toLocaleString(userLocale, {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-        hour12: undefined
+        hour12: false
       });
     } catch (error) {
       console.warn('Error formatting date with user locale, falling back to en-US', error);
-      return now.toLocaleString('en-US', {
+      return dateTime.toLocaleString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',

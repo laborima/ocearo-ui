@@ -1,28 +1,39 @@
-import React, { Suspense, useRef } from 'react';
+import React, { Suspense, useRef, useMemo } from 'react';
 import { OrbitControls, PerspectiveCamera, Html, Environment } from '@react-three/drei';
 import SailBoat3D from '../SailBoat3D';
-import { useOcearoContext, convertWindSpeed, oGreen } from '../../context/OcearoContext';
+import { useOcearoContext, convertWindSpeed } from '../../context/OcearoContext';
+import { useSignalKPaths } from '../../hooks/useSignalK';
 import WindSector3D from '../compass/WindSector3D';
 import BoatNavigationSystem from './BoatNavigationSystem';
 import Current3D from '../compass/Current3D';
 
 const ThreeDParkAssistBoat = ({ onUpdateInfoPanel }) => {
   const sailBoatRef = useRef();
-  const { getSignalKValue } = useOcearoContext();
+  
+  // Define paths for subscription
+  const assistPaths = useMemo(() => [
+    'steering.rudderAngle',
+    'navigation.speedOverGround',
+    'environment.wind.angleApparent',
+    'environment.wind.speedApparent',
+    'environment.current'
+  ], []);
 
-  // Get rudder and speed data
-  const rudderAngle = getSignalKValue('steering.rudderAngle') || 0;
-  const sog = getSignalKValue('navigation.speedOverGround') || 0;
+  const skValues = useSignalKPaths(assistPaths);
+
+  // Get rudder and speed data from subscribed values
+  const rudderAngle = skValues['steering.rudderAngle'] || 0;
+  const sog = skValues['navigation.speedOverGround'] || 0;
 
   // Get apparent wind data
-  const appWindAngle = getSignalKValue('environment.wind.angleApparent') || 0;
-  const appWindSpeed = convertWindSpeed(getSignalKValue('environment.wind.speedApparent')) || 0;
+  const appWindAngle = skValues['environment.wind.angleApparent'] || 0;
+  const appWindSpeed = useMemo(() => convertWindSpeed(skValues['environment.wind.speedApparent']) || 0, [skValues]);
 
   // Get current data
-  const currentData = getSignalKValue('environment.current') || {
+  const currentData = useMemo(() => skValues['environment.current'] || {
     setTrue: 0,
     drift: 0
-  };
+  }, [skValues]);
 
   // Calculate leeway based on wind and boat characteristics
   // This is a simplified calculation - adjust coefficients based on your boat's characteristics

@@ -1,6 +1,7 @@
 import { useOcearoContext } from '../context/OcearoContext';
 import { BATTERY_CONFIG, estimateStateOfCharge, isBatteryCharging, getBatteryColorClass } from '../utils/BatteryUtils';
 import { useState, useMemo } from 'react';
+import { useSignalKPaths } from '../hooks/useSignalK';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDroplet, faGasPump, faToilet, faBolt } from '@fortawesome/free-solid-svg-icons';
 
@@ -148,13 +149,28 @@ const BatteryIndicator = ({ batteryLevel, batteryNumber, voltage, styles }) => {
  * Allows toggling between battery and tank views
  */
 const ThreeDBoatTankIndicator = () => {
-    const { nightMode, getSignalKValue, getTankData } = useOcearoContext();
+    const { nightMode, getTankData } = useOcearoContext();
     const [displayMode, setDisplayMode] = useState(INDICATOR_TYPES.BATTERIES);
 
-    // Fetch battery data
+    // Subscribe to battery paths
+    const batteryPaths = useMemo(() => [
+        'electrical.batteries.1.capacity.stateOfCharge',
+        'electrical.batteries.1.voltage'
+    ], []);
+
+    // Subscribe to tank paths
+    const tankPaths = useMemo(() => [
+        'tanks.freshWater.0.currentLevel',
+        'tanks.fuel.0.currentLevel',
+        'tanks.blackWater.0.currentLevel'
+    ], []);
+
+    const skValues = useSignalKPaths([...batteryPaths, ...tankPaths]);
+
+    // Fetch battery data from subscribed values
     const batteries = useMemo(() => {
-        const battery1SoC = getSignalKValue('electrical.batteries.1.capacity.stateOfCharge');
-        const battery1Voltage = getSignalKValue('electrical.batteries.1.voltage');
+        const battery1SoC = skValues['electrical.batteries.1.capacity.stateOfCharge'];
+        const battery1Voltage = skValues['electrical.batteries.1.voltage'];
         const battery1EstimatedSoC = battery1SoC === null 
             ? estimateStateOfCharge(battery1Voltage) 
             : battery1SoC;
@@ -166,20 +182,20 @@ const ThreeDBoatTankIndicator = () => {
                 voltage: battery1Voltage
             }
         ].filter(battery => battery.level !== null);
-    }, [getSignalKValue]);
+    }, [skValues]);
 
-    // Fetch tank data using centralized helper
+    // Fetch tank data from subscribed values
     const tankLevels = useMemo(() => {
-        const freshWater = getTankData('freshWater', 0);
-        const fuel = getTankData('fuel', 0);
-        const blackWater = getTankData('blackWater', 0);
+        const freshWaterLevel = skValues['tanks.freshWater.0.currentLevel'];
+        const fuelLevel = skValues['tanks.fuel.0.currentLevel'];
+        const blackWaterLevel = skValues['tanks.blackWater.0.currentLevel'];
         
         return {
-            FRESH_WATER: freshWater.currentLevel !== null ? freshWater.currentLevel * 100 : 40,
-            FUEL: fuel.currentLevel !== null ? fuel.currentLevel * 100 : 75,
-            BLACK_WATER: blackWater.currentLevel !== null ? blackWater.currentLevel * 100 : 20
+            FRESH_WATER: freshWaterLevel !== null ? freshWaterLevel * 100 : 40,
+            FUEL: fuelLevel !== null ? fuelLevel * 100 : 75,
+            BLACK_WATER: blackWaterLevel !== null ? blackWaterLevel * 100 : 20
         };
-    }, [getTankData]);
+    }, [skValues]);
 
     // Toggle between battery and tank display
     const toggleDisplayMode = () => {

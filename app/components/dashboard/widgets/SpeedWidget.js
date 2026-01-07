@@ -1,43 +1,45 @@
 'use client';
 import React, { useMemo } from 'react';
-import { useOcearoContext, toDegrees } from '../../context/OcearoContext';
-import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { toDegrees, MS_TO_KNOTS, useOcearoContext } from '../../context/OcearoContext';
+import { useSignalKPath } from '../../hooks/useSignalK';
+import configService from '../../settings/ConfigService';
 import { faTachometerAlt, faCompass, faWater, faWind } from '@fortawesome/free-solid-svg-icons';
+import BaseWidget from './BaseWidget';
 
 const SpeedWidget = React.memo(() => {
-  const { getSignalKValue, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
   
+  const sogValue = useSignalKPath('navigation.speedOverGround');
+  const stwValue = useSignalKPath('navigation.speedThroughWater');
+  const headingValue = useSignalKPath('navigation.headingTrue');
+  const cogValue = useSignalKPath('navigation.courseOverGroundTrue');
+  const windSpeedValue = useSignalKPath('environment.wind.speedApparent');
+
+  const { nightMode } = useOcearoContext();
   const speedData = useMemo(() => {
-    const sogValue = getSignalKValue('navigation.speedOverGround');
-    const stwValue = getSignalKValue('navigation.speedThroughWater');
-    const headingValue = getSignalKValue('navigation.headingTrue');
-    const cogValue = getSignalKValue('navigation.courseOverGroundTrue');
-    const windSpeedValue = getSignalKValue('environment.wind.speedApparent');
+    const hasData = sogValue !== null || stwValue !== null || debugMode;
 
-    const hasData = sogValue !== null || stwValue !== null;
-
-    if (!hasData && !debugMode) {
+    if (!hasData) {
       return { hasData: false };
     }
 
-    const sog = sogValue || (debugMode ? 0 : null);
-    const stw = stwValue || (debugMode ? 0 : null);
-    const heading = headingValue || (debugMode ? 0 : null);
-    const cog = cogValue || (debugMode ? 0 : null);
-    const windSpeed = windSpeedValue || (debugMode ? 0 : null);
+    const sog = sogValue || (debugMode ? 5.2 : null);
+    const stw = stwValue || (debugMode ? 4.8 : null);
+    const heading = headingValue || (debugMode ? 0.52 : null);
+    const cog = cogValue || (debugMode ? 0.61 : null);
+    const windSpeed = windSpeedValue || (debugMode ? 12.5 : null);
     
     return {
       hasData: true,
-      sog: sog !== null ? Math.round(sog * 1.94384 * 10) / 10 : null,
-      stw: stw !== null ? Math.round(stw * 1.94384 * 10) / 10 : null,
+      sog: sog !== null ? Math.round(sog * MS_TO_KNOTS * 10) / 10 : null,
+      stw: stw !== null ? Math.round(stw * MS_TO_KNOTS * 10) / 10 : null,
       heading: heading !== null ? Math.round(toDegrees(heading)) : null,
       cog: cog !== null ? Math.round(toDegrees(cog)) : null,
-      windSpeed: windSpeed !== null ? Math.round(windSpeed * 1.94384 * 10) / 10 : null,
-      drift: sog !== null && stw !== null ? Math.round((sog - stw) * 1.94384 * 10) / 10 : null
+      windSpeed: windSpeed !== null ? Math.round(windSpeed * MS_TO_KNOTS * 10) / 10 : null,
+      drift: sog !== null && stw !== null ? Math.round((sog - stw) * MS_TO_KNOTS * 10) / 10 : null
     };
-  }, [getSignalKValue, debugMode]);
+  }, [sogValue, stwValue, headingValue, cogValue, windSpeedValue, debugMode]);
 
   const getSpeedColor = (speed) => {
     if (speed < 2) return 'text-gray-400';
@@ -54,120 +56,101 @@ const SpeedWidget = React.memo(() => {
     return 'Very Fast';
   };
 
-  if (!speedData.hasData) {
-    return (
-      <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
-        <div className="flex items-center space-x-2 mb-3">
-          <FontAwesomeIcon icon={faTachometerAlt} className="text-oBlue text-lg" />
-          <span className="text-white font-medium text-lg">Speed</span>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className="text-sm text-gray-500">No speed data available</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
 
   return (
-    <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center space-x-2 mb-3">
-        <FontAwesomeIcon icon={faTachometerAlt} className={`${nightMode ? 'text-oNight' : 'text-oBlue'} text-lg`} />
-        <span className={`${nightMode ? 'text-oNight' : 'text-white'} font-medium text-lg`}>Speed</span>
-      </div>
-      
-      {/* Content */}
-      <div className="flex-1 flex flex-col justify-center">
+    <BaseWidget
+      title="Speed"
+      icon={faTachometerAlt}
+      hasData={speedData.hasData}
+      noDataMessage="No speed data available"
+    >
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Main speed display */}
-        <div className="text-center mb-4">
-          <div className={`text-4xl font-bold ${nightMode ? 'text-oNight' : 'text-white'} mb-1`}>
+        <div className="text-center mb-6">
+          <div className="text-5xl font-bold text-white mb-1">
             {speedData.sog !== null ? speedData.sog : 'N/A'}
-            {speedData.sog !== null && <span className={`text-lg ${nightMode ? 'text-oNight' : 'text-gray-400'} ml-1`}>kts</span>}
+            {speedData.sog !== null && <span className="text-xl text-gray-400 ml-1">kts</span>}
           </div>
-          <div className={`text-sm font-medium ${speedData.sog !== null ? getSpeedColor(speedData.sog) : nightMode ? 'text-oNight' : 'text-gray-500'}`}>
+          <div className={`text-xs font-bold uppercase tracking-widest ${speedData.sog !== null ? getSpeedColor(speedData.sog) : 'text-gray-500'}`}>
             {speedData.sog !== null ? getSpeedStatus(speedData.sog) : 'Unknown'}
           </div>
         </div>
 
         {/* Speed readings */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          {/* Speed Over Ground */}
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-1 mb-0.5">
-              <FontAwesomeIcon icon={faCompass} className={`${nightMode ? 'text-oNight' : 'text-oBlue'} text-sm`} />
-              <div className={`${nightMode ? 'text-oNight' : 'text-gray-400'} text-sm`}>SOG</div>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-oGray p-3 rounded-lg text-center border border-gray-800">
+            <div className="flex items-center justify-center space-x-1 mb-1">
+              <FontAwesomeIcon icon={faCompass} className="text-oBlue text-xs" />
+              <div className="text-gray-400 text-[10px] uppercase font-bold">SOG</div>
             </div>
-            <div className={`text-xl font-bold ${speedData.sog !== null ? getSpeedColor(speedData.sog) : nightMode ? 'text-oNight' : 'text-gray-500'}`}>
+            <div className={`text-xl font-bold ${speedData.sog !== null ? getSpeedColor(speedData.sog) : 'text-gray-500'}`}>
               {speedData.sog !== null ? speedData.sog : 'N/A'}
             </div>
-            <div className={`${nightMode ? 'text-oNight' : 'text-gray-400'} text-sm`}>knots</div>
+            <div className="text-gray-500 text-[10px] uppercase">knots</div>
           </div>
           
-          {/* Speed Through Water */}
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-1 mb-0.5">
-              <FontAwesomeIcon icon={faWater} className={`${nightMode ? 'text-oNight' : 'text-oBlue'} text-sm`} />
-              <div className={`${nightMode ? 'text-oNight' : 'text-gray-400'} text-sm`}>STW</div>
+          <div className="bg-oGray p-3 rounded-lg text-center border border-gray-800">
+            <div className="flex items-center justify-center space-x-1 mb-1">
+              <FontAwesomeIcon icon={faWater} className="text-oBlue text-xs" />
+              <div className="text-gray-400 text-[10px] uppercase font-bold">STW</div>
             </div>
-            <div className={`text-xl font-bold ${speedData.stw !== null ? getSpeedColor(speedData.stw) : nightMode ? 'text-oNight' : 'text-gray-500'}`}>
+            <div className={`text-xl font-bold ${speedData.stw !== null ? getSpeedColor(speedData.stw) : 'text-gray-500'}`}>
               {speedData.stw !== null ? speedData.stw : 'N/A'}
             </div>
-            <div className={`${nightMode ? 'text-oNight' : 'text-gray-400'} text-sm`}>knots</div>
+            <div className="text-gray-500 text-[10px] uppercase">knots</div>
           </div>
         </div>
 
         {/* Visual speed gauge */}
-        <div className="mb-3">
-          <div className="flex items-center space-x-2">
-            <div className={`${nightMode ? 'text-oNight' : 'text-gray-400'} text-xs w-8`}>0</div>
-            <div className="flex-1 bg-gray-600 rounded-full h-2.5">
+        <div className="mb-6 px-2">
+          <div className="flex items-center space-x-3">
+            <div className="text-gray-500 text-[10px] font-bold">0</div>
+            <div className="flex-1 bg-oGray rounded-full h-3 overflow-hidden border border-gray-800 shadow-inner">
               <div 
-                className={`h-2.5 rounded-full transition-all duration-500 ${
-                  speedData.sog < 2 ? 'bg-gray-400' : 
-                  speedData.sog < 5 ? 'bg-oBlue' : 
-                  speedData.sog < 8 ? 'bg-oGreen' : 'bg-oYellow'
+                className={`h-full transition-all duration-1000 ease-out ${
+                  speedData.sog < 2 ? 'bg-gray-400 shadow-[0_0_10px_rgba(156,163,175,0.3)]' : 
+                  speedData.sog < 5 ? 'bg-oBlue shadow-[0_0_10px_rgba(59,130,246,0.4)]' : 
+                  speedData.sog < 8 ? 'bg-oGreen shadow-[0_0_10px_rgba(16,185,129,0.4)]' : 
+                  'bg-oYellow shadow-[0_0_10px_rgba(245,158,11,0.4)]'
                 }`}
                 style={{ width: `${speedData.sog !== null ? Math.min(100, (speedData.sog / 15) * 100) : 0}%` }}
               />
             </div>
-            <div className={`${nightMode ? 'text-oNight' : 'text-gray-400'} text-xs w-8`}>15+</div>
+            <div className="text-gray-500 text-[10px] font-bold">15+</div>
           </div>
         </div>
 
         {/* Course and heading */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
+        <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="text-center">
-            <div className={`${nightMode ? 'text-oNight' : 'text-gray-400'} text-sm mb-1`}>Heading</div>
-            <div className={`${nightMode ? 'text-oNight' : 'text-white'} font-medium`}>{speedData.heading !== null ? `${speedData.heading}°` : 'N/A'}</div>
+            <div className="text-gray-400 text-[10px] uppercase mb-1 font-bold">Heading</div>
+            <div className="text-white font-bold text-lg">{speedData.heading !== null ? `${speedData.heading}°` : 'N/A'}</div>
           </div>
           <div className="text-center">
-            <div className={`${nightMode ? 'text-oNight' : 'text-gray-400'} text-sm mb-1`}>COG</div>
-            <div className={`${nightMode ? 'text-oNight' : 'text-white'} font-medium`}>{speedData.cog !== null ? `${speedData.cog}°` : 'N/A'}</div>
+            <div className="text-gray-400 text-[10px] uppercase mb-1 font-bold">COG</div>
+            <div className="text-white font-bold text-lg">{speedData.cog !== null ? `${speedData.cog}°` : 'N/A'}</div>
           </div>
         </div>
 
         {/* Additional info */}
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs">
-            <span className={`${nightMode ? 'text-oNight' : 'text-gray-400'}`}>Current effect:</span>
-            <span className={`${speedData.drift !== null && speedData.drift > 0 ? 'text-oGreen' : speedData.drift !== null && speedData.drift < 0 ? 'text-oRed' : 'text-gray-400'}`}>
+        <div className="bg-oGray p-3 rounded-lg border border-gray-800 space-y-2">
+          <div className="flex justify-between items-center text-[10px] uppercase font-bold">
+            <span className="text-gray-400">Current effect:</span>
+            <span className={speedData.drift !== null && speedData.drift > 0 ? 'text-oGreen' : speedData.drift !== null && speedData.drift < 0 ? 'text-oRed' : 'text-gray-500'}>
               {speedData.drift !== null ? `${speedData.drift > 0 ? '+' : ''}${speedData.drift} kts` : 'N/A'}
             </span>
           </div>
-          <div className="flex justify-between text-xs">
-            <span className={`${nightMode ? 'text-oNight' : 'text-gray-400'}`}>Wind speed:</span>
-            <span className={`${nightMode ? 'text-oNight' : 'text-white'}`}>{speedData.windSpeed !== null ? `${speedData.windSpeed} kts` : 'N/A'}</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className={`${nightMode ? 'text-oNight' : 'text-gray-400'}`}>Max speed:</span>
-            <span className={`${nightMode ? 'text-oNight' : 'text-white'}`}>15+ knots</span>
+          <div className="flex justify-between items-center text-[10px] uppercase font-bold">
+            <span className="text-gray-400">Apparent Wind:</span>
+            <div className="flex items-center space-x-1">
+              <FontAwesomeIcon icon={faWind} className="text-oBlue text-[8px]" />
+              <span className="text-white">{speedData.windSpeed !== null ? `${speedData.windSpeed} kts` : 'N/A'}</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </BaseWidget>
   );
 });
 

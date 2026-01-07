@@ -1,9 +1,10 @@
 'use client';
 import React, { useMemo } from 'react';
-import { useOcearoContext, convertTemperature } from '../../context/OcearoContext';
+import { convertTemperature } from '../../context/OcearoContext';
+import { useSignalKPath } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faThermometerHalf } from '@fortawesome/free-solid-svg-icons';
+import BaseWidget from './BaseWidget';
 
 const TEMPERATURE_CONFIG = {
   airPath: 'environment.outside.temperature',
@@ -12,20 +13,15 @@ const TEMPERATURE_CONFIG = {
 };
 
 const TemperatureWidget = React.memo(() => {
-  const { getSignalKValue, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
-  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
-  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
-  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
-  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
   
+  const airValue = useSignalKPath(TEMPERATURE_CONFIG.airPath);
+  const seaValue = useSignalKPath(TEMPERATURE_CONFIG.seaPath);
+
   const temperatureData = useMemo(() => {
-    const airValue = getSignalKValue(TEMPERATURE_CONFIG.airPath);
-    const seaValue = getSignalKValue(TEMPERATURE_CONFIG.seaPath);
+    const hasData = airValue !== null || seaValue !== null || debugMode;
 
-    const hasData = airValue !== null || seaValue !== null;
-
-    if (!hasData && !debugMode) {
+    if (!hasData) {
       return { hasData: false };
     }
 
@@ -34,7 +30,7 @@ const TemperatureWidget = React.memo(() => {
       airTemp: airValue !== null ? TEMPERATURE_CONFIG.transform(airValue) : (debugMode ? 21 : null),
       seaTemp: seaValue !== null ? TEMPERATURE_CONFIG.transform(seaValue) : (debugMode ? 17 : null)
     };
-  }, [getSignalKValue, debugMode]);
+  }, [airValue, seaValue, debugMode]);
 
   // Determine temperature color based on value
   const getTemperatureColor = (temp) => {
@@ -50,101 +46,88 @@ const TemperatureWidget = React.memo(() => {
     return 'Moderate';
   };
 
-  if (!temperatureData.hasData) {
-    return (
-      <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
-        <div className="flex items-center space-x-2 mb-4">
-          <FontAwesomeIcon icon={faThermometerHalf} className={`${accentIconClass} text-lg`} />
-          <span className={`${primaryTextClass} font-medium text-lg`}>Temperature</span>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className={`text-sm ${mutedTextClass}`}>No temperature data available</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const { airTemp, seaTemp } = temperatureData;
+  const { hasData, airTemp, seaTemp } = temperatureData;
 
   return (
-    <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col min-h-0">
-      {/* Header */}
-      <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faThermometerHalf} className={`${accentIconClass} text-lg`} />
-        <span className={`${primaryTextClass} font-medium text-lg`}>Temperature</span>
-      </div>
-      
-      {/* Content */}
+    <BaseWidget
+      title="Temperature"
+      icon={faThermometerHalf}
+      hasData={hasData}
+      noDataMessage="No temperature data available"
+    >
       <div className="flex-1 flex flex-col justify-center min-h-0">
         {/* Temperature readings */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          {/* Air Temperature */}
           <div className="text-center">
-            <div className={`${secondaryTextClass} text-base mb-1`}>Air</div>
-            <div className={`text-4xl font-bold ${airTemp !== null ? getTemperatureColor(airTemp) : 'text-gray-500'}`}>
+            <div className="text-gray-400 text-[10px] uppercase font-bold mb-1 tracking-tight">Air</div>
+            <div className={`text-4xl font-black text-white mb-0.5`}>
               {airTemp !== null ? `${airTemp}°` : 'N/A'}
             </div>
-            <div className={`${secondaryTextClass} text-sm`}>Celsius</div>
+            <div className={`text-[10px] font-black uppercase tracking-widest ${airTemp !== null ? getTemperatureColor(airTemp) : 'text-gray-500'}`}>
+              Celsius
+            </div>
           </div>
           
-          {/* Sea Temperature */}
           <div className="text-center">
-            <div className={`${secondaryTextClass} text-base mb-1`}>Sea</div>
-            <div className={`text-4xl font-bold ${seaTemp !== null ? getTemperatureColor(seaTemp) : 'text-gray-500'}`}>
+            <div className="text-gray-400 text-[10px] uppercase font-bold mb-1 tracking-tight">Sea</div>
+            <div className={`text-4xl font-black text-white mb-0.5`}>
               {seaTemp !== null ? `${seaTemp}°` : 'N/A'}
             </div>
-            <div className={`${secondaryTextClass} text-sm`}>Celsius</div>
+            <div className={`text-[10px] font-black uppercase tracking-widest ${seaTemp !== null ? getTemperatureColor(seaTemp) : 'text-gray-500'}`}>
+              Celsius
+            </div>
           </div>
         </div>
 
         {/* Visual temperature bars */}
-        <div className="space-y-3 mb-4">
-          {/* Air temperature bar */}
-          <div className="flex items-center space-x-2">
-            <div className={`${secondaryTextClass} text-sm w-10`}>Air</div>
-            <div className="flex-1 bg-gray-600 rounded-full h-3">
+        <div className="space-y-4 mb-6 px-2">
+          <div className="flex items-center space-x-3">
+            <div className="text-gray-500 text-[9px] uppercase w-6 font-black">Air</div>
+            <div className="flex-1 bg-oGray rounded-full h-2.5 border border-gray-800 overflow-hidden shadow-inner">
               <div 
-                className={`h-3 rounded-full transition-all duration-500 ${
-                  airTemp !== null && airTemp < 10 ? 'bg-oBlue' : airTemp !== null && airTemp > 25 ? 'bg-oRed' : 'bg-oGreen'
+                className={`h-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,0,0,0.2)] ${
+                  airTemp !== null && airTemp < 10 ? 'bg-oBlue shadow-[0_0_10px_rgba(59,130,246,0.4)]' : 
+                  airTemp !== null && airTemp > 25 ? 'bg-oRed shadow-[0_0_10px_rgba(239,68,68,0.4)]' : 
+                  'bg-oGreen shadow-[0_0_10px_rgba(16,185,129,0.4)]'
                 }`}
                 style={{ width: `${airTemp !== null ? Math.min(100, Math.max(0, (airTemp + 10) * 2.5)) : 0}%` }}
               />
             </div>
-            <div className={`${secondaryTextClass} text-sm w-10`}>{airTemp !== null ? `${airTemp}°` : 'N/A'}</div>
+            <div className="text-white text-[10px] w-8 text-right font-mono font-bold">{airTemp !== null ? `${airTemp}°` : 'N/A'}</div>
           </div>
           
-          {/* Sea temperature bar */}
-          <div className="flex items-center space-x-2">
-            <div className={`${secondaryTextClass} text-sm w-10`}>Sea</div>
-            <div className="flex-1 bg-gray-600 rounded-full h-3">
+          <div className="flex items-center space-x-3">
+            <div className="text-gray-500 text-[9px] uppercase w-6 font-black">Sea</div>
+            <div className="flex-1 bg-oGray rounded-full h-2.5 border border-gray-800 overflow-hidden shadow-inner">
               <div 
-                className={`h-3 rounded-full transition-all duration-500 ${
-                  seaTemp !== null && seaTemp < 10 ? 'bg-oBlue' : seaTemp !== null && seaTemp > 25 ? 'bg-oRed' : 'bg-oGreen'
+                className={`h-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(0,0,0,0.2)] ${
+                  seaTemp !== null && seaTemp < 10 ? 'bg-oBlue shadow-[0_0_10px_rgba(59,130,246,0.4)]' : 
+                  seaTemp !== null && seaTemp > 25 ? 'bg-oRed shadow-[0_0_10px_rgba(239,68,68,0.4)]' : 
+                  'bg-oGreen shadow-[0_0_10px_rgba(16,185,129,0.4)]'
                 }`}
                 style={{ width: `${seaTemp !== null ? Math.min(100, Math.max(0, (seaTemp + 10) * 2.5)) : 0}%` }}
               />
             </div>
-            <div className={`${secondaryTextClass} text-sm w-10`}>{seaTemp !== null ? `${seaTemp}°` : 'N/A'}</div>
+            <div className="text-white text-[10px] w-8 text-right font-mono font-bold">{seaTemp !== null ? `${seaTemp}°` : 'N/A'}</div>
           </div>
         </div>
 
-        {/* Status and difference */}
-        <div className="text-center space-y-2">
-          <div className={`text-base font-medium ${airTemp !== null && seaTemp !== null ? getTemperatureColor((airTemp + seaTemp) / 2) : mutedTextClass}`}>
-            {airTemp !== null && seaTemp !== null ? getTemperatureStatus(airTemp, seaTemp) : 'Unknown'}
+        {/* Status and info */}
+        <div className="bg-oGray p-3 rounded-lg border border-gray-800">
+          <div className="flex justify-between items-center mb-2">
+            <div className={`text-xs font-black uppercase tracking-widest ${airTemp !== null && seaTemp !== null ? getTemperatureColor((airTemp + seaTemp) / 2) : 'text-gray-500'}`}>
+              {airTemp !== null && seaTemp !== null ? getTemperatureStatus(airTemp, seaTemp) : 'Unknown'}
+            </div>
+            <div className="text-[10px] text-gray-500 uppercase font-bold">
+              Diff: <span className="text-white font-mono">{airTemp !== null && seaTemp !== null ? `${Math.abs(airTemp - seaTemp).toFixed(1)}°C` : 'N/A'}</span>
+            </div>
           </div>
-          <div className={`${secondaryTextClass} text-sm`}>
-            Difference: {airTemp !== null && seaTemp !== null ? `${Math.abs(airTemp - seaTemp).toFixed(1)}°C` : 'N/A'}
-          </div>
-          <div className={`${secondaryTextClass} text-sm`}>
-            Range: -10°C to 40°C
+          <div className="text-center text-[9px] text-gray-500 uppercase font-black tracking-tighter border-t border-gray-800 pt-2">
+            Safe Operational Range: -10°C to 40°C
           </div>
         </div>
       </div>
-    </div>
+    </BaseWidget>
   );
 });
 

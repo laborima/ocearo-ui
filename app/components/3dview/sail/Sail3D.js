@@ -10,7 +10,8 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import * as Wind from './Wind';
 import SailShape from './SailShape';
-import { useOcearoContext, oBlue } from '../../context/OcearoContext';
+import { oBlue } from '../../context/OcearoContext';
+import { useSignalKPath } from '../../hooks/useSignalK';
 
 // Sail dimensions in millimeters
 const SAIL_HEIGHT = 8000;                                      // Total sail height
@@ -52,8 +53,11 @@ const Sail3D = ({
     boatParams = { mastrotation: 0.0, heading: 130.0, speed: 5.0 },
     sailParams = { mastArea: 0, sailArea: 0, cunningham: 1, angleOfAttack: 20 },
 }) => {
-    // Access to SignalK data through Ocearo context
-    const { getSignalKValue } = useOcearoContext();
+    // Access to SignalK data through specialized hooks for better performance
+    const appWindAngle = useSignalKPath('environment.wind.angleApparent', 0);
+    const appWindSpeed = useSignalKPath('environment.wind.speedApparent', 0);
+    const skAttitude = useSignalKPath('navigation.attitude');
+    const skRudderAngle = useSignalKPath('steering.rudderAngle', 0);
 
     // Component references
     const sailRef = useRef();                       // Reference to the sail mesh
@@ -75,7 +79,7 @@ const Sail3D = ({
         // Define the cone geometry and material
         const geometry = new THREE.ConeGeometry(0.1, 0.2, 12);
         const material = new THREE.MeshStandardMaterial({
-            color: oBlue,               // Ocearo blue color
+            color: 0x007bff,               // Ocearo blue color
             opacity: 0.5,               // Semi-transparent
             transparent: true,
         });
@@ -249,14 +253,6 @@ const Sail3D = ({
     
     // Extract the results from the geometry creation function
     const { geometry, sailClipWidthPerLevel } = createSailGeometry;
-
-    /**
-     * Retrieve wind values from SignalK
-     * The apparent wind angle and speed are used to determine
-     * the shape and orientation of the sail
-     */
-    const appWindAngle = useMemo(() => getSignalKValue('environment.wind.angleApparent') || 0, [getSignalKValue]);
-    const appWindSpeed = useMemo(() => getSignalKValue('environment.wind.speedApparent') || 0, [getSignalKValue]);
 
     /**
      * Main effect: Update sail geometry based on wind

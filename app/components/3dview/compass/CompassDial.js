@@ -8,6 +8,7 @@ import React, { useMemo } from 'react';
 import { Ring, Sphere, Text } from '@react-three/drei';
 import { DoubleSide, MathUtils } from 'three';
 import { oGreen, oRed, oNight, useOcearoContext } from '../../context/OcearoContext';
+import { useSignalKPaths } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
 
 /**
@@ -127,11 +128,26 @@ const CompassDial = ({ outerRadius, innerRadius }) => {
   const markerColorRed = oRed;
 
   // Get context values and night mode setting
-  const { nightMode, getSignalKValue, getBoatRotationAngle } = useOcearoContext();
-  const dialColor = nightMode ? oNight : 0xffffff;
+  const { nightMode } = useOcearoContext();
   
-  // Get rotation angle using the shared OcearoContext method (returns radians)
-  const compassHeading = getBoatRotationAngle();
+  // Subscribe to relevant SignalK paths for heading
+  const headingPaths = useMemo(() => [
+    'navigation.headingTrue',
+    'navigation.headingMagnetic',
+    'navigation.courseOverGroundTrue',
+    'navigation.courseOverGroundMagnetic'
+  ], []);
+  
+  const skValues = useSignalKPaths(headingPaths);
+  
+  // Logic from getBoatRotationAngle
+  const compassHeading = useMemo(() => {
+    const heading = skValues['navigation.headingTrue'] || skValues['navigation.headingMagnetic'];
+    const cog = skValues['navigation.courseOverGroundTrue'] || skValues['navigation.courseOverGroundMagnetic'];
+    return cog || heading || 0;
+  }, [skValues]);
+
+  const dialColor = nightMode ? oNight : 0xffffff;
   
   // Get compass orientation preference from settings
   const isNorthUp = configService.get('compassNorthUp');

@@ -1,5 +1,4 @@
-import { Text } from '@react-three/drei';
-import React, { forwardRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 
 /**
@@ -10,7 +9,7 @@ import React, { forwardRef, useState, useEffect } from 'react';
 const loadBoatComponent = async (boatType) => {
     try {
         // Load the appropriate 3D model from the public directory
-        const boatModule = await import(`/public/boats/${boatType}/Scene.jsx`);
+        const boatModule = await import(`@/public/boats/${boatType}/Scene.jsx`);
         // Handle different export styles in 3D model files
         return boatModule.default ? boatModule.default : boatModule.Model;
     } catch (error) {
@@ -38,7 +37,7 @@ const BASE_MODEL_LENGTH = 10;
  * AISBoat component - Renders a 3D boat model with information display
  * Optimized for touchscreen interaction using click events instead of hover
  */
-const AISBoat = forwardRef(({ position, visible, boatData, onClick }, ref) => {
+const AISBoat = ({ position, visible, boatData, onClick, ref }) => {
     // State to hold the dynamically loaded boat component
     const [BoatComponent, setBoatComponent] = useState(null);
     // Determine which boat model to use based on AIS data
@@ -95,9 +94,8 @@ const AISBoat = forwardRef(({ position, visible, boatData, onClick }, ref) => {
             </group>
 
     );
-});
+};
 
-// Set display name for React DevTools
-AISBoat.displayName = 'AISBoat';
+
 
 export default AISBoat;

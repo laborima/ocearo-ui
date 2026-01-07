@@ -1,6 +1,7 @@
 'use client';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { useOcearoContext } from '../../context/OcearoContext';
+import { useSignalKPath } from '../../hooks/useSignalK';
+import BaseWidget from './BaseWidget';
 import configService from '../../settings/ConfigService';
 import signalKService from '../../services/SignalKService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -16,13 +17,16 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 export default function WeatherWidget() {
-  const { getSignalKValue, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
-  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
-  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
-  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
-  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
   
+  // Use specialized hooks for better performance
+  const temperature = useSignalKPath('environment.outside.temperature');
+  const humidity = useSignalKPath('environment.outside.humidity');
+  const pressure = useSignalKPath('environment.outside.pressure');
+  const windSpeed = useSignalKPath('environment.wind.speedTrue');
+  const windDirection = useSignalKPath('environment.wind.directionTrue');
+  const position = useSignalKPath('navigation.position');
+
   // State for weather API forecast data
   const [forecastData, setForecastData] = useState(null);
   const [forecastError, setForecastError] = useState(null);
@@ -31,11 +35,8 @@ export default function WeatherWidget() {
 
   /**
    * Fetch weather forecast from SignalK Weather API
-   * Similar to freeboard-sk implementation
    */
   const fetchWeatherForecast = useCallback(async () => {
-    const position = getSignalKValue('navigation.position');
-    
     if (!position?.latitude || !position?.longitude) {
       return;
     }
@@ -68,7 +69,7 @@ export default function WeatherWidget() {
     } finally {
       setIsFetchingForecast(false);
     }
-  }, [getSignalKValue]);
+  }, [position]);
 
   // Fetch weather forecast on mount and periodically
   useEffect(() => {
@@ -89,13 +90,6 @@ export default function WeatherWidget() {
   }, [fetchWeatherForecast]);
 
   const weatherData = useMemo(() => {
-    // First try to get data from SignalK sensors
-    const temperature = getSignalKValue('environment.outside.temperature');
-    const humidity = getSignalKValue('environment.outside.humidity');
-    const pressure = getSignalKValue('environment.outside.pressure');
-    const windSpeed = getSignalKValue('environment.wind.speedTrue');
-    const windDirection = getSignalKValue('environment.wind.directionTrue');
-    
     // Check if sensor data is available
     const hasSensorData = temperature !== null || humidity !== null || pressure !== null || windSpeed !== null;
     
@@ -171,7 +165,7 @@ export default function WeatherWidget() {
       condition,
       forecast: forecastData
     };
-  }, [getSignalKValue, debugMode, forecastData]);
+  }, [temperature, humidity, pressure, windSpeed, windDirection, debugMode, forecastData]);
 
   const getWeatherIcon = (condition) => {
     switch (condition) {
@@ -232,128 +226,90 @@ export default function WeatherWidget() {
     }
   };
 
-  if (!weatherData.hasData) {
-    return (
-      <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <FontAwesomeIcon icon={faCloudSun} className={`${accentIconClass} text-lg`} />
-            <span className={`${primaryTextClass} font-medium text-lg`}>Weather</span>
-          </div>
-          {weatherApiAvailable !== false && (
-            <button 
-              onClick={fetchWeatherForecast}
-              disabled={isFetchingForecast}
-              className={`${accentIconClass} hover:text-white transition-colors`}
-              title="Refresh weather forecast"
-            >
-              <FontAwesomeIcon 
-                icon={faSync} 
-                className={`text-sm ${isFetchingForecast ? 'animate-spin' : ''}`} 
-              />
-            </button>
-          )}
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className={`text-sm ${mutedTextClass}`}>
-              {isFetchingForecast ? 'Loading forecast...' : 'No weather data available'}
-            </div>
-            {forecastError && (
-              <div className="text-xs text-oRed mt-1">{forecastError}</div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-2">
-          <FontAwesomeIcon icon={getWeatherIcon(weatherData.condition)} className={`${accentIconClass} text-lg`} />
-          <span className={`${primaryTextClass} font-medium text-lg`}>Weather</span>
-          {weatherData.dataSource && (
-            <span className={`text-xs px-2 py-0.5 rounded ${
-              weatherData.dataSource === 'sensors' ? 'bg-oGreen text-white' :
-              weatherData.dataSource === 'forecast' ? 'bg-oBlue text-white' :
-              'bg-gray-500 text-white'
-            }`}>
-              {getDataSourceLabel()}
-            </span>
-          )}
-        </div>
+    <BaseWidget
+      title="Weather"
+      icon={getWeatherIcon(weatherData.condition)}
+      hasData={weatherData.hasData}
+      noDataMessage={isFetchingForecast ? 'Loading forecast...' : 'No weather data available'}
+    >
+      {/* Header Actions */}
+      <div className="absolute top-4 right-4 z-10 flex items-center space-x-2">
+        {weatherData.dataSource && (
+          <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold text-white ${
+            weatherData.dataSource === 'sensors' ? 'bg-oGreen' :
+            weatherData.dataSource === 'forecast' ? 'bg-oBlue' :
+            'bg-gray-500'
+          }`}>
+            {getDataSourceLabel()}
+          </span>
+        )}
         {weatherApiAvailable !== false && (
           <button 
             onClick={fetchWeatherForecast}
             disabled={isFetchingForecast}
-            className={`${accentIconClass} hover:text-white transition-colors`}
+            className="text-gray-400 hover:text-white transition-colors"
             title="Refresh weather forecast"
           >
             <FontAwesomeIcon 
               icon={faSync} 
-              className={`text-sm ${isFetchingForecast ? 'animate-spin' : ''}`} 
+              className={`text-xs ${isFetchingForecast ? 'animate-spin' : ''}`} 
             />
           </button>
         )}
       </div>
       
       {/* Content */}
-      <div className="flex-1 flex flex-col justify-center">
+      <div className="flex-1 flex flex-col justify-center min-h-0">
         {/* Main weather display */}
-        <div className="text-center mb-4">
+        <div className="text-center mb-6">
           <FontAwesomeIcon 
             icon={getWeatherIcon(weatherData.condition)} 
-            className={`text-4xl mb-2 ${getWeatherColor(weatherData.condition)}`} 
+            className={`text-5xl mb-3 ${getWeatherColor(weatherData.condition)}`} 
           />
-          <div className={`text-3xl font-bold ${primaryTextClass} mb-1`}>
+          <div className="text-4xl font-bold text-white mb-1">
             {weatherData.temperature !== null ? `${weatherData.temperature}°C` : 'N/A'}
           </div>
-          <div className={`text-base ${secondaryTextClass}`}>
+          <div className="text-sm text-gray-400 uppercase tracking-wider">
             {weatherData.description || getWeatherDescription(weatherData.condition)}
           </div>
         </div>
 
         {/* Weather details grid */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {/* Humidity */}
-          <div className="text-center">
-            <div className={`${secondaryTextClass} text-sm mb-1`}>Humidity</div>
-            <div className={`${primaryTextClass} font-medium text-lg`}>{weatherData.humidity !== null ? `${weatherData.humidity}%` : 'N/A'}</div>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-oGray p-3 rounded-lg text-center">
+            <div className="text-gray-400 text-[10px] uppercase mb-1">Humidity</div>
+            <div className="text-white font-bold text-lg">{weatherData.humidity !== null ? `${weatherData.humidity}%` : 'N/A'}</div>
           </div>
           
-          {/* Pressure */}
-          <div className="text-center">
-            <div className={`${secondaryTextClass} text-sm mb-1`}>Pressure</div>
+          <div className="bg-oGray p-3 rounded-lg text-center">
+            <div className="text-gray-400 text-[10px] uppercase mb-1">Pressure</div>
             <div className="flex items-center justify-center space-x-1">
-              <span className={`${primaryTextClass} font-medium text-lg`}>{weatherData.pressure !== null ? weatherData.pressure : 'N/A'}</span>
+              <span className="text-white font-bold text-lg">{weatherData.pressure !== null ? weatherData.pressure : 'N/A'}</span>
               {pressureTrend && <span className={`text-xs ${pressureTrend.color}`}>{pressureTrend.trend}</span>}
             </div>
-            <div className={`${secondaryTextClass} text-sm`}>hPa</div>
+            <div className="text-gray-500 text-[10px]">hPa</div>
           </div>
         </div>
 
         {/* Wind information */}
-        <div className="bg-oGray1 rounded-lg p-3 mb-4">
+        <div className="bg-oGray p-3 rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <FontAwesomeIcon icon={faWind} className={`${accentIconClass} text-sm`} />
-              <span className={`${primaryTextClass} text-sm font-medium`}>Wind</span>
+              <FontAwesomeIcon icon={faWind} className="text-oBlue text-sm" />
+              <span className="text-gray-400 text-xs uppercase">Wind</span>
             </div>
             <div className="text-right">
-              <div className={`${primaryTextClass} font-medium`}>
+              <div className="text-white font-bold">
                 {weatherData.windSpeed !== null ? `${weatherData.windSpeed} kts` : 'N/A'}
               </div>
-              <div className={`${secondaryTextClass} text-xs`}>
+              <div className="text-gray-500 text-[10px] uppercase">
                 {weatherData.windDirection !== null ? `${getWindDirection(weatherData.windDirection)} (${weatherData.windDirection}°)` : 'N/A'}
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </BaseWidget>
   );
 }

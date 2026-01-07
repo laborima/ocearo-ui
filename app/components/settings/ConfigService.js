@@ -1,4 +1,4 @@
-import boatsData from '/public/boats/boats.json';
+import boatsData from '@/public/boats/boats.json';
 
 class ConfigService {
   constructor() {

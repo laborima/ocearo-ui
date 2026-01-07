@@ -1,5 +1,6 @@
 import { convertSpeed, useOcearoContext } from '../context/OcearoContext';
 import { useState, useMemo, useCallback } from 'react';
+import { useSignalKPaths } from '../hooks/useSignalK';
 
 // Define speed types and their corresponding SignalK paths
 const SPEED_CONFIG = {
@@ -9,24 +10,27 @@ const SPEED_CONFIG = {
     POL: 'performance.polarSpeedRatio'
 };
 
-
 const ThreeDBoatSpeedIndicator = () => {
-    const { nightMode, getSignalKValue } = useOcearoContext();
+    const { nightMode } = useOcearoContext();
     const [speedType, setSpeedType] = useState('SOG');
 
+    // Subscribe to all relevant speed paths
+    const paths = useMemo(() => Object.values(SPEED_CONFIG), []);
+    const skValues = useSignalKPaths(paths);
 
-    // Use useMemo to prevent unnecessary recalculations
+    // Use useMemo to derived available speed types from subscribed data
     const speedTypes = useMemo(() => {
         const types = {};
         for (const [type, path] of Object.entries(SPEED_CONFIG)) {
-            const value = getSignalKValue(path);
+            const value = skValues[path];
             // Only include speed type if data is available
             if (value !== undefined && value !== null) {
-                types[type] = convertSpeed(value);
+                // Polar ratio is already a percentage/ratio, no need for speed conversion if it's POL
+                types[type] = type === 'POL' ? value * 100 : convertSpeed(value);
             }
         }
         return types;
-    }, [getSignalKValue]);
+    }, [skValues]);
 
     // Use the first available speed type as default if current type has no data
     const availableTypes = Object.keys(speedTypes);

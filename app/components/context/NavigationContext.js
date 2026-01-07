@@ -7,9 +7,10 @@
  * - Course calculations (XTE, bearing, distance, ETA, VMG)
  */
 
-import React, { createContext, useState, useEffect, useContext, useCallback, useRef } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback, useRef, useMemo } from 'react';
 import signalKService from '../services/SignalKService';
 import { useOcearoContext } from './OcearoContext';
+import { useSignalKPath } from '../hooks/useSignalK';
 
 const NavigationContext = createContext();
 
@@ -24,7 +25,8 @@ const COURSE_REFRESH_INTERVAL = 5000;
 const RESOURCES_REFRESH_INTERVAL = 5 * 60 * 1000;
 
 export const NavigationContextProvider = ({ children }) => {
-    const { getSignalKValue } = useOcearoContext();
+    // Subscribe to boat position for internal calculations
+    const myPosition = useSignalKPath('navigation.position');
     
     // Resources state
     const [routes, setRoutes] = useState({});
@@ -56,17 +58,34 @@ export const NavigationContextProvider = ({ children }) => {
 
         try {
             const [routesData, waypointsData, chartsData] = await Promise.all([
-                signalKService.getRoutes().catch(() => ({})),
-                signalKService.getWaypoints().catch(() => ({})),
-                signalKService.getCharts().catch(() => ({}))
+                signalKService.getRoutes().catch(error => {
+                    if (error.name !== 'NetworkError') {
+                        console.error('NavigationContext: Failed to fetch routes:', error);
+                    }
+                    return {};
+                }),
+                signalKService.getWaypoints().catch(error => {
+                    if (error.name !== 'NetworkError') {
+                        console.error('NavigationContext: Failed to fetch waypoints:', error);
+                    }
+                    return {};
+                }),
+                signalKService.getCharts().catch(error => {
+                    if (error.name !== 'NetworkError') {
+                        console.error('NavigationContext: Failed to fetch charts:', error);
+                    }
+                    return {};
+                })
             ]);
 
             setRoutes(routesData || {});
             setWaypoints(waypointsData || {});
             setCharts(chartsData || {});
         } catch (error) {
-            console.error('NavigationContext: Failed to fetch resources:', error);
-            setResourcesError(error.message);
+            if (error.name !== 'NetworkError') {
+                console.error('NavigationContext: Failed to fetch resources:', error);
+                setResourcesError(error.message);
+            }
         } finally {
             setIsLoadingResources(false);
         }

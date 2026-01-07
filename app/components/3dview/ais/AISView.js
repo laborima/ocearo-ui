@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three'; // Import THREE for Color
 
 import { useOcearoContext, toKnots, toDegrees } from '../../context/OcearoContext';
+import { useSignalKPaths } from '../../hooks/useSignalK';
 import { useAIS } from './AISContext';
 import AISBoat from './AISBoat'; // Assuming AISBoat accepts onClick prop now
 
@@ -49,7 +50,6 @@ const updateBoatTransform = (boat, boatData, interpolate = true) => {
 
 
 const AISView = ({ onUpdateInfoPanel }) => {
-    const { getBoatRotationAngle } = useOcearoContext();
     const { aisData, vesselIds } = useAIS();
     const boatRefs = useRef({}); // Refs to all boat 3D objects for direct manipulation
     const materialsCache = useRef({}); // Cache materials per boat { mmsi: { white: mat, red: mat } }
@@ -57,8 +57,27 @@ const AISView = ({ onUpdateInfoPanel }) => {
     // State for the selected boat MMSI
     const [selectedBoat, setSelectedBoat] = useState(null);
 
+    // Subscribe to heading paths for boat rotation
+    const headingPaths = useMemo(() => [
+        'navigation.headingTrue',
+        'navigation.headingMagnetic',
+        'navigation.courseOverGroundTrue',
+        'navigation.courseOverGroundMagnetic'
+    ], []);
+    const skHeadingValues = useSignalKPaths(headingPaths);
+
+    // Calculate rotation angle reactively
+    const rotationAngle = useMemo(() => {
+        const heading = skHeadingValues['navigation.headingTrue'] || skHeadingValues['navigation.headingMagnetic'];
+        const cog = skHeadingValues['navigation.courseOverGroundTrue'] || skHeadingValues['navigation.courseOverGroundMagnetic'];
+        return heading || cog || 0;
+    }, [skHeadingValues]);
+
     // Store user's boat rotation angle for relative position calculations
     const myRotationRef = useRef(0);
+    useEffect(() => {
+        myRotationRef.current = rotationAngle;
+    }, [rotationAngle]);
 
     // Proximity alert settings
     const lowerThreshold = 500; // meters
@@ -66,8 +85,7 @@ const AISView = ({ onUpdateInfoPanel }) => {
 
     // --- Frame Loop for Animation & Logic ---
     useFrame(() => {
-        // Update user's boat rotation
-        myRotationRef.current = getBoatRotationAngle();
+        // Rotation is updated via ref from subscription
 
         if (!aisData || Object.keys(boatRefs.current).length === 0) return;
 
@@ -230,7 +248,7 @@ const AISView = ({ onUpdateInfoPanel }) => {
     const infoPanelContent = selectedBoat ? [
         formatBoatData('Name', selectedBoat.name),  // Only show Name if it exists
         formatBoatData('MMSI', formatMMSI(selectedBoat.mmsi)),
-        formatBoatData('Distance', selectedBoat.distanceMeters ? selectedBoat.distanceMeters.toFixed(0) : O, 'm'),
+        formatBoatData('Distance', selectedBoat.distanceMeters ? selectedBoat.distanceMeters.toFixed(0) : 0, 'm'),
         formatBoatData('Length', selectedBoat.length, 'm'),
         formatBoatData('Type', selectedBoat.shipType),
         formatBoatData('SOG', selectedBoat.sog, ' kts', false, true),

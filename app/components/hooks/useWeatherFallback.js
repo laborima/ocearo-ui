@@ -8,6 +8,7 @@
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useOcearoContext } from '../context/OcearoContext';
+import { useSignalKPath, useSignalKPaths } from './useSignalK';
 import signalKService from '../services/SignalKService';
 
 /**
@@ -58,18 +59,18 @@ const getNestedProperty = (obj, path) => {
  * @returns {Object} { value, source, isLoading }
  */
 export const useWeatherFallback = (signalkPath) => {
-    const { getSignalKValue } = useOcearoContext();
+    const sensorValue = useSignalKPath(signalkPath);
+    const position = useSignalKPath('navigation.position');
     const [forecastData, setForecastData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Fetch forecast data on mount
+    // Fetch forecast data on mount or when position changes
     useEffect(() => {
         const fetchForecast = async () => {
             try {
                 const isAvailable = await signalKService.checkWeatherApiAvailability();
                 if (!isAvailable) return;
 
-                const position = getSignalKValue('navigation.position');
                 if (!position?.latitude || !position?.longitude) return;
 
                 setIsLoading(true);
@@ -89,12 +90,9 @@ export const useWeatherFallback = (signalkPath) => {
         };
 
         fetchForecast();
-    }, [getSignalKValue]);
+    }, [position]);
 
     return useMemo(() => {
-        // First try to get sensor data
-        const sensorValue = getSignalKValue(signalkPath);
-        
         if (sensorValue !== null) {
             return {
                 value: sensorValue,
@@ -123,7 +121,7 @@ export const useWeatherFallback = (signalkPath) => {
             source: null,
             isLoading
         };
-    }, [getSignalKValue, signalkPath, forecastData, isLoading]);
+    }, [sensorValue, signalkPath, forecastData, isLoading]);
 };
 
 /**
@@ -133,18 +131,18 @@ export const useWeatherFallback = (signalkPath) => {
  * @returns {Object} { values: { [path]: { value, source } }, isLoading, hasAnyData }
  */
 export const useMultipleWeatherFallback = (signalkPaths) => {
-    const { getSignalKValue } = useOcearoContext();
+    const sensorValues = useSignalKPaths(signalkPaths);
+    const position = useSignalKPath('navigation.position');
     const [forecastData, setForecastData] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Fetch forecast data on mount
+    // Fetch forecast data on mount or when position changes
     useEffect(() => {
         const fetchForecast = async () => {
             try {
                 const isAvailable = await signalKService.checkWeatherApiAvailability();
                 if (!isAvailable) return;
 
-                const position = getSignalKValue('navigation.position');
                 if (!position?.latitude || !position?.longitude) return;
 
                 setIsLoading(true);
@@ -164,7 +162,7 @@ export const useMultipleWeatherFallback = (signalkPaths) => {
         };
 
         fetchForecast();
-    }, [getSignalKValue]);
+    }, [position]);
 
     return useMemo(() => {
         const values = {};
@@ -172,9 +170,9 @@ export const useMultipleWeatherFallback = (signalkPaths) => {
 
         for (const path of signalkPaths) {
             // First try sensor data
-            const sensorValue = getSignalKValue(path);
+            const sensorValue = sensorValues[path];
             
-            if (sensorValue !== null) {
+            if (sensorValue !== null && sensorValue !== undefined) {
                 values[path] = { value: sensorValue, source: 'sensors' };
                 hasAnyData = true;
                 continue;
@@ -197,7 +195,7 @@ export const useMultipleWeatherFallback = (signalkPaths) => {
         }
 
         return { values, isLoading, hasAnyData };
-    }, [getSignalKValue, signalkPaths, forecastData, isLoading]);
+    }, [sensorValues, signalkPaths, forecastData, isLoading]);
 };
 
 export default useWeatherFallback;

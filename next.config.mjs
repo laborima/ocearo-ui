@@ -5,7 +5,10 @@ const nextConfig = {
   assetPrefix: process.env.NODE_ENV === 'production' ? '/ocearo-ui' : '',
   images: {
     unoptimized: true // Disable image optimization for compatibility with export mode
-  }
+  },
+  turbopack: {
+    root: process.cwd(),
+  },
 };
 
 export default nextConfig;

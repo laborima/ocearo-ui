@@ -1,9 +1,10 @@
 'use client';
 import React, { useMemo } from 'react';
-import { useOcearoContext } from '../../context/OcearoContext';
+import { useSignalKPaths } from '../../hooks/useSignalK';
+import BaseWidget from './BaseWidget';
 import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSun, faArrowUp, faArrowDown } from '@fortawesome/free-solid-svg-icons';
+import { faSun } from '@fortawesome/free-solid-svg-icons';
 
 const SUN_CONFIG = {
   sunrise: {
@@ -110,16 +111,21 @@ const computeSunTimes = (latitudeRadians, longitudeRadians, date) => {
 };
 
 export default function SunriseSunsetWidget() {
-  const { getSignalKValue, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
-  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
-  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
-  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
-  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
-  const sunriseValue = getSignalKValue(SUN_CONFIG.sunrise.path);
-  const sunsetValue = getSignalKValue(SUN_CONFIG.sunset.path);
-  const latitudeValue = getSignalKValue('navigation.position.latitude');
-  const longitudeValue = getSignalKValue('navigation.position.longitude');
+  
+  const sunPaths = [
+    SUN_CONFIG.sunrise.path,
+    SUN_CONFIG.sunset.path,
+    'navigation.position.latitude',
+    'navigation.position.longitude'
+  ];
+  
+  const skValues = useSignalKPaths(sunPaths);
+  
+  const sunriseValue = skValues[SUN_CONFIG.sunrise.path];
+  const sunsetValue = skValues[SUN_CONFIG.sunset.path];
+  const latitudeValue = skValues['navigation.position.latitude'];
+  const longitudeValue = skValues['navigation.position.longitude'];
 
   const sunData = useMemo(() => {
     const sunriseFromSignal = sunriseValue !== null ? SUN_CONFIG.sunrise.transform(sunriseValue) : null;
@@ -142,45 +148,26 @@ export default function SunriseSunsetWidget() {
     };
   }, [sunriseValue, sunsetValue, latitudeValue, longitudeValue, debugMode]);
 
-  if (!sunData.hasData) {
-    return (
-      <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
-        <div className="flex items-center space-x-2 mb-4">
-          <FontAwesomeIcon icon={faSun} className={`${accentIconClass} text-lg`} />
-          <span className={`${primaryTextClass} font-medium text-lg`}>Sun Times</span>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className={`text-sm ${mutedTextClass}`}>No sun times data available</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const { sunrise, sunset } = sunData;
+  const { hasData, sunrise, sunset } = sunData;
 
   return (
-    <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faSun} className={`${accentIconClass} text-lg`} />
-        <span className={`${primaryTextClass} font-medium text-lg`}>Sun Times</span>
-      </div>
-      
-      {/* Content */}
-      <div className="flex-1 flex flex-col justify-center">
+    <BaseWidget
+      title="Sun Times"
+      icon={faSun}
+      hasData={sunData.hasData}
+      noDataMessage="No sun times data available"
+    >
+      <div className="flex-1 flex flex-col justify-center min-h-0">
         {/* Visual representation */}
         <div className="relative mb-6">
-          <div className="w-full h-16 relative overflow-hidden rounded-lg bg-gradient-to-r from-orange-900 via-orange-600 to-yellow-400">
+          <div className="w-full h-16 relative overflow-hidden rounded-lg bg-gradient-to-r from-orange-900 via-orange-600 to-yellow-400 shadow-inner">
             {/* Horizon line */}
-            <div className="absolute bottom-0 w-full h-1 bg-oGray"></div>
+            <div className="absolute bottom-0 w-full h-1 bg-oGray/30 backdrop-blur-sm"></div>
             
             {/* Sun position indicator */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div className="w-8 h-8 bg-oYellow rounded-full shadow-lg flex items-center justify-center">
-                <FontAwesomeIcon icon={faSun} className="text-orange-800 text-sm" />
+              <div className="w-10 h-10 bg-oYellow rounded-full shadow-lg flex items-center justify-center border-2 border-white/20 animate-pulse">
+                <FontAwesomeIcon icon={faSun} className="text-orange-800 text-lg" />
               </div>
             </div>
           </div>
@@ -188,23 +175,23 @@ export default function SunriseSunsetWidget() {
 
         {/* Times display */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="text-center">
-            <div className={`${secondaryTextClass} text-base mb-2`}>Sunrise</div>
-            <div className="text-3xl font-bold text-oYellow mb-1">
+          <div className="text-center bg-oGray p-3 rounded-lg border border-gray-800">
+            <div className="text-gray-400 text-[10px] uppercase mb-1 font-bold">Sunrise</div>
+            <div className="text-2xl font-bold text-oYellow">
               {sunrise !== null ? sunrise : 'N/A'}
             </div>
-            <div className={`${secondaryTextClass} text-sm`}>Local Time</div>
+            <div className="text-gray-500 text-[10px] uppercase mt-1">Local Time</div>
           </div>
           
-          <div className="text-center">
-            <div className={`${secondaryTextClass} text-base mb-2`}>Sunset</div>
-            <div className="text-3xl font-bold text-orange-400 mb-1">
+          <div className="text-center bg-oGray p-3 rounded-lg border border-gray-800">
+            <div className="text-gray-400 text-[10px] uppercase mb-1 font-bold">Sunset</div>
+            <div className="text-2xl font-bold text-orange-400">
               {sunset !== null ? sunset : 'N/A'}
             </div>
-            <div className={`${secondaryTextClass} text-sm`}>Local Time</div>
+            <div className="text-gray-500 text-[10px] uppercase mt-1">Local Time</div>
           </div>
         </div>
       </div>
-    </div>
+    </BaseWidget>
   );
 }

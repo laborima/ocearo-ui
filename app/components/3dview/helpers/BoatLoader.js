@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { Box3, Vector3 } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
-const boatAssets = './boats';
+const boatAssets = '/boats';
 
 export default function useBoat(boatId, desiredLength, material, useModelMaterial) {
     const [boat, setBoat] = useState(null);

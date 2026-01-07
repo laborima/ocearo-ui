@@ -1,9 +1,10 @@
 'use client';
 import React, { useMemo } from 'react';
-import { useOcearoContext } from '../../context/OcearoContext';
+import { useSignalKPath } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSun } from '@fortawesome/free-solid-svg-icons';
+import BaseWidget from './BaseWidget';
 
 const UV_CONFIG = {
   path: 'environment.outside.uvIndex',
@@ -11,104 +12,71 @@ const UV_CONFIG = {
 };
 
 export default function UVIndexWidget() {
-  const { getSignalKValue, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
-  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
-  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
-  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
-  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
   
+  const uvValue = useSignalKPath(UV_CONFIG.path);
+
   const uvData = useMemo(() => {
-    const value = getSignalKValue(UV_CONFIG.path);
+    const hasData = uvValue !== null || debugMode;
 
-    const hasData = value !== null;
-
-    if (!hasData && !debugMode) {
+    if (!hasData) {
       return { hasData: false };
     }
 
     return {
       hasData: true,
-      uvIndex: value !== null ? UV_CONFIG.transform(value) : (debugMode ? '3.2' : null)
+      uvIndex: uvValue !== null ? UV_CONFIG.transform(uvValue) : (debugMode ? 4 : null)
     };
-  }, [getSignalKValue, debugMode]);
+  }, [uvValue, debugMode]);
 
-  // Determine UV risk level and color
+  const { hasData, uvIndex } = uvData;
+
   const getUVInfo = (uv) => {
     const index = parseFloat(uv);
-    if (index <= 2) return { level: 'Low', color: 'text-oGreen', bg: 'bg-green-900' };
-    if (index <= 5) return { level: 'Moderate', color: 'text-oYellow', bg: 'bg-yellow-900' };
-    if (index <= 7) return { level: 'High', color: 'text-orange-400', bg: 'bg-orange-900' };
-    if (index <= 10) return { level: 'Very High', color: 'text-oRed', bg: 'bg-red-900' };
-    return { level: 'Extreme', color: 'text-purple-400', bg: 'bg-purple-900' };
+    if (index <= 2) return { level: 'Low', color: 'text-oGreen', bg: 'bg-green-900/30 border-green-800' };
+    if (index <= 5) return { level: 'Moderate', color: 'text-oYellow', bg: 'bg-yellow-900/30 border-yellow-800' };
+    if (index <= 7) return { level: 'High', color: 'text-orange-400', bg: 'bg-orange-900/30 border-orange-800' };
+    if (index <= 10) return { level: 'Very High', color: 'text-oRed', bg: 'bg-red-900/30 border-red-800' };
+    return { level: 'Extreme', color: 'text-purple-400', bg: 'bg-purple-900/30 border-purple-800' };
   };
 
-  const getUVColor = (uv) => {
-    const index = parseFloat(uv);
-    if (index <= 2) return 'text-oGreen';
-    if (index <= 5) return 'text-oYellow';
-    if (index <= 7) return 'text-orange-400';
-    if (index <= 10) return 'text-oRed';
-    return 'text-purple-400';
-  };
-
-  if (!uvData.hasData) {
-    return (
-      <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
-        <div className="flex items-center space-x-2 mb-4">
-          <FontAwesomeIcon icon={faSun} className={`${accentIconClass} text-lg`} />
-          <span className={`${primaryTextClass} font-medium text-lg`}>UV Index</span>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className={`text-sm ${mutedTextClass}`}>No UV index data available</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const { uvIndex } = uvData;
-  const uvInfo = uvIndex !== null ? getUVInfo(uvIndex) : { level: 'Unknown', color: 'text-gray-500', bg: 'bg-gray-700' };
+  const uvInfo = hasData ? getUVInfo(uvIndex) : null;
 
   return (
-    <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faSun} className={`${accentIconClass} text-lg`} />
-        <span className={`${primaryTextClass} font-medium text-lg`}>UV Index</span>
-      </div>
-      
-      {/* Content */}
-      <div className="flex-1 flex flex-col justify-center items-center">
+    <BaseWidget
+      title="UV Index"
+      icon={faSun}
+      hasData={uvData.hasData}
+      noDataMessage="No UV index data available"
+    >
+      <div className="flex-1 flex flex-col justify-center items-center min-h-0">
         {/* Main UV display */}
         <div className="text-center mb-6">
-          <div className={`text-5xl font-bold ${primaryTextClass} mb-2`}>
+          <div className="text-5xl font-black text-white mb-1 tracking-tighter">
             {uvIndex !== null ? uvIndex : 'N/A'}
           </div>
-          <div className={`text-base font-medium ${uvIndex !== null ? getUVColor(uvIndex) : mutedTextClass}`}>
-            {uvInfo.level}
+          <div className={`text-xs font-black uppercase tracking-widest ${uvIndex !== null ? getUVInfo(uvIndex).color : 'text-gray-500'}`}>
+            {uvIndex !== null ? getUVInfo(uvIndex).level : 'Unknown'}
           </div>
         </div>
 
         {/* Risk level indicator */}
-        <div className={`px-3 py-1 rounded-full ${uvInfo.bg} mb-4`}>
-          <span className={`text-sm font-medium ${uvInfo.color}`}>
-            {uvInfo.level}
+        <div className={`px-4 py-1.5 rounded-lg border uppercase text-[10px] font-black tracking-widest ${uvInfo?.bg || 'bg-gray-900/30 border-gray-800'} mb-6`}>
+          <span className={uvInfo?.color || 'text-gray-500'}>
+            {uvInfo?.level || 'Unknown'} Risk
           </span>
         </div>
 
         {/* UV scale bar */}
-        <div className="w-full">
-          <div className="flex h-3 rounded-full overflow-hidden">
-            <div className="flex-1 bg-green-500"></div>
-            <div className="flex-1 bg-yellow-500"></div>
-            <div className="flex-1 bg-orange-500"></div>
-            <div className="flex-1 bg-red-500"></div>
-            <div className="flex-1 bg-purple-500"></div>
+        <div className="w-full px-2">
+          <div className="flex h-2.5 rounded-full overflow-hidden border border-gray-800 shadow-inner">
+            <div className="flex-1 bg-oGreen shadow-[inset_0_0_5px_rgba(0,0,0,0.2)]"></div>
+            <div className="flex-1 bg-oYellow shadow-[inset_0_0_5px_rgba(0,0,0,0.2)]"></div>
+            <div className="flex-1 bg-orange-500 shadow-[inset_0_0_5px_rgba(0,0,0,0.2)]"></div>
+            <div className="flex-1 bg-oRed shadow-[inset_0_0_5px_rgba(0,0,0,0.2)]"></div>
+            <div className="flex-1 bg-purple-500 shadow-[inset_0_0_5px_rgba(0,0,0,0.2)]"></div>
           </div>
-          <div className={`flex justify-between text-xs ${secondaryTextClass} mt-1`}>
+          <div className="flex justify-between text-[10px] font-bold text-gray-500 mt-2 uppercase tracking-tighter px-0.5">
             <span>0</span>
             <span>2</span>
             <span>5</span>
@@ -117,6 +85,6 @@ export default function UVIndexWidget() {
           </div>
         </div>
       </div>
-    </div>
+    </BaseWidget>
   );
 }

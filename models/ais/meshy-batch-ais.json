@@ -1,0 +1,48 @@
+{
+  "endpoint": "https://api.meshy.ai/v1/text-to-3d",
+  "common": {
+    "mode": "text_to_3d",
+    "style": "low_poly",
+    "negative_prompt": "high poly, photorealistic, interior, crew, text labels, sea surface",
+    "format": "glb",
+    "scale": 1.0,
+    "lod": "game"
+  },
+  "jobs": [
+
+    { "id": "ais-20", "prompt": "Low poly white wing-in-ground craft, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, hybrid airplane-ship hull, short wings, aerodynamic body, flat deck, simple geometry" },
+
+    { "id": "ais-30", "prompt": "Low poly white fishing vessel, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, narrow hull, small cabin forward, open working deck aft, simple mast or crane, winches or net reels as cylinders" },
+
+    { "id": "ais-31", "prompt": "Low poly white tugboat, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, short wide hull, tall wheelhouse, towing winch on rear deck" },
+
+    { "id": "ais-33", "prompt": "Low poly white work vessel, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, industrial hull, flat deck, crane and equipment blocks" },
+
+    { "id": "ais-35", "prompt": "Low poly white military ship, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, angular hull, stealth-like superstructure, clean silhouette" },
+
+    { "id": "ais-36", "prompt": "Low poly white sailing vessel, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, slender hull, tall mast, triangular mainsail, small cabin, simple keel and rudder" },
+
+    { "id": "ais-37", "prompt": "Low poly white pleasure motor yacht, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, streamlined hull, raised cabin with windows, flybridge and swim platform" },
+
+    { "id": "ais-40", "prompt": "Low poly white high-speed craft, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, sleek pointed hull, open cockpit, windshield, outboard motor" },
+
+    { "id": "ais-50", "prompt": "Low poly white pilot vessel, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, compact hull, central cabin with windows, radar dome" },
+    { "id": "ais-51", "prompt": "Low poly white search and rescue boat, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, robust hull, enclosed cabin, searchlight, lifebuoys, radar mast" },
+    { "id": "ais-52", "prompt": "Low poly white tugboat, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, short wide hull, fenders, towing winch" },
+    { "id": "ais-53", "prompt": "Low poly white service vessel, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, compact utility hull, small cabin" },
+    { "id": "ais-55", "prompt": "Low poly white patrol vessel, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, compact hull, central cabin" },
+    { "id": "ais-56", "prompt": "Low poly white generic local vessel, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, simple hull" },
+    { "id": "ais-58", "prompt": "Low poly white medical transport vessel, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, enclosed cabin, red cross marking" },
+    { "id": "ais-59", "prompt": "Low poly white noncombatant ship, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, neutral hull design" },
+
+  
+    { "id": "ais-60", "prompt": "Low poly white passenger ship, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, multi-deck hull, rows of windows, bridge, funnel, lifeboats as boxes" },
+
+    { "id": "ais-70", "prompt": "Low poly white general cargo ship, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, boxy hull, flat deck, raised bridge near stern, cargo holds with hatch covers" },
+
+    { "id": "ais-80", "prompt": "Low poly white tanker, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, rounded hull, stern superstructure, cylindrical deck tanks, central pipeline" },
+    /* ---------- Other 90–99 ---------- */
+    { "id": "ais-90", "prompt": "Low poly white generic ship, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, simple hull, no specific equipment" }
+
+  ]
+}

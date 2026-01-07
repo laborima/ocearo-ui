@@ -1,5 +1,6 @@
 import { useOcearoContext } from '../context/OcearoContext';
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSignalKPaths } from '../hooks/useSignalK';
 
 // Constants remain the same
 const TIDE_DISPLAY_THRESHOLDS = {
@@ -24,17 +25,19 @@ const TEXT_COLORS = {
 };
 
 const ThreeDBoatTideLevelIndicator = () => {
-  const { nightMode, getSignalKValue } = useOcearoContext();
+  const { nightMode } = useOcearoContext();
   const [maxHeight, setMaxHeight] = useState(240); // Default height (equivalent to h-60)
-  const [tideData, setTideData] = useState({
-    level: null,
-    high: null,
-    low: null,
-    timeLow: null,
-    timeHigh: null,
-    coefficient: null,
-    isRising: null
-  });
+  
+  const tidePaths = useMemo(() => [
+    'environment.tide.heightNow',
+    'environment.tide.heightHigh',
+    'environment.tide.heightLow',
+    'environment.tide.timeLow',
+    'environment.tide.timeHigh',
+    'environment.tide.coeffNow'
+  ], []);
+
+  const skValues = useSignalKPaths(tidePaths);
 
   // Existing helper functions remain the same
   const timeToMinutes = useCallback((timeString) => {
@@ -80,8 +83,8 @@ const ThreeDBoatTideLevelIndicator = () => {
     return () => window.removeEventListener('resize', updateMaxHeight);
   }, []);
 
-  // Existing tide data effect
-  useEffect(() => {
+  // Existing tide data derived values
+  const tideData = useMemo(() => {
     const currentTime = new Date();
     const currentTimeString = currentTime.toLocaleTimeString('en-GB', { 
       hour: '2-digit', 
@@ -89,26 +92,27 @@ const ThreeDBoatTideLevelIndicator = () => {
       hour12: false 
     });
 
-    const newTideData = {
-      level: getSignalKValue('environment.tide.heightNow'),
-      high: getSignalKValue('environment.tide.heightHigh'),
-      low: getSignalKValue('environment.tide.heightLow'),
-      timeLow: getSignalKValue('environment.tide.timeLow'),
-      timeHigh: getSignalKValue('environment.tide.timeHigh'),
-      coefficient: getSignalKValue('environment.tide.coeffNow')
-    };
+    const level = skValues['environment.tide.heightNow'];
+    const high = skValues['environment.tide.heightHigh'];
+    const low = skValues['environment.tide.heightLow'];
+    const timeLow = skValues['environment.tide.timeLow'];
+    const timeHigh = skValues['environment.tide.timeHigh'];
+    const coefficient = skValues['environment.tide.coeffNow'];
 
-    const isDataComplete = Object.values(newTideData).every(value => 
+    const isDataComplete = [level, high, low, timeLow, timeHigh].every(value => 
       value !== null && value !== undefined
     );
 
     if (isDataComplete) {
-      setTideData({
-        ...newTideData,
-        isRising: computeIsRising(currentTimeString, newTideData.timeLow, newTideData.timeHigh)
-      });
+      return {
+        level, high, low, timeLow, timeHigh, coefficient,
+        isRising: computeIsRising(currentTimeString, timeLow, timeHigh)
+      };
     }
-  }, [getSignalKValue, computeIsRising]);
+    return {
+      level: null, high: null, low: null, timeLow: null, timeHigh: null, coefficient: null, isRising: null
+    };
+  }, [skValues, computeIsRising]);
 
   const {
     level,

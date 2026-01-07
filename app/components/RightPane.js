@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useOcearoContext } from './context/OcearoContext';
+import { useSignalKPath } from './hooks/useSignalK';
 import configService from './settings/ConfigService';
 
 // Dynamic imports for lazy-loaded components
@@ -57,39 +59,28 @@ const EXTERNAL_URLS = {
 };
 
 const RightPane = ({ view }) => {
-    const { getSignalKValue } = useOcearoContext();
-    const [myPosition, setMyPosition] = useState(null);
+    const [myPosition, setMyPosition] = useState(DEFAULT_POSITION);
     const [error, setError] = useState(null);
     const config = configService.getAll();
     const { signalkUrl } = config;
 
-    // Position update effect
+    // Use subscription model for position updates
+    const skPosition = useSignalKPath('navigation.position');
+
+    // Update internal position state only when significant change occurs
     useEffect(() => {
-        const fetchPosition = () => {
-            try {
-                const position = getSignalKValue('navigation.position') || DEFAULT_POSITION;
+        if (!skPosition) return;
 
-                setMyPosition((prev) => {
-                    if (!prev) return position;
+        setMyPosition((prev) => {
+            if (!prev) return skPosition;
 
-                    const hasSignificantChange =
-                        Math.abs(prev.latitude - position.latitude) > POSITION_CHANGE_THRESHOLD ||
-                        Math.abs(prev.longitude - position.longitude) > POSITION_CHANGE_THRESHOLD;
+            const hasSignificantChange =
+                Math.abs(prev.latitude - skPosition.latitude) > POSITION_CHANGE_THRESHOLD ||
+                Math.abs(prev.longitude - skPosition.longitude) > POSITION_CHANGE_THRESHOLD;
 
-                    return hasSignificantChange ? position : prev;
-                });
-
-                setError(null);
-            } catch (err) {
-                setError('Error fetching position data');
-                console.error('Position fetch error:', err);
-            }
-        };
-
-        fetchPosition();
-        const intervalId = setInterval(fetchPosition, POSITION_UPDATE_INTERVAL);
-        return () => clearInterval(intervalId);
-    }, [getSignalKValue]);
+            return hasSignificantChange ? skPosition : prev;
+        });
+    }, [skPosition]);
 
     // URL generation
     const iframeSrc = useMemo(() => {
@@ -135,7 +126,7 @@ const RightPane = ({ view }) => {
 
         switch (view) {
             case 'manual':
-                return <PDFList path="docs" />;
+                return <PDFList path="/docs" />;
             case 'settings':
                 return <ConfigPage />;
             case 'mediaplayer':
@@ -163,8 +154,19 @@ const RightPane = ({ view }) => {
     };
 
     return (
-        <div className="flex flex-col w-full h-full overflow-auto">
-            {renderContent()}
+        <div className="flex flex-col w-full h-full overflow-hidden">
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={view}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex flex-col w-full h-full overflow-auto"
+                >
+                    {renderContent()}
+                </motion.div>
+            </AnimatePresence>
         </div>
     );
 };

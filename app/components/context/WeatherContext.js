@@ -7,9 +7,10 @@
  * - Fallback data for widgets when sensor data is unavailable
  */
 
-import React, { createContext, useState, useEffect, useContext, useCallback, useRef } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback, useRef, useMemo } from 'react';
 import signalKService from '../services/SignalKService';
 import { useOcearoContext } from './OcearoContext';
+import { useSignalKPaths } from '../hooks/useSignalK';
 
 const WeatherContext = createContext();
 
@@ -25,7 +26,18 @@ const WEATHER_REFRESH_INTERVAL = 30 * 60 * 1000;
 const INITIAL_FETCH_DELAY = 5000;
 
 export const WeatherContextProvider = ({ children }) => {
-    const { getSignalKValue } = useOcearoContext();
+    // Define paths for subscription
+    const weatherPaths = useMemo(() => [
+        'navigation.position',
+        'environment.outside.temperature',
+        'environment.outside.humidity',
+        'environment.outside.pressure',
+        'environment.wind.speedTrue',
+        'environment.wind.directionTrue',
+        'environment.wind.gust'
+    ], []);
+
+    const skValues = useSignalKPaths(weatherPaths);
     
     // Weather forecast state
     const [forecasts, setForecasts] = useState([]);
@@ -43,7 +55,7 @@ export const WeatherContextProvider = ({ children }) => {
      * Fetch weather forecast from SignalK Weather API
      */
     const fetchWeatherForecast = useCallback(async () => {
-        const position = getSignalKValue('navigation.position');
+        const position = skValues['navigation.position'];
         
         if (!position?.latitude || !position?.longitude) {
             console.warn('WeatherContext: No position available for weather forecast');
@@ -85,7 +97,7 @@ export const WeatherContextProvider = ({ children }) => {
         } finally {
             setIsLoading(false);
         }
-    }, [getSignalKValue]);
+    }, [skValues]);
 
     /**
      * Get weather data for a specific time offset (hours from now)
@@ -107,13 +119,13 @@ export const WeatherContextProvider = ({ children }) => {
      * @returns {Object} Current weather data
      */
     const getCurrentWeather = useCallback(() => {
-        // First try to get sensor data
+        // First try to get sensor data from subscribed values
         const sensorData = {
-            temperature: getSignalKValue('environment.outside.temperature'),
-            humidity: getSignalKValue('environment.outside.humidity'),
-            pressure: getSignalKValue('environment.outside.pressure'),
-            windSpeed: getSignalKValue('environment.wind.speedTrue'),
-            windDirection: getSignalKValue('environment.wind.directionTrue')
+            temperature: skValues['environment.outside.temperature'],
+            humidity: skValues['environment.outside.humidity'],
+            pressure: skValues['environment.outside.pressure'],
+            windSpeed: skValues['environment.wind.speedTrue'],
+            windDirection: skValues['environment.wind.directionTrue']
         };
 
         const hasSensorData = Object.values(sensorData).some(v => v !== null);
@@ -160,16 +172,16 @@ export const WeatherContextProvider = ({ children }) => {
             windDirection: null,
             description: null
         };
-    }, [getSignalKValue, currentForecast]);
+    }, [skValues, currentForecast]);
 
     /**
      * Get wind data with fallback to forecast
      * @returns {Object} Wind data
      */
     const getWindData = useCallback(() => {
-        const sensorSpeed = getSignalKValue('environment.wind.speedTrue');
-        const sensorDirection = getSignalKValue('environment.wind.directionTrue');
-        const sensorGust = getSignalKValue('environment.wind.gust');
+        const sensorSpeed = skValues['environment.wind.speedTrue'];
+        const sensorDirection = skValues['environment.wind.directionTrue'];
+        const sensorGust = skValues['environment.wind.gust'];
 
         if (sensorSpeed !== null || sensorDirection !== null) {
             return {
@@ -201,7 +213,7 @@ export const WeatherContextProvider = ({ children }) => {
             direction: null,
             gust: null
         };
-    }, [getSignalKValue, currentForecast]);
+    }, [skValues, currentForecast]);
 
     // Initialize weather data fetch
     useEffect(() => {

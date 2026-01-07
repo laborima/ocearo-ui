@@ -173,6 +173,12 @@ class SignalKService {
 
             return await response.json();
         } catch (error) {
+            if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                const networkError = new Error(`SignalK server unreachable at ${baseUrl}`);
+                networkError.name = 'NetworkError';
+                console.warn(`SignalKService: Server unreachable for ${path}:`, error.message);
+                throw networkError;
+            }
             console.error(`SignalKService: API call failed for ${path}:`, error);
             throw error;
         }
@@ -193,7 +199,9 @@ class SignalKService {
             this.weatherApiAvailable = response.ok;
             return this.weatherApiAvailable;
         } catch (error) {
-            console.warn('SignalKService: Weather API not available:', error.message);
+            if (error.name !== 'TypeError' || error.message !== 'Failed to fetch') {
+                console.warn('SignalKService: Weather API check failed:', error.message);
+            }
             this.weatherApiAvailable = false;
             return false;
         }
@@ -383,6 +391,11 @@ class SignalKService {
             this.authToken = data.token;
             return this.authToken;
         } catch (error) {
+            if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                const networkError = new Error(`SignalK server unreachable at ${baseUrl}`);
+                networkError.name = 'NetworkError';
+                throw networkError;
+            }
             console.error('SignalKService: Login failed:', error);
             throw error;
         }
@@ -399,6 +412,9 @@ class SignalKService {
             });
             return response.ok;
         } catch (error) {
+            if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                return false;
+            }
             return false;
         }
     }
@@ -752,17 +768,9 @@ class SignalKService {
      */
     async clearCourse() {
         const path = '/signalk/v2/api/vessels/self/navigation/course';
-        const baseUrl = this.getBaseUrl();
-        const url = `${baseUrl}${path}`;
-
-        const response = await fetch(url, {
-            method: 'DELETE',
-            headers: this.getAuthHeaders()
+        await this.apiCall(path, {
+            method: 'DELETE'
         });
-
-        if (!response.ok) {
-            throw new Error(`Failed to clear course: ${response.statusText}`);
-        }
     }
 
     /**

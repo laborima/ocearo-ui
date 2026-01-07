@@ -8,6 +8,7 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { convertWindSpeed, oBlue, useOcearoContext } from '../../context/OcearoContext';
+import { useSignalKPaths } from '../../hooks/useSignalK';
 import { Vector3, DoubleSide } from 'three';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -99,14 +100,22 @@ WindArrow.propTypes = {
  * @param {number} outerRadius - Outer radius of the compass dial
  */
 const WindSector3D = ({ outerRadius }) => {
-    const { getSignalKValue } = useOcearoContext();
+    // Subscribe to all relevant wind paths
+    const windPaths = useMemo(() => [
+        'environment.wind.angleTrueGround',
+        'environment.wind.speedOverGround',
+        'environment.wind.angleApparent',
+        'environment.wind.speedApparent'
+    ], []);
 
-    // Get wind data from SignalK values and convert to appropriate units
+    const skValues = useSignalKPaths(windPaths);
+
+    // Get wind data from subscribed values and convert to appropriate units
     // Note: Math.PI/2 adjustment aligns with compass coordinate system
-    const trueWindAngle = (Math.PI / 2 - getSignalKValue('environment.wind.angleTrueGround')) || 0;
-    const trueWindSpeed = convertWindSpeed(getSignalKValue('environment.wind.speedOverGround')) || 0;
-    const appWindAngle = (Math.PI / 2 - getSignalKValue('environment.wind.angleApparent')) || 0;
-    const appWindSpeed = convertWindSpeed(getSignalKValue('environment.wind.speedApparent')) || 0;
+    const trueWindAngle = useMemo(() => (Math.PI / 2 - (skValues['environment.wind.angleTrueGround'] || 0)), [skValues]);
+    const trueWindSpeed = useMemo(() => convertWindSpeed(skValues['environment.wind.speedOverGround']) || 0, [skValues]);
+    const appWindAngle = useMemo(() => (Math.PI / 2 - (skValues['environment.wind.angleApparent'] || 0)), [skValues]);
+    const appWindSpeed = useMemo(() => convertWindSpeed(skValues['environment.wind.speedApparent']) || 0, [skValues]);
     // Calculate positions for wind indicators based on their angles
     // These are memoized to avoid recalculation on every render
     const trueWindPosition = useMemo(

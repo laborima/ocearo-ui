@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faShip,
@@ -43,8 +44,15 @@ const AppMenu = ({
     );
 
     return (
-        <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-black p-6 rounded-lg shadow-lg z-50 w-200">
-            <div className="grid grid-cols-2 gap-4">
+        <AnimatePresence>
+            <motion.div
+                initial={{ y: 20, x: '-50%', opacity: 0, scale: 0.95 }}
+                animate={{ y: 0, x: '-50%', opacity: 1, scale: 1 }}
+                exit={{ y: 20, x: '-50%', opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="fixed bottom-24 left-1/2 bg-black/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl z-50 w-full max-w-md border border-white/10"
+            >
+                <div className="grid grid-cols-2 gap-3">
                 {currentViewMode !== VIEW_MODES.SPLIT && (
                     <MenuButton icon={faExpand} label="Split View" onClick={() => toggleViewMode(VIEW_MODES.SPLIT)} />
                 )}
@@ -137,13 +145,14 @@ const AppMenu = ({
                 {/* Refresh Page Button */}
                 <MenuButton
                     icon={faSyncAlt}
-                    label="Refresh Page"
+                    label="Refresh"
                     onClick={() => {
                         window.location.reload();
                     }}
                 />
             </div>
-        </div>
+        </motion.div>
+        </AnimatePresence>
     );
 };
 

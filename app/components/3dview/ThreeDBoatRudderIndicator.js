@@ -1,11 +1,11 @@
+import React, { useMemo } from 'react';
 import { useOcearoContext } from '../context/OcearoContext';
+import { useSignalKPath } from '../hooks/useSignalK';
 
 const ThreeDBoatRudderIndicator = () => {
     const { nightMode } = useOcearoContext();
-    const { getSignalKValue } = useOcearoContext();
-
-    const rudderAngleRadians = getSignalKValue('steering.rudderAngle') || 0; // Example: -0.5585 radians
-    const rudderAngle = (rudderAngleRadians * 180) / Math.PI; // Convert to degrees
+    const rudderAngleRadians = useSignalKPath('steering.rudderAngle', 0);
+    const rudderAngle = useMemo(() => (rudderAngleRadians * 180) / Math.PI, [rudderAngleRadians]);
 
 
     // Function to generate graduation markers

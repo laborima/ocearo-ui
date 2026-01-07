@@ -1,8 +1,9 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { useFrame, extend } from "@react-three/fiber";
 import { shaderMaterial } from "@react-three/drei";
 import * as THREE from "three";
 import { useOcearoContext } from "../../context/OcearoContext";
+import { useSignalKPath } from "../../hooks/useSignalK";
 // Create a custom shader material with an extra 'rainbowActive' uniform.
 const TrailShaderMaterial = shaderMaterial(
   {
@@ -146,17 +147,22 @@ export const Trail = ({
   opacity = 0.5,
 }) => {
   const trailRef = useRef();
-  const { getSignalKValue } = useOcearoContext();
+  
+  // Use subscription for autopilot state
+  const autopilotState = useSignalKPath("steering.autopilot.state");
+  const autopilotActiveRef = useRef(false);
+
+  useEffect(() => {
+    autopilotActiveRef.current = autopilotState === "auto";
+  }, [autopilotState]);
 
   useFrame((state, delta) => {
     if (trailRef.current) {
       // Animate time for continuous shader movement.
       trailRef.current.uniforms.time.value += delta;
 
-      // Check the autopilot state via SignalK.
-      const autopilotState = getSignalKValue("steering.autopilot.state") == "auto" || false;
-      // Enable the rainbow effect when autopilot is active.
-      trailRef.current.uniforms.rainbowActive.value = autopilotState ? 1.0 : 0.0;
+      // Enable the rainbow effect when autopilot is active using ref for performance
+      trailRef.current.uniforms.rainbowActive.value = autopilotActiveRef.current ? 1.0 : 0.0;
     }
   });
 

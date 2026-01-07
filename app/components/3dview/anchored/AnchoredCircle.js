@@ -1,7 +1,7 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { useFrame } from '@react-three/fiber';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import * as THREE from 'three';
 import { useOcearoContext } from '../../context/OcearoContext';
+import { useSignalKPath } from '../../hooks/useSignalK';
 
 // Helper function to convert lat/lon difference to approximate meters
 const haversineDistance = (lat1, lon1, lat2, lon2) => {
@@ -22,20 +22,23 @@ const haversineDistance = (lat1, lon1, lat2, lon2) => {
 const AnchoredCircle = () => {
   const circleRef = useRef();
   const [anchorPosition, setAnchorPosition] = useState(null);
-  const {  getSignalKValue } = useOcearoContext();
+  const { subscribe, unsubscribe } = useOcearoContext();
+  
+  // Use subscription for position
+  const skPosition = useSignalKPath('navigation.position');
+  
   const radius = 50; // Size of circle in meters
   const segments = 64;
 
-  // Store initial position when component mounts
+  // Store initial position when component mounts or data becomes available
   useEffect(() => {
-    const initialPosition = getSignalKValue('navigation.position');
-    if (initialPosition && !anchorPosition) {
+    if (skPosition && !anchorPosition) {
       setAnchorPosition({
-        latitude: initialPosition.latitude,
-        longitude: initialPosition.longitude
+        latitude: skPosition.latitude,
+        longitude: skPosition.longitude
       });
     }
-  }, [getSignalKValue, anchorPosition]);
+  }, [skPosition, anchorPosition]);
   
   // Create the circle geometry
   useEffect(() => {
@@ -57,37 +60,34 @@ const AnchoredCircle = () => {
     }
   }, []);
 
-  // Update circle position based on difference from anchor point
-  useFrame(() => {
-    if (circleRef.current && anchorPosition) {
-      const currentPosition = getSignalKValue('navigation.position');
-      
-      if (currentPosition) {
-        // Calculate distance and bearing from anchor point
-        const dX = haversineDistance(
-          anchorPosition.latitude,
-          anchorPosition.longitude,
-          anchorPosition.latitude,
-          currentPosition.longitude
-        );
-        
-        const dZ = haversineDistance(
-          anchorPosition.latitude,
-          anchorPosition.longitude,
-          currentPosition.latitude,
-          anchorPosition.longitude
-        );
+  // Update circle position based on difference from anchor point using direct subscription
+  // to avoid useFrame overhead and React re-renders
+  useEffect(() => {
+    if (!anchorPosition || !skPosition || !circleRef.current) return;
 
-        // Convert to scene coordinates (assuming 1 unit = 1 meter)
-        // Adjust signs based on direction
-        const x = currentPosition.longitude > anchorPosition.longitude ? dX : -dX;
-        const z = currentPosition.latitude > anchorPosition.latitude ? dZ : -dZ;
+    // Calculate distance and bearing from anchor point
+    const dX = haversineDistance(
+      anchorPosition.latitude,
+      anchorPosition.longitude,
+      anchorPosition.latitude,
+      skPosition.longitude
+    );
+    
+    const dZ = haversineDistance(
+      anchorPosition.latitude,
+      anchorPosition.longitude,
+      skPosition.latitude,
+      anchorPosition.longitude
+    );
 
-        // Update circle position
-        circleRef.current.position.set(x, -6.9, z);
-      }
-    }
-  });
+    // Convert to scene coordinates (assuming 1 unit = 1 meter)
+    // Adjust signs based on direction
+    const x = skPosition.longitude > anchorPosition.longitude ? dX : -dX;
+    const z = skPosition.latitude > anchorPosition.latitude ? dZ : -dZ;
+
+    // Update circle position directly via ref
+    circleRef.current.position.set(x, -6.9, z);
+  }, [anchorPosition, skPosition]);
 
   return (
     <line ref={circleRef}>

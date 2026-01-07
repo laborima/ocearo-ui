@@ -1,5 +1,6 @@
 import { useOcearoContext } from '../context/OcearoContext';
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSignalKPath } from '../hooks/useSignalK';
 
 const DEPTH_THRESHOLDS = {
   DANGER: 3,
@@ -19,9 +20,18 @@ const TEXT_COLORS = {
 };
 
 const ThreeDBoatSeaLevelIndicator = () => {
-  const { nightMode, getDepthData } = useOcearoContext();
-  const [depth, setDepth] = useState(null);
+  const { nightMode } = useOcearoContext();
   const [barHeight, setBarHeight] = useState(240); // Default height (equivalent to h-60)
+
+  // Use specialized hooks for better performance and targeted subscriptions
+  const depthKeel = useSignalKPath('environment.depth.belowKeel');
+  const depthTransducer = useSignalKPath('environment.depth.belowTransducer');
+
+  // Derive depth with fallback logic
+  const depth = useMemo(() => {
+    // Mirroring getDepthData fallback logic from OcearoContext
+    return depthKeel ?? depthTransducer ?? null;
+  }, [depthKeel, depthTransducer]);
 
   // Handle responsive height
   useEffect(() => {
@@ -40,13 +50,6 @@ const ThreeDBoatSeaLevelIndicator = () => {
     window.addEventListener('resize', updateBarHeight);
     return () => window.removeEventListener('resize', updateBarHeight);
   }, []);
-
-  // Fetch depth data from SignalK using common helper
-  useEffect(() => {
-    const depthData = getDepthData();
-    // Use belowKeel which already has fallback to belowTransducer
-    setDepth(depthData.belowKeel);
-  }, [getDepthData]);
 
   // Calculate depth percentage for progress bar
   const depthPercentage = useMemo(() => {
@@ -68,7 +71,7 @@ const ThreeDBoatSeaLevelIndicator = () => {
   // Format depth display
   const formattedDepth = useCallback((depth) => {
     if (depth === null) return '--';
-    return `${depth} m`;
+    return `${Math.round(depth * 10) / 10} m`;
   }, []);
 
   // Render progress bar

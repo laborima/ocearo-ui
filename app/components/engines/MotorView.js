@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useOcearoContext } from '../context/OcearoContext';
+import { useSignalKPath, useSignalKPaths } from '../hooks/useSignalK';
 import configService from '../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -42,95 +43,105 @@ const DataField = ({ label, value, unit, icon, statusClass = 'text-white' }) => 
 };
 
 const MotorView = () => {
-  const { getSignalKValue } = useOcearoContext();
   const debugMode = configService.get('debugMode');
   const [selectedEngine, setSelectedEngine] = useState('0');
   const [activeTab, setActiveTab] = useState('engine'); // engine, transmission, electrical, fuel, warnings
   const [availableEngines, setAvailableEngines] = useState([]);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   
-  // Fuel log state
-  const [showFuelLogModal, setShowFuelLogModal] = useState(false);
-  const [fuelLogEntries, setFuelLogEntries] = useState([]);
-  const [fuelStats, setFuelStats] = useState(null);
-  const [fuelLogLoading, setFuelLogLoading] = useState(false);
-  const [fuelLogError, setFuelLogError] = useState(null);
+  // Define all possible engine paths for subscription
+  const enginePaths = useMemo(() => {
+    const paths = [];
+    const instances = ['0', '1', 'port', 'main', 'starboard'];
+    const fields = [
+      'revolutions', 'runTime', 'coolantTemperature', 'temperature', 
+      'exhaustTemperature', 'coolantPressure', 'boostPressure', 
+      'oilPressure', 'oilTemperature', 'fuel.rate', 'fuel.pressure', 
+      'load', 'torque', 'intakeManifoldTemperature', 'tilt', 'state',
+      'transmission.gear', 'transmission.oilPressure', 'transmission.oilTemperature'
+    ];
+    
+    instances.forEach(inst => {
+      fields.forEach(field => {
+        paths.push(`propulsion.${inst}.${field}`);
+      });
+    });
+    
+    // Add electrical and tank paths
+    paths.push(
+      'electrical.batteries.0.voltage', 'electrical.batteries.0.current',
+      'electrical.batteries.1.voltage', 'electrical.batteries.1.current',
+      'electrical.alternators.0.voltage', 'electrical.alternators.1.voltage',
+      'electrical.alternators.0.current', 'electrical.alternators.1.current',
+      'tanks.fuel.0.currentLevel', 'tanks.fuel.0.capacity'
+    );
+    
+    return paths;
+  }, []);
+
+  const skValues = useSignalKPaths(enginePaths);
+  const position = useSignalKPath('navigation.position');
+
+  // Helper function to get value with fallbacks from subscribed data
+  const getSKValue = useCallback((path) => {
+    return skValues[path] ?? null;
+  }, [skValues]);
 
   // Get available engines
   const getAvailableEngines = useCallback(() => {
     const engines = [];
-    for (let i = 0; i <= 3; i++) {
-      let rpm = getSignalKValue(`propulsion.${i}.revolutions`);
-      let runTime = getSignalKValue(`propulsion.${i}.runTime`);
+    for (let i = 0; i <= 1; i++) {
+      let rpm = getSKValue(`propulsion.${i}.revolutions`);
+      let runTime = getSKValue(`propulsion.${i}.runTime`);
       
-      // Check named instances if numeric not found
       if (i === 0 && (rpm === null && runTime === null)) {
-        rpm = getSignalKValue('propulsion.port.revolutions') ?? getSignalKValue('propulsion.main.revolutions');
-        runTime = getSignalKValue('propulsion.port.runTime') ?? getSignalKValue('propulsion.main.runTime');
+        rpm = getSKValue('propulsion.port.revolutions') ?? getSKValue('propulsion.main.revolutions');
+        runTime = getSKValue('propulsion.port.runTime') ?? getSKValue('propulsion.main.runTime');
       } else if (i === 1 && (rpm === null && runTime === null)) {
-        rpm = getSignalKValue('propulsion.starboard.revolutions');
-        runTime = getSignalKValue('propulsion.starboard.runTime');
+        rpm = getSKValue('propulsion.starboard.revolutions');
+        runTime = getSKValue('propulsion.starboard.runTime');
       }
       
       if (rpm !== null || runTime !== null || debugMode) {
         engines.push({
           id: i.toString(),
-          name: i === 0 ? 'Port/Main Engine' : i === 1 ? 'Starboard Engine' : `Engine ${i}`,
-          hasData: true
+          name: i === 0 ? 'Port/Main Engine' : 'Starboard Engine',
+          hasData: rpm !== null || runTime !== null
         });
       }
     }
     return engines.length > 0 ? engines : [{ id: '0', name: 'Main Engine', hasData: false }];
-  }, [getSignalKValue, debugMode]);
+  }, [getSKValue, debugMode]);
 
   useEffect(() => {
     setAvailableEngines(getAvailableEngines());
   }, [getAvailableEngines]);
 
-  // Helper function to get value from either numeric or named instance path
-  const getEngineValue = useCallback((path) => {
+  // Helper function to get engine value with instance fallbacks
+  const getEngineValue = useCallback((field) => {
     const instance = selectedEngine;
-    // Try numeric instance first (e.g., propulsion.0.revolutions)
-    let value = getSignalKValue(`propulsion.${instance}.${path}`);
+    let value = getSKValue(`propulsion.${instance}.${field}`);
     
-    // If not found and instance is 0, try named alternatives (port, main)
     if (value === null && instance === '0') {
-      value = getSignalKValue(`propulsion.port.${path}`);
-      if (value === null) {
-        value = getSignalKValue(`propulsion.main.${path}`);
-      }
-    }
-    // If instance is 1, try starboard
-    else if (value === null && instance === '1') {
-      value = getSignalKValue(`propulsion.starboard.${path}`);
+      value = getSKValue(`propulsion.port.${field}`) ?? getSKValue(`propulsion.main.${field}`);
+    } else if (value === null && instance === '1') {
+      value = getSKValue(`propulsion.starboard.${field}`);
     }
     
     return value;
-  }, [selectedEngine, getSignalKValue]);
+  }, [selectedEngine, getSKValue]);
 
   // Get comprehensive engine data
-  const getEngineData = useCallback(() => {
+  const engineData = useMemo(() => {
     const instance = selectedEngine;
-    const coolantTemperatureKelvin = getEngineValue('coolantTemperature');
-    const engineTemperatureKelvin = getEngineValue('temperature');
-    const portTemperatureKelvin = getSignalKValue('propulsion.port.temperature');
-    let effectiveCoolantTemperature = coolantTemperatureKelvin;
-    if (effectiveCoolantTemperature === null || effectiveCoolantTemperature === undefined) {
-      effectiveCoolantTemperature = engineTemperatureKelvin;
-    }
-    if (effectiveCoolantTemperature === null || effectiveCoolantTemperature === undefined) {
-      effectiveCoolantTemperature = portTemperatureKelvin;
-    }
-    const exhaustTemperatureKelvin = getEngineValue('exhaustTemperature');
-    const mainExhaustTemperatureKelvin = getSignalKValue('propulsion.main.exhaustTemperature');
-    const effectiveExhaustTemperature = (exhaustTemperatureKelvin !== null && exhaustTemperatureKelvin !== undefined)
-      ? exhaustTemperatureKelvin
-      : mainExhaustTemperatureKelvin;
+    const coolantTemperatureKelvin = getEngineValue('coolantTemperature') ?? getEngineValue('temperature') ?? getSKValue('propulsion.port.temperature');
+    const exhaustTemperatureKelvin = getEngineValue('exhaustTemperature') ?? getSKValue('propulsion.main.exhaustTemperature');
+    
     return {
       // Primary Engine Data
       rpm: MotorUtils.hzToRPM(getEngineValue('revolutions')),
       runTime: MotorUtils.formatEngineHours(getEngineValue('runTime')),
-      coolantTemp: MotorUtils.kelvinToCelsius(effectiveCoolantTemperature),
+      coolantTemp: MotorUtils.kelvinToCelsius(coolantTemperatureKelvin),
       coolantPressure: MotorUtils.pascalsToBar(getEngineValue('coolantPressure')),
       boostPressure: MotorUtils.pascalsToBar(getEngineValue('boostPressure')),
       oilPressure: MotorUtils.pascalsToBar(getEngineValue('oilPressure')),
@@ -139,7 +150,7 @@ const MotorView = () => {
       fuelPressure: MotorUtils.pascalsToBar(getEngineValue('fuel.pressure')),
       load: MotorUtils.ratioToPercent(getEngineValue('load')),
       torque: MotorUtils.ratioToPercent(getEngineValue('torque')),
-      exhaustTemp: MotorUtils.kelvinToCelsius(effectiveExhaustTemperature),
+      exhaustTemp: MotorUtils.kelvinToCelsius(exhaustTemperatureKelvin),
       intakeTemp: MotorUtils.kelvinToCelsius(getEngineValue('intakeManifoldTemperature')),
       tilt: MotorUtils.radiansToDegrees(getEngineValue('tilt')),
       state: getEngineValue('state'),
@@ -150,19 +161,18 @@ const MotorView = () => {
       transOilTemp: MotorUtils.kelvinToCelsius(getEngineValue('transmission.oilTemperature')),
       
       // Electrical Data
-      batteryVoltage: getSignalKValue('electrical.batteries.0.voltage'),
-      batteryCurrent: getSignalKValue('electrical.batteries.0.current'),
-      alternatorVoltage: getSignalKValue(`electrical.alternators.${instance}.voltage`) ?? getSignalKValue('propulsion.port.alternatorVoltage'),
-      alternatorCurrent: getSignalKValue(`electrical.alternators.${instance}.current`) ?? getSignalKValue('propulsion.port.alternatorCurrent'),
+      batteryVoltage: getSKValue('electrical.batteries.0.voltage'),
+      batteryCurrent: getSKValue('electrical.batteries.0.current'),
+      alternatorVoltage: getSKValue(`electrical.alternators.${instance}.voltage`) ?? getSKValue('propulsion.port.alternatorVoltage'),
+      alternatorCurrent: getSKValue(`electrical.alternators.${instance}.current`) ?? getSKValue('propulsion.port.alternatorCurrent'),
       
       // Fuel Tank Data
-      fuelLevel: MotorUtils.ratioToPercent(getSignalKValue('tanks.fuel.0.currentLevel')),
-      fuelCapacity: getSignalKValue('tanks.fuel.0.capacity'),
+      fuelLevel: MotorUtils.ratioToPercent(getSKValue('tanks.fuel.0.currentLevel')),
+      fuelCapacity: getSKValue('tanks.fuel.0.capacity'),
     };
-  }, [selectedEngine, getSignalKValue, getEngineValue]);
+  }, [selectedEngine, getEngineValue, getSKValue]);
   
-  const engineData = getEngineData();
-  const houseBatteryCurrentRaw = getSignalKValue('electrical.batteries.1.current');
+  const houseBatteryCurrentRaw = getSKValue('electrical.batteries.1.current');
   const houseBatteryCurrent = typeof houseBatteryCurrentRaw === 'number'
     ? Math.round(houseBatteryCurrentRaw * 10) / 10
     : houseBatteryCurrentRaw;
@@ -172,6 +182,13 @@ const MotorView = () => {
   const currentEngineHours = currentEngineHoursRaw !== null 
     ? currentEngineHoursRaw / 3600 
     : null;
+
+  // Fuel log state
+  const [showFuelLogModal, setShowFuelLogModal] = useState(false);
+  const [fuelLogEntries, setFuelLogEntries] = useState([]);
+  const [fuelStats, setFuelStats] = useState(null);
+  const [fuelLogLoading, setFuelLogLoading] = useState(false);
+  const [fuelLogError, setFuelLogError] = useState(null);
 
   // Fetch fuel log entries on mount and when tab changes to fuel
   const loadFuelLogEntries = useCallback(async () => {
@@ -203,10 +220,6 @@ const MotorView = () => {
     setFuelLogLoading(true);
     setFuelLogError(null);
     try {
-      const position = {
-        latitude: getSignalKValue('navigation.position.latitude'),
-        longitude: getSignalKValue('navigation.position.longitude')
-      };
       await addFuelLogEntry(fuelData, position);
       setShowFuelLogModal(false);
       await loadFuelLogEntries();
@@ -216,7 +229,7 @@ const MotorView = () => {
     } finally {
       setFuelLogLoading(false);
     }
-  }, [getSignalKValue, loadFuelLogEntries]);
+  }, [position, loadFuelLogEntries]);
 
   // Get last refill engine hours for the modal
   const lastRefillEngineHours = fuelStats?.lastRefill?.engineHours || null;
@@ -548,7 +561,7 @@ const MotorView = () => {
                   <h4 className="text-lg text-oGray">House Battery</h4>
                   <BarGauge
                     label="Voltage"
-                    value={getSignalKValue('electrical.batteries.1.voltage')}
+                    value={getSKValue('electrical.batteries.1.voltage')}
                     unit="V"
                     min={10}
                     max={15}
@@ -887,14 +900,14 @@ const MotorView = () => {
                 const notifications = [];
                 notificationTypes.forEach(type => {
                   // Try numeric instance first
-                  let notification = getSignalKValue(`notifications.propulsion.${instance}.${type}`);
+                  let notification = getSKValue(`notifications.propulsion.${instance}.${type}`);
                   
                   // Try named instances if not found
                   if (!notification && instance === '0') {
-                    notification = getSignalKValue(`notifications.propulsion.port.${type}`) 
-                               ?? getSignalKValue(`notifications.propulsion.main.${type}`);
+                    notification = getSKValue(`notifications.propulsion.port.${type}`) 
+                               ?? getSKValue(`notifications.propulsion.main.${type}`);
                   } else if (!notification && instance === '1') {
-                    notification = getSignalKValue(`notifications.propulsion.starboard.${type}`);
+                    notification = getSKValue(`notifications.propulsion.starboard.${type}`);
                   }
                   
                   if (notification && typeof notification === 'object') {
@@ -1014,76 +1027,76 @@ const MotorView = () => {
                 <div className="space-y-2 text-sm font-mono">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <div className="text-gray-400">propulsion.{selectedEngine}.revolutions:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.revolutions`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.revolutions`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.runTime:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.runTime`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.runTime`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.coolantTemperature:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.coolantTemperature`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.coolantTemperature`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.coolantPressure:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.coolantPressure`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.coolantPressure`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.oilPressure:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.oilPressure`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.oilPressure`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.oilTemperature:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.oilTemperature`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.oilTemperature`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.exhaustTemperature:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.exhaustTemperature`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.exhaustTemperature`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.intakeManifoldTemperature:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.intakeManifoldTemperature`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.intakeManifoldTemperature`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.boostPressure:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.boostPressure`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.boostPressure`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.load:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.load`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.load`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.torque:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.torque`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.torque`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.state:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.state`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.state`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.fuel.rate:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.fuel.rate`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.fuel.rate`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.fuel.pressure:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.fuel.pressure`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.fuel.pressure`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.transmission.gear:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.transmission.gear`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.transmission.gear`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.transmission.oilPressure:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.transmission.oilPressure`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.transmission.oilPressure`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.transmission.oilTemperature:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.transmission.oilTemperature`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.transmission.oilTemperature`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">propulsion.{selectedEngine}.tilt:</div>
-                    <div className="text-green-400">{getSignalKValue(`propulsion.${selectedEngine}.tilt`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`propulsion.${selectedEngine}.tilt`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">electrical.batteries.0.voltage:</div>
-                    <div className="text-green-400">{getSignalKValue('electrical.batteries.0.voltage') ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue('electrical.batteries.0.voltage') ?? 'null'}</div>
                     
                     <div className="text-gray-400">electrical.batteries.0.current:</div>
-                    <div className="text-green-400">{getSignalKValue('electrical.batteries.0.current') ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue('electrical.batteries.0.current') ?? 'null'}</div>
                     
                     <div className="text-gray-400">electrical.alternators.{selectedEngine}.voltage:</div>
-                    <div className="text-green-400">{getSignalKValue(`electrical.alternators.${selectedEngine}.voltage`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`electrical.alternators.${selectedEngine}.voltage`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">electrical.alternators.{selectedEngine}.current:</div>
-                    <div className="text-green-400">{getSignalKValue(`electrical.alternators.${selectedEngine}.current`) ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue(`electrical.alternators.${selectedEngine}.current`) ?? 'null'}</div>
                     
                     <div className="text-gray-400">tanks.fuel.0.currentLevel:</div>
-                    <div className="text-green-400">{getSignalKValue('tanks.fuel.0.currentLevel') ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue('tanks.fuel.0.currentLevel') ?? 'null'}</div>
                     
                     <div className="text-gray-400">tanks.fuel.0.capacity:</div>
-                    <div className="text-green-400">{getSignalKValue('tanks.fuel.0.capacity') ?? 'null'}</div>
+                    <div className="text-green-400">{getSKValue('tanks.fuel.0.capacity') ?? 'null'}</div>
                   </div>
                 </div>
               </div>

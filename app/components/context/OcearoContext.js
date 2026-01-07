@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
+import React, { createContext, useState, useEffect, useContext, useRef, useCallback } from 'react';
 import Client from '@signalk/client';
 import configService from '../settings/ConfigService';
 import signalKService from '../services/SignalKService';
@@ -235,138 +235,83 @@ const SAMPLE_DATA = {
 
 
 export const OcearoContextProvider = ({ children }) => {
-    const [signalkData, setSignalKData] = useState({}); // State to hold SignalK data
     const [nightMode, setNightMode] = useState(false); // Night mode state
     const [states, setStates] = useState(INITIAL_STATES);
     
+    // Store subscribers for each path
+    const subscribersRef = useRef({});
+    // Store current data in a ref for immediate access without triggering re-renders of the context itself
+    const signalkDataRef = useRef({});
+
+    /**
+     * Subscribe to a specific SignalK path
+     */
+    const subscribe = useCallback((path, callback) => {
+        if (!subscribersRef.current[path]) {
+            subscribersRef.current[path] = new Set();
+        }
+        subscribersRef.current[path].add(callback);
+    }, []);
+
+    /**
+     * Unsubscribe from a specific SignalK path
+     */
+    const unsubscribe = useCallback((path, callback) => {
+        if (subscribersRef.current[path]) {
+            subscribersRef.current[path].delete(callback);
+            if (subscribersRef.current[path].size === 0) {
+                delete subscribersRef.current[path];
+            }
+        }
+    }, []);
+
+    /**
+     * Notify subscribers of a data change
+     */
+    const notifySubscribers = useCallback((path, value) => {
+        if (subscribersRef.current[path]) {
+            subscribersRef.current[path].forEach(callback => callback(value));
+        }
+    }, []);
+
+    /**
+     * Update SignalK data and notify subscribers
+     */
+    const updateSignalKData = useCallback((updates) => {
+        // Update the ref for immediate access
+        signalkDataRef.current = { ...signalkDataRef.current, ...updates };
+        
+        // Notify subscribers for each changed path
+        Object.entries(updates).forEach(([path, value]) => {
+            notifySubscribers(path, value);
+        });
+    }, [notifySubscribers]);
+
     /**
      * Get the value of a SignalK data path
      * @param {string} path - The SignalK data path
      * @returns {*} - The value at the specified path, or null if not found
      */
-    const getSignalKValue = (path) => {
-        if (Object.prototype.hasOwnProperty.call(signalkData, path)) {
-            return signalkData[path];
+    const getSignalKValue = useCallback((path) => {
+        if (Object.prototype.hasOwnProperty.call(signalkDataRef.current, path)) {
+            return signalkDataRef.current[path];
         }
         return null;
-    };
+    }, []);
     
     /**
-     * Get depth data with automatic fallback from multiple SignalK paths
-     * 
-     * This helper centralizes depth data retrieval and provides intelligent fallbacks
-     * between different depth measurement types commonly used in marine systems.
-     * 
-     * SignalK paths checked (in priority order):
-     * - environment.depth.belowKeel (preferred for navigation)
-     * - environment.depth.belowSurface (total water depth)
-     * - environment.depth.belowTransducer (raw sensor reading)
-     * 
-     * Fallback logic:
-     * - belowKeel: Uses belowKeel if available, otherwise falls back to belowTransducer
-     * - belowSurface: Uses belowSurface if available, otherwise estimates from belowTransducer + 1.5m offset
-     * - belowTransducer: Returns raw transducer reading if available
-     * 
-     * @returns {Object} Depth measurements in meters (rounded to 1 decimal)
-     * @returns {number|null} return.belowKeel - Depth below keel (safe navigation depth)
-     * @returns {number|null} return.belowSurface - Depth below water surface (total depth)
-     * @returns {number|null} return.belowTransducer - Depth from transducer sensor
-     */
-    const getDepthData = () => {
-        const depthKeel = getSignalKValue('environment.depth.belowKeel');
-        const depthSurface = getSignalKValue('environment.depth.belowSurface');
-        const depthTransducer = getSignalKValue('environment.depth.belowTransducer');
-        
-        // Use belowKeel if available, otherwise fallback to belowTransducer
-        const keel = depthKeel ?? depthTransducer ?? null;
-        
-        // Use belowSurface if available, otherwise calculate from transducer
-        // Typical offset is ~1.5m (transducer to waterline)
-        const surface = depthSurface ?? (depthTransducer !== null ? depthTransducer + 1.5 : null) ?? null;
-        
-        return {
-            belowKeel: keel !== null ? Math.round(keel * 10) / 10 : null,
-            belowSurface: surface !== null ? Math.round(surface * 10) / 10 : null,
-            belowTransducer: depthTransducer !== null ? Math.round(depthTransducer * 10) / 10 : null
-        };
-    };
-    
-    /**
-     * Get tank data with automatic fallback from multiple SignalK path formats
-     * 
-     * This helper centralizes tank data retrieval and provides intelligent fallbacks
-     * between different tank instance naming conventions (numeric vs named).
-     * 
-     * SignalK standard format: tanks.<type>.<instance>.<property>
-     * 
-     * Tank types: fuel, freshWater, wasteWater, blackWater, lubrication, liveWell, baitWell
-     * 
-     * Fallback logic for each tank type:
-     * - First tries numeric instance (0, 1, 2, etc.) - SignalK standard
-     * - Then tries named instance ('main', 'port', 'starboard') - non-standard fallback
-     * 
-     * @param {string} tankType - Tank type ('fuel', 'freshWater', 'wasteWater', 'blackWater', 'lubrication', etc.)
-     * @param {number|string} [instance=0] - Tank instance (number or name like 'main', 'port', 'starboard')
-     * @returns {Object} Complete tank data object
-     * @returns {string|null} return.name - Tank name
-     * @returns {string|null} return.type - Tank type (petrol, diesel, fresh water, greywater, blackwater, etc.)
-     * @returns {number|null} return.capacity - Tank capacity in cubic meters (m³)
-     * @returns {number|null} return.currentLevel - Current level as ratio (0.0 to 1.0)
-     * @returns {number|null} return.currentVolume - Current volume in cubic meters (m³)
-     * @returns {number|null} return.pressure - Pressure in Pascals (Pa)
-     * @returns {number|null} return.temperature - Temperature in Kelvin (K)
-     */
-    const getTankData = (tankType, instance = 0) => {
-        // Helper to get property with fallback
-        const getProperty = (property) => {
-            // Try numeric instance first (SignalK standard)
-            let value = getSignalKValue(`tanks.${tankType}.${instance}.${property}`);
-            
-            // Fallback to named instances if not found and instance is 0
-            if (value === null && instance === 0) {
-                value = getSignalKValue(`tanks.${tankType}.main.${property}`) 
-                     ?? getSignalKValue(`tanks.${tankType}.port.${property}`);
-            } else if (value === null && instance === 1) {
-                value = getSignalKValue(`tanks.${tankType}.starboard.${property}`);
-            }
-            
-            return value;
-        };
-        
-        const currentLevel = getProperty('currentLevel');
-        const currentVolume = getProperty('currentVolume');
-        const capacity = getProperty('capacity');
-        
-        return {
-            name: getProperty('name'),
-            type: getProperty('type'),
-            capacity: capacity,
-            currentLevel: currentLevel !== null ? Math.round(currentLevel * 1000) / 1000 : null,
-            currentVolume: currentVolume,
-            pressure: getProperty('pressure'),
-            temperature: getProperty('temperature'),
-            // Calculate volume from level if not provided
-            calculatedVolume: (currentLevel !== null && capacity !== null) 
-                ? Math.round(currentLevel * capacity * 1000) / 1000 
-                : null
-        };
-    };
-    
-    /**
-     * Get the user's boat rotation angle in degrees
-     * First tries to use course over ground, then falls back to heading
+     * Get the user's boat rotation angle in radians
+     * @deprecated Use useSignalKPaths in components instead for reactive updates
      * @returns {number} - Rotation angle in radian
      */
-    const getBoatRotationAngle = () => {
-        // Get heading and COG in radians
-       // Get heading data from SignalK values
-        const heading = getSignalKValue('navigation.headingTrue') || getSignalKValue('navigation.headingMagnetic');
-        const courseOverGroundAngle = getSignalKValue('navigation.courseOverGroundTrue')
-        || getSignalKValue('navigation.courseOverGroundMagnetic');
+    const getBoatRotationAngle = useCallback(() => {
+        const data = signalkDataRef.current;
+        const heading = data['navigation.headingTrue'] || data['navigation.headingMagnetic'];
+        const courseOverGroundAngle = data['navigation.courseOverGroundTrue']
+        || data['navigation.courseOverGroundMagnetic'];
 
-        // Use course over ground if available, otherwise use heading
         return courseOverGroundAngle || heading || 0;
-    };
+    }, []);
     
     /**
      * Convert latitude/longitude coordinates to X/Y coordinates relative to a reference position
@@ -422,11 +367,12 @@ export const OcearoContextProvider = ({ children }) => {
 
     
     // Function to get sail visibility state based on navigation mode
-    const getSailVisibility = () => {
-        const navigationState = getSignalKValue('navigation.state');
+    const getSailVisibility = useCallback(() => {
+        const data = signalkDataRef.current;
+        const navigationState = data['navigation.state'];
         // Hide sails when in motoring mode
         return navigationState !== 'motoring';
-    };
+    }, []);
    
     // Method to toggle any state (e.g., autopilot, anchorWatch)
     const toggleState = async (key, value = undefined) => {
@@ -447,7 +393,8 @@ export const OcearoContextProvider = ({ children }) => {
                     }
                 } else {
                     // Determine navigation mode based on engine state
-                    const engineState = getSignalKValue('propulsion.main.state') || getSignalKValue('propulsion.main.revolutions');
+                    const data = signalkDataRef.current;
+                    const engineState = data['propulsion.main.state'] || data['propulsion.main.revolutions'];
                     const navigationMode = (engineState === 'running' || (typeof engineState === 'number' && engineState > 0)) ? 'motoring' : 'sailing';
                     
                     if (isOcearoCoreEnabled()) {
@@ -527,15 +474,9 @@ export const OcearoContextProvider = ({ children }) => {
                     // Increment the wind angle by 5 degrees each interval
                     currentWindAngle = (currentWindAngle + 5) % 360;
 
-                    setSignalKData(prev => ({
-                        ...prev,
+                    // Update SignalK data using the new subscription-aware method
+                    updateSignalKData({
                         'steering.rudderAngle': MathUtils.degToRad(randomAngle),
-                        // Override the apparent wind angle with our incrementing value
-                        //nt.wind.angleApparent': MathUtils.degToRad(currentWindAngle),
-                        // Keep other wind data from sample data
-                        // 'environment.wind.angleTrueWater': SAMPLE_DATA.wind['environment.wind.angleTrueWater'],
-                        // 'environment.wind.speedTrue': SAMPLE_DATA.wind['environment.wind.speedTrue'],
-                        // 'environment.wind.speedApparent': SAMPLE_DATA.wind['environment.wind.speedApparent'],
                         ...SAMPLE_DATA.temperature,
                         ...SAMPLE_DATA.environment,
                         ...SAMPLE_DATA.performance,
@@ -544,7 +485,7 @@ export const OcearoContextProvider = ({ children }) => {
                         ...SAMPLE_DATA.electrical,
                         ...SAMPLE_DATA.propulsion,
                         ...SAMPLE_DATA.tanks,
-                      }));
+                    });
                 }, SAMPLE_DATA_INTERVAL);
             };
             
@@ -566,11 +507,10 @@ export const OcearoContextProvider = ({ children }) => {
                         delta.updates.forEach((update) => {
                     if (update.values) {
                         update.values.forEach((value) => {
-                            // Update SignalK data state
-                            setSignalKData((prevData) => ({
-                                ...prevData,
-                                [value.path]: value.value,
-                            }));
+                    // Update SignalK data state and notify subscribers
+                    updateSignalKData({
+                        [value.path]: value.value,
+                    });
                         });
                     }
                 });
@@ -595,7 +535,7 @@ export const OcearoContextProvider = ({ children }) => {
             const date = new Date();
             const year = date.getFullYear();
             const month = (date.getMonth() + 1).toString().padStart(2, '0');
-            const filePath = `tides/larochelle/${month}_${year}.json`;
+            const filePath = `/tides/larochelle/${month}_${year}.json`;
         
             const response = await fetch(filePath);
             if (!response.ok) {
@@ -658,15 +598,15 @@ export const OcearoContextProvider = ({ children }) => {
                     closestLowTide.time
                 );
         
-                setSignalKData((prevData) => ({
-                    ...prevData,
+                // Update SignalK data using the new subscription-aware method
+                updateSignalKData({
                     "environment.tide.heightNow": currentTideHeight,
                     "environment.tide.heightHigh": closestHighTide.height,
                     "environment.tide.heightLow": closestLowTide.height,
                     "environment.tide.timeLow": closestLowTide.time,
                     "environment.tide.timeHigh": closestHighTide.time,
                     "environment.tide.coeffNow": closestHighTide.coef
-                }));
+                });
             } else {
                 throw new Error("Tide data for today is incomplete.");
             }
@@ -699,8 +639,8 @@ export const OcearoContextProvider = ({ children }) => {
             <OcearoContext.Provider
                 value={{
                     getSignalKValue,
-                    getDepthData,
-                    getTankData,
+                    subscribe,
+                    unsubscribe,
                     getBoatRotationAngle,
                     convertLatLonToXY,
                     nightMode,

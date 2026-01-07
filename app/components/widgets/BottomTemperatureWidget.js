@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { convertTemperature, useOcearoContext } from '../context/OcearoContext';
+import { useSignalKPaths } from '../hooks/useSignalK';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faThermometerHalf, 
@@ -59,18 +60,22 @@ const TemperatureDisplay = ({ mode, value, icon, nightMode }) => {
 };
 
 const BottomTemperatureWidget = () => {
-  const { nightMode, getSignalKValue } = useOcearoContext();
+  const { nightMode } = useOcearoContext();
   const [availableModes, setAvailableModes] = useState([]);
   const [displayMode, setDisplayMode] = useState(null);
 
-  // Get temperature data
+  // Subscribe to all relevant temperature paths
+  const paths = useMemo(() => Object.values(TEMPERATURE_MODES).map(m => m.path), []);
+  const signalkValues = useSignalKPaths(paths);
+
+  // Get temperature data using specialized hooks for better performance
   const temperatureData = useMemo(() => {
     return Object.entries(TEMPERATURE_MODES).reduce((acc, [key, config]) => {
-      const value = getSignalKValue(config.path);
+      const value = signalkValues[config.path];
       acc[key] = value !== null ? config.transform(value) : null;
       return acc;
     }, {});
-  }, [getSignalKValue]);
+  }, [signalkValues]);
 
   // Update available modes when data changes
   useEffect(() => {
@@ -85,13 +90,13 @@ const BottomTemperatureWidget = () => {
     }
   }, [temperatureData, displayMode]);
 
-  const toggleDisplayMode = () => {
+  const toggleDisplayMode = useCallback(() => {
     if (availableModes.length <= 1) return;
 
     const currentIndex = availableModes.indexOf(displayMode);
     const nextIndex = (currentIndex + 1) % availableModes.length;
     setDisplayMode(availableModes[nextIndex]);
-  };
+  }, [availableModes, displayMode]);
 
   if (availableModes.length === 0) {
     return (

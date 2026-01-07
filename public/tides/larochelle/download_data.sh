@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set the year for which to download data
-YEAR=2025
+YEAR=2026
 
 # Base URL with placeholders for month and year
 BASE_URL="https://www.portlarochelle.com/marees/?d=MONTHYEAR"

@@ -1,7 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Vector3, MathUtils } from 'three';
 import { Sphere } from '@react-three/drei';
-import { useOcearoContext, oGreen, oRed, oYellow } from '../../context/OcearoContext';
+import { oGreen, oRed, oYellow, useOcearoContext } from '../../context/OcearoContext';
+import { useSignalKPath, useSignalKPaths } from '../../hooks/useSignalK';
 import signalKService from '../../services/SignalKService';
 import configService from '../../settings/ConfigService';
 
@@ -111,9 +112,18 @@ const ParallelepipedLine = ({ start, end, color, width = 0.2, height = 0.1, dash
 };
 
 const LayLines3D = ({ outerRadius = 10 }) => {
-    const { getSignalKValue, convertLatLonToXY } = useOcearoContext();
+    const { convertLatLonToXY } = useOcearoContext();
     const debugMode = configService.get('debugMode');
     
+    // Subscribe to relevant SignalK paths
+    const navigationPaths = useMemo(() => [
+        'navigation.courseGreatCircle.nextPoint.bearingTrue',
+        'navigation.courseGreatCircle.nextPoint.distance',
+        'navigation.position'
+    ], []);
+
+    const skValues = useSignalKPaths(navigationPaths);
+
     // State for waypoints from Resources API
     const [resourceWaypoints, setResourceWaypoints] = useState([]);
     const [activeCourse, setActiveCourse] = useState(null);
@@ -156,13 +166,13 @@ const LayLines3D = ({ outerRadius = 10 }) => {
         return () => clearInterval(interval);
     }, [debugMode]);
 
-    // Get waypoint data from SignalK delta stream or course API
-    const waypointBearing = getSignalKValue('navigation.courseGreatCircle.nextPoint.bearingTrue') || MathUtils.degToRad(30);
-    const waypointDistance = getSignalKValue('navigation.courseGreatCircle.nextPoint.distance') || 20;
+    // Get waypoint data from subscribed SignalK values
+    const waypointBearing = skValues['navigation.courseGreatCircle.nextPoint.bearingTrue'] ?? MathUtils.degToRad(30);
+    const waypointDistance = skValues['navigation.courseGreatCircle.nextPoint.distance'] ?? 20;
+    const myPosition = skValues['navigation.position'];
     
-    // Get current boat position for relative calculations
-    const boatPosition3D = new Vector3(0, 0, 0);
-    const myPosition = getSignalKValue('navigation.position');
+    // Origin (boat position) is always at 0,0,0
+    const boatPosition = useMemo(() => new Vector3(0, 0, 0), []);
     
     // Calculate the waypoint position
     const waypointPosition = useMemo(() => {
@@ -195,9 +205,6 @@ const LayLines3D = ({ outerRadius = 10 }) => {
         // Default position
         return new Vector3(0, 0, -5);
     }, [debugMode, activeCourse, myPosition, waypointBearing, waypointDistance, convertLatLonToXY, outerRadius]);
-    
-    // Origin (boat position) is always at 0,0,0
-    const boatPosition = boatPosition3D;
     
     /**
      * Calculate layline corners for a rectangular path to waypoint

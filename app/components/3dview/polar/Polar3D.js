@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
 import { Line } from '@react-three/drei';
 import { Vector3, CatmullRomCurve3, Group, MathUtils } from 'three';
 import { useFrame } from '@react-three/fiber';
-import polarData from '/public/boats/default/polar/polar.json';
+import polarData from '@/public/boats/default/polar/polar.json';
 import { 
     convertSpeed, 
     convertWindSpeed, 
@@ -11,6 +11,7 @@ import {
     oRed, 
     useOcearoContext 
 } from '../../context/OcearoContext';
+import { useSignalKPath, useSignalKPaths } from '../../hooks/useSignalK';
 
 // Constants
 const CONSTANTS = {
@@ -192,11 +193,19 @@ function PolarProjection() {
     const frameCount = useRef(0);
     const previousAngles = useRef([]);
     const lastSOG = useRef(CONSTANTS.DEFAULT_SOG);
-    const { getSignalKValue } = useOcearoContext();
 
-    const appWindAngle = - getSignalKValue('environment.wind.angleApparent');
-    const trueWindSpeed = convertWindSpeed(getSignalKValue('environment.wind.speedOverGround')) || 0;
-    const sog = getSignalKValue('navigation.speedOverGround') || CONSTANTS.DEFAULT_SOG;
+    // Use subscription model for performance data
+    const polarPaths = useMemo(() => [
+        'environment.wind.angleApparent',
+        'environment.wind.speedOverGround',
+        'navigation.speedOverGround'
+    ], []);
+
+    const skValues = useSignalKPaths(polarPaths);
+
+    const appWindAngle = - (skValues['environment.wind.angleApparent'] || 0);
+    const trueWindSpeed = useMemo(() => convertWindSpeed(skValues['environment.wind.speedOverGround']) || 0, [skValues]);
+    const sog = skValues['navigation.speedOverGround'] || CONSTANTS.DEFAULT_SOG;
     
     // Add a ref to track the previous wind speed for detecting changes
     const prevWindSpeedRef = useRef(trueWindSpeed);

@@ -1,6 +1,8 @@
 'use client';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useOcearoContext, toDegrees } from '../context/OcearoContext';
+import { useSignalKPath, useSignalKPaths } from '../hooks/useSignalK';
 import signalKService from '../services/SignalKService';
 import configService from '../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -74,16 +76,34 @@ const ocearoCoreApiCall = async (endpoint, options = {}) => {
  * - PlayStation controller configuration (via OcearoCore)
  */
 export default function AutopilotView() {
-    const { getSignalKValue, nightMode } = useOcearoContext();
     const debugMode = configService.get('debugMode');
     
-    // Styling classes
-    const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
-    const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
-    const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
+    // Use subscription model for real-time data
+    const autopilotPaths = useMemo(() => [
+        'navigation.headingTrue',
+        'navigation.headingMagnetic',
+        'environment.wind.angleApparent',
+        'steering.rudderAngle',
+        'steering.autopilot.state',
+        'steering.autopilot.mode',
+        'steering.autopilot.target.headingTrue',
+        'steering.autopilot.target.windAngleApparent'
+    ], []);
+
+    const skValues = useSignalKPaths(autopilotPaths);
     
+    const currentHeading = skValues['navigation.headingTrue'] || skValues['navigation.headingMagnetic'];
+    const apparentWindAngle = skValues['environment.wind.angleApparent'];
+    const rudderAngle = skValues['steering.rudderAngle'];
+
     // State
     const [activeTab, setActiveTab] = useState('control');
+    const { nightMode } = useOcearoContext();
+
+    const primaryTextClass = 'text-white';
+    const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
+    const mutedTextClass = nightMode ? 'text-oNight/70' : 'text-gray-500';
+
     const [autopilotData, setAutopilotData] = useState(null);
     const [devices, setDevices] = useState([]);
     const [selectedDevice, setSelectedDevice] = useState('default');
@@ -94,11 +114,6 @@ export default function AutopilotView() {
     // Controller config state
     const [controllerConfig, setControllerConfig] = useState(null);
     const [controllerConnected, setControllerConnected] = useState(false);
-    
-    // Get current heading from SignalK
-    const currentHeading = getSignalKValue('navigation.headingTrue') || getSignalKValue('navigation.headingMagnetic');
-    const apparentWindAngle = getSignalKValue('environment.wind.angleApparent');
-    const rudderAngle = getSignalKValue('steering.rudderAngle');
 
     /**
      * Fetch autopilot data from SignalK
@@ -112,11 +127,11 @@ export default function AutopilotView() {
             setIsAutopilotAvailable(available);
             
             if (!available) {
-                // Use SignalK delta values as fallback
-                const state = getSignalKValue('steering.autopilot.state');
-                const mode = getSignalKValue('steering.autopilot.mode');
-                const target = getSignalKValue('steering.autopilot.target.headingTrue') || 
-                              getSignalKValue('steering.autopilot.target.windAngleApparent');
+                // Use subscribed SignalK values as fallback
+                const state = skValues['steering.autopilot.state'];
+                const mode = skValues['steering.autopilot.mode'];
+                const target = skValues['steering.autopilot.target.headingTrue'] || 
+                              skValues['steering.autopilot.target.windAngleApparent'];
                 
                 setAutopilotData({
                     state: state || (debugMode ? 'standby' : 'off-line'),
@@ -145,7 +160,7 @@ export default function AutopilotView() {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedDevice, getSignalKValue, debugMode]);
+    }, [selectedDevice, skValues, debugMode]);
 
     /**
      * Fetch controller configuration from OcearoCore
@@ -755,12 +770,19 @@ export default function AutopilotView() {
             </div>
 
             {/* Error display */}
-            {error && (
-                <div className="bg-red-900 text-red-400 p-3 rounded-lg mx-4 mt-4">
-                    <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2" />
-                    {error}
-                </div>
-            )}
+            <AnimatePresence>
+                {error && (
+                    <motion.div 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="bg-red-900 text-red-400 p-3 rounded-lg mx-4 mt-4"
+                    >
+                        <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2" />
+                        {error}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Device selector - show if multiple devices */}
             {devices.length > 1 && (
@@ -779,14 +801,29 @@ export default function AutopilotView() {
 
             {/* Tab Content */}
             <div className="flex-1 min-h-0 overflow-y-auto">
-                {isLoading && (
-                    <div className="flex items-center justify-center h-32">
-                        <div className="text-white">Loading...</div>
-                    </div>
-                )}
-                
-                {!isLoading && activeTab === 'control' && renderControlTab()}
-                {!isLoading && activeTab === 'controller' && renderControllerTab()}
+                <AnimatePresence mode="wait">
+                    {isLoading ? (
+                        <motion.div 
+                            key="loading"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex items-center justify-center h-32"
+                        >
+                            <div className="text-white">Loading...</div>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key={activeTab}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            {activeTab === 'control' ? renderControlTab() : renderControllerTab()}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );

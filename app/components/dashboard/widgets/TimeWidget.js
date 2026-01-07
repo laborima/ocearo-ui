@@ -1,28 +1,15 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useOcearoContext } from '../../context/OcearoContext';
+import { useSignalKPath } from '../../hooks/useSignalK';
+import BaseWidget from './BaseWidget';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClock, faGlobe, faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
 
 const TimeWidget = React.memo(() => {
-  const { getSignalKValue, nightMode } = useOcearoContext();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
-  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
-  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
-  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
   
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    
-    return () => clearInterval(timer);
-  }, []);
-
-  // Get position for timezone calculation (mock data if not available)
-  const latitude = getSignalKValue('navigation.position.latitude') || 0.7854; // ~45°N
-  const longitude = getSignalKValue('navigation.position.longitude') || 0.1396; // ~8°E
+  const latitude = useSignalKPath('navigation.position.latitude', 0.7854); // ~45°N
+  const longitude = useSignalKPath('navigation.position.longitude', 0.1396); // ~8°E
   
   // Convert radians to degrees
   const latDeg = (latitude * 180 / Math.PI).toFixed(4);
@@ -64,63 +51,63 @@ const TimeWidget = React.memo(() => {
   sunset.setHours(18, 45, 0, 0);
 
   return (
-    <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faClock} className={`${accentIconClass} text-lg`} />
-        <span className={`${primaryTextClass} font-medium text-lg`}>Time & Date</span>
-      </div>
-      
-      {/* Content */}
-      <div className="flex-1 flex flex-col justify-center">
+    <BaseWidget
+      title="Time & Date"
+      icon={faClock}
+      hasData={true}
+    >
+      <div className="flex-1 flex flex-col justify-center min-h-0">
         {/* Main time display */}
         <div className="text-center mb-6">
-          <div className={`text-5xl font-bold ${primaryTextClass} mb-2 font-mono`}>
+          <div className="text-5xl font-black text-white mb-1 font-mono tracking-tighter">
             {formatTime(currentTime)}
           </div>
-          <div className={`text-base ${secondaryTextClass}`}>
+          <div className="text-sm text-gray-400 font-bold uppercase tracking-widest">
             {formatDate(currentTime)}
           </div>
         </div>
 
         {/* Time zones */}
-        <div className="space-y-3 mb-4">
-          {/* Local Time */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <FontAwesomeIcon icon={faGlobe} className={`${accentIconClass} text-sm`} />
-              <span className={`${secondaryTextClass} text-sm`}>Local</span>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-oGray p-3 rounded-lg border border-gray-800">
+            <div className="flex items-center space-x-2 mb-1">
+              <FontAwesomeIcon icon={faGlobe} className="text-oBlue text-[10px]" />
+              <span className="text-gray-500 text-[10px] font-black uppercase tracking-tight">Local</span>
             </div>
-            <div className={`${primaryTextClass} font-mono`}>{formatTime(localTime, false)}</div>
+            <div className="text-white font-mono font-bold text-lg">{formatTime(localTime, false)}</div>
           </div>
           
-          {/* UTC Time */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <FontAwesomeIcon icon={faGlobe} className={`${secondaryTextClass} text-sm`} />
-              <span className={`${secondaryTextClass} text-sm`}>UTC</span>
+          <div className="bg-oGray p-3 rounded-lg border border-gray-800">
+            <div className="flex items-center space-x-2 mb-1">
+              <FontAwesomeIcon icon={faGlobe} className="text-gray-500 text-[10px]" />
+              <span className="text-gray-500 text-[10px] font-black uppercase tracking-tight">UTC</span>
             </div>
-            <div className={`${primaryTextClass} font-mono`}>{formatTime(utcTime, false)}</div>
+            <div className="text-white font-mono font-bold text-lg">{formatTime(utcTime, false)}</div>
           </div>
         </div>
 
         {/* Day/Night indicator */}
-        <div className="bg-oGray1 rounded-lg p-3 mb-4">
+        <div className="bg-oGray p-3 rounded-lg border border-gray-800 mb-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <FontAwesomeIcon 
-                icon={isDaytime ? faSun : faMoon} 
-                className={`${isDaytime ? 'text-oYellow' : 'text-blue-300'} text-sm`} 
-              />
-              <span className={`${primaryTextClass} text-sm font-medium`}>
-                {isDaytime ? 'Daytime' : 'Nighttime'}
-              </span>
+            <div className="flex items-center space-x-3">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDaytime ? 'bg-oYellow/20' : 'bg-blue-900/20'}`}>
+                <FontAwesomeIcon 
+                  icon={isDaytime ? faSun : faMoon} 
+                  className={isDaytime ? 'text-oYellow' : 'text-blue-300'} 
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-white text-sm font-black uppercase tracking-tight">
+                  {isDaytime ? 'Daytime' : 'Nighttime'}
+                </span>
+                <span className="text-[9px] text-gray-500 font-bold uppercase">Solar Cycle</span>
+              </div>
             </div>
             <div className="text-right">
-              <div className={`${secondaryTextClass} text-xs`}>
+              <div className="text-gray-500 text-[9px] uppercase font-black mb-0.5">
                 {isDaytime ? 'Sunset' : 'Sunrise'}
               </div>
-              <div className={`${primaryTextClass} text-sm`}>
+              <div className="text-white font-mono font-bold">
                 {formatTime(isDaytime ? sunset : sunrise, false)}
               </div>
             </div>
@@ -128,24 +115,22 @@ const TimeWidget = React.memo(() => {
         </div>
 
         {/* Position info */}
-        <div className="space-y-2">
-          <div className="flex flex-wrap justify-between text-xs gap-y-1">
-            <div className="flex items-center space-x-2">
-              <span className={`${secondaryTextClass}`}>Latitude:</span>
-              <span className={`${primaryTextClass} font-mono`}>{latDeg}°</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className={`${secondaryTextClass}`}>Longitude:</span>
-              <span className={`${primaryTextClass} font-mono`}>{lonDeg}°</span>
-            </div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px] font-bold uppercase border-t border-gray-800 pt-4">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500">Lat:</span>
+            <span className="text-white font-mono">{latDeg}°</span>
           </div>
-          <div className="flex justify-between text-xs">
-            <span className={`${secondaryTextClass}`}>Timezone:</span>
-            <span className={`${primaryTextClass}`}>UTC{localOffset >= 0 ? '+' : ''}{localOffset}</span>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-500">Lon:</span>
+            <span className="text-white font-mono">{lonDeg}°</span>
+          </div>
+          <div className="flex justify-between items-center col-span-2 mt-1">
+            <span className="text-gray-500">Offset:</span>
+            <span className="text-white font-mono">UTC{localOffset >= 0 ? '+' : ''}{localOffset}:00</span>
           </div>
         </div>
       </div>
-    </div>
+    </BaseWidget>
   );
 });
 

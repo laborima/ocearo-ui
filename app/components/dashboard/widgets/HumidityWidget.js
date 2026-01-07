@@ -1,9 +1,10 @@
 'use client';
 import React, { useMemo } from 'react';
-import { useOcearoContext } from '../../context/OcearoContext';
+import { useSignalKPath } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTint, faThermometerHalf } from '@fortawesome/free-solid-svg-icons';
+import BaseWidget from './BaseWidget';
 
 const HUMIDITY_CONFIG = {
   humidity: {
@@ -17,20 +18,15 @@ const HUMIDITY_CONFIG = {
 };
 
 export default function HumidityWidget() {
-  const { getSignalKValue, nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
-  const primaryTextClass = nightMode ? 'text-oNight' : 'text-white';
-  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
-  const mutedTextClass = nightMode ? 'text-oNight' : 'text-gray-500';
-  const accentIconClass = nightMode ? 'text-oNight' : 'text-oBlue';
   
+  const humidityValue = useSignalKPath(HUMIDITY_CONFIG.humidity.path);
+  const dewPointValue = useSignalKPath(HUMIDITY_CONFIG.dewPoint.path);
+
   const humidityData = useMemo(() => {
-    const humidityValue = getSignalKValue(HUMIDITY_CONFIG.humidity.path);
-    const dewPointValue = getSignalKValue(HUMIDITY_CONFIG.dewPoint.path);
+    const hasData = humidityValue !== null || dewPointValue !== null || debugMode;
 
-    const hasData = humidityValue !== null || dewPointValue !== null;
-
-    if (!hasData && !debugMode) {
+    if (!hasData) {
       return { hasData: false };
     }
     
@@ -42,9 +38,10 @@ export default function HumidityWidget() {
       humidityPercentage: humidityPercent,
       dewPointCelsius: dewPointValue !== null ? HUMIDITY_CONFIG.dewPoint.transform(dewPointValue) : (debugMode ? '18.5' : null)
     };
-  }, [getSignalKValue, debugMode]);
+  }, [humidityValue, dewPointValue, debugMode]);
 
-  // Determine humidity status color
+  const { humidity, humidityPercentage, dewPointCelsius } = humidityData;
+
   const getHumidityColor = (humidity) => {
     const h = parseInt(humidity);
     if (h < 30 || h > 70) return 'text-oYellow';
@@ -52,7 +49,6 @@ export default function HumidityWidget() {
     return 'text-oGreen';
   };
 
-  // Determine humidity status text
   const getHumidityStatus = (humidity) => {
     const h = parseInt(humidity);
     if (h < 30) return 'Too Dry';
@@ -61,67 +57,49 @@ export default function HumidityWidget() {
     return 'Optimal';
   };
 
-  if (!humidityData.hasData) {
-    return (
-      <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
-        <div className="flex items-center space-x-2 mb-4">
-          <FontAwesomeIcon icon={faTint} className={`${accentIconClass} text-lg`} />
-          <span className={`${primaryTextClass} font-medium text-lg`}>Humidity</span>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className={`text-sm ${mutedTextClass}`}>No humidity data available</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const { humidity, humidityPercentage, dewPointCelsius } = humidityData;
-
   return (
-    <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faTint} className={`${accentIconClass} text-lg`} />
-        <span className={`${primaryTextClass} font-medium text-lg`}>Humidity</span>
-      </div>
-      
-      {/* Content */}
-      <div className="flex-1 flex flex-col justify-center">
-        {/* Main humidity display */}
+    <BaseWidget
+      title="Humidity"
+      icon={faTint}
+      hasData={humidityData.hasData}
+      noDataMessage="No humidity data available"
+    >
+      <div className="flex-1 flex flex-col justify-center min-h-0">
         <div className="text-center mb-6">
-          <div className={`text-5xl font-bold ${primaryTextClass} mb-2`}>
+          <div className="text-5xl font-bold text-white mb-1">
             {humidity !== null ? `${humidity}%` : 'N/A'}
           </div>
-          <div className={`text-base font-medium ${humidity !== null ? getHumidityColor(humidity) : mutedTextClass}`}>
+          <div className={`text-xs font-bold uppercase tracking-widest ${humidity !== null ? getHumidityColor(humidity) : 'text-gray-500'}`}>
             {humidity !== null ? getHumidityStatus(humidity) : 'Unknown'}
           </div>
         </div>
 
-        {/* Visual representation */}
-        <div className="mb-4">
-          <div className="w-full bg-oGray rounded-full h-3">
+        <div className="mb-6 px-2">
+          <div className="w-full bg-oGray rounded-full h-3 border border-gray-800 overflow-hidden shadow-inner">
             <div 
-              className="bg-oBlue h-3 rounded-full transition-all duration-500"
+              className="bg-oBlue h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(59,130,246,0.4)]"
               style={{ width: `${humidityPercentage !== null ? humidityPercentage : 0}%` }}
-            ></div>
+            />
           </div>
-          <div className={`flex justify-between text-xs ${secondaryTextClass} mt-1`}>
-            <span>0%</span>
-            <span>50%</span>
-            <span>100%</span>
+          <div className="flex justify-between text-[10px] font-bold text-gray-500 mt-2 uppercase tracking-tighter px-1">
+            <span>Dry</span>
+            <span>Optimal</span>
+            <span>Humid</span>
           </div>
         </div>
 
-        {/* Dew point */}
-        <div className="flex items-center justify-center space-x-2 text-sm">
-          <FontAwesomeIcon icon={faThermometerHalf} className={accentIconClass} />
-          <span className={`${secondaryTextClass}`}>Dew Point:</span>
-          <span className={`${primaryTextClass} font-medium`}>{dewPointCelsius !== null ? `${dewPointCelsius}°C` : 'N/A'}</span>
+        <div className="bg-oGray p-3 rounded-lg border border-gray-800">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <FontAwesomeIcon icon={faThermometerHalf} className="text-oBlue text-sm" />
+              <span className="text-gray-400 text-xs uppercase font-bold">Dew Point</span>
+            </div>
+            <div className="text-white font-bold font-mono">
+              {dewPointCelsius !== null ? `${dewPointCelsius}°C` : 'N/A'}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </BaseWidget>
   );
 }

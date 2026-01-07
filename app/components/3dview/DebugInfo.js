@@ -1,65 +1,100 @@
 
-import React, { Suspense, useRef, useState, useEffect } from 'react';
-import { useOcearoContext } from '../context/OcearoContext';
+import React, { Suspense, useRef, useState, useEffect, useMemo } from 'react';
+import { useSignalKPaths } from '../hooks/useSignalK';
 import { Html } from '@react-three/drei';
 
 const toRadians = (degrees) => (degrees * Math.PI) / 180;
 
 const DebugInfo = (sampleData = true) => {
-    const { getSignalKValue } = useOcearoContext();
+    // Define all paths for subscription
+    const debugPaths = useMemo(() => [
+        'environment.wind.angleTrueWater',
+        'environment.wind.speedTrue',
+        'environment.wind.angleApparent',
+        'environment.wind.speedApparent',
+        'performance.beatAngle',
+        'performance.gybeAngle',
+        'performance.beatAngleVelocityMadeGood',
+        'performance.gybeAngleVelocityMadeGood',
+        'performance.targetAngle',
+        'performance.polarSpeed',
+        'performance.polarSpeedRatio',
+        'performance.velocityMadeGood',
+        'navigation.speedThroughWater',
+        'performance.polarVelocityMadeGood',
+        'performance.polarVelocityMadeGoodRatio',
+        'navigation.headingTrue',
+        'navigation.courseOverGroundTrue',
+        'navigation.courseGreatCircle.nextPoint.bearingTrue',
+        'performance.laylineAngle',
+        'navigation.racing.lailine',
+        'navigation.racing.layline.distance',
+        'navigation.racing.layline.time',
+        'navigation.racing.oppositeLayline',
+        'navigation.racing.oppositeLayline.distance',
+        'navigation.racing.oppositeLayline.time',
+        'navigation.racing.startLineStb',
+        'navigation.racing.startLinePort',
+        'navigation.racing.distanceStartline',
+        'navigation.racing.timeToStart',
+        'navigation.racing.timePortDown',
+        'navigation.racing.timePortUp',
+        'navigation.racing.timeStbdDown',
+        'navigation.racing.timeStbdUp'
+    ], []);
 
+    const skValues = useSignalKPaths(debugPaths);
 
-    // Données envoyées par https://github.com/htool/signalk-polar-performance-plugin
+    // Helper to get value with fallback
+    const getVal = (path, fallback) => skValues[path] ?? fallback;
 
     // *** Données de vent ***
-    const trueWindAngle = getSignalKValue('environment.wind.angleTrueWater') || toRadians(25); // Angle du vent réel (TWA)
-    const trueWindSpeed = getSignalKValue('environment.wind.speedTrue') || 20; // Vitesse du vent réel
-    const appWindAngle = getSignalKValue('environment.wind.angleApparent') || toRadians(23); // Angle du vent apparent
-    const appWindSpeed = getSignalKValue('environment.wind.speedApparent') || 25; // Vitesse du vent apparent
+    const trueWindAngle = getVal('environment.wind.angleTrueWater', toRadians(25));
+    const trueWindSpeed = getVal('environment.wind.speedTrue', 20);
+    const appWindAngle = getVal('environment.wind.angleApparent', toRadians(23));
+    const appWindSpeed = getVal('environment.wind.speedApparent', 25);
 
     // *** Performances de navigation ***
-    const beatAngle = getSignalKValue('performance.beatAngle') || toRadians(45); // Angle de près
-    const gybeAngle = getSignalKValue('performance.gybeAngle') || toRadians(135); // Angle d'empannage
-    const beatVMG = getSignalKValue('performance.beatAngleVelocityMadeGood') || 6; // VMG en près
-    const gybeVMG = getSignalKValue('performance.gybeAngleVelocityMadeGood') || 5; // VMG au portant
-    const targetTWA = getSignalKValue('performance.targetAngle') || beatAngle; // Angle cible TWA (correspond à l'angle près ou arrière)
-    const optimalWindAngle = targetTWA - trueWindAngle || toRadians(15); // Angle de vent optimal (différence entre TWA et direction du vent réel)
-    const polarSpeed = getSignalKValue('performance.polarSpeed') || 8; // Vitesse polaire du bateau
-    const polarSpeedRatio = getSignalKValue('performance.polarSpeedRatio') || 0.95; // Ratio de vitesse polaire (Performance polaire)
+    const beatAngle = getVal('performance.beatAngle', toRadians(45));
+    const gybeAngle = getVal('performance.gybeAngle', toRadians(135));
+    const beatVMG = getVal('performance.beatAngleVelocityMadeGood', 6);
+    const gybeVMG = getVal('performance.gybeAngleVelocityMadeGood', 5);
+    const targetTWA = getVal('performance.targetAngle', beatAngle);
+    const optimalWindAngle = targetTWA - trueWindAngle;
+    const polarSpeed = getVal('performance.polarSpeed', 8);
+    const polarSpeedRatio = getVal('performance.polarSpeedRatio', 0.95);
+    
     // *** Données de vitesse et de performance ***
-    const velocityMadeGood = getSignalKValue('performance.velocityMadeGood') || 5; // VMG actuel
-    const speedThroughWater = getSignalKValue('navigation.speedThroughWater') || 7; // Vitesse à travers l'eau
-    const polarVelocityMadeGood = getSignalKValue('performance.polarVelocityMadeGood') || 6; // VMG polaire
-    const polarVelocityMadeGoodRatio = getSignalKValue('performance.polarVelocityMadeGoodRatio') || 0.9; // Ratio de VMG polaire
-
+    const velocityMadeGood = getVal('performance.velocityMadeGood', 5);
+    const speedThroughWater = getVal('navigation.speedThroughWater', 7);
+    const polarVelocityMadeGood = getVal('performance.polarVelocityMadeGood', 6);
+    const polarVelocityMadeGoodRatio = getVal('performance.polarVelocityMadeGoodRatio', 0.9);
 
     // *** Cap et angle par rapport au waypoint ***
-    const headingTrue = getSignalKValue('navigation.headingTrue') || toRadians(0); // Cap vrai
-    const courseOverGroundAngle = getSignalKValue('navigation.courseOverGroundTrue') || toRadians(20); // Cap sur fond
-    const nextWaypointBearing = getSignalKValue('navigation.courseGreatCircle.nextPoint.bearingTrue') || toRadians(30); // Cap vers le prochain waypoint
-    const laylineAngle = getSignalKValue('performance.laylineAngle') || toRadians(10); // Angle de layline
-
+    const headingTrue = getVal('navigation.headingTrue', toRadians(0));
+    const courseOverGroundAngle = getVal('navigation.courseOverGroundTrue', toRadians(20));
+    const nextWaypointBearing = getVal('navigation.courseGreatCircle.nextPoint.bearingTrue', toRadians(30));
+    const laylineAngle = getVal('performance.laylineAngle', toRadians(10));
 
     // *** Layline pour navigation de régate ***
-    const layline = getSignalKValue('navigation.racing.lailine') || toRadians(10); // Layline parallèle au cap actuel
-    const laylineDistance = getSignalKValue('navigation.racing.layline.distance') || 100; // Distance jusqu'à la layline
-    const laylineTime = getSignalKValue('navigation.racing.layline.time') || 180; // Temps estimé pour atteindre la layline
+    const layline = getVal('navigation.racing.lailine', toRadians(10));
+    const laylineDistance = getVal('navigation.racing.layline.distance', 100);
+    const laylineTime = getVal('navigation.racing.layline.time', 180);
 
     // *** Layline opposée pour la navigation de régate ***
-    const oppositeLayline = getSignalKValue('navigation.racing.oppositeLayline') || toRadians(45); // Layline parallèle au cap actuel
-    const oppositeLaylineDistance = getSignalKValue('navigation.racing.oppositeLayline.distance') || 80; // Distance jusqu'à la layline opposée
-    const oppositeLaylineTime = getSignalKValue('navigation.racing.oppositeLayline.time') || 180; // Temps estimé pour atteindre la layline
-
+    const oppositeLayline = getVal('navigation.racing.oppositeLayline', toRadians(45));
+    const oppositeLaylineDistance = getVal('navigation.racing.oppositeLayline.distance', 80);
+    const oppositeLaylineTime = getVal('navigation.racing.oppositeLayline.time', 180);
 
     // *** Données de ligne de départ pour la régate ***
-    const startLineStb = getSignalKValue('navigation.racing.startLineStb') || { latitude: 0, longitude: 0, altitude: 0 }; // Position de la marque de départ tribord
-    const startLinePort = getSignalKValue('navigation.racing.startLinePort') || { latitude: 0, longitude: 0, altitude: 0 }; // Position de la marque de départ bâbord
-    const distanceToStartline = getSignalKValue('navigation.racing.distanceStartline') || 50; // Distance jusqu'à la ligne de départ
-    const timeToStart = getSignalKValue('navigation.racing.timeToStart') || 120; // Temps estimé pour atteindre la ligne de départ
-    const timePortDown = getSignalKValue('navigation.racing.timePortDown') || 60; // Temps estimé en bâbord amure au vent arrière
-    const timePortUp = getSignalKValue('navigation.racing.timePortUp') || 70; // Temps estimé en bâbord amure au près
-    const timeStbdDown = getSignalKValue('navigation.racing.timeStbdDown') || 65; // Temps estimé en tribord amure au vent arrière
-    const timeStbdUp = getSignalKValue('navigation.racing.timeStbdUp') || 75; // Temps estimé en tribord amure au près
+    const startLineStb = getVal('navigation.racing.startLineStb', { latitude: 0, longitude: 0, altitude: 0 });
+    const startLinePort = getVal('navigation.racing.startLinePort', { latitude: 0, longitude: 0, altitude: 0 });
+    const distanceToStartline = getVal('navigation.racing.distanceStartline', 50);
+    const timeToStart = getVal('navigation.racing.timeToStart', 120);
+    const timePortDown = getVal('navigation.racing.timePortDown', 60);
+    const timePortUp = getVal('navigation.racing.timePortUp', 70);
+    const timeStbdDown = getVal('navigation.racing.timeStbdDown', 65);
+    const timeStbdUp = getVal('navigation.racing.timeStbdUp', 75);
 
 
 

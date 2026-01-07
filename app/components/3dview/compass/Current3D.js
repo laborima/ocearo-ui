@@ -4,6 +4,7 @@ import { Vector3 } from 'three';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { oBlue, oGreen, useOcearoContext } from '../../context/OcearoContext';
+import { useSignalKPath } from '../../hooks/useSignalK';
 
 // Constants for configuration
 const CURRENT_OFFSET = 0.7;
@@ -70,13 +71,13 @@ CurrentArrow.defaultProps = {
 };
 
 const Current3D = ({ outerRadius }) => {
-  const { getSignalKValue } = useOcearoContext();
+  const currentDataRaw = useSignalKPath('environment.current');
 
   // Get current data with default values
-  const currentData = getSignalKValue('environment.current') || {
+  const currentData = useMemo(() => currentDataRaw || {
     setTrue: 0,
     drift: 0
-  };
+  }, [currentDataRaw]);
 
   // Calculate current arrow position
   const currentPosition = useMemo(() => {

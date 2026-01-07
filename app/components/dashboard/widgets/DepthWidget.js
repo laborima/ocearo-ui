@@ -1,29 +1,36 @@
 'use client';
 import React, { useMemo } from 'react';
-import { useOcearoContext } from '../../context/OcearoContext';
-import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useOcearoContext } from '../../context/OcearoContext';
+import { useSignalKPath } from '../../hooks/useSignalK';
+import configService from '../../settings/ConfigService';
 import { faWater, faAnchor } from '@fortawesome/free-solid-svg-icons';
+import BaseWidget from './BaseWidget';
 
 export default function DepthWidget() {
-  const { getDepthData, nightMode } = useOcearoContext();
+  const { nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
   
-  const depthData = useMemo(() => {
-    const depth = getDepthData();
-    
-    const hasData = depth.belowKeel !== null || depth.belowSurface !== null || depth.belowTransducer !== null;
+  const depthKeel = useSignalKPath('environment.depth.belowKeel');
+  const depthSurface = useSignalKPath('environment.depth.belowSurface');
+  const depthTransducer = useSignalKPath('environment.depth.belowTransducer');
 
-    if (!hasData && !debugMode) {
+  const depthData = useMemo(() => {
+    const keel = depthKeel ?? depthTransducer ?? (debugMode ? 5.2 : null);
+    const surface = depthSurface ?? (depthTransducer !== null ? depthTransducer + 1.5 : (debugMode ? 6.8 : null));
+    
+    const hasData = keel !== null || surface !== null || debugMode;
+
+    if (!hasData) {
       return { hasData: false };
     }
 
     return {
       hasData: true,
-      belowKeel: depth.belowKeel ?? (debugMode ? 5.2 : null),
-      belowSurface: depth.belowSurface ?? (debugMode ? 6.8 : null)
+      belowKeel: keel !== null ? Math.round(keel * 10) / 10 : null,
+      belowSurface: surface !== null ? Math.round(surface * 10) / 10 : null
     };
-  }, [getDepthData, debugMode]);
+  }, [depthKeel, depthSurface, depthTransducer, debugMode]);
 
   const getDepthColor = (depth) => {
     if (depth < 2) return 'text-oRed';
@@ -38,85 +45,74 @@ export default function DepthWidget() {
     return 'Deep';
   };
 
-  if (!depthData.hasData) {
-    return (
-      <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
-        <div className="flex items-center space-x-2 mb-4">
-          <FontAwesomeIcon icon={faWater} className="text-oBlue text-lg" />
-          <span className="text-white font-medium text-lg">Depth</span>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-gray-600 mb-2">N/A</div>
-            <div className="text-sm text-gray-500">No depth data available</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
 
   return (
-    <div className="bg-oGray2 rounded-lg p-4 h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center space-x-2 mb-4">
-        <FontAwesomeIcon icon={faWater} className={`${nightMode ? 'text-oNight' : 'text-oBlue'} text-lg`} />
-        <span className={`${nightMode ? 'text-oNight' : 'text-white'} font-medium text-lg`}>Depth</span>
-      </div>
-      
-      {/* Content */}
-      <div className="flex-1 flex flex-col justify-center">
+    <BaseWidget
+      title="Depth"
+      icon={faWater}
+      hasData={depthData.hasData}
+      noDataMessage="No depth data available"
+    >
+      <div className="flex-1 flex flex-col min-h-0">
         {/* Main depth reading */}
         <div className="text-center mb-6">
-          <div className={`text-5xl font-bold ${nightMode ? 'text-oNight' : 'text-white'} mb-2`}>
+          <div className="text-5xl font-bold text-white mb-2">
             {depthData.belowKeel !== null ? depthData.belowKeel : 'N/A'}
-            {depthData.belowKeel !== null && <span className={`text-xl ${nightMode ? 'text-oNight' : 'text-gray-400'} ml-1`}>m</span>}
+            {depthData.belowKeel !== null && <span className="text-xl text-gray-400 ml-1">m</span>}
           </div>
-          <div className={`text-base font-medium ${depthData.belowKeel !== null ? getDepthColor(depthData.belowKeel) : nightMode ? 'text-oNight' : 'text-gray-500'}`}>
+          <div className={`text-xs font-bold uppercase tracking-widest ${depthData.belowKeel !== null ? getDepthColor(depthData.belowKeel) : 'text-gray-500'}`}>
             {depthData.belowKeel !== null ? getDepthStatus(depthData.belowKeel) : 'Unknown'}
           </div>
         </div>
 
         {/* Depth readings */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="text-center">
-            <div className={`${nightMode ? 'text-oNight' : 'text-gray-400'} text-base mb-1`}>Below Keel</div>
-            <div className={`text-2xl font-bold ${depthData.belowKeel !== null ? getDepthColor(depthData.belowKeel) : nightMode ? 'text-oNight' : 'text-gray-500'}`}>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-oGray p-3 rounded-lg text-center border border-gray-800">
+            <div className="text-gray-400 text-[10px] uppercase font-bold mb-1">Below Keel</div>
+            <div className={`text-xl font-bold ${depthData.belowKeel !== null ? getDepthColor(depthData.belowKeel) : 'text-gray-500'}`}>
               {depthData.belowKeel !== null ? `${depthData.belowKeel}m` : 'N/A'}
             </div>
           </div>
           
-          <div className="text-center">
-            <div className={`${nightMode ? 'text-oNight' : 'text-gray-400'} text-base mb-1`}>Below Surface</div>
-            <div className={`text-2xl font-bold ${depthData.belowSurface !== null ? getDepthColor(depthData.belowSurface) : nightMode ? 'text-oNight' : 'text-gray-500'}`}>
+          <div className="bg-oGray p-3 rounded-lg text-center border border-gray-800">
+            <div className="text-gray-400 text-[10px] uppercase font-bold mb-1">Surface</div>
+            <div className={`text-xl font-bold ${depthData.belowSurface !== null ? getDepthColor(depthData.belowSurface) : 'text-gray-500'}`}>
               {depthData.belowSurface !== null ? `${depthData.belowSurface}m` : 'N/A'}
             </div>
           </div>
         </div>
 
         {/* Visual depth indicator */}
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center space-x-2">
-            <FontAwesomeIcon icon={faAnchor} className={`${nightMode ? 'text-oNight' : 'text-gray-400'} text-xs`} />
-            <div className="flex-1 bg-gray-600 rounded-full h-3">
+        <div className="mb-6 px-2">
+          <div className="flex items-center space-x-3">
+            <FontAwesomeIcon icon={faAnchor} className="text-gray-500 text-xs" />
+            <div className="flex-1 bg-oGray rounded-full h-3 overflow-hidden border border-gray-800 shadow-inner">
               <div 
-                className={`h-3 rounded-full transition-all duration-500 ${depthData.belowKeel !== null ? getDepthColor(depthData.belowKeel).replace('text-', 'bg-') : 'bg-gray-500'}`}
-                style={{ width: `${depthData.belowKeel !== null ? Math.min(100, Math.max(5, depthData.belowKeel * 5)) : 0}%` }}
+                className={`h-full transition-all duration-1000 ease-out ${
+                  depthData.belowKeel !== null ? getDepthColor(depthData.belowKeel).replace('text-', 'bg-') : 'bg-gray-500'
+                } shadow-[0_0_10px_rgba(0,0,0,0.2)]`}
+                style={{ width: `${depthData.belowKeel !== null ? Math.min(100, (depthData.belowKeel / 50) * 100) : 0}%` }}
               />
             </div>
-            <div className={`${nightMode ? 'text-oNight' : 'text-gray-400'} text-xs w-12`}>{depthData.belowKeel !== null ? `${depthData.belowKeel}m` : 'N/A'}</div>
+            <div className="text-gray-500 text-[10px] w-8 text-right font-bold">50m</div>
           </div>
         </div>
 
         {/* Status info */}
-        <div className="text-center space-y-1">
-          <div className={`${nightMode ? 'text-oNight' : 'text-gray-400'} text-xs`}>
-            Draft clearance: {depthData.belowKeel !== null ? `${Math.max(0, depthData.belowKeel - 1.5).toFixed(1)}m` : 'N/A'}
+        <div className="bg-oGray p-3 rounded-lg border border-gray-800 space-y-2">
+          <div className="flex justify-between items-center text-[10px] uppercase font-bold">
+            <span className="text-gray-400">Draft clearance:</span>
+            <span className="text-white font-mono">
+              {depthData.belowKeel !== null ? `${Math.max(0, depthData.belowKeel - 1.5).toFixed(1)}m` : 'N/A'}
+            </span>
           </div>
-          <div className={`${nightMode ? 'text-oNight' : 'text-gray-400'} text-xs`}>
-            Range: 0-50m
+          <div className="flex justify-between items-center text-[10px] uppercase font-bold">
+            <span className="text-gray-400">Transducer offset:</span>
+            <span className="text-white font-mono">1.5m</span>
           </div>
         </div>
       </div>
-    </div>
+    </BaseWidget>
   );
 }

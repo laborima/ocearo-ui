@@ -1,8 +1,9 @@
-import React, { useRef, useEffect, forwardRef, useMemo, useState } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { useOcearoContext, toDegrees, toKnots } from '../context/OcearoContext';
+import React, { useRef, useMemo, useEffect, useState } from 'react';
+import { toDegrees, toKnots, useOcearoContext } from '../context/OcearoContext';
+import { useSignalKPath, useSignalKPaths } from '../hooks/useSignalK';
 import configService from '../settings/ConfigService';
 import { useGLTF } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import Sail3D from './sail/Sail3D';
 
@@ -34,11 +35,44 @@ const defaultBoat = {
 };
 
 
-const SailBoat3D = forwardRef(({ showSail = false, onUpdateInfoPanel, ...props }, ref) => {
+const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, ...props }) => {
     const boatRef = useRef();
     const rudderRef = useRef();
-    const { getSignalKValue } = useOcearoContext();
     const config = configService.getAll();
+
+    // Use subscription for info panel data to ensure reactivity without full context re-renders
+    const infoPaths = useMemo(() => [
+        'environment.wind.angleTrueWater',
+        'environment.wind.speedTrue',
+        'environment.wind.angleApparent',
+        'environment.wind.speedApparent',
+        'performance.beatAngle',
+        'performance.polarSpeed',
+        'performance.polarSpeedRatio',
+        'performance.velocityMadeGood',
+        'navigation.speedThroughWater',
+        'navigation.headingTrue',
+        'navigation.courseOverGroundTrue',
+        'navigation.position'
+    ], []);
+
+    const skValues = useSignalKPaths(infoPaths);
+
+    // Use specialized hooks for better performance in useFrame
+    const skAttitude = useSignalKPath('navigation.attitude');
+    const skRudderAngle = useSignalKPath('steering.rudderAngle', 0);
+    const attitudeRef = useRef({ roll: 0, pitch: 0, yaw: 0 });
+    const rudderAngleRef = useRef(0);
+
+    useEffect(() => {
+        if (skAttitude) {
+            attitudeRef.current = skAttitude;
+        }
+    }, [skAttitude]);
+
+    useEffect(() => {
+        rudderAngleRef.current = skRudderAngle;
+    }, [skRudderAngle]);
 
     // Use state to store the selected boat
     const [selectedBoat, setSelectedBoat] = useState(() =>
@@ -120,17 +154,16 @@ const SailBoat3D = forwardRef(({ showSail = false, onUpdateInfoPanel, ...props }
     useFrame(() => {
         if (!boatRef.current) return;
 
-        // Get attitude values from SignalK (in radians)
-        const attitude = getSignalKValue('navigation.attitude') || { roll: 0, pitch: 0, yaw: 0 };
-        const rudderAngleRadians = getSignalKValue('steering.rudderAngle') || 0;
-        const rudderAngle = (rudderAngleRadians * 180) / Math.PI;
+        // Get attitude values from refs for maximum performance
+        const attitude = attitudeRef.current;
+        const rudderAngle = (rudderAngleRef.current * 180) / Math.PI;
 
         // Update boat attitude
         if (boatRef.current) {
             boatRef.current.rotation.set(
-                attitude.pitch,  // X rotation (pitch)
+                attitude.pitch || 0,  // X rotation (pitch)
                 0/*2* Math.PI  - attitude.yaw*/,    // Y rotation (yaw)
-                2* Math.PI  - attitude.roll    // Z rotation (roll)
+                2* Math.PI  - (attitude.roll || 0)    // Z rotation (roll)
             );
         }
 
@@ -225,25 +258,25 @@ const SailBoat3D = forwardRef(({ showSail = false, onUpdateInfoPanel, ...props }
             type: 'sailboat',
             
             // Wind data
-            trueWindAngle: getSignalKValue('environment.wind.angleTrueWater') || 0,
-            trueWindSpeed: getSignalKValue('environment.wind.speedTrue') || 0,
-            appWindAngle: getSignalKValue('environment.wind.angleApparent') || 0,
-            appWindSpeed: getSignalKValue('environment.wind.speedApparent') || 0,
+            trueWindAngle: skValues['environment.wind.angleTrueWater'] || 0,
+            trueWindSpeed: skValues['environment.wind.speedTrue'] || 0,
+            appWindAngle: skValues['environment.wind.angleApparent'] || 0,
+            appWindSpeed: skValues['environment.wind.speedApparent'] || 0,
             
             // Navigation performance
-            beatAngle: getSignalKValue('performance.beatAngle') || 0,
-            polarSpeed: getSignalKValue('performance.polarSpeed') || 0,
-            polarSpeedRatio: getSignalKValue('performance.polarSpeedRatio') || 0,
-            velocityMadeGood: getSignalKValue('performance.velocityMadeGood') || 0,
-            speedThroughWater: getSignalKValue('navigation.speedThroughWater') || 0,
+            beatAngle: skValues['performance.beatAngle'] || 0,
+            polarSpeed: skValues['performance.polarSpeed'] || 0,
+            polarSpeedRatio: skValues['performance.polarSpeedRatio'] || 0,
+            velocityMadeGood: skValues['performance.velocityMadeGood'] || 0,
+            speedThroughWater: skValues['navigation.speedThroughWater'] || 0,
             
             // Heading and course
-            headingTrue: getSignalKValue('navigation.headingTrue') || 0,
-            courseOverGroundTrue: getSignalKValue('navigation.courseOverGroundTrue') || 0,
+            headingTrue: skValues['navigation.headingTrue'] || 0,
+            courseOverGroundTrue: skValues['navigation.courseOverGroundTrue'] || 0,
            
-            position: getSignalKValue('navigation.position') || { latitude: 0, longitude: 0 }
+            position: skValues['navigation.position'] || { latitude: 0, longitude: 0 }
         };
-    }, [getSignalKValue, selectedBoat.name]);
+    }, [skValues, selectedBoat.name]);
 
    
     // Format data for InfoPanel display
@@ -331,11 +364,11 @@ const SailBoat3D = forwardRef(({ showSail = false, onUpdateInfoPanel, ...props }
             <BoatMeshes />
         </group>
     );
-});
+};
 
 
 // Preload default model
 useGLTF.preload(getModelPath(), `${ASSET_PREFIX}/draco/`);
 
-SailBoat3D.displayName = 'SailBoat3D';
+
 export default SailBoat3D;
