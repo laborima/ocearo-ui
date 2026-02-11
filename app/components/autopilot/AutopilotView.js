@@ -5,6 +5,7 @@ import { useOcearoContext, toDegrees } from '../context/OcearoContext';
 import { useSignalKPath, useSignalKPaths } from '../hooks/useSignalK';
 import signalKService from '../services/SignalKService';
 import configService from '../settings/ConfigService';
+import { makeOcearoCoreApiCall } from '../utils/OcearoCoreUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
     faShip,
@@ -29,40 +30,7 @@ import {
     faLocationArrow,
     faSatellite
 } from '@fortawesome/free-solid-svg-icons';
-
-/**
- * Make API call to OcearoCore plugin for controller configuration
- * @param {string} endpoint - API endpoint
- * @param {Object} options - Fetch options
- * @returns {Promise<Object>} API response
- */
-const ocearoCoreApiCall = async (endpoint, options = {}) => {
-    const config = configService.getAll();
-    const baseUrl = config.signalkUrl || 'http://localhost:3000';
-    const url = `${baseUrl}/plugins/ocearo-core${endpoint}`;
-    
-    const headers = {
-        'Content-Type': 'application/json',
-        ...options.headers
-    };
-    
-    // Add Basic Auth if configured
-    if (config.useAuthentication && config.username) {
-        const token = btoa(`${config.username}:${config.password || ''}`);
-        headers['Authorization'] = `Basic ${token}`;
-    }
-    
-    const response = await fetch(url, {
-        ...options,
-        headers
-    });
-    
-    if (!response.ok) {
-        throw new Error(`OcearoCore API error: ${response.statusText}`);
-    }
-    
-    return await response.json();
-};
+import { useTranslation } from 'react-i18next';
 
 /**
  * AutopilotView - Complete autopilot control interface
@@ -76,6 +44,7 @@ const ocearoCoreApiCall = async (endpoint, options = {}) => {
  * - PlayStation controller configuration (via OcearoCore)
  */
 export default function AutopilotView() {
+    const { t } = useTranslation();
     const debugMode = configService.get('debugMode');
     
     // Use subscription model for real-time data
@@ -100,9 +69,9 @@ export default function AutopilotView() {
     const [activeTab, setActiveTab] = useState('control');
     const { nightMode } = useOcearoContext();
 
-    const primaryTextClass = 'text-white';
-    const secondaryTextClass = nightMode ? 'text-oNight' : 'text-gray-400';
-    const mutedTextClass = nightMode ? 'text-oNight/70' : 'text-gray-500';
+    const primaryTextClass = 'text-hud-main';
+    const secondaryTextClass = nightMode ? 'text-oNight' : 'text-hud-secondary';
+    const mutedTextClass = nightMode ? 'text-oNight/70' : 'text-hud-muted';
 
     const [autopilotData, setAutopilotData] = useState(null);
     const [devices, setDevices] = useState([]);
@@ -167,7 +136,7 @@ export default function AutopilotView() {
      */
     const fetchControllerConfig = useCallback(async () => {
         try {
-            const config = await ocearoCoreApiCall('/api/controller/config');
+            const config = await makeOcearoCoreApiCall('/api/controller/config');
             setControllerConfig(config);
             setControllerConnected(config?.connected || false);
         } catch (err) {
@@ -197,7 +166,7 @@ export default function AutopilotView() {
             await signalKService.engageAutopilot(selectedDevice);
             await fetchAutopilotData();
         } catch (err) {
-            setError(`Failed to engage: ${err.message}`);
+            setError(t('autopilot.failedToEngage', { message: err.message }));
         }
     };
 
@@ -210,7 +179,7 @@ export default function AutopilotView() {
             await signalKService.disengageAutopilot(selectedDevice);
             await fetchAutopilotData();
         } catch (err) {
-            setError(`Failed to disengage: ${err.message}`);
+            setError(t('autopilot.failedToDisengage', { message: err.message }));
         }
     };
 
@@ -223,7 +192,7 @@ export default function AutopilotView() {
             await signalKService.setAutopilotMode(mode, selectedDevice);
             await fetchAutopilotData();
         } catch (err) {
-            setError(`Failed to set mode: ${err.message}`);
+            setError(t('autopilot.failedToSetMode', { message: err.message }));
         }
     };
 
@@ -237,7 +206,7 @@ export default function AutopilotView() {
             await signalKService.adjustAutopilotTarget(deltaRadians, selectedDevice);
             await fetchAutopilotData();
         } catch (err) {
-            setError(`Failed to adjust heading: ${err.message}`);
+            setError(t('autopilot.failedToAdjustHeading', { message: err.message }));
         }
     };
 
@@ -251,7 +220,7 @@ export default function AutopilotView() {
             await signalKService.setAutopilotTarget(headingRadians, selectedDevice);
             await fetchAutopilotData();
         } catch (err) {
-            setError(`Failed to set heading: ${err.message}`);
+            setError(t('autopilot.failedToSetHeading', { message: err.message }));
         }
     };
 
@@ -264,7 +233,7 @@ export default function AutopilotView() {
             await signalKService.autopilotTack(direction, selectedDevice);
             await fetchAutopilotData();
         } catch (err) {
-            setError(`Failed to tack: ${err.message}`);
+            setError(t('autopilot.failedToTack', { message: err.message }));
         }
     };
 
@@ -277,7 +246,7 @@ export default function AutopilotView() {
             await signalKService.autopilotGybe(direction, selectedDevice);
             await fetchAutopilotData();
         } catch (err) {
-            setError(`Failed to gybe: ${err.message}`);
+            setError(t('autopilot.failedToGybe', { message: err.message }));
         }
     };
 
@@ -286,13 +255,13 @@ export default function AutopilotView() {
      */
     const handleSaveControllerConfig = async (newConfig) => {
         try {
-            await ocearoCoreApiCall('/api/controller/config', {
+            await makeOcearoCoreApiCall('/api/controller/config', {
                 method: 'PUT',
                 body: JSON.stringify(newConfig)
             });
             setControllerConfig(newConfig);
         } catch (err) {
-            setError(`Failed to save controller config: ${err.message}`);
+            setError(t('autopilot.failedToSaveConfig', { message: err.message }));
         }
     };
 
@@ -301,9 +270,9 @@ export default function AutopilotView() {
         switch (state) {
             case 'enabled': return 'text-oGreen';
             case 'standby': return 'text-oYellow';
-            case 'disabled': return 'text-gray-500';
+            case 'disabled': return 'text-hud-muted';
             case 'off-line': return 'text-oRed';
-            default: return 'text-gray-500';
+            default: return 'text-hud-muted';
         }
     };
 
@@ -339,133 +308,129 @@ export default function AutopilotView() {
 
     // Render control tab
     const renderControlTab = () => (
-        <div className="p-4 space-y-6">
+        <div className="p-2 space-y-4">
             {/* Status Display */}
-            <div className="bg-oGray2 rounded-lg p-4">
-                <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="bg-hud-bg rounded-lg p-3 border border-hud">
+                <div className="grid grid-cols-3 gap-2 text-center">
                     {/* State */}
                     <div>
-                        <div className={`text-3xl mb-1 ${getStateColor(autopilotData?.state)}`}>
+                        <div className={`text-2xl mb-1 ${getStateColor(autopilotData?.state)}`}>
                             <FontAwesomeIcon icon={getStateIcon(autopilotData?.state)} />
                         </div>
-                        <div className={`text-sm ${secondaryTextClass}`}>State</div>
-                        <div className={`font-medium ${primaryTextClass} capitalize`}>
-                            {autopilotData?.state || 'Unknown'}
+                        <div className={`text-xs ${secondaryTextClass} font-bold`}>{t('autopilot.state')}</div>
+                        <div className={`text-sm ${primaryTextClass} font-black capitalize`}>
+                            {autopilotData?.state || t('autopilot.unknown')}
                         </div>
                     </div>
                     
                     {/* Mode */}
                     <div>
-                        <div className="text-3xl mb-1 text-oBlue">
+                        <div className="text-2xl mb-1 text-oBlue">
                             <FontAwesomeIcon icon={getModeIcon(autopilotData?.mode)} />
                         </div>
-                        <div className={`text-sm ${secondaryTextClass}`}>Mode</div>
-                        <div className={`font-medium ${primaryTextClass} capitalize`}>
-                            {autopilotData?.mode || 'None'}
+                        <div className={`text-xs ${secondaryTextClass} font-bold`}>{t('autopilot.mode')}</div>
+                        <div className={`text-sm ${primaryTextClass} font-black capitalize`}>
+                            {autopilotData?.mode || t('autopilot.none')}
                         </div>
                     </div>
                     
                     {/* Target */}
                     <div>
-                        <div className="text-3xl mb-1 text-oYellow">
+                        <div className="text-2xl mb-1 text-oYellow">
                             <FontAwesomeIcon icon={faLocationArrow} />
                         </div>
-                        <div className={`text-sm ${secondaryTextClass}`}>Target</div>
-                        <div className={`font-medium ${primaryTextClass}`}>
+                        <div className={`text-xs ${secondaryTextClass} font-bold`}>{t('autopilot.target')}</div>
+                        <div className={`text-sm ${primaryTextClass} font-black`}>
                             {formatHeading(autopilotData?.target)}
                         </div>
                     </div>
                 </div>
                 
                 {/* Current Heading */}
-                <div className="mt-4 pt-4 border-t border-gray-600 text-center">
-                    <div className={`text-sm ${secondaryTextClass}`}>Current Heading</div>
-                    <div className={`text-4xl font-bold ${primaryTextClass}`}>
+                <div className="mt-3 pt-3 border-t border-hud text-center">
+                    <div className={`text-xs ${secondaryTextClass} font-bold uppercase`}>{t('autopilot.currentHeading')}</div>
+                    <div className={`text-4xl font-black ${primaryTextClass}`}>
                         {formatHeading(currentHeading)}
                     </div>
                 </div>
             </div>
 
             {/* Engage/Disengage */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
                 <button
                     onClick={handleEngage}
                     disabled={autopilotData?.state === 'enabled' || autopilotData?.state === 'off-line'}
-                    className={`py-4 rounded-lg font-bold text-lg transition-all ${
+                    className={`py-3 rounded font-black text-base uppercase transition-all ${
                         autopilotData?.state === 'enabled' 
-                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                            : 'bg-oGreen hover:bg-green-600 text-white'
+                            ? 'bg-hud-bg text-hud-dim cursor-not-allowed border border-hud'
+                            : 'bg-oGreen hover:bg-green-600 text-hud-main shadow-lg shadow-oGreen/20'
                     }`}
                 >
                     <FontAwesomeIcon icon={faPlay} className="mr-2" />
-                    Engage
+                    {t('autopilot.engage')}
                 </button>
                 <button
                     onClick={handleDisengage}
                     disabled={autopilotData?.state !== 'enabled'}
-                    className={`py-4 rounded-lg font-bold text-lg transition-all ${
+                    className={`py-3 rounded font-black text-base uppercase transition-all ${
                         autopilotData?.state !== 'enabled'
-                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                            : 'bg-oRed hover:bg-red-600 text-white'
+                            ? 'bg-hud-bg text-hud-dim cursor-not-allowed border border-hud'
+                            : 'bg-oRed hover:bg-red-600 text-hud-main shadow-lg shadow-oRed/20'
                     }`}
                 >
                     <FontAwesomeIcon icon={faStop} className="mr-2" />
-                    Disengage
+                    {t('autopilot.disengage')}
                 </button>
             </div>
 
             {/* Mode Selection */}
-            <div className="bg-oGray2 rounded-lg p-4">
-                <div className={`text-sm ${secondaryTextClass} mb-3`}>Mode</div>
+            <div className="bg-hud-bg rounded-lg p-3 border border-hud">
+                <div className={`text-xs font-black uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.modeSelection')}</div>
                 <div className="grid grid-cols-4 gap-2">
                     {['compass', 'wind', 'gps', 'route'].map(mode => (
                         <button
                             key={mode}
                             onClick={() => handleSetMode(mode)}
-                            className={`py-3 rounded-lg font-medium transition-all flex flex-col items-center ${
+                            className={`py-2 rounded font-bold transition-all flex flex-col items-center border ${
                                 autopilotData?.mode === mode
-                                    ? 'bg-oBlue text-white'
-                                    : 'bg-oGray text-gray-300 hover:bg-gray-600'
+                                    ? 'bg-oBlue text-hud-main border-oBlue shadow-lg shadow-oBlue/20'
+                                    : 'bg-hud-bg text-hud-secondary border-hud hover:bg-hud-elevated'
                             }`}
                         >
-                            <FontAwesomeIcon icon={getModeIcon(mode)} className="text-xl mb-1" />
-                            <span className="text-xs capitalize">{mode}</span>
+                            <FontAwesomeIcon icon={getModeIcon(mode)} className="text-lg mb-1" />
+                            <span className="text-xs uppercase">{mode}</span>
                         </button>
                     ))}
                 </div>
             </div>
 
             {/* Heading Adjustment */}
-            <div className="bg-oGray2 rounded-lg p-4">
-                <div className={`text-sm ${secondaryTextClass} mb-3`}>Heading Adjustment</div>
+            <div className="bg-hud-bg rounded-lg p-3 border border-hud">
+                <div className={`text-xs font-black uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.targetAdjustment')}</div>
                 <div className="grid grid-cols-4 gap-2">
                     <button
                         onClick={() => handleAdjustHeading(-10)}
-                        className="py-4 bg-oRed hover:bg-red-600 text-white rounded-lg font-bold text-lg"
+                        className="py-3 bg-oRed/40 hover:bg-oRed/60 text-hud-main rounded border border-oRed/50 font-black text-sm"
                     >
-                        <FontAwesomeIcon icon={faArrowLeft} className="mr-1" />
-                        10°
+                        -10°
                     </button>
                     <button
                         onClick={() => handleAdjustHeading(-1)}
-                        className="py-4 bg-red-700 hover:bg-red-600 text-white rounded-lg font-bold text-lg"
+                        className="py-3 bg-oRed/20 hover:bg-oRed/40 text-hud-main rounded border border-oRed/30 font-black text-sm"
                     >
-                        <FontAwesomeIcon icon={faArrowLeft} className="mr-1" />
-                        1°
+                        -1°
                     </button>
                     <button
                         onClick={() => handleAdjustHeading(1)}
-                        className="py-4 bg-green-700 hover:bg-green-600 text-white rounded-lg font-bold text-lg"
+                        className="py-3 bg-oGreen/20 hover:bg-oGreen/40 text-hud-main rounded border border-oGreen/30 font-black text-sm"
                     >
-                        1°
-                        <FontAwesomeIcon icon={faArrowRight} className="ml-1" />
+                        +1°
                     </button>
                     <button
                         onClick={() => handleAdjustHeading(10)}
-                        className="py-4 bg-oGreen hover:bg-green-600 text-white rounded-lg font-bold text-lg"
+                        className="py-3 bg-oGreen/40 hover:bg-oGreen/60 text-hud-main rounded border border-oGreen/50 font-black text-sm"
                     >
-                        10°
-                        <FontAwesomeIcon icon={faArrowRight} className="ml-1" />
+                        +10°
                     </button>
                 </div>
                 
@@ -473,52 +438,48 @@ export default function AutopilotView() {
                 <button
                     onClick={() => currentHeading && handleSetHeading(toDegrees(currentHeading))}
                     disabled={!currentHeading}
-                    className="w-full mt-3 py-3 bg-oGray hover:bg-gray-600 text-white rounded-lg font-medium"
+                    className="w-full mt-3 py-2.5 bg-hud-bg hover:bg-hud-elevated text-hud-main rounded border border-hud font-bold text-xs uppercase"
                 >
                     <FontAwesomeIcon icon={faCompass} className="mr-2" />
-                    Set Current Heading
+                    {t('autopilot.syncTargetToHeading')}
                 </button>
             </div>
 
             {/* Tack & Gybe */}
-            <div className="bg-oGray2 rounded-lg p-4">
-                <div className={`text-sm ${secondaryTextClass} mb-3`}>Maneuvers</div>
+            <div className="bg-hud-bg rounded-lg p-3 border border-hud">
+                <div className={`text-xs font-black uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.maneuvers')}</div>
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <div className={`text-xs ${mutedTextClass} mb-2 text-center`}>Tack</div>
+                        <div className={`text-xs font-black uppercase ${mutedTextClass} mb-2 text-center`}>{t('autopilot.tack')}</div>
                         <div className="grid grid-cols-2 gap-2">
                             <button
                                 onClick={() => handleTack('port')}
-                                className="py-3 bg-oRed hover:bg-red-600 text-white rounded-lg font-medium"
+                                className="py-2 bg-hud-bg hover:bg-hud-elevated text-hud-main rounded border border-hud font-bold text-xs"
                             >
-                                <FontAwesomeIcon icon={faArrowLeft} className="mr-1" />
-                                Port
+                                {t('autopilot.port')}
                             </button>
                             <button
                                 onClick={() => handleTack('starboard')}
-                                className="py-3 bg-oGreen hover:bg-green-600 text-white rounded-lg font-medium"
+                                className="py-2 bg-hud-bg hover:bg-hud-elevated text-hud-main rounded border border-hud font-bold text-xs"
                             >
-                                Stbd
-                                <FontAwesomeIcon icon={faArrowRight} className="ml-1" />
+                                {t('autopilot.stbd')}
                             </button>
                         </div>
                     </div>
                     <div>
-                        <div className={`text-xs ${mutedTextClass} mb-2 text-center`}>Gybe</div>
+                        <div className={`text-xs font-black uppercase ${mutedTextClass} mb-2 text-center`}>{t('autopilot.gybe')}</div>
                         <div className="grid grid-cols-2 gap-2">
                             <button
                                 onClick={() => handleGybe('port')}
-                                className="py-3 bg-oRed hover:bg-red-600 text-white rounded-lg font-medium"
+                                className="py-2 bg-hud-bg hover:bg-hud-elevated text-hud-main rounded border border-hud font-bold text-xs"
                             >
-                                <FontAwesomeIcon icon={faArrowLeft} className="mr-1" />
-                                Port
+                                {t('autopilot.port')}
                             </button>
                             <button
                                 onClick={() => handleGybe('starboard')}
-                                className="py-3 bg-oGreen hover:bg-green-600 text-white rounded-lg font-medium"
+                                className="py-2 bg-hud-bg hover:bg-hud-elevated text-hud-main rounded border border-hud font-bold text-xs"
                             >
-                                Stbd
-                                <FontAwesomeIcon icon={faArrowRight} className="ml-1" />
+                                {t('autopilot.stbd')}
                             </button>
                         </div>
                     </div>
@@ -529,47 +490,46 @@ export default function AutopilotView() {
 
     // Render controller config tab
     const renderControllerTab = () => (
-        <div className="p-4 space-y-6">
+        <div className="p-2 space-y-4">
             {/* Controller Status */}
-            <div className="bg-oGray2 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
+            <div className="bg-hud-bg rounded-lg p-3 border border-hud">
+                <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
                         <FontAwesomeIcon 
                             icon={faGamepad} 
-                            className={`text-2xl ${controllerConnected ? 'text-oGreen' : 'text-gray-500'}`} 
+                            className={`text-xl ${controllerConnected ? 'text-oGreen' : 'text-hud-muted'}`} 
                         />
                         <div>
-                            <div className={`font-medium ${primaryTextClass}`}>PlayStation Controller</div>
-                            <div className={`text-sm ${controllerConnected ? 'text-oGreen' : 'text-gray-500'}`}>
-                                {controllerConnected ? 'Connected' : 'Not Connected'}
+                            <div className={`text-sm font-bold ${primaryTextClass}`}>{t('autopilot.controller')}</div>
+                            <div className={`text-xs ${controllerConnected ? 'text-oGreen' : 'text-hud-muted'} font-bold`}>
+                                {controllerConnected ? t('autopilot.connected') : t('autopilot.notConnected')}
                             </div>
                         </div>
                     </div>
                     <button
                         onClick={fetchControllerConfig}
-                        className="p-2 text-gray-400 hover:text-white"
+                        className="p-2 text-hud-secondary hover:text-hud-main"
                     >
-                        <FontAwesomeIcon icon={faSync} />
+                        <FontAwesomeIcon icon={faSync} className="text-sm" />
                     </button>
                 </div>
                 
                 {!controllerConnected && (
-                    <div className={`text-sm ${mutedTextClass} bg-oGray rounded p-3`}>
+                    <div className={`text-xs ${mutedTextClass} bg-hud-elevated border border-hud rounded p-2.5 font-bold`}>
                         <FontAwesomeIcon icon={faExclamationTriangle} className="text-oYellow mr-2" />
-                        Connect a PlayStation controller to configure button mappings.
-                        Controller support is managed by OcearoCore plugin.
+                        {t('autopilot.connectController')}
                     </div>
                 )}
             </div>
 
             {/* Button Mappings */}
-            <div className="bg-oGray2 rounded-lg p-4">
-                <div className={`text-sm ${secondaryTextClass} mb-4`}>Button Mappings</div>
+            <div className="bg-hud-bg rounded-lg p-3 border border-hud">
+                <div className={`text-xs font-black uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.buttonMappings')}</div>
                 
-                <div className="space-y-3">
+                <div className="space-y-2">
                     {/* Autopilot Controls */}
                     <ControllerMappingRow
-                        label="Engage Autopilot"
+                        label={t('autopilot.engageAutopilot')}
                         button={controllerConfig?.mappings?.engage || 'X'}
                         onChange={(btn) => handleSaveControllerConfig({
                             ...controllerConfig,
@@ -579,7 +539,7 @@ export default function AutopilotView() {
                         secondaryTextClass={secondaryTextClass}
                     />
                     <ControllerMappingRow
-                        label="Disengage Autopilot"
+                        label={t('autopilot.disengageAutopilot')}
                         button={controllerConfig?.mappings?.disengage || 'Circle'}
                         onChange={(btn) => handleSaveControllerConfig({
                             ...controllerConfig,
@@ -590,11 +550,11 @@ export default function AutopilotView() {
                     />
                     
                     {/* Heading Controls */}
-                    <div className="border-t border-gray-600 pt-3 mt-3">
-                        <div className={`text-xs ${mutedTextClass} mb-2`}>Heading Control</div>
+                    <div className="border-t border-hud pt-2 mt-2">
+                        <div className={`text-xs font-black uppercase ${mutedTextClass} mb-2`}>{t('autopilot.headingControl')}</div>
                     </div>
                     <ControllerMappingRow
-                        label="Heading -1°"
+                        label={t('autopilot.headingMinus1')}
                         button={controllerConfig?.mappings?.headingMinus1 || 'D-Pad Left'}
                         onChange={(btn) => handleSaveControllerConfig({
                             ...controllerConfig,
@@ -604,7 +564,7 @@ export default function AutopilotView() {
                         secondaryTextClass={secondaryTextClass}
                     />
                     <ControllerMappingRow
-                        label="Heading +1°"
+                        label={t('autopilot.headingPlus1')}
                         button={controllerConfig?.mappings?.headingPlus1 || 'D-Pad Right'}
                         onChange={(btn) => handleSaveControllerConfig({
                             ...controllerConfig,
@@ -614,7 +574,7 @@ export default function AutopilotView() {
                         secondaryTextClass={secondaryTextClass}
                     />
                     <ControllerMappingRow
-                        label="Heading -10°"
+                        label={t('autopilot.headingMinus10')}
                         button={controllerConfig?.mappings?.headingMinus10 || 'L1'}
                         onChange={(btn) => handleSaveControllerConfig({
                             ...controllerConfig,
@@ -624,7 +584,7 @@ export default function AutopilotView() {
                         secondaryTextClass={secondaryTextClass}
                     />
                     <ControllerMappingRow
-                        label="Heading +10°"
+                        label={t('autopilot.headingPlus10')}
                         button={controllerConfig?.mappings?.headingPlus10 || 'R1'}
                         onChange={(btn) => handleSaveControllerConfig({
                             ...controllerConfig,
@@ -635,11 +595,11 @@ export default function AutopilotView() {
                     />
                     
                     {/* Rudder Controls */}
-                    <div className="border-t border-gray-600 pt-3 mt-3">
-                        <div className={`text-xs ${mutedTextClass} mb-2`}>Rudder Control (Manual)</div>
+                    <div className="border-t border-hud pt-2 mt-2">
+                        <div className={`text-xs font-black uppercase ${mutedTextClass} mb-2`}>{t('autopilot.rudderControl')}</div>
                     </div>
                     <ControllerMappingRow
-                        label="Rudder Left"
+                        label={t('autopilot.rudderLeft')}
                         button={controllerConfig?.mappings?.rudderLeft || 'Left Stick Left'}
                         onChange={(btn) => handleSaveControllerConfig({
                             ...controllerConfig,
@@ -649,7 +609,7 @@ export default function AutopilotView() {
                         secondaryTextClass={secondaryTextClass}
                     />
                     <ControllerMappingRow
-                        label="Rudder Right"
+                        label={t('autopilot.rudderRight')}
                         button={controllerConfig?.mappings?.rudderRight || 'Left Stick Right'}
                         onChange={(btn) => handleSaveControllerConfig({
                             ...controllerConfig,
@@ -658,43 +618,18 @@ export default function AutopilotView() {
                         primaryTextClass={primaryTextClass}
                         secondaryTextClass={secondaryTextClass}
                     />
-                    
-                    {/* Maneuvers */}
-                    <div className="border-t border-gray-600 pt-3 mt-3">
-                        <div className={`text-xs ${mutedTextClass} mb-2`}>Maneuvers</div>
-                    </div>
-                    <ControllerMappingRow
-                        label="Tack Port"
-                        button={controllerConfig?.mappings?.tackPort || 'L2'}
-                        onChange={(btn) => handleSaveControllerConfig({
-                            ...controllerConfig,
-                            mappings: { ...controllerConfig?.mappings, tackPort: btn }
-                        })}
-                        primaryTextClass={primaryTextClass}
-                        secondaryTextClass={secondaryTextClass}
-                    />
-                    <ControllerMappingRow
-                        label="Tack Starboard"
-                        button={controllerConfig?.mappings?.tackStarboard || 'R2'}
-                        onChange={(btn) => handleSaveControllerConfig({
-                            ...controllerConfig,
-                            mappings: { ...controllerConfig?.mappings, tackStarboard: btn }
-                        })}
-                        primaryTextClass={primaryTextClass}
-                        secondaryTextClass={secondaryTextClass}
-                    />
                 </div>
             </div>
 
             {/* Sensitivity Settings */}
-            <div className="bg-oGray2 rounded-lg p-4">
-                <div className={`text-sm ${secondaryTextClass} mb-4`}>Sensitivity</div>
+            <div className="bg-hud-bg rounded-lg p-3 border border-hud">
+                <div className={`text-xs font-black uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.sensitivity')}</div>
                 
                 <div className="space-y-4">
                     <div>
                         <div className="flex justify-between mb-1">
-                            <span className={`text-sm ${primaryTextClass}`}>Rudder Sensitivity</span>
-                            <span className={`text-sm ${secondaryTextClass}`}>
+                            <span className={`text-xs font-bold ${primaryTextClass}`}>{t('autopilot.rudderSensitivity')}</span>
+                            <span className={`text-xs font-bold ${secondaryTextClass}`}>
                                 {controllerConfig?.sensitivity?.rudder || 50}%
                             </span>
                         </div>
@@ -710,14 +645,14 @@ export default function AutopilotView() {
                                     rudder: parseInt(e.target.value) 
                                 }
                             })}
-                            className="w-full"
+                            className="w-full h-1.5 bg-hud-elevated rounded-full appearance-none cursor-pointer accent-oGreen"
                         />
                     </div>
                     
                     <div>
                         <div className="flex justify-between mb-1">
-                            <span className={`text-sm ${primaryTextClass}`}>Dead Zone</span>
-                            <span className={`text-sm ${secondaryTextClass}`}>
+                            <span className={`text-xs font-bold ${primaryTextClass}`}>{t('autopilot.deadZone')}</span>
+                            <span className={`text-xs font-bold ${secondaryTextClass}`}>
                                 {controllerConfig?.sensitivity?.deadZone || 10}%
                             </span>
                         </div>
@@ -733,7 +668,7 @@ export default function AutopilotView() {
                                     deadZone: parseInt(e.target.value) 
                                 }
                             })}
-                            className="w-full"
+                            className="w-full h-1.5 bg-hud-elevated rounded-full appearance-none cursor-pointer accent-oGreen"
                         />
                     </div>
                 </div>
@@ -742,31 +677,26 @@ export default function AutopilotView() {
     );
 
     return (
-        <div className="flex flex-col h-full rightPaneBg overflow-auto">
-            {/* Tab Navigation */}
-            <div className="flex border-b border-gray-800">
-                <button
-                    onClick={() => setActiveTab('control')}
-                    className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center transition-all ${
-                        activeTab === 'control'
-                            ? 'text-green-500 border-b-2 border-green-500'
-                            : 'text-gray-400 hover:text-gray-300'
-                    }`}
-                >
-                    <FontAwesomeIcon icon={faCompass} className="mr-2" />
-                    Control
-                </button>
-                <button
-                    onClick={() => setActiveTab('controller')}
-                    className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center transition-all ${
-                        activeTab === 'controller'
-                            ? 'text-green-500 border-b-2 border-green-500'
-                            : 'text-gray-400 hover:text-gray-300'
-                    }`}
-                >
-                    <FontAwesomeIcon icon={faGamepad} className="mr-2" />
-                    Controller
-                </button>
+        <div className="flex flex-col h-full bg-rightPaneBg overflow-auto">
+            {/* Tab Navigation - Tesla Style */}
+            <div className="flex border-b border-hud bg-hud-bg">
+                {[
+                    { id: 'control', label: t('autopilot.control'), icon: faCompass },
+                    { id: 'controller', label: t('autopilot.controller'), icon: faGamepad }
+                ].map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex-1 py-3 px-2 text-xs font-black uppercase flex items-center justify-center transition-all duration-500 ${
+                            activeTab === tab.id
+                                ? 'text-oGreen border-b-2 border-oGreen bg-hud-bg'
+                                : 'text-hud-secondary hover:text-hud-main tesla-hover'
+                        }`}
+                    >
+                        <FontAwesomeIcon icon={tab.icon} className="mr-2" />
+                        {tab.label}
+                    </button>
+                ))}
             </div>
 
             {/* Error display */}
@@ -776,7 +706,7 @@ export default function AutopilotView() {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="bg-red-900 text-red-400 p-3 rounded-lg mx-4 mt-4"
+                        className="bg-oRed/20 text-oRed p-3 rounded-lg mx-4 mt-4 border border-oRed/30"
                     >
                         <FontAwesomeIcon icon={faExclamationTriangle} className="mr-2" />
                         {error}
@@ -790,7 +720,7 @@ export default function AutopilotView() {
                     <select
                         value={selectedDevice}
                         onChange={(e) => setSelectedDevice(e.target.value)}
-                        className="bg-oGray text-white rounded px-3 py-2 w-full border border-gray-600 focus:border-green-500 focus:outline-none"
+                        className="bg-hud-elevated text-hud-main rounded px-3 py-2 w-full border border-hud focus:border-oGreen/50 focus:outline-none transition-all"
                     >
                         {devices.map(device => (
                             <option key={device} value={device}>{device}</option>
@@ -810,7 +740,7 @@ export default function AutopilotView() {
                             exit={{ opacity: 0 }}
                             className="flex items-center justify-center h-32"
                         >
-                            <div className="text-white">Loading...</div>
+                            <div className="text-hud-main">Loading...</div>
                         </motion.div>
                     ) : (
                         <motion.div
@@ -856,7 +786,7 @@ const ControllerMappingRow = ({ label, button, onChange, primaryTextClass, secon
                     }}
                     onBlur={() => setIsEditing(false)}
                     autoFocus
-                    className="bg-oGray text-white rounded px-2 py-1 text-sm border border-gray-600 focus:border-green-500 focus:outline-none"
+                    className="bg-hud-elevated text-hud-main rounded px-2 py-1 text-sm border border-hud focus:border-oGreen/50 focus:outline-none transition-all"
                 >
                     {buttonOptions.map(opt => (
                         <option key={opt} value={opt}>{opt}</option>
@@ -865,7 +795,7 @@ const ControllerMappingRow = ({ label, button, onChange, primaryTextClass, secon
             ) : (
                 <button
                     onClick={() => setIsEditing(true)}
-                    className={`px-3 py-1 bg-oGray rounded text-sm ${secondaryTextClass} hover:bg-gray-600`}
+                    className={`px-3 py-1 bg-hud-elevated rounded text-sm ${secondaryTextClass} hover:bg-hud-bg border border-hud transition-all`}
                 >
                     {button}
                 </button>

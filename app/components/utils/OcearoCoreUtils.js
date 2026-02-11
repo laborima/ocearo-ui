@@ -42,7 +42,7 @@ export const isOcearoCoreEnabled = () => {
 /**
  * Make a generic API call to OcearoCore plugin
  */
-const makeOcearoCoreApiCall = async (endpoint, options = {}) => {
+export const makeOcearoCoreApiCall = async (endpoint, options = {}) => {
   const config = getOcearoCoreConfig();
   
   if (!config.enabled) {
@@ -104,7 +104,7 @@ const makeOcearoCoreApiCall = async (endpoint, options = {}) => {
       throw timeoutError;
     }
 
-    if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+    if (error.name === 'TypeError' && (error.message === 'Failed to fetch' || error.message.includes('NetworkError'))) {
       const networkError = new Error(`OcearoCore server unreachable at ${config.baseUrl}`);
       networkError.name = 'NetworkError';
       throw networkError;
