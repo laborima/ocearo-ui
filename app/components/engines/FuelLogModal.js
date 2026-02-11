@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faGasPump, faClock, faEuroSign, faFlask, faTimes, faSave
 } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Modal component for logging fuel refills
@@ -16,6 +17,7 @@ const FuelLogModal = ({
   lastRefillEngineHours = null,
   loading = false 
 }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     liters: '',
     cost: '',
@@ -51,15 +53,15 @@ const FuelLogModal = ({
     const newErrors = {};
     
     if (!formData.liters || parseFloat(formData.liters) <= 0) {
-      newErrors.liters = 'Please enter a valid number of liters';
+      newErrors.liters = t('fuelLog.errorLiters');
     }
     
     if (!formData.cost || parseFloat(formData.cost) < 0) {
-      newErrors.cost = 'Please enter a valid cost';
+      newErrors.cost = t('fuelLog.errorCost');
     }
     
     if (!formData.engineHours || parseFloat(formData.engineHours) < 0) {
-      newErrors.engineHours = 'Please enter engine hours';
+      newErrors.engineHours = t('fuelLog.errorEngineHours');
     }
 
     setErrors(newErrors);
@@ -96,32 +98,32 @@ const FuelLogModal = ({
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-hud-bg/60 backdrop-blur-sm flex items-center justify-center z-50"
       onClick={onClose}
     >
       <div 
-        className="bg-oGray2 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+        className="bg-hud-bg backdrop-blur-xl rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-hud"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold text-white flex items-center">
+        <div className="flex justify-between items-center mb-8">
+          <h3 className="text-xl font-black text-hud-main flex items-center tracking-tight">
             <FontAwesomeIcon icon={faGasPump} className="mr-3 text-oYellow" />
-            Log Fuel Refill
+            {t('fuelLog.logFuelRefill')}
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="w-10 h-10 rounded-full flex items-center justify-center text-hud-secondary hover:text-hud-main hover:bg-hud-elevated transition-all duration-300"
             disabled={loading}
           >
             <FontAwesomeIcon icon={faTimes} size="lg" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-white mb-2 flex items-center">
+            <label className="block text-xs font-black uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
               <FontAwesomeIcon icon={faGasPump} className="mr-2 text-oBlue" />
-              Liters Added *
+              {t('fuelLog.litersAdded')}
             </label>
             <input
               type="number"
@@ -129,21 +131,21 @@ const FuelLogModal = ({
               min="0"
               value={formData.liters}
               onChange={(e) => handleInputChange('liters', e.target.value)}
-              className={`w-full bg-oGray text-white px-4 py-3 rounded-lg border ${
-                errors.liters ? 'border-red-500' : 'border-gray-600'
-              } focus:border-oBlue focus:outline-none`}
+              className={`w-full bg-hud-elevated text-hud-main px-4 py-3 rounded-xl border ${
+                errors.liters ? 'border-red-500' : 'border-hud'
+              } focus:border-oBlue focus:outline-none transition-all duration-300`}
               placeholder="Ex: 50"
               disabled={loading}
             />
             {errors.liters && (
-              <p className="text-red-400 text-sm mt-1">{errors.liters}</p>
+              <p className="text-red-400 text-xs mt-2 font-medium">{errors.liters}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-white mb-2 flex items-center">
+            <label className="block text-xs font-black uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
               <FontAwesomeIcon icon={faEuroSign} className="mr-2 text-oGreen" />
-              Cost (€) *
+              {t('fuelLog.cost')}
             </label>
             <input
               type="number"
@@ -151,21 +153,21 @@ const FuelLogModal = ({
               min="0"
               value={formData.cost}
               onChange={(e) => handleInputChange('cost', e.target.value)}
-              className={`w-full bg-oGray text-white px-4 py-3 rounded-lg border ${
-                errors.cost ? 'border-red-500' : 'border-gray-600'
-              } focus:border-oBlue focus:outline-none`}
+              className={`w-full bg-hud-elevated text-hud-main px-4 py-3 rounded-xl border ${
+                errors.cost ? 'border-red-500' : 'border-hud'
+              } focus:border-oBlue focus:outline-none transition-all duration-300`}
               placeholder="Ex: 85.50"
               disabled={loading}
             />
             {errors.cost && (
-              <p className="text-red-400 text-sm mt-1">{errors.cost}</p>
+              <p className="text-red-400 text-xs mt-2 font-medium">{errors.cost}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-white mb-2 flex items-center">
+            <label className="block text-xs font-black uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
               <FontAwesomeIcon icon={faClock} className="mr-2 text-oYellow" />
-              Current Engine Hours *
+              {t('fuelLog.currentEngineHours')}
             </label>
             <input
               type="number"
@@ -173,26 +175,26 @@ const FuelLogModal = ({
               min="0"
               value={formData.engineHours}
               onChange={(e) => handleInputChange('engineHours', e.target.value)}
-              className={`w-full bg-oGray text-white px-4 py-3 rounded-lg border ${
-                errors.engineHours ? 'border-red-500' : 'border-gray-600'
-              } focus:border-oBlue focus:outline-none`}
+              className={`w-full bg-hud-elevated text-hud-main px-4 py-3 rounded-xl border ${
+                errors.engineHours ? 'border-red-500' : 'border-hud'
+              } focus:border-oBlue focus:outline-none transition-all duration-300`}
               placeholder="Ex: 245.5"
               disabled={loading}
             />
             {errors.engineHours && (
-              <p className="text-red-400 text-sm mt-1">{errors.engineHours}</p>
+              <p className="text-red-400 text-xs mt-2 font-medium">{errors.engineHours}</p>
             )}
             {currentEngineHours !== null && (
-              <p className="text-gray-400 text-sm mt-1">
-                SignalK value: {Math.round(currentEngineHours * 10) / 10} h
+              <p className="text-hud-dim text-xs mt-2 font-medium">
+                {t('fuelLog.signalkValue')} {Math.round(currentEngineHours * 10) / 10} h
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-white mb-2 flex items-center">
-              <FontAwesomeIcon icon={faClock} className="mr-2 text-gray-400" />
-              Hours Since Last Refill
+            <label className="block text-xs font-black uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
+              <FontAwesomeIcon icon={faClock} className="mr-2 text-hud-dim" />
+              {t('fuelLog.hoursSinceLastRefill')}
             </label>
             <input
               type="number"
@@ -200,55 +202,55 @@ const FuelLogModal = ({
               min="0"
               value={formData.hoursSinceLastRefill}
               onChange={(e) => handleInputChange('hoursSinceLastRefill', e.target.value)}
-              className="w-full bg-oGray text-white px-4 py-3 rounded-lg border border-gray-600 focus:border-oBlue focus:outline-none"
+              className="w-full bg-hud-elevated text-hud-main px-4 py-3 rounded-xl border border-hud focus:border-oBlue focus:outline-none transition-all duration-300"
               placeholder="Ex: 25.5"
               disabled={loading}
             />
             {lastRefillEngineHours !== null && (
-              <p className="text-gray-400 text-sm mt-1">
-                Last refill at {Math.round(lastRefillEngineHours * 10) / 10} h
+              <p className="text-hud-dim text-xs mt-2 font-medium">
+                {t('fuelLog.lastRefillAt')} {Math.round(lastRefillEngineHours * 10) / 10} h
               </p>
             )}
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center p-1">
             <input
               type="checkbox"
               id="additive"
               checked={formData.additive}
               onChange={(e) => handleInputChange('additive', e.target.checked)}
-              className="w-5 h-5 rounded border-gray-600 bg-oGray text-oBlue focus:ring-oBlue"
+              className="w-5 h-5 rounded border-hud bg-hud-elevated text-oBlue focus:ring-oBlue transition-all duration-300"
               disabled={loading}
             />
-            <label htmlFor="additive" className="ml-3 text-white flex items-center cursor-pointer">
-              <FontAwesomeIcon icon={faFlask} className="mr-2 text-purple-400" />
-              Additive Added
+            <label htmlFor="additive" className="ml-3 text-sm font-bold text-hud-secondary flex items-center cursor-pointer hover:text-hud-main transition-colors duration-300">
+              <FontAwesomeIcon icon={faFlask} className="mr-2 text-purple-400 opacity-70" />
+              {t('fuelLog.additiveAdded')}
             </label>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-700">
+          <div className="flex justify-end space-x-4 pt-6 border-t border-hud">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+              className="px-6 py-3 bg-hud-elevated hover:bg-hud-bg text-hud-main font-bold rounded-xl transition-all duration-300"
               disabled={loading}
             >
-              Cancel
+              {t('fuelLog.cancel')}
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-oBlue hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center disabled:opacity-50"
+              className="px-8 py-3 bg-oBlue hover:bg-blue-600 text-hud-main font-bold rounded-xl transition-all duration-300 flex items-center disabled:opacity-50 shadow-lg shadow-oBlue/20"
               disabled={loading}
             >
               {loading ? (
                 <>
-                  <span className="animate-spin mr-2">⏳</span>
-                  Saving...
+                  <span className="animate-spin mr-3 font-normal">⏳</span>
+                  {t('fuelLog.saving')}
                 </>
               ) : (
                 <>
                   <FontAwesomeIcon icon={faSave} className="mr-2" />
-                  Save
+                  {t('fuelLog.save')}
                 </>
               )}
             </button>

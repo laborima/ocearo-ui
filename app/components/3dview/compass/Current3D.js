@@ -14,42 +14,53 @@ const CurrentArrow = ({
   position,
   rotation,
   speed,
-  color = '#ffffff',
+  color,
   fontSize = FONT_SIZE,
   textPosition = [0, 0.8, 0],
   arrowSize = 1,
-}) => (
+}) => {
+  const { nightMode } = useOcearoContext();
+  const finalColor = color || (nightMode ? oNight : "#ffffff");
+  
+  return (
   <group position={position} rotation={rotation}>
     {/* Speed text */}
     <Text
       characters="0123456789."
-      color={color}
+      color={finalColor}
       fontSize={fontSize * arrowSize}
       position={textPosition}
       font="fonts/Roboto-Bold.ttf"
       anchorX="center"
       anchorY="middle"
+      fillOpacity={0.9}
     >
       {speed.toFixed(1)}
     </Text>
 
-    {/* Arrow shape */}
+    {/* Arrow shape - Clean HUD triangle */}
     <mesh>
       <shapeGeometry 
         args={[
           new THREE.Shape([
             new THREE.Vector2(0, 0),
-            new THREE.Vector2(0.5 * arrowSize * Math.cos(5 * Math.PI / 6), 0.5 * arrowSize * Math.sin(5 * Math.PI / 6)),
-            new THREE.Vector2(0, -0.577 * arrowSize),
-            new THREE.Vector2(-0.5 * arrowSize * Math.cos(5 * Math.PI / 6), 0.5 * arrowSize * Math.sin(5 * Math.PI / 6)),
+            new THREE.Vector2(0.4 * arrowSize, 0.3 * arrowSize),
+            new THREE.Vector2(0, -0.6 * arrowSize),
+            new THREE.Vector2(-0.4 * arrowSize, 0.3 * arrowSize),
             new THREE.Vector2(0, 0),
           ])
         ]} 
       />
-      <meshStandardMaterial color={color} side={THREE.DoubleSide} />
+      <meshBasicMaterial 
+        color={finalColor} 
+        side={THREE.DoubleSide} 
+        transparent={true} 
+        opacity={0.8}
+      />
     </mesh>
   </group>
 );
+};
 
 CurrentArrow.propTypes = {
   position: PropTypes.arrayOf(PropTypes.number),
@@ -64,7 +75,7 @@ CurrentArrow.propTypes = {
 CurrentArrow.defaultProps = {
   position: [0, 0, 0],
   rotation: [0, 0, 0],
-  color: '#ffffff',
+  color: null,
   fontSize: FONT_SIZE,
   textPosition: [0, 0.8, 0],
   arrowSize: 1

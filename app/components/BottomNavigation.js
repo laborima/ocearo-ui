@@ -12,20 +12,27 @@ import {
 import BottomTemperatureWidget from './widgets/BottomTemperatureWidget';
 import BottomEnvironmentalWidget from './widgets/BottomEnvironmentalWidget';
 import { useOcearoContext } from './context/OcearoContext';
+import { useTranslation } from 'react-i18next';
 
 const NavButton = ({ icon, onClick, label, textColor }) => (
   <button
     onClick={onClick}
-    className={`${textColor} text-2xl flex items-center justify-center hover:text-gray-300 transition-colors duration-200`}
+    className={`${textColor} flex flex-col items-center justify-center p-2 rounded-xl tesla-hover transition-all duration-300 group`}
     aria-label={label}
   >
-    <FontAwesomeIcon icon={icon} />
+    <div className="w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-hud-elevated transition-colors">
+      <FontAwesomeIcon icon={icon} className="text-xl group-hover:scale-110 transition-transform" />
+    </div>
+    <span className="text-xs font-black uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100 transition-opacity">
+      {label}
+    </span>
   </button>
 );
 
 const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
+  const { t } = useTranslation();
   const { nightMode } = useOcearoContext();
-  const textColor = nightMode ? 'text-oNight' : 'text-white';
+  const textColor = nightMode ? 'text-hud-main/90' : 'text-hud-main';
 
   const navigationItems = [
     {
@@ -34,7 +41,7 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
         {
           icon: faShip,
           onClick: () => toggleSettings(),
-          label: 'Settings'
+          label: t('nav.system')
         }
       ]
     },
@@ -44,27 +51,27 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
         {
           icon: faMapMarkedAlt,
           onClick: () => setRightView('navigation'),
-          label: 'Navigation'
+          label: t('nav.nav')
         },
         {
           icon: faCloudSun,
           onClick: () => setRightView('weather'),
-          label: 'Weather'
+          label: t('nav.weather')
         },
         {
           icon: faTh,
           onClick: toggleAppMenu,
-          label: 'App Menu'
-        },
-        {
-          icon: faHandsHelping,
-          onClick: () => setRightView('manual'),
-          label: 'Manual'
+          label: t('nav.apps')
         },
         {
           icon: faTachometerAlt,
           onClick: () => setRightView('instrument'),
-          label: 'Instrument'
+          label: t('nav.gauges')
+        },
+        {
+          icon: faHandsHelping,
+          onClick: () => setRightView('manual'),
+          label: t('nav.help')
         }
       ]
     }
@@ -86,20 +93,21 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
   };
 
   return (
-    <div className="flex items-center w-full h-full bg-black px-4">
+    <div className="flex items-center w-full h-full bg-leftPaneBg px-6">
       {/* Left Section */}
-      <div className="flex-1 flex items-center space-x-10">
+      <div className="flex-1 flex items-center space-x-6">
         {renderSection('left')}
+        <div className="h-8 w-[1px] bg-hud-muted opacity-20 mx-2" />
         <BottomTemperatureWidget />
       </div>
 
       {/* Center Section */}
-      <div className="flex-1 flex items-center justify-center space-x-10">
+      <div className="flex-1 flex items-center justify-center space-x-8">
         {renderSection('center')}
       </div>
 
       {/* Right Section */}
-      <div className="flex-1 flex items-center justify-end space-x-10">
+      <div className="flex-1 flex items-center justify-end space-x-6">
         <BottomEnvironmentalWidget />
       </div>
     </div>

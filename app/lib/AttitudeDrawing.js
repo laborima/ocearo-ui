@@ -31,14 +31,14 @@ export const drawAttitudeInstrument = (ctx, options) => {
     // Color theme
     const theme = {
         sky: nightMode ? '#1a0000' : (colors.sky || '#87CEEB'),
-        sea: nightMode ? '#000000' : (colors.sea || colors.oBlue || '#09bfff'),
+        sea: nightMode ? '#000000' : (colors.sea || colors.oGray2 || '#424242'),
         horizon: nightMode ? (colors.oNight || '#ef4444') : (colors.oYellow || '#ffbe00'),
         bezel: nightMode ? '#330000' : (colors.bezel || colors.oGray2 || '#424242'),
-        text: nightMode ? (colors.oNight || '#ef4444') : (colors.text || '#FFFFFF'),
+        text: nightMode ? (colors.oNight || '#ef4444') : (colors.text || 'var(--hud-text-main)'),
         boat: nightMode ? (colors.oNight || '#ef4444') : (colors.boat || colors.oYellow || '#ffbe00'),
         rollScale: nightMode ? (colors.oNight || '#ef4444') : (colors.rollScale || colors.oRed || '#cc000c'),
-        headingMarks: nightMode ? (colors.oNight || '#ef4444') : (colors.headingMarks || '#FFFFFF'),
-        pitchMarks: nightMode ? 'rgba(239, 68, 68, 0.6)' : (colors.pitchMarks || 'rgba(255, 255, 255, 0.8)'),
+        headingMarks: nightMode ? (colors.oNight || '#ef4444') : (colors.headingMarks || 'var(--hud-text-main)'),
+        pitchMarks: nightMode ? 'rgba(239, 68, 68, 0.6)' : (colors.pitchMarks || 'var(--hud-text-secondary)'),
         ...colors
     };
 
@@ -143,7 +143,7 @@ export const drawAttitudeInstrument = (ctx, options) => {
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
-            ctx.strokeStyle = isMajor ? theme.headingMarks : (nightMode ? 'rgba(239, 68, 68, 0.4)' : 'rgba(255, 255, 255, 0.6)');
+            ctx.strokeStyle = isMajor ? theme.headingMarks : (nightMode ? 'rgba(239, 68, 68, 0.4)' : theme.pitchMarks);
             ctx.lineWidth = isMajor ? slw(1.5) : slw(compact ? 0.5 : 2);
             ctx.stroke();
             

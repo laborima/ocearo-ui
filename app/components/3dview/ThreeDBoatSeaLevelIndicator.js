@@ -1,6 +1,7 @@
 import { useOcearoContext } from '../context/OcearoContext';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSignalKPath } from '../hooks/useSignalK';
+import { useTranslation } from 'react-i18next';
 
 const DEPTH_THRESHOLDS = {
   DANGER: 3,
@@ -16,10 +17,11 @@ const DEPTH_COLORS = {
 
 const TEXT_COLORS = {
   NIGHT: 'text-oNight',
-  DAY: 'text-white'
+  DAY: 'text-hud-main'
 };
 
 const ThreeDBoatSeaLevelIndicator = () => {
+  const { t } = useTranslation();
   const { nightMode } = useOcearoContext();
   const [barHeight, setBarHeight] = useState(240); // Default height (equivalent to h-60)
 
@@ -77,32 +79,34 @@ const ThreeDBoatSeaLevelIndicator = () => {
   // Render progress bar
   const ProgressBar = () => (
     <div
-      className={`w-2 ${progressBarColor} rounded-lg overflow-hidden mb-4`}
+      className="w-1.5 bg-hud-elevated rounded-full overflow-hidden mb-2 relative"
       style={{ height: barHeight }}
       role="progressbar"
       aria-valuenow={depth}
       aria-valuemin="0"
       aria-valuemax={DEPTH_THRESHOLDS.MAX_DEPTH}
-      aria-label={`Water depth: ${formattedDepth(depth)}`}
+      aria-label={`${t('indicators.waterDepth')}: ${formattedDepth(depth)}`}
     >
       <div
-        className="bg-oGray transition-all duration-500 ease-in-out"
-        style={{ height: `${100 - depthPercentage}%` }}
+        className={`absolute bottom-0 left-0 w-full transition-all duration-1000 ease-in-out ${progressBarColor} ${depth < DEPTH_THRESHOLDS.DANGER ? 'animate-pulse' : ''}`}
+        style={{ height: `${depthPercentage}%` }}
       />
     </div>
   );
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center group p-3 transition-all duration-300">
       {/* Label */}
-      <div className={`text-sm mb-2 ${textColor}`}>Depth</div>
+      <div className={`text-xs font-black uppercase tracking-[0.2em] mb-4 opacity-40 group-hover:opacity-100 transition-opacity ${textColor}`}>
+        {t('indicators.depth')}
+      </div>
 
       {/* Progress Bar */}
       <ProgressBar />
 
       {/* Depth Value */}
       <div
-        className={`text-sm mt-2 ${textColor} ${depth < DEPTH_THRESHOLDS.DANGER ? 'animate-pulse' : ''}`}
+        className={`text-xs font-black tracking-widest mt-2 ${textColor} ${depth < DEPTH_THRESHOLDS.DANGER ? 'text-oRed animate-soft-pulse' : ''}`}
       >
         {formattedDepth(depth)}
       </div>

@@ -281,60 +281,42 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, ...props }) => {
    
     // Format data for InfoPanel display
     const formatInfoPanelContent = (data) => {
-        
-        // Create array of formatted strings, filtering out empty/zero values
         const result = [];
         
-        // Only add name if it exists and isn't empty
         if (data.name) {
-            result.push(`Name: ${data.name}`);
+            result.push(`Vessel: ${data.name}`);
         }
         
-        // Only add wind data if speed exists and isn't zero
         if (data.trueWindSpeed) {
-            // SignalK provides wind speed in m/s
-            result.push(`Wind: ${toKnots(data.trueWindSpeed)}kn @ ${toDegrees(data.trueWindAngle)}°`);
+            result.push(`Wind: ${toKnots(data.trueWindSpeed)} kn @ ${toDegrees(data.trueWindAngle)}°`);
         }
         
-        // Only add apparent wind data if speed exists and isn't zero
         if (data.appWindSpeed) {
-            // SignalK provides apparent wind speed in m/s
-            result.push(`App Wind: ${toKnots(data.appWindSpeed)}kn @ ${toDegrees(data.appWindAngle)}°`);
+            result.push(`App Wind: ${toKnots(data.appWindSpeed)} kn @ ${toDegrees(data.appWindAngle)}°`);
         }
         
-        // Only add speed if it exists and isn't zero
         if (data.speedThroughWater) {
-            // SignalK provides boat speed in m/s
-            result.push(`Speed: ${toKnots(data.speedThroughWater)}kn`);
+            result.push(`STW: ${toKnots(data.speedThroughWater)} kn`);
         }
         
-        // Only add heading if it exists
         if (data.headingTrue !== undefined && data.headingTrue !== null) {
-            // SignalK provides heading in radians
-            result.push(`Heading: ${toDegrees(data.headingTrue)}°`);
+            result.push(`HDG: ${toDegrees(data.headingTrue)}°`);
         }
         
-        // Only add COG if it exists
         if (data.courseOverGroundTrue !== undefined && data.courseOverGroundTrue !== null) {
-            // SignalK provides COG in radians
             result.push(`COG: ${toDegrees(data.courseOverGroundTrue)}°`);
         }
         
-        // Only add VMG if it exists and isn't zero
         if (data.velocityMadeGood) {
-            // SignalK provides VMG in m/s
-            result.push(`VMG: ${toKnots(data.velocityMadeGood)}kn`);
+            result.push(`VMG: ${toKnots(data.velocityMadeGood)} kn`);
         }
         
-        // Only add Polar if it exists and isn't zero
         if (data.polarSpeedRatio) {
-            // Ratio is already a percentage (0-1 range)
             result.push(`Polar: ${(data.polarSpeedRatio * 100).toFixed(0)}%`);
         }
         
-        // Only add Position if both latitude and longitude exist
         if (data.position && data.position.latitude !== undefined && data.position.longitude !== undefined) {
-            result.push(`Position: ${data.position.latitude.toFixed(4)}°, ${data.position.longitude.toFixed(4)}°`);
+            result.push(`Pos: ${data.position.latitude.toFixed(4)}°, ${data.position.longitude.toFixed(4)}°`);
         }
         
         return result.join('\n');

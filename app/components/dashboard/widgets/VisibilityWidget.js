@@ -5,8 +5,10 @@ import { useSignalKPath } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
 import { faEye, faSmog, faSun, faCloud } from '@fortawesome/free-solid-svg-icons';
 import BaseWidget from './BaseWidget';
+import { useTranslation } from 'react-i18next';
 
 export default function VisibilityWidget() {
+  const { t } = useTranslation();
   const debugMode = configService.get('debugMode');
   
   const visibilityValue = useSignalKPath('environment.outside.visibility');
@@ -28,12 +30,12 @@ export default function VisibilityWidget() {
   }, [visibilityValue, debugMode]);
 
   const getVisibilityStatus = (distance) => {
-    if (distance < 1) return 'Dense Fog';
-    if (distance < 2) return 'Thick Fog';
-    if (distance < 5) return 'Moderate Fog';
-    if (distance < 10) return 'Light Haze';
-    if (distance < 20) return 'Good';
-    return 'Excellent';
+    if (distance < 1) return t('widgets.denseFog');
+    if (distance < 2) return t('widgets.thickFog');
+    if (distance < 5) return t('widgets.moderateFog');
+    if (distance < 10) return t('widgets.lightHaze');
+    if (distance < 20) return t('widgets.visGood');
+    return t('widgets.visExcellent');
   };
 
   const getVisibilityColor = (distance) => {
@@ -51,65 +53,66 @@ export default function VisibilityWidget() {
   };
 
   const getVisibilityDescription = (distance) => {
-    if (distance < 0.05) return 'Extremely dense fog';
-    if (distance < 0.2) return 'Very dense fog';
-    if (distance < 0.5) return 'Dense fog';
-    if (distance < 1) return 'Thick fog';
-    if (distance < 2) return 'Moderate fog';
-    if (distance < 4) return 'Light fog';
-    if (distance < 10) return 'Mist or haze';
-    if (distance < 20) return 'Slight haze';
-    if (distance < 40) return 'Clear';
-    return 'Very clear';
+    if (distance < 0.05) return t('widgets.extremelyDenseFog');
+    if (distance < 0.2) return t('widgets.veryDenseFog');
+    if (distance < 0.5) return t('widgets.denseFog');
+    if (distance < 1) return t('widgets.thickFog');
+    if (distance < 2) return t('widgets.moderateFog');
+    if (distance < 4) return t('widgets.lightFog');
+    if (distance < 10) return t('widgets.mistOrHaze');
+    if (distance < 20) return t('widgets.slightHaze');
+    if (distance < 40) return t('widgets.clear');
+    return t('widgets.veryClear');
   };
 
   return (
     <BaseWidget
-      title="Visibility"
+      title={t('widgets.atmosphericVisibility')}
       icon={faEye}
       hasData={visibilityData.hasData}
-      noDataMessage="No visibility data available"
+      noDataMessage={t('widgets.signalLossOptical')}
     >
-      <div className="flex-1 flex flex-col justify-center min-h-0">
-        {/* Main visibility reading */}
-        <div className="text-center mb-6">
-          <FontAwesomeIcon 
-            icon={getVisibilityIcon(visibilityData.distance)} 
-            className={`text-5xl mb-3 ${getVisibilityColor(visibilityData.distance)}`} 
-          />
-          <div className="text-5xl font-black text-white mb-1 tracking-tighter">
-            {visibilityData.distance}
-            <span className="text-xl text-gray-400 ml-1">km</span>
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Main display - centered */}
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div className={`text-5xl mb-4 ${getVisibilityColor(visibilityData.distance)}`}>
+            <FontAwesomeIcon 
+              icon={getVisibilityIcon(visibilityData.distance)} 
+              className={visibilityData.distance < 10 ? 'animate-soft-pulse' : ''} 
+            />
           </div>
-          <div className={`text-xs font-black uppercase tracking-widest ${getVisibilityColor(visibilityData.distance)}`}>
+          <div className="text-5xl font-black text-hud-main leading-none gliding-value tracking-tighter">
+            {visibilityData.distance}
+            <span className="text-xl text-hud-secondary ml-2 uppercase font-black tracking-widest">km</span>
+          </div>
+          <div className={`text-xs font-black uppercase tracking-[0.3em] mt-3 ${getVisibilityColor(visibilityData.distance)}`}>
             {getVisibilityStatus(visibilityData.distance)}
           </div>
         </div>
 
-        {/* Distance readings */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-oGray p-3 rounded-lg border border-gray-800 text-center">
-            <div className="text-gray-400 text-[10px] uppercase font-bold mb-1 tracking-tight">Metric</div>
-            <div className={`text-xl font-bold ${getVisibilityColor(visibilityData.distance)}`}>
+        {/* Metric + Nautical */}
+        <div className="grid grid-cols-2 gap-4 mb-4 shrink-0">
+          <div className="tesla-card p-3 text-center tesla-hover bg-hud-bg">
+            <div className="text-hud-secondary text-xs uppercase font-black tracking-widest mb-1 opacity-60">{t('widgets.metricRange')}</div>
+            <div className={`text-xl font-black gliding-value ${getVisibilityColor(visibilityData.distance)}`}>
               {visibilityData.distance} km
             </div>
           </div>
-          
-          <div className="bg-oGray p-3 rounded-lg border border-gray-800 text-center">
-            <div className="text-gray-400 text-[10px] uppercase font-bold mb-1 tracking-tight">Nautical</div>
-            <div className={`text-xl font-bold ${getVisibilityColor(visibilityData.distance)}`}>
+          <div className="tesla-card p-3 text-center tesla-hover bg-hud-bg">
+            <div className="text-hud-secondary text-xs uppercase font-black tracking-widest mb-1 opacity-60">{t('widgets.nauticalRange')}</div>
+            <div className={`text-xl font-black gliding-value ${getVisibilityColor(visibilityData.distance)}`}>
               {visibilityData.distanceNM} NM
             </div>
           </div>
         </div>
 
-        {/* Visual visibility bar */}
-        <div className="mb-6 px-2">
+        {/* Progress bar + description */}
+        <div className="shrink-0 space-y-2">
           <div className="flex items-center space-x-3">
-            <div className="text-gray-500 text-[10px] font-bold">0</div>
-            <div className="flex-1 bg-oGray rounded-full h-3 border border-gray-800 overflow-hidden shadow-inner">
+            <div className="text-hud-muted text-xs font-black tracking-tighter">0</div>
+            <div className="flex-1 bg-hud-elevated rounded-full h-1 overflow-hidden shadow-inner">
               <div 
-                className={`h-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(0,0,0,0.3)] ${
+                className={`h-full transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${
                   visibilityData.distance < 1 ? 'bg-oRed' : 
                   visibilityData.distance < 5 ? 'bg-oYellow' : 
                   visibilityData.distance < 10 ? 'bg-oBlue' : 'bg-oGreen'
@@ -117,17 +120,10 @@ export default function VisibilityWidget() {
                 style={{ width: `${Math.min(100, (visibilityData.distance / 20) * 100)}%` }}
               />
             </div>
-            <div className="text-gray-500 text-[10px] font-bold">20k+</div>
+            <div className="text-hud-muted text-xs font-black tracking-tighter">20k+</div>
           </div>
-        </div>
-
-        {/* Additional info */}
-        <div className="bg-oGray p-3 rounded-lg border border-gray-800 text-center">
-          <div className="text-white font-bold text-sm mb-1 uppercase tracking-tight">
+          <div className="text-center text-hud-main font-black text-xs uppercase tracking-widest opacity-60">
             {getVisibilityDescription(visibilityData.distance)}
-          </div>
-          <div className="text-gray-500 text-[10px] uppercase font-bold">
-            Environmental Condition
           </div>
         </div>
       </div>

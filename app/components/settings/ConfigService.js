@@ -17,7 +17,9 @@ class ConfigService {
       compassNorthUp: false, // Default: North at bottom (standard marine compass)
       showCustomUrls: false, // Toggle for custom external URLs section
       customExternalUrls: {}, 
-      currentView: 'default'
+      currentView: 'default',
+      theme: 'dark', // Default theme
+      language: 'en' // Default language
     };
 
     this.configKey = 'ocearoConfig'; // Key used to store the config

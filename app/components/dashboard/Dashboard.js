@@ -2,6 +2,7 @@ import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLeaf, faCompass, faCog, faExpand, faCompress } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
 import SunriseSunsetWidget from './widgets/SunriseSunsetWidget';
 import UVIndexWidget from './widgets/UVIndexWidget';
 import HumidityWidget from './widgets/HumidityWidget';
@@ -30,16 +31,16 @@ const WidgetWrapper = React.memo(({ children, widgetName, className = "", fullsc
       hidden: { opacity: 0, y: 20 },
       show: { opacity: 1, y: 0 }
     }}
-    transition={{ duration: 0.3 }}
+    transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
     className={`relative group ${className}`}
   >
     {children}
     <button
       onClick={() => toggleFullscreen(widgetName)}
-      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black bg-opacity-50 hover:bg-opacity-70 rounded p-1 text-white text-xs z-10"
+      className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-500 bg-hud-bg backdrop-blur-md hover:bg-hud-elevated rounded-full w-8 h-8 flex items-center justify-center text-hud-muted hover:text-hud-main z-10 shadow-soft"
       title={fullscreenWidget === widgetName ? "Exit fullscreen" : "Fullscreen"}
     >
-      <FontAwesomeIcon icon={fullscreenWidget === widgetName ? faCompress : faExpand} />
+      <FontAwesomeIcon icon={fullscreenWidget === widgetName ? faCompress : faExpand} className="text-xs" />
     </button>
   </motion.div>
 ));
@@ -57,6 +58,7 @@ const containerVariants = {
 };
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('environment');
   const [fullscreenWidget, setFullscreenWidget] = useState(null);
 
@@ -260,53 +262,38 @@ export default function Dashboard() {
   }, [activeTab, renderEnvironmentTab, renderNavigationTab, renderSystemTab]);
 
   return (
-    <div className="flex flex-col h-full rightPaneBg overflow-hidden">
-      {/* Tab Navigation - Modern Style */}
-      <div className="flex border-b border-gray-800">
-        <button
-          onClick={() => setActiveTab('environment')}
-          className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center transition-all ${
-            activeTab === 'environment'
-              ? 'text-green-500 border-b-2 border-green-500'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          <FontAwesomeIcon icon={faLeaf} className="mr-2" />
-          Environment
-        </button>
-        <button
-          onClick={() => setActiveTab('navigation')}
-          className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center transition-all ${
-            activeTab === 'navigation'
-              ? 'text-green-500 border-b-2 border-green-500'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          <FontAwesomeIcon icon={faCompass} className="mr-2" />
-          Navigation
-        </button>
-        <button
-          onClick={() => setActiveTab('system')}
-          className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center transition-all ${
-            activeTab === 'system'
-              ? 'text-green-500 border-b-2 border-green-500'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          <FontAwesomeIcon icon={faCog} className="mr-2" />
-          System
-        </button>
+    <div className="flex flex-col h-full bg-rightPaneBg overflow-hidden">
+      {/* Tab Navigation - Tesla Style */}
+      <div className="flex border-b border-hud bg-hud-bg">
+        {[
+          { id: 'environment', label: t('dashboard.environment'), icon: faLeaf },
+          { id: 'navigation', label: t('dashboard.navigation'), icon: faCompass },
+          { id: 'system', label: t('dashboard.systems'), icon: faCog }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex-1 py-3 px-2 text-xs font-black uppercase flex items-center justify-center transition-all duration-500 ${
+              activeTab === tab.id
+                ? 'text-oGreen border-b-2 border-oGreen bg-hud-bg'
+                : 'text-hud-secondary hover:text-hud-main tesla-hover'
+            }`}
+          >
+            <FontAwesomeIcon icon={tab.icon} className="mr-2" />
+            {tab.label}
+          </button>
+        ))}
       </div>
     
       {/* Dashboard Content */}
-      <div className="flex-1 p-4 min-h-0 overflow-auto">
+      <div className="flex-1 p-4 min-h-0 overflow-auto scrollbar-hide">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
             className="h-full"
           >
             {renderTabContent}

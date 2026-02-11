@@ -6,12 +6,13 @@ const BoatLighting = () => {
   const { states, nightMode } = useOcearoContext();
   
   // Adjust lighting based on night mode
-  const ambientIntensity = nightMode ? 0.3 : 0.5;
-  const mainLightIntensity = nightMode ? 0.8 : 1.4;
-  const fillLightIntensity = nightMode ? 0.2 : 0.4;
+  const ambientIntensity = nightMode ? 0.2 : 0.4;
+  const mainLightIntensity = nightMode ? 0.6 : 1.2;
+  const fillLightIntensity = nightMode ? 0.3 : 0.5;
   
   // Color adjustments for night mode
-  const mainLightColor = nightMode ? "#c8e6ff" : "#ffffff"; 
+  const mainLightColor = nightMode ? "#b0d8ff" : "#ffffff"; 
+  const rimLightColor = nightMode ? "#4080ff" : "#ffffff";
   
   return (
     <>
@@ -22,17 +23,17 @@ const BoatLighting = () => {
       <directionalLight
         position={[0, 70, -100]}
         intensity={mainLightIntensity}
-        castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-        shadow-camera-near={0.5}
-        shadow-camera-far={200}
-        shadow-camera-left={-50}
-        shadow-camera-right={50}
-        shadow-camera-top={50}
-        shadow-camera-bottom={-50}
-        shadow-bias={-0.0001}
+        castShadow={false} // Performance optimization as per Tesla-UI focus on smoothness
         color={mainLightColor}
+      />
+      
+      {/* Rim light for silhouette definition - critical for high-contrast HUD look */}
+      <spotLight
+        position={[0, 50, 100]}
+        intensity={fillLightIntensity * 2}
+        angle={0.6}
+        penumbra={1}
+        color={rimLightColor}
       />
       
       {/* Point light from behind for backlighting effect */}
@@ -43,7 +44,7 @@ const BoatLighting = () => {
         decay={2}
       />
       
-      {/* Soft fill light from the front to avoid complete darkness */}
+      {/* Soft fill light from the front */}
       <pointLight 
         position={[0, 30, 100]} 
         intensity={fillLightIntensity * 0.8} 

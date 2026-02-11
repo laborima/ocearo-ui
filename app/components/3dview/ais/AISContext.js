@@ -265,7 +265,8 @@ export const AISProvider = ({ children }) => {
                 let hasOrientationUpdate = false;
 
                 delta.updates.forEach((update) => {
-                    update.values.forEach((data) => {
+                    if (update.values) {
+                        update.values.forEach((data) => {
                         switch (data.path) {
                             case 'name':
                                 target.name = data.value;
@@ -298,7 +299,8 @@ export const AISProvider = ({ children }) => {
                                 break;
                         }
                     });
-                });
+                }
+            });
 
                 // Check if visibility changed
                 const visibilityChanged = updateVesselSpatialPropertiesRef.current(target);

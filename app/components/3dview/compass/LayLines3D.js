@@ -106,7 +106,12 @@ const ParallelepipedLine = ({ start, end, color, width = 0.2, height = 0.1, dash
             scale={[width, height, length]}
         >
             <boxGeometry />
-            <meshStandardMaterial color={color} />
+            <meshBasicMaterial 
+                color={color} 
+                transparent={true} 
+                opacity={0.6}
+                depthWrite={false}
+            />
         </mesh>
     );
 };

@@ -64,7 +64,11 @@ const DiamondMarker = ({ position, color }) => {
     return (
         <mesh position={position}>
             <sphereGeometry args={[CONSTANTS.SPHERE_SIZE, CONSTANTS.SPHERE_SEGMENTS, CONSTANTS.SPHERE_SEGMENTS]} />
-            <meshStandardMaterial color={color} />
+            <meshBasicMaterial 
+                color={color} 
+                transparent={true} 
+                opacity={0.8} 
+            />
         </mesh>
     );
 };
@@ -73,7 +77,15 @@ const DiamondMarker = ({ position, color }) => {
 const PolarCurve = ({ points, color }) => {
     if (!points?.length) return null;
     
-    return <Line points={points} color={color} lineWidth={CONSTANTS.DEFAULT_LINE_WIDTH} />;
+    return (
+        <Line 
+            points={points} 
+            color={color} 
+            lineWidth={2} 
+            transparent={true} 
+            opacity={0.5} 
+        />
+    );
 };
 
 const PolarPlot = React.memo(({ timeInMinute, windSpeed }) => {

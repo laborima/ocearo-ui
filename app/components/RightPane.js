@@ -2,41 +2,53 @@ import React, { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOcearoContext } from './context/OcearoContext';
+import { useTranslation } from 'react-i18next';
 import { useSignalKPath } from './hooks/useSignalK';
 import configService from './settings/ConfigService';
 
+/**
+ * Loading fallback component used by dynamic imports.
+ */
+const LoadingFallback = ({ messageKey }) => {
+    const { t } = useTranslation();
+    return (
+        <div className="w-full h-full flex items-center justify-center text-hud-main">
+            {t(messageKey)}
+        </div>
+    );
+};
+
 // Dynamic imports for lazy-loaded components
 const PDFList = dynamic(() => import('./docviewer/PDFList'), {
-  loading: () => <div className="w-full h-full flex justify-center items-center">Loading documents...</div>
+  loading: () => <LoadingFallback messageKey="common.loadingDocuments" />
 });
 
 const ConfigPage = dynamic(() => import('./settings/ConfigPage'), {
-  loading: () => <div className="w-full h-full flex justify-center items-center">Loading settings...</div>
+  loading: () => <LoadingFallback messageKey="common.loadingSettings" />
 });
 
 const MediaPlayer = dynamic(() => import('./mediaplayer/MediaPlayer'), {
-  loading: () => <div className="w-full h-full flex justify-center items-center">Loading media player...</div>
+  loading: () => <LoadingFallback messageKey="common.loadingMediaPlayer" />
 });
 
 const BatteryMonitor = dynamic(() => import('./battery/BatteryMonitor'), {
-  loading: () => <div className="w-full h-full flex justify-center items-center">Loading battery monitor...</div>
+  loading: () => <LoadingFallback messageKey="common.loadingBatteryMonitor" />
 });
 
 const MotorView = dynamic(() => import('./engines/MotorView'), {
-  loading: () => <div className="w-full h-full flex justify-center items-center">Loading engine monitor...</div>
+  loading: () => <LoadingFallback messageKey="common.loadingEngineMonitor" />
 });
 
-
 const Dashboard = dynamic(() => import('./dashboard/Dashboard'), {
-  loading: () => <div className="w-full h-full flex justify-center items-center">Loading dashboard...</div>
+  loading: () => <LoadingFallback messageKey="common.loadingDashboard" />
 });
 
 const LogbookView = dynamic(() => import('./logbook/LogbookView'), {
-  loading: () => <div className="w-full h-full flex justify-center items-center">Loading logbook...</div>
+  loading: () => <LoadingFallback messageKey="common.loadingLogbook" />
 });
 
 const AutopilotView = dynamic(() => import('./autopilot/AutopilotView'), {
-  loading: () => <div className="w-full h-full flex justify-center items-center">Loading autopilot...</div>
+  loading: () => <LoadingFallback messageKey="common.loadingAutopilot" />
 });
 
 
@@ -59,6 +71,8 @@ const EXTERNAL_URLS = {
 };
 
 const RightPane = ({ view }) => {
+    const { t } = useTranslation();
+    const { nightMode } = useOcearoContext();
     const [myPosition, setMyPosition] = useState(DEFAULT_POSITION);
     const [error, setError] = useState(null);
     const config = configService.getAll();
@@ -113,7 +127,7 @@ const RightPane = ({ view }) => {
             return urlGenerator(signalkUrl, myPosition);
         } catch (err) {
             console.error('Error generating URL:', err);
-            setError('Error generating application URL');
+            setError(t('errors.errorGeneratingUrl'));
             return null;
         }
     }, [view, myPosition, signalkUrl]);
@@ -121,7 +135,7 @@ const RightPane = ({ view }) => {
     // Render component based on view type
     const renderContent = () => {
         if (error) {
-            return <div className="text-red-500 p-4">{error}</div>;
+            return <div className="text-oRed p-4 font-black uppercase text-xs">{error}</div>;
         }
 
         switch (view) {
@@ -147,21 +161,24 @@ const RightPane = ({ view }) => {
                         className="flex-grow border-none"
                         src={iframeSrc}
                         title="External Application"
-                        onError={() => setError('Failed to load external content')}
+                        onError={() => setError(t('errors.failedToLoadExternal'))}
                     />
                 );
         }
     };
 
     return (
-        <div className="flex flex-col w-full h-full overflow-hidden">
+        <div className="flex flex-col w-full h-full overflow-hidden bg-hud-bg backdrop-blur-sm">
             <AnimatePresence mode="wait">
                 <motion.div
                     key={view}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
+                    initial={{ opacity: 0, x: 10, scale: 0.99 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -10, scale: 0.99 }}
+                    transition={{ 
+                        duration: 0.4, 
+                        ease: [0.16, 1, 0.3, 1] // Custom ease-out cubic for "gliding" feel
+                    }}
                     className="flex flex-col w-full h-full overflow-auto"
                 >
                     {renderContent()}

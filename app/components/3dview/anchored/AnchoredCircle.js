@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import * as THREE from 'three';
-import { useOcearoContext } from '../../context/OcearoContext';
+import { useOcearoContext, oYellow } from '../../context/OcearoContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
 
 // Helper function to convert lat/lon difference to approximate meters
@@ -91,7 +91,13 @@ const AnchoredCircle = () => {
 
   return (
     <line ref={circleRef}>
-      <lineBasicMaterial attach="material" color="green" linewidth={2} />
+      <lineBasicMaterial 
+        attach="material" 
+        color={oYellow} 
+        linewidth={3} 
+        transparent={true}
+        opacity={0.6}
+      />
     </line>
   );
 };

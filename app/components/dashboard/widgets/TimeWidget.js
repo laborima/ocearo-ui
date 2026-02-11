@@ -1,12 +1,17 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useOcearoContext, oNight, oBlue } from '../../context/OcearoContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import BaseWidget from './BaseWidget';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClock, faGlobe, faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
 
 const TimeWidget = React.memo(() => {
+  const { t } = useTranslation();
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  const { nightMode } = useOcearoContext();
   
   const latitude = useSignalKPath('navigation.position.latitude', 0.7854); // ~45°N
   const longitude = useSignalKPath('navigation.position.longitude', 0.1396); // ~8°E
@@ -52,81 +57,64 @@ const TimeWidget = React.memo(() => {
 
   return (
     <BaseWidget
-      title="Time & Date"
+      title={t('widgets.temporalNode')}
       icon={faClock}
       hasData={true}
     >
-      <div className="flex-1 flex flex-col justify-center min-h-0">
-        {/* Main time display */}
-        <div className="text-center mb-6">
-          <div className="text-5xl font-black text-white mb-1 font-mono tracking-tighter">
-            {formatTime(currentTime)}
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Main time display - centered */}
+        <div className="flex-1 flex flex-col justify-center">
+          <div className="text-center group mb-6">
+            <div className="text-6xl font-black text-hud-main leading-none font-mono tracking-tighter gliding-value">
+              {formatTime(currentTime)}
+            </div>
+            <div className="text-hud-secondary text-xs font-black uppercase tracking-[0.3em] mt-4 opacity-60">
+              {formatDate(currentTime)}
+            </div>
           </div>
-          <div className="text-sm text-gray-400 font-bold uppercase tracking-widest">
-            {formatDate(currentTime)}
+
+          {/* Local + UTC */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="tesla-card p-4 tesla-hover bg-hud-bg">
+              <div className="flex items-center space-x-3 mb-2">
+                <FontAwesomeIcon icon={faGlobe} className="text-oBlue text-xs opacity-50" />
+                <span className="text-hud-muted text-xs font-black uppercase tracking-widest">{t('widgets.localSync')}</span>
+              </div>
+              <div className="text-hud-main font-mono font-black text-xl gliding-value">{formatTime(localTime, false)}</div>
+            </div>
+            <div className="tesla-card p-4 tesla-hover bg-hud-bg">
+              <div className="flex items-center space-x-3 mb-2">
+                <FontAwesomeIcon icon={faGlobe} className="text-hud-muted text-xs opacity-50" />
+                <span className="text-hud-muted text-xs font-black uppercase tracking-widest">{t('widgets.utcClock')}</span>
+              </div>
+              <div className="text-hud-main font-mono font-black text-xl gliding-value">{formatTime(utcTime, false)}</div>
+            </div>
           </div>
         </div>
 
-        {/* Time zones */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-oGray p-3 rounded-lg border border-gray-800">
-            <div className="flex items-center space-x-2 mb-1">
-              <FontAwesomeIcon icon={faGlobe} className="text-oBlue text-[10px]" />
-              <span className="text-gray-500 text-[10px] font-black uppercase tracking-tight">Local</span>
-            </div>
-            <div className="text-white font-mono font-bold text-lg">{formatTime(localTime, false)}</div>
-          </div>
-          
-          <div className="bg-oGray p-3 rounded-lg border border-gray-800">
-            <div className="flex items-center space-x-2 mb-1">
-              <FontAwesomeIcon icon={faGlobe} className="text-gray-500 text-[10px]" />
-              <span className="text-gray-500 text-[10px] font-black uppercase tracking-tight">UTC</span>
-            </div>
-            <div className="text-white font-mono font-bold text-lg">{formatTime(utcTime, false)}</div>
-          </div>
-        </div>
-
-        {/* Day/Night indicator */}
-        <div className="bg-oGray p-3 rounded-lg border border-gray-800 mb-6">
+        {/* Day/Night + Position at bottom */}
+        <div className="shrink-0 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDaytime ? 'bg-oYellow/20' : 'bg-blue-900/20'}`}>
-                <FontAwesomeIcon 
-                  icon={isDaytime ? faSun : faMoon} 
-                  className={isDaytime ? 'text-oYellow' : 'text-blue-300'} 
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-white text-sm font-black uppercase tracking-tight">
-                  {isDaytime ? 'Daytime' : 'Nighttime'}
-                </span>
-                <span className="text-[9px] text-gray-500 font-bold uppercase">Solar Cycle</span>
-              </div>
+              <FontAwesomeIcon 
+                icon={isDaytime ? faSun : faMoon} 
+                className={isDaytime ? 'text-oYellow text-lg' : (nightMode ? 'text-oNight text-lg' : 'text-oBlue text-lg')} 
+              />
+              <span className="text-hud-main text-xs font-black uppercase tracking-widest">
+                {isDaytime ? t('widgets.diurnalPhase') : t('widgets.nocturnalPhase')}
+              </span>
             </div>
-            <div className="text-right">
-              <div className="text-gray-500 text-[9px] uppercase font-black mb-0.5">
-                {isDaytime ? 'Sunset' : 'Sunrise'}
-              </div>
-              <div className="text-white font-mono font-bold">
-                {formatTime(isDaytime ? sunset : sunrise, false)}
-              </div>
-            </div>
+            <span className="text-hud-muted text-xs font-black font-mono opacity-60">
+              {isDaytime ? '☀' : '☾'} {formatTime(isDaytime ? sunset : sunrise, false)}
+            </span>
           </div>
-        </div>
-
-        {/* Position info */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px] font-bold uppercase border-t border-gray-800 pt-4">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-500">Lat:</span>
-            <span className="text-white font-mono">{latDeg}°</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-500">Lon:</span>
-            <span className="text-white font-mono">{lonDeg}°</span>
-          </div>
-          <div className="flex justify-between items-center col-span-2 mt-1">
-            <span className="text-gray-500">Offset:</span>
-            <span className="text-white font-mono">UTC{localOffset >= 0 ? '+' : ''}{localOffset}:00</span>
+          <div className="flex items-center justify-between text-xs font-black uppercase opacity-60">
+            <span className="text-hud-muted">
+              <span className="tracking-widest">LAT</span> <span className="text-hud-main font-mono">{latDeg}°</span>
+            </span>
+            <span className="text-hud-muted">
+              <span className="tracking-widest">LON</span> <span className="text-hud-main font-mono">{lonDeg}°</span>
+            </span>
           </div>
         </div>
       </div>

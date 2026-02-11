@@ -19,7 +19,7 @@ const LineChart = ({ data, dataKey, color, scale, label, unit, showPoints = fals
 
   if (validValues.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+      <div className="flex items-center justify-center h-full text-hud-muted text-sm">
         No data available
       </div>
     );
@@ -43,9 +43,9 @@ const LineChart = ({ data, dataKey, color, scale, label, unit, showPoints = fals
   const CustomTooltip = ({ active, payload, label: timeLabel }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-oGray2 border border-gray-700 p-2 rounded-md shadow-lg">
-          <p className="text-gray-400 text-[10px] uppercase mb-1">{timeLabel}</p>
-          <p className="text-white font-bold text-sm">
+        <div className="bg-hud-bg backdrop-blur-md border border-hud p-3 rounded-lg shadow-lg">
+          <p className="text-hud-secondary text-xs uppercase mb-1">{timeLabel}</p>
+          <p className="text-hud-main font-bold text-sm">
             {payload[0].value.toFixed(2)}{unit}
           </p>
         </div>
@@ -56,7 +56,7 @@ const LineChart = ({ data, dataKey, color, scale, label, unit, showPoints = fals
 
   return (
     <div className="h-full w-full">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
         {fillGradient ? (
           <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>
@@ -65,11 +65,11 @@ const LineChart = ({ data, dataKey, color, scale, label, unit, showPoints = fals
                 <stop offset="95%" stopColor={color} stopOpacity={0}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--hud-border)" vertical={false} />
             <XAxis 
               dataKey="time" 
               tickFormatter={formatXAxis} 
-              tick={{ fill: '#9ca3af', fontSize: 10 }}
+              tick={{ fill: 'var(--hud-text-muted)', fontSize: 12 }}
               axisLine={false}
               tickLine={false}
               interval="preserveStartEnd"
@@ -77,7 +77,7 @@ const LineChart = ({ data, dataKey, color, scale, label, unit, showPoints = fals
             />
             <YAxis 
               domain={domain}
-              tick={{ fill: '#9ca3af', fontSize: 10 }}
+              tick={{ fill: 'var(--hud-text-muted)', fontSize: 12 }}
               axisLine={false}
               tickLine={false}
               unit={unit}
@@ -96,11 +96,11 @@ const LineChart = ({ data, dataKey, color, scale, label, unit, showPoints = fals
           </AreaChart>
         ) : (
           <ReChartsLineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--hud-border)" vertical={false} />
             <XAxis 
               dataKey="time" 
               tickFormatter={formatXAxis} 
-              tick={{ fill: '#9ca3af', fontSize: 10 }}
+              tick={{ fill: 'var(--hud-text-muted)', fontSize: 12 }}
               axisLine={false}
               tickLine={false}
               interval="preserveStartEnd"
@@ -108,7 +108,7 @@ const LineChart = ({ data, dataKey, color, scale, label, unit, showPoints = fals
             />
             <YAxis 
               domain={domain}
-              tick={{ fill: '#9ca3af', fontSize: 10 }}
+              tick={{ fill: 'var(--hud-text-muted)', fontSize: 12 }}
               axisLine={false}
               tickLine={false}
               unit={unit}

@@ -1,6 +1,7 @@
 import { useOcearoContext } from '../context/OcearoContext';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSignalKPaths } from '../hooks/useSignalK';
+import { useTranslation } from 'react-i18next';
 
 // Constants remain the same
 const TIDE_DISPLAY_THRESHOLDS = {
@@ -21,10 +22,11 @@ const COLORS = {
 
 const TEXT_COLORS = {
   NIGHT: 'text-oNight',
-  DAY: 'text-white'
+  DAY: 'text-hud-main'
 };
 
 const ThreeDBoatTideLevelIndicator = () => {
+  const { t } = useTranslation();
   const { nightMode } = useOcearoContext();
   const [maxHeight, setMaxHeight] = useState(240); // Default height (equivalent to h-60)
   
@@ -39,25 +41,48 @@ const ThreeDBoatTideLevelIndicator = () => {
 
   const skValues = useSignalKPaths(tidePaths);
 
-  // Existing helper functions remain the same
-  const timeToMinutes = useCallback((timeString) => {
-    if (!timeString) return null;
-    const [hours, minutes] = timeString.split(':').map(Number);
-    return hours * 60 + minutes;
+  /**
+   * Parse a tide time value (ISO timestamp or HH:MM) to a Date object
+   */
+  const parseTideTime = useCallback((timeValue) => {
+    if (!timeValue) return null;
+    if (typeof timeValue === 'string' && (timeValue.includes('T') || timeValue.includes('-'))) {
+      const d = new Date(timeValue);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    if (typeof timeValue === 'string') {
+      const parts = timeValue.split(':').map(Number);
+      if (parts.length < 2) return null;
+      const d = new Date();
+      d.setHours(parts[0], parts[1], 0, 0);
+      return d;
+    }
+    return null;
   }, []);
 
-  const computeIsRising = useCallback((currentTime, timeLow, timeHigh) => {
-    const currentMinutes = timeToMinutes(currentTime);
-    const lowMinutes = timeToMinutes(timeLow);
-    const highMinutes = timeToMinutes(timeHigh);
-
-    if (!currentMinutes || !lowMinutes || !highMinutes) return false;
-
-    if (lowMinutes < highMinutes) {
-      return currentMinutes >= lowMinutes && currentMinutes <= highMinutes;
+  /**
+   * Format a tide time value to HH:MM display string
+   */
+  const formatTideTime = useCallback((timeValue) => {
+    if (!timeValue) return null;
+    if (typeof timeValue === 'string' && (timeValue.includes('T') || timeValue.includes('-'))) {
+      const d = new Date(timeValue);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+      }
     }
-    return currentMinutes >= lowMinutes || currentMinutes <= highMinutes;
-  }, [timeToMinutes]);
+    return timeValue;
+  }, []);
+
+  /**
+   * Determine if tide is rising: next high comes before next low
+   */
+  const computeIsRising = useCallback((timeLow, timeHigh) => {
+    const highDate = parseTideTime(timeHigh);
+    const lowDate = parseTideTime(timeLow);
+    if (!highDate || !lowDate) return false;
+    return highDate.getTime() < lowDate.getTime();
+  }, [parseTideTime]);
 
   const computeTidePercentage = useCallback((level, low, high) => {
     if (high <= low || !level) return 0;
@@ -83,15 +108,7 @@ const ThreeDBoatTideLevelIndicator = () => {
     return () => window.removeEventListener('resize', updateMaxHeight);
   }, []);
 
-  // Existing tide data derived values
   const tideData = useMemo(() => {
-    const currentTime = new Date();
-    const currentTimeString = currentTime.toLocaleTimeString('en-GB', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: false 
-    });
-
     const level = skValues['environment.tide.heightNow'];
     const high = skValues['environment.tide.heightHigh'];
     const low = skValues['environment.tide.heightLow'];
@@ -106,7 +123,7 @@ const ThreeDBoatTideLevelIndicator = () => {
     if (isDataComplete) {
       return {
         level, high, low, timeLow, timeHigh, coefficient,
-        isRising: computeIsRising(currentTimeString, timeLow, timeHigh)
+        isRising: computeIsRising(timeLow, timeHigh)
       };
     }
     return {
@@ -140,40 +157,24 @@ const ThreeDBoatTideLevelIndicator = () => {
                             tidePercentage < TIDE_DISPLAY_THRESHOLDS.MAX;
 
   return (
-    <div className="flex flex-col items-center">
-      <div className={`text-sm ${textColor}`}>
-        La Rochelle
+    <div className="flex flex-col items-center group p-3 transition-all duration-300">
+      <div className={`text-xs font-black uppercase tracking-[0.2em] mb-1 opacity-40 group-hover:opacity-100 transition-opacity ${textColor}`}>
+        {t('indicators.tide')}
       </div>
-      <div className={`text-sm mb-2 ${textColor} flex items-center gap-1`}>
-        {timeHigh}
-        <span className={`inline-block transform ${!isRising && 'rotate-180'} ${tideColors.TEXT}`}>
+      <div className={`text-xs font-black uppercase tracking-widest mb-4 ${textColor} flex items-center gap-1.5 opacity-60`}>
+        <span className="text-oBlue">{formatTideTime(timeHigh)}</span>
+        <span className={`inline-block transform ${!isRising && 'rotate-180'} ${tideColors.TEXT} text-xs`}>
           ▲
         </span>
-        <span>{coefficient}</span>
+        <span className="text-hud-muted">C{coefficient}</span>
       </div>
 
-      <div className="relative flex flex-col w-8" style={{ height: maxHeight }}>
-        <span className={`absolute ${textColor} text-sm font-medium`} style={{ top: '0%', left: '60%' }}>
-          {high}m
-        </span>
-        
-        {shouldShowTideLevel && (
-          <span 
-            className={`absolute ${textColor} text-sm font-medium transition-opacity duration-300`} 
-            style={{ bottom: `${tidePercentage}%`, left: '60%' }}
-          >
-            {level.toFixed(2)}m
-          </span>
-        )}
-        
-        <span className={`absolute ${textColor} text-sm font-medium`} style={{ bottom: '0%', left: '60%' }}>
-          {low}m
-        </span>
-
-        <div className="flex flex-col justify-end bg-oGray rounded-3xl w-2 overflow-hidden" style={{ height: maxHeight }}>
+      <div className="relative flex flex-col w-12" style={{ height: maxHeight }}>
+        {/* Progress Bar Container */}
+        <div className="absolute left-0 top-0 w-1.5 h-full bg-hud-elevated rounded-full overflow-hidden">
           <div
             role="progressbar"
-            className={`${tideColors.BACKGROUND} w-2 rounded-3xl transition-all duration-500`}
+            className={`${tideColors.BACKGROUND} w-full rounded-full transition-all duration-1000 ease-in-out absolute bottom-0 left-0`}
             aria-valuenow={tidePercentage}
             aria-valuemin="0"
             aria-valuemax="100"
@@ -181,10 +182,33 @@ const ThreeDBoatTideLevelIndicator = () => {
             style={{ height: `${tidePercentage}%` }}
           />
         </div>
+
+        {/* Labels positioned to the right of the bar */}
+        <div className="ml-4 h-full relative">
+          <span className={`absolute ${textColor} text-xs font-black uppercase tracking-tighter opacity-30`} style={{ top: '0%' }}>
+            {high}m
+          </span>
+          
+          {shouldShowTideLevel && (
+            <div 
+              className={`absolute transition-all duration-500 flex items-center space-x-1`} 
+              style={{ bottom: `${tidePercentage}%`, transform: 'translateY(50%)' }}
+            >
+              <div className={`w-2 h-[1px] ${tideColors.BACKGROUND} opacity-50`} />
+              <span className={`${textColor} text-xs font-black tracking-tight`}>
+                {level.toFixed(2)}m
+              </span>
+            </div>
+          )}
+          
+          <span className={`absolute ${textColor} text-xs font-black uppercase tracking-tighter opacity-30`} style={{ bottom: '0%' }}>
+            {low}m
+          </span>
+        </div>
       </div>
 
-      <div className={`text-sm mt-2 ${textColor}`}>
-        {timeLow}
+      <div className={`text-xs font-black uppercase tracking-widest mt-4 opacity-40 ${textColor}`}>
+        {formatTideTime(timeLow)}
       </div>
     </div>
   );

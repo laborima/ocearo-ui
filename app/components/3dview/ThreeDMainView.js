@@ -66,31 +66,29 @@ const ThreeDMainView = () => {
     return (
         <div className="w-full h-full relative ">
 
-            <div className="absolute top-2 left-2 z-10 space-y-0">
-                {/* Toolbar with buttons for Autopilot, Anchor Watch, MOB, and Night Mode */}
+            <div className="absolute top-2 left-2 z-10">
                 <ThreeDBoatToolbar />
+            </div>
 
-                {/* Speed Indicator (top-left) */}
+            <div className="absolute top-14 left-2 z-10">
                 {!states.anchorWatch && <ThreeDBoatSpeedIndicator />}
                 {states.anchorWatch && <ThreeDBoatPositionDateIndicator/> }
             </div>
 
-           
-
             {/* InfoPanel positioned above Thanks indicators */}
-            <div className="absolute top-2 right-2 z-20 flex flex-col items-end">
-                <div className="mb-2">
-                    <InfoPanel content={infoPanelContent} />
-                </div>
+            <div className="absolute top-2 right-2 z-20 flex flex-col items-end space-y-2">
               
-                <div className="flex items-center">
-                    <span className={`${nightMode ? 'text-oNight' : 'text-white'} align-top`}>
+                <div className="flex items-center space-x-3">
+                    <span className={`text-sm font-black uppercase tracking-[0.2em] ${nightMode ? 'text-oNight' : 'text-hud-muted'}`}>
                         {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     </span>
                     <ThreeDBoatThanksIndicator />
                 </div>
                 {/* Only render the attitude indicator if showAttitudeIndicator is true */}
                 {showAttitudeIndicator && <ThreeDBoatAttitudeIndicator />}
+                <div>
+                    <InfoPanel content={infoPanelContent} />
+                </div>
             </div>
 
             {/* See Level Indicator (left-side) */}

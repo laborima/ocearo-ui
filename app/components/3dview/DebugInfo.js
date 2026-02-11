@@ -1,6 +1,6 @@
-
 import React, { Suspense, useRef, useState, useEffect, useMemo } from 'react';
 import { useSignalKPaths } from '../hooks/useSignalK';
+import { useTranslation } from 'react-i18next';
 import { Html } from '@react-three/drei';
 
 const toRadians = (degrees) => (degrees * Math.PI) / 180;
@@ -96,60 +96,104 @@ const DebugInfo = (sampleData = true) => {
     const timeStbdDown = getVal('navigation.racing.timeStbdDown', 65);
     const timeStbdUp = getVal('navigation.racing.timeStbdUp', 75);
 
-
+    const { t } = useTranslation();
 
     return (
         <group>
-
             <axesHelper args={[100]} />
 
-            <Html position={[5, 5, 0]} style={{ width: '350px', color: 'white', background: 'rgba(0,0,0,0.6)', padding: '10px', borderRadius: '5px' }}>
-                <div>
-                    <h4>Wind Data</h4>
-                    <p>True Wind Angle: {(trueWindAngle * (180 / Math.PI)).toFixed(2)}°</p>
-                    <p>True Wind Speed: {trueWindSpeed.toFixed(2)} knots</p>
-                    <p>Apparent Wind Angle: {(appWindAngle * (180 / Math.PI)).toFixed(2)}°</p>
-                    <p>Apparent Wind Speed: {appWindSpeed.toFixed(2)} knots</p>
+            <Html 
+                position={[5, 5, 0]} 
+                className="select-none pointer-events-none"
+            >
+                <div className="tesla-card p-6 min-w-[350px] bg-hud-bg backdrop-blur-xl border border-hud shadow-2xl rounded-3xl space-y-6">
+                    <header className="flex items-center justify-between border-b border-hud pb-2">
+                        <div className="text-xs font-black uppercase tracking-[0.2em] mb-3 text-oBlue/80">{t('debug.systemDebug')}</div>
+                        <div className="flex space-x-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-oGreen animate-pulse" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-hud-elevated" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-hud-elevated" />
+                        </div>
+                    </header>
 
-                    <h4>Navigation Performance</h4>
-                    <p>Beat Angle: {(beatAngle * (180 / Math.PI)).toFixed(2)}°</p>
-                    <p>Gybe Angle: {(gybeAngle * (180 / Math.PI)).toFixed(2)}°</p>
-                    <p>VMG Beat: {beatVMG.toFixed(2)} knots</p>
-                    <p>VMG Gybe: {gybeVMG.toFixed(2)} knots</p>
-                    <p>Target TWA: {(targetTWA * (180 / Math.PI)).toFixed(2)}°</p>
-                    <p>Optimal Wind Angle: {(optimalWindAngle * (180 / Math.PI)).toFixed(2)}°</p>
-                    <p>Polar Speed: {polarSpeed.toFixed(2)} knots</p>
-                    <p>Polar Speed Ratio: {polarSpeedRatio.toFixed(2)}</p>
-                    <p>VMG: {velocityMadeGood.toFixed(2)} knots</p>
-                    <p>Speed Through Water: {speedThroughWater.toFixed(2)} knots</p>
-                    <p>Polar VMG: {polarVelocityMadeGood.toFixed(2)} knots</p>
-                    <p>Polar VMG Ratio: {polarVelocityMadeGoodRatio.toFixed(2)}</p>
+                    <div className="grid grid-cols-1 gap-6 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+                        {/* Wind Data */}
+                        <section className="space-y-2">
+                            <div className="text-xs font-black uppercase tracking-[0.15em] mb-2 text-hud-muted/60">{t('debug.windDynamics')}</div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <DebugRow label="TWA" value={`${(trueWindAngle * (180 / Math.PI)).toFixed(1)}°`} />
+                                <DebugRow label="TWS" value={`${trueWindSpeed.toFixed(1)} kn`} />
+                                <DebugRow label="AWA" value={`${(appWindAngle * (180 / Math.PI)).toFixed(1)}°`} />
+                                <DebugRow label="AWS" value={`${appWindSpeed.toFixed(1)} kn`} />
+                            </div>
+                        </section>
 
-                    <h4>Waypoint and Heading</h4>
-                    <p>True Heading: {(headingTrue * (180 / Math.PI)).toFixed(2)}°</p>
-                    <p>COG Angle: {(courseOverGroundAngle * (180 / Math.PI)).toFixed(2)}°</p>
-                    <p>Next Waypoint Bearing: {(nextWaypointBearing * (180 / Math.PI)).toFixed(2)}°</p>
-                    <p>Layline Angle: {(laylineAngle * (180 / Math.PI)).toFixed(2)}°</p>
+                        {/* Navigation Performance */}
+                        <section className="space-y-2">
+                            <div className="text-xs font-black uppercase tracking-[0.15em] mb-2 text-hud-muted/60">{t('debug.performanceMetrics')}</div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <DebugRow label="Beat ∠" value={`${(beatAngle * (180 / Math.PI)).toFixed(1)}°`} />
+                                <DebugRow label="Gybe ∠" value={`${(gybeAngle * (180 / Math.PI)).toFixed(1)}°`} />
+                                <DebugRow label="VMG Beat" value={`${beatVMG.toFixed(1)} kn`} />
+                                <DebugRow label="VMG Gybe" value={`${gybeVMG.toFixed(1)} kn`} />
+                                <DebugRow label="Target TWA" value={`${(targetTWA * (180 / Math.PI)).toFixed(1)}°`} />
+                                <DebugRow label="Opt ∠" value={`${(optimalWindAngle * (180 / Math.PI)).toFixed(1)}°`} />
+                                <DebugRow label="Polar Spd" value={`${polarSpeed.toFixed(1)} kn`} />
+                                <DebugRow label="Pol Ratio" value={polarSpeedRatio.toFixed(2)} />
+                                <DebugRow label="VMG" value={`${velocityMadeGood.toFixed(1)} kn`} accent="text-oBlue" />
+                                <DebugRow label="STW" value={`${speedThroughWater.toFixed(1)} kn`} />
+                                <DebugRow label="Pol VMG" value={`${polarVelocityMadeGood.toFixed(1)} kn`} />
+                                <DebugRow label="Pol VMG %" value={`${(polarVelocityMadeGoodRatio * 100).toFixed(1)}%`} />
+                            </div>
+                        </section>
 
-                    <h4>Layline Data</h4>
-                    <p>Layline Distance: {laylineDistance.toFixed(2)} m</p>
-                    <p>Time to Layline: {laylineTime} s</p>
-                    <p>Opposite Layline Distance: {oppositeLaylineDistance.toFixed(2)} m</p>
-                    <p>Time to Opposite Layline: {oppositeLaylineTime} s</p>
+                        {/* Waypoint and Heading */}
+                        <section className="space-y-2">
+                            <div className="text-xs font-black uppercase tracking-[0.15em] mb-2 text-hud-muted/60">{t('debug.navigation')}</div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <DebugRow label="Heading" value={`${(headingTrue * (180 / Math.PI)).toFixed(1)}°`} />
+                                <DebugRow label="COG" value={`${(courseOverGroundAngle * (180 / Math.PI)).toFixed(1)}°`} />
+                                <DebugRow label="WPT Brg" value={`${(nextWaypointBearing * (180 / Math.PI)).toFixed(1)}°`} accent="text-oYellow" />
+                                <DebugRow label="Layline ∠" value={`${(laylineAngle * (180 / Math.PI)).toFixed(1)}°`} accent="text-oGreen" />
+                            </div>
+                        </section>
 
-                    <h4>Starting Line Data</h4>
-                    <p>Distance to Startline: {distanceToStartline.toFixed(2)} m</p>
-                    <p>Time to Start: {timeToStart} s</p>
-                    <p>Time Port Downwind: {timePortDown} s</p>
-                    <p>Time Port Upwind: {timePortUp} s</p>
-                    <p>Time Stbd Downwind: {timeStbdDown} s</p>
-                    <p>Time Stbd Upwind: {timeStbdUp} s</p>
+                        {/* Layline Data */}
+                        <section className="space-y-2">
+                            <div className="text-xs font-black uppercase tracking-[0.15em] mb-2 text-hud-muted/60">{t('debug.laylineAnalysis')}</div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <DebugRow label="Dist" value={`${laylineDistance.toFixed(0)}m`} />
+                                <DebugRow label="Time" value={`${laylineTime}s`} />
+                                <DebugRow label="Opp Dist" value={`${oppositeLaylineDistance.toFixed(0)}m`} />
+                                <DebugRow label="Opp Time" value={`${oppositeLaylineTime}s`} />
+                            </div>
+                        </section>
+
+                        {/* Starting Line Data */}
+                        <section className="space-y-2">
+                            <div className="text-xs font-black uppercase tracking-[0.15em] mb-2 text-hud-muted/60">{t('debug.regattaStart')}</div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <DebugRow label="Start Dist" value={`${distanceToStartline.toFixed(1)}m`} accent="text-oRed" />
+                                <DebugRow label="TT Start" value={`${timeToStart}s`} accent="text-oRed" />
+                                <DebugRow label="Port DW" value={`${timePortDown}s`} />
+                                <DebugRow label="Port UW" value={`${timePortUp}s`} />
+                                <DebugRow label="Stbd DW" value={`${timeStbdDown}s`} />
+                                <DebugRow label="Stbd UW" value={`${timeStbdUp}s`} />
+                            </div>
+                        </section>
+                    </div>
                 </div>
             </Html>
-
         </group>
     );
 };
+
+const DebugRow = ({ label, value, accent = "text-hud-main" }) => (
+    <div className="flex flex-col bg-hud-bg p-2 rounded-lg border border-hud">
+        <span className="text-xs font-black uppercase tracking-widest text-hud-muted leading-none mb-1">{label}</span>
+        <span className={`text-xs font-mono font-bold ${accent}`}>{value}</span>
+    </div>
+);
 
 export default DebugInfo;
 

@@ -8,13 +8,14 @@ import {
   faFire, 
   faSnowflake 
 } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
 
 const TEMPERATURE_MODES = {
   waterTemp: {
     key: 'waterTemp',
     path: 'environment.water.temperature',
     icon: faWater,
-    label: 'Water Temperature',
+    labelKey: 'temperature.waterTemperature',
     format: (value) => `${value}°C`,
     transform: convertTemperature
   },
@@ -22,7 +23,7 @@ const TEMPERATURE_MODES = {
     key: 'airTemp',
     path: 'environment.outside.temperature',
     icon: faThermometerHalf,
-    label: 'Air Temperature',
+    labelKey: 'temperature.airTemperature',
     format: (value) => `${value}°C`,
     transform: convertTemperature
   },
@@ -30,7 +31,7 @@ const TEMPERATURE_MODES = {
     key: 'exhaustTemp',
     path: 'propulsion.main.exhaustTemperature',
     icon: faFire,
-    label: 'Exhaust Temperature',
+    labelKey: 'temperature.exhaustTemperature',
     format: (value) => `${value}°C`,
     transform: convertTemperature
   },
@@ -38,28 +39,39 @@ const TEMPERATURE_MODES = {
     key: 'fridgeTemp',
     path: 'environment.inside.fridge.temperature',
     icon: faSnowflake,
-    label: 'Fridge Temperature',
+    labelKey: 'temperature.fridgeTemperature',
     format: (value) => `${value}°C`,
     transform: convertTemperature
   }
 };
 
 const TemperatureDisplay = ({ mode, value, icon, nightMode }) => {
-  const textColor = nightMode ? 'text-red-500' : 'text-white';
+  const { t } = useTranslation();
+  const textColor = nightMode ? 'text-oNight' : 'text-hud-main';
   
   if (!value && value !== 0) {
     return null;
   }
 
+  const label = t(TEMPERATURE_MODES[mode].labelKey);
+
   return (
-    <div className={`flex items-center text-2xl ${textColor}`}>
-      <FontAwesomeIcon icon={icon} className="mr-2" />
-      <span>{TEMPERATURE_MODES[mode].format(value)}</span>
+    <div className={`flex items-center space-x-3 px-3 py-1.5 transition-all duration-300 ${textColor}`}>
+      <FontAwesomeIcon icon={icon} className="text-lg opacity-80" />
+      <div className="flex flex-col">
+        <span className="text-xs font-black uppercase tracking-widest text-hud-muted leading-none mb-1">
+          {label.split(' ')[0]}
+        </span>
+        <span className="text-xl font-bold tracking-tight leading-none">
+          {TEMPERATURE_MODES[mode].format(value)}
+        </span>
+      </div>
     </div>
   );
 };
 
 const BottomTemperatureWidget = () => {
+  const { t } = useTranslation();
   const { nightMode } = useOcearoContext();
   const [availableModes, setAvailableModes] = useState([]);
   const [displayMode, setDisplayMode] = useState(null);
@@ -100,21 +112,21 @@ const BottomTemperatureWidget = () => {
 
   if (availableModes.length === 0) {
     return (
-      <div className={`text-2xl ${nightMode ? 'text-red-500' : 'text-white'}`}>
-        <span>NA</span>
+      <div className={`px-3 py-1.5 ${nightMode ? 'text-oNight' : 'text-hud-muted'}`}>
+        <span className="text-sm font-black uppercase tracking-widest">N/A</span>
       </div>
     );
   }
 
   return (
     <div
-      className="cursor-pointer flex items-center space-x-2"
+      className="cursor-pointer flex items-center group"
       onClick={toggleDisplayMode}
       title={`Toggle Temperature Display (${availableModes.length} sensors available)`}
       role="button"
       tabIndex={0}
       onKeyPress={(e) => e.key === 'Enter' && toggleDisplayMode()}
-      aria-label={displayMode ? TEMPERATURE_MODES[displayMode].label : 'No temperature data available'}
+      aria-label={displayMode ? t(TEMPERATURE_MODES[displayMode].labelKey) : t('common.na')}
     >
       {displayMode && (
         <TemperatureDisplay

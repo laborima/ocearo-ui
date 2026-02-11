@@ -49,29 +49,42 @@ const ThreeDBoatPositionDateIndicator = () => {
     }
   };
 
-  const textColor = nightMode ? 'text-oNight' : 'text-oGray';
-  const positionTextColor = nightMode ? 'text-oNight' : 'text-white';
+  const positionTextColor = nightMode ? 'text-oNight' : 'text-hud-main';
 
   // Check if position is null or undefined
   if (!position) {
     return (
-      <div className="mt-4">
-        <div className={`text-3xl font-bold cursor-pointer flex gap-2 ${positionTextColor}`}>
-          <span>--</span>
-          <span>--</span>
+      <div className="mt-6 ml-2 p-3 transition-all duration-300">
+        <div className={`text-2xl font-black flex gap-4 ${positionTextColor} opacity-10 tracking-tighter mb-2`}>
+          <span>--°--'--</span>
+          <span>--°--'--</span>
         </div>
-        <div className={`text-lg ${textColor}`}>{getCurrentDateTime()}</div>
+        <div className={`text-xs font-black uppercase tracking-[0.2em] opacity-40 ${nightMode ? 'text-oNight' : 'text-hud-main'}`}>
+          {getCurrentDateTime()}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mt-4">
-      <div className={`text-3xl font-bold cursor-pointer flex gap-2 ${positionTextColor}`}>
-        <span>{formatCoordinate(position.latitude, true)}</span>
-        <span>{formatCoordinate(position.longitude, false)}</span>
+    <div className="mt-6 ml-2 group p-4 transition-all duration-300 select-none">
+      <div className={`text-2xl font-black flex gap-4 ${positionTextColor} tracking-tighter drop-shadow-lg mb-3`}>
+        <div className="flex flex-col">
+          <span className={`text-xs font-black uppercase tracking-[0.2em] mb-1 ${nightMode ? 'text-oNight/40' : 'text-hud-dim'}`}>LAT</span>
+          <span>{formatCoordinate(position.latitude, true)}</span>
+        </div>
+        <div className="w-[1px] bg-hud-border self-stretch my-1" />
+        <div className="flex flex-col">
+          <span className={`text-xs font-black uppercase tracking-[0.2em] mb-1 ${nightMode ? 'text-oNight/40' : 'text-hud-dim'}`}>LON</span>
+          <span>{formatCoordinate(position.longitude, false)}</span>
+        </div>
       </div>
-      <div className={`text-lg ${textColor}`}>{getCurrentDateTime()}</div>
+      <div className="flex items-center space-x-2">
+        <div className="h-[2px] w-4 bg-oBlue/40 rounded-full" />
+        <div className={`text-xs font-black uppercase tracking-[0.3em] ${nightMode ? 'text-oNight/60' : 'text-hud-secondary'}`}>
+          {getCurrentDateTime()}
+        </div>
+      </div>
     </div>
   );
 };

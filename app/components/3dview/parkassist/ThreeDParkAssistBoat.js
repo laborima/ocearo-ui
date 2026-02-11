@@ -8,6 +8,7 @@ import BoatNavigationSystem from './BoatNavigationSystem';
 import Current3D from '../compass/Current3D';
 
 const ThreeDParkAssistBoat = ({ onUpdateInfoPanel }) => {
+  const { nightMode } = useOcearoContext();
   const sailBoatRef = useRef();
   
   // Define paths for subscription
@@ -66,36 +67,29 @@ const ThreeDParkAssistBoat = ({ onUpdateInfoPanel }) => {
         minPolarAngle={Math.PI / 4}
       />
 
-      <Environment files="./assets/ocearo_env.hdr" background={false} intensity={0.8} />
+      <Environment files="./assets/ocearo_env.hdr" background={false} intensity={0.6} />
 
-      <ambientLight intensity={0.6} />
+      <ambientLight intensity={0.2} />
 
-      <spotLight
-        position={[15, 30, 20]}
-        intensity={1.8}
-        angle={Math.PI / 6}
-        penumbra={0.5}
-        castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-        shadow-camera-near={0.5}
-        shadow-camera-far={50}
-        shadow-bias={-0.0001}
-      />
-
+      {/* Main directional light */}
       <directionalLight
-        position={[-10, 20, 10]}
-        intensity={1.5}
-        castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-        shadow-camera-near={0.5}
-        shadow-camera-far={50}
-        shadow-bias={-0.0001}
-        color="#ffd1a6"
+        position={[15, 30, 20]}
+        intensity={1.2}
+        castShadow={false}
+        color={nightMode ? "#b0d8ff" : "#ffffff"}
       />
 
-      <pointLight position={[-10, 10, -10]} intensity={0.7} />
+      {/* Rim light for silhouette definition */}
+      <spotLight
+        position={[0, 50, 100]}
+        intensity={0.8}
+        angle={0.6}
+        penumbra={1}
+        color={nightMode ? "#4080ff" : "#ffffff"}
+      />
+
+      {/* Fill light */}
+      <pointLight position={[-10, 10, -10]} intensity={0.5} />
 
       <group position={[0, -3, 0]}>
         <SailBoat3D

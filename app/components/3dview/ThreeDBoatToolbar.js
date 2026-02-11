@@ -2,123 +2,115 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAnchor, faShip, faPersonFalling, faMoon, faWater, faParking, faSatellite, faCompass, faRulerCombined } from '@fortawesome/free-solid-svg-icons';
 import { useOcearoContext } from '../context/OcearoContext';
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const ThreeDBoatToolbar = () => {
-    const { nightMode, setNightMode, states, toggleState } = useOcearoContext();
+    const { t } = useTranslation();
+    const { nightMode, setNightMode, states, toggleState, toggleExclusiveMode } = useOcearoContext();
     const prevAutopilotRef = useRef(states.autopilot);
 
     // Dynamic text color based on night mode
-    const textColor = nightMode ? 'text-oNight' : 'text-oGray';
-
-    // Helper function to toggle a mode, ensuring exclusivity
-    const toggleExclusiveMode = (mode) => {
-        const updatedStates = {
-            autopilot: mode === 'autopilot',
-            anchorWatch: mode === 'anchorWatch',
-            parkingMode: mode === 'parkingMode',
-        };
-
-        // Update states to ensure only the selected mode is active
-        Object.keys(updatedStates).forEach((key) => {
-            toggleState(key, updatedStates[key]);
-        });
+    const activeColor = {
+        autopilot: 'text-oBlue',
+        anchorWatch: 'text-oYellow',
+        parkingMode: 'text-oGreen',
+        nightMode: 'text-oNight',
+        ocean: 'text-oBlue',
+        polar: 'text-oBlue',
+        laylines: 'text-oGreen',
+        ais: 'text-oGreen'
     };
 
-    // Enable showPolar by default ONLY when autopilot is first activated
-    useEffect(() => {
-        // Only enable showPolar when autopilot changes from false to true
-        if (states.autopilot && !prevAutopilotRef.current) {
-            toggleState('showPolar', true);
-        }
-        // Update the ref to track autopilot state changes
-        prevAutopilotRef.current = states.autopilot;
-    }, [states.autopilot, toggleState]);
+    const ToolbarButton = ({ onClick, icon, isActive, activeClass, label }) => (
+        <button
+            onClick={onClick}
+            className={`p-2 rounded-xl tesla-hover transition-all duration-300 group relative ${isActive ? 'bg-hud-elevated shadow-soft' : ''}`}
+            title={label}
+        >
+            <FontAwesomeIcon 
+                icon={icon} 
+                className={`text-xl transition-all duration-300 ${isActive ? activeClass + ' scale-110' : 'text-hud-muted group-hover:text-hud-main'}`} 
+            />
+            {isActive && (
+                <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${activeClass.replace('text-', 'bg-')} animate-soft-pulse`} />
+            )}
+        </button>
+    );
 
     return (
-        <div className="text-lg">
-            {/* Autopilot */}
-            <button
+        <div className="flex items-center space-x-1 bg-hud-bg/60 backdrop-blur-2xl p-1.5 rounded-2xl shadow-2xl">
+            <ToolbarButton
                 onClick={() => toggleExclusiveMode('autopilot')}
-                className="p-1"
-            >
-                <FontAwesomeIcon icon={faShip} className={states.autopilot ? 'text-oBlue' : textColor} />
-            </button>
+                icon={faShip}
+                isActive={states.autopilot}
+                activeClass={activeColor.autopilot}
+                label={t('toolbar.autopilot')}
+            />
 
-
-
-            {/* Anchor Watch */}
-            <button
+            <ToolbarButton
                 onClick={() => toggleExclusiveMode('anchorWatch')}
-                className="p-1"
-            >
-                <FontAwesomeIcon icon={faAnchor} className={states.anchorWatch ? 'text-oYellow' : textColor} />
-            </button>
+                icon={faAnchor}
+                isActive={states.anchorWatch}
+                activeClass={activeColor.anchorWatch}
+                label={t('toolbar.anchorWatch')}
+            />
 
-            {/* Parking Mode */}
-            <button
+            <ToolbarButton
                 onClick={() => toggleExclusiveMode('parkingMode')}
-                className="p-1"
-            >
-                <FontAwesomeIcon icon={faParking} className={states.parkingMode ? 'text-oGreen' : textColor} />
-            </button>
+                icon={faParking}
+                isActive={states.parkingMode}
+                activeClass={activeColor.parkingMode}
+                label={t('toolbar.parkingMode')}
+            />
 
-            {/* MOB
-      <button
-        onClick={() => toggleState('mob')}
-        className="p-1"
-      >
-        <FontAwesomeIcon icon={faPersonFalling} className={states.mob ? 'text-oRed' : textColor} />
-      </button>
-      */}
-            {/* Night Mode */}
-            <button
+            <div className="h-6 w-[1px] bg-hud-border mx-0.5" />
+
+            <ToolbarButton
                 onClick={() => setNightMode(!nightMode)}
-                className="p-1"
-            >
-                <FontAwesomeIcon icon={faMoon} className={nightMode ? 'text-oNight' : textColor} />
-            </button>
+                icon={faMoon}
+                isActive={nightMode}
+                activeClass={activeColor.nightMode}
+                label={t('toolbar.nightMode')}
+            />
 
-
-
-            {/* See State */}
-            <button
+            <ToolbarButton
                 onClick={() => toggleState('showOcean')}
-                className="p-1"
-            >
-                <FontAwesomeIcon icon={faWater} className={states.showOcean ? 'text-oBlue' : textColor} />
-            </button>
+                icon={faWater}
+                isActive={states.showOcean}
+                activeClass={activeColor.ocean}
+                label={t('toolbar.seaState')}
+            />
 
-            {/* Show Polar - only visible when autopilot is active and ocean is hidden */}
             {states.autopilot && !states.showOcean && (
-                <button
+                <ToolbarButton
                     onClick={() => toggleState('showPolar')}
-                    className="p-1"
-                >
-                    <FontAwesomeIcon icon={faCompass} className={states.showPolar ? 'text-oBlue' : textColor} />
-                </button>
+                    icon={faCompass}
+                    isActive={states.showPolar}
+                    activeClass={activeColor.polar}
+                    label={t('toolbar.polarView')}
+                />
             )}
 
-            {/* Laylines 3D - visible when autopilot is active */}
             {states.autopilot && (
-                <button
+                <ToolbarButton
                     onClick={() => toggleState('showLaylines3D')}
-                    className="p-1"
-                >
-                    <FontAwesomeIcon icon={faRulerCombined} className={states.showLaylines3D ? 'text-oGreen' : textColor} />
-                </button>
+                    icon={faRulerCombined}
+                    isActive={states.showLaylines3D}
+                    activeClass={activeColor.laylines}
+                    label={t('toolbar.laylines3D')}
+                />
             )}
 
-            {/* AIS */}
             {states.autopilot && (
-                <button
+                <ToolbarButton
                     onClick={() => toggleState('ais')}
-                    className="p-1"
-                >
-                    <FontAwesomeIcon icon={faSatellite} className={states.ais ? 'text-oGreen' : textColor} />
-                </button>
+                    icon={faSatellite}
+                    isActive={states.ais}
+                    activeClass={activeColor.ais}
+                    label={t('toolbar.aisRadar')}
+                />
             )}
         </div>
-
     );
 };
 

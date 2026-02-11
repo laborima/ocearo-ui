@@ -13,29 +13,34 @@ import { useOcearoContext } from '../context/OcearoContext';
 export const useSignalKPath = (path, defaultValue = null) => {
   const { getSignalKValue, subscribe, unsubscribe } = useOcearoContext();
   const [value, setValue] = useState(() => getSignalKValue(path) ?? defaultValue);
-  const pathRef = useRef(path);
+  const defaultValueRef = useRef(defaultValue);
+  const lastKnownRef = useRef(value);
+  defaultValueRef.current = defaultValue;
 
   const updateValue = useCallback((newValue) => {
-    setValue(newValue ?? defaultValue);
-  }, [defaultValue]);
+    const resolved = newValue ?? defaultValueRef.current;
+    lastKnownRef.current = resolved;
+    setValue(resolved);
+  }, []);
 
   useEffect(() => {
-    pathRef.current = path;
-    
-    // Subscribe to updates for this path
     if (subscribe) {
       subscribe(path, updateValue);
     }
 
-    // Initial sync
-    setValue(getSignalKValue(path) ?? defaultValue);
+    // Initial sync — only update if we get a real value, otherwise keep last known
+    const current = getSignalKValue(path);
+    if (current != null) {
+      lastKnownRef.current = current;
+      setValue(current);
+    }
 
     return () => {
       if (unsubscribe) {
         unsubscribe(path, updateValue);
       }
     };
-  }, [path, subscribe, unsubscribe, getSignalKValue, updateValue, defaultValue]);
+  }, [path, subscribe, unsubscribe, getSignalKValue, updateValue]);
 
   return value;
 };
@@ -48,32 +53,64 @@ export const useSignalKPath = (path, defaultValue = null) => {
  */
 export const useSignalKPaths = (paths) => {
   const { getSignalKValue, subscribe, unsubscribe } = useOcearoContext();
+
+  // Stabilize paths array by content — prevents infinite re-render loops
+  // when callers pass a new array reference with the same paths each render
+  const pathsKey = JSON.stringify(paths);
+  const stablePaths = useRef(paths);
+  if (JSON.stringify(stablePaths.current) !== pathsKey) {
+    stablePaths.current = paths;
+  }
+
   const [values, setValues] = useState(() => {
     const initial = {};
-    paths.forEach(path => {
+    stablePaths.current.forEach(path => {
       initial[path] = getSignalKValue(path);
     });
     return initial;
   });
 
-  const updateValues = useCallback((path, value) => {
-    setValues(prev => ({
-      ...prev,
-      [path]: value
-    }));
-  }, []);
-
   useEffect(() => {
+    const currentPaths = stablePaths.current;
+    // Create one stable callback per path
+    const callbacks = {};
+    currentPaths.forEach(path => {
+      callbacks[path] = (val) => {
+        setValues(prev => {
+          if (prev[path] === val) return prev;
+          return { ...prev, [path]: val };
+        });
+      };
+    });
+
     if (subscribe) {
-      paths.forEach(path => subscribe(path, (val) => updateValues(path, val)));
+      currentPaths.forEach(path => subscribe(path, callbacks[path]));
+    }
+
+    // Initial sync
+    const initial = {};
+    let changed = false;
+    currentPaths.forEach(path => {
+      const current = getSignalKValue(path);
+      if (current != null) {
+        initial[path] = current;
+        changed = true;
+      }
+    });
+    if (changed) {
+      setValues(prev => ({ ...prev, ...initial }));
     }
 
     return () => {
       if (unsubscribe) {
-        paths.forEach(path => unsubscribe(path, (val) => updateValues(path, val)));
+        currentPaths.forEach(path => {
+          if (callbacks[path]) {
+            unsubscribe(path, callbacks[path]);
+          }
+        });
       }
     };
-  }, [paths, subscribe, unsubscribe, updateValues]);
+  }, [pathsKey, subscribe, unsubscribe, getSignalKValue]);
 
   return values;
 };

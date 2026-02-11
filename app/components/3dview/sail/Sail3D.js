@@ -10,7 +10,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import * as Wind from './Wind';
 import SailShape from './SailShape';
-import { oBlue } from '../../context/OcearoContext';
+import { oBlue, useOcearoContext } from '../../context/OcearoContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
 
 // Sail dimensions in millimeters
@@ -77,16 +77,17 @@ const Sail3D = ({
         const windcone = new THREE.Group();
         
         // Define the cone geometry and material
-        const geometry = new THREE.ConeGeometry(0.1, 0.2, 12);
-        const material = new THREE.MeshStandardMaterial({
-            color: 0x007bff,               // Ocearo blue color
-            opacity: 0.5,               // Semi-transparent
+        const geometry = new THREE.ConeGeometry(0.08, 0.15, 12);
+        const material = new THREE.MeshBasicMaterial({
+            color: new THREE.Color(oBlue),
+            opacity: 0.3,                  // Very translucent for HUD look
             transparent: true,
+            depthWrite: false,
         });
         
         // Create the mesh and position it
         const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.set(0, -0.1, 0);  // Place the cone base at the origin
+        mesh.position.set(0, -0.075, 0);  
         windcone.add(mesh);
         
         return windcone;
@@ -502,8 +503,9 @@ const Sail3D = ({
             <meshBasicMaterial
                 vertexColors
                 transparent
-                opacity={0.7}
+                opacity={0.4} // More translucent for HUD look
                 side={THREE.DoubleSide}
+                depthWrite={false}
             />
         </mesh>
     );

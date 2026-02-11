@@ -5,6 +5,7 @@ import BaseWidget from './BaseWidget';
 import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSun } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
 
 const SUN_CONFIG = {
   sunrise: {
@@ -111,6 +112,7 @@ const computeSunTimes = (latitudeRadians, longitudeRadians, date) => {
 };
 
 export default function SunriseSunsetWidget() {
+  const { t } = useTranslation();
   const debugMode = configService.get('debugMode');
   
   const sunPaths = [
@@ -152,43 +154,46 @@ export default function SunriseSunsetWidget() {
 
   return (
     <BaseWidget
-      title="Sun Times"
+      title={t('widgets.solarCycle')}
       icon={faSun}
       hasData={sunData.hasData}
-      noDataMessage="No sun times data available"
+      noDataMessage={t('widgets.signalLossCelestial')}
     >
-      <div className="flex-1 flex flex-col justify-center min-h-0">
+      <div className="flex-1 flex flex-col justify-center py-4">
         {/* Visual representation */}
-        <div className="relative mb-6">
-          <div className="w-full h-16 relative overflow-hidden rounded-lg bg-gradient-to-r from-orange-900 via-orange-600 to-yellow-400 shadow-inner">
+        <div className="relative mb-8 group">
+          <div className="w-full h-16 relative overflow-hidden rounded-sm bg-gradient-to-r from-orange-950 via-orange-600/20 to-yellow-900/40 shadow-inner border border-hud transition-all duration-700 group-hover:scale-[1.02]">
             {/* Horizon line */}
-            <div className="absolute bottom-0 w-full h-1 bg-oGray/30 backdrop-blur-sm"></div>
+            <div className="absolute bottom-4 w-full h-px bg-hud-muted opacity-20 shadow-[0_-4px_10px_var(--hud-text-main)] shadow-opacity-10"></div>
             
             {/* Sun position indicator */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div className="w-10 h-10 bg-oYellow rounded-full shadow-lg flex items-center justify-center border-2 border-white/20 animate-pulse">
-                <FontAwesomeIcon icon={faSun} className="text-orange-800 text-lg" />
+              <div className="w-10 h-10 bg-oYellow rounded-full shadow-[0_0_25px_var(--color-oYellow)] shadow-opacity-40 flex items-center justify-center border border-hud animate-soft-pulse">
+                <FontAwesomeIcon icon={faSun} className="text-orange-900 text-sm" />
               </div>
             </div>
+
+            {/* Atmosphere glow */}
+            <div className="absolute inset-0 bg-gradient-to-t from-transparent to-orange-500/5 pointer-events-none"></div>
           </div>
         </div>
 
         {/* Times display */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="text-center bg-oGray p-3 rounded-lg border border-gray-800">
-            <div className="text-gray-400 text-[10px] uppercase mb-1 font-bold">Sunrise</div>
-            <div className="text-2xl font-bold text-oYellow">
-              {sunrise !== null ? sunrise : 'N/A'}
+          <div className="text-center tesla-card bg-hud-bg p-4 tesla-hover border border-hud">
+            <div className="text-hud-muted text-xs uppercase mb-3 font-black tracking-widest">{t('widgets.solarIngress')}</div>
+            <div className="text-3xl font-black text-oYellow leading-none gliding-value tracking-tighter">
+              {sunrise !== null ? sunrise : t('common.na')}
             </div>
-            <div className="text-gray-500 text-[10px] uppercase mt-1">Local Time</div>
+            <div className="text-hud-muted text-xs uppercase mt-3 font-black tracking-widest opacity-60">{t('widgets.localMeridian')}</div>
           </div>
           
-          <div className="text-center bg-oGray p-3 rounded-lg border border-gray-800">
-            <div className="text-gray-400 text-[10px] uppercase mb-1 font-bold">Sunset</div>
-            <div className="text-2xl font-bold text-orange-400">
-              {sunset !== null ? sunset : 'N/A'}
+          <div className="text-center tesla-card bg-hud-bg p-4 tesla-hover border border-hud">
+            <div className="text-hud-muted text-xs uppercase mb-3 font-black tracking-widest">{t('widgets.solarEgress')}</div>
+            <div className="text-3xl font-black text-orange-500 leading-none gliding-value tracking-tighter">
+              {sunset !== null ? sunset : t('common.na')}
             </div>
-            <div className="text-gray-500 text-[10px] uppercase mt-1">Local Time</div>
+            <div className="text-hud-muted text-xs uppercase mt-3 font-black tracking-widest opacity-60">{t('widgets.localMeridian')}</div>
           </div>
         </div>
       </div>

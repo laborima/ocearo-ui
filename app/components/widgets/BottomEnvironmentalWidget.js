@@ -3,12 +3,14 @@ import { convertPressure, useOcearoContext } from '../context/OcearoContext';
 import { useSignalKPaths } from '../hooks/useSignalK';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCloud, faDroplet, faWind } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
 
 const ENVIRONMENTAL_MODES = {
   pressure: {
     key: 'pressure',
     path: 'environment.outside.pressure',
     icon: faCloud,
+    labelKey: 'environmental.pressure',
     format: (value) => `${value} hPa`,
     transform: convertPressure
   },
@@ -16,6 +18,7 @@ const ENVIRONMENTAL_MODES = {
     key: 'humidity',
     path: 'environment.inside.relativeHumidity',
     icon: faDroplet,
+    labelKey: 'environmental.humidity',
     format: (value) => `${(value).toFixed(1)}%`,
     transform: (value) => value * 100
   },
@@ -23,22 +26,31 @@ const ENVIRONMENTAL_MODES = {
     key: 'voc',
     path: 'environment.inside.voc',
     icon: faWind,
+    labelKey: 'environmental.voc',
     format: (value) => `${value} ppm`,
     transform: (value) => value
   }
 };
 
 const EnvironmentalDisplay = ({ mode, value, icon, nightMode }) => {
-  const textColor = nightMode ? 'text-red-500' : 'text-white';
+  const { t } = useTranslation();
+  const textColor = nightMode ? 'text-oNight' : 'text-hud-main';
   
   if (!value && value !== 0) {
     return null;
   }
 
   return (
-    <div className={`flex items-center text-2xl ${textColor}`}>
-      <FontAwesomeIcon icon={icon} className="mr-2" />
-      <span>{ENVIRONMENTAL_MODES[mode].format(value)}</span>
+    <div className={`flex items-center space-x-3 px-3 py-1.5 transition-all duration-300 ${textColor}`}>
+      <FontAwesomeIcon icon={icon} className="text-lg opacity-80" />
+      <div className="flex flex-col">
+        <span className="text-xs font-black uppercase tracking-widest text-hud-muted leading-none mb-1">
+          {t(ENVIRONMENTAL_MODES[mode].labelKey)}
+        </span>
+        <span className="text-xl font-bold tracking-tight leading-none">
+          {ENVIRONMENTAL_MODES[mode].format(value)}
+        </span>
+      </div>
     </div>
   );
 };
@@ -84,15 +96,15 @@ const BottomEnvironmentalWidget = () => {
 
   if (availableModes.length === 0) {
     return (
-      <div className={`text-2xl ${nightMode ? 'text-red-500' : 'text-white'}`}>
-        <span>NA</span>
+      <div className={`px-3 py-1.5 ${nightMode ? 'text-oNight' : 'text-hud-muted'}`}>
+        <span className="text-sm font-black uppercase tracking-widest">N/A</span>
       </div>
     );
   }
 
   return (
     <div
-      className="cursor-pointer flex items-center space-x-2"
+      className="cursor-pointer flex items-center group"
       onClick={toggleDisplayMode}
       title={`Toggle Environmental Display (${availableModes.length} modes available)`}
       role="button"

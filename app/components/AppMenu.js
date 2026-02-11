@@ -20,6 +20,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { VIEW_MODES } from '../page';
 import { isOcearoCoreEnabled } from './utils/OcearoCoreUtils';
+import { useTranslation } from 'react-i18next';
 
 const AppMenu = ({
     currentViewMode,
@@ -28,7 +29,7 @@ const AppMenu = ({
     toggleFullscreen,
     setShowAppMenu,
 }) => {
-    // Check if Jarvis is enabled
+    const { t } = useTranslation();
     const jarvisEnabled = isOcearoCoreEnabled();
 
     const MenuButton = ({ icon, label, onClick }) => (
@@ -37,9 +38,12 @@ const AppMenu = ({
                 onClick();
                 setShowAppMenu(false);
             }}
-            className="flex items-center text-white p-2 rounded-md hover:bg-gray-700 transition"
+            className="flex items-center text-hud-main px-4 py-3 rounded-xl tesla-hover transition-all duration-200 group bg-hud-bg shadow-soft border border-hud"
         >
-            <FontAwesomeIcon icon={icon} className="mr-2" /> {label}
+            <div className="w-8 h-8 flex items-center justify-center bg-hud-elevated rounded-lg mr-3 group-hover:scale-110 transition-transform">
+                <FontAwesomeIcon icon={icon} className="text-hud-muted group-hover:text-hud-main transition-colors" />
+            </div>
+            <span className="text-sm font-bold uppercase tracking-widest">{label}</span>
         </button>
     );
 
@@ -49,95 +53,95 @@ const AppMenu = ({
                 initial={{ y: 20, x: '-50%', opacity: 0, scale: 0.95 }}
                 animate={{ y: 0, x: '-50%', opacity: 1, scale: 1 }}
                 exit={{ y: 20, x: '-50%', opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="fixed bottom-24 left-1/2 bg-black/90 backdrop-blur-md p-6 rounded-2xl shadow-2xl z-50 w-full max-w-md border border-white/10"
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                className="fixed bottom-28 left-1/2 bg-hud-bg backdrop-blur-xl p-6 rounded-3xl shadow-2xl z-50 w-full max-w-lg border border-hud"
             >
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                 {currentViewMode !== VIEW_MODES.SPLIT && (
-                    <MenuButton icon={faExpand} label="Split View" onClick={() => toggleViewMode(VIEW_MODES.SPLIT)} />
+                    <MenuButton icon={faExpand} label={t('menu.splitView')} onClick={() => toggleViewMode(VIEW_MODES.SPLIT)} />
                 )}
                 {currentViewMode !== VIEW_MODES.APP && (
-                    <MenuButton icon={faExpand} label="Full View" onClick={() => toggleViewMode(VIEW_MODES.APP)} />
+                    <MenuButton icon={faExpand} label={t('menu.fullView')} onClick={() => toggleViewMode(VIEW_MODES.APP)} />
                 )}
                 <MenuButton 
                     icon={faChartLine} 
-                    label="Dashboard" 
+                    label={t('menu.dashboard')} 
                     onClick={() => handleSetRightView('dashboard')} 
                 /> 
                 {jarvisEnabled && (
                     <MenuButton 
                         icon={faBook} 
-                        label="Logbook" 
+                        label={t('menu.logbook')} 
                         onClick={() => handleSetRightView('logbook')} 
                     />
                 )}
                 <MenuButton 
                     icon={faCompass} 
-                    label="Autopilot" 
+                    label={t('menu.autopilot')} 
                     onClick={() => handleSetRightView('autopilot')} 
                 />
                 {currentViewMode !== VIEW_MODES.BOAT && (
-                    <MenuButton icon={faShip} label="Boat View" onClick={() => toggleViewMode(VIEW_MODES.BOAT)} />
+                    <MenuButton icon={faShip} label={t('menu.boatView')} onClick={() => toggleViewMode(VIEW_MODES.BOAT)} />
                 )}
 
                
                 <MenuButton
                     icon={faHandsHelping}
-                    label="Manual"
+                    label={t('menu.manual')}
                     onClick={() => handleSetRightView('manual')}
                 />
 
                 <MenuButton
                     icon={faTachometerAlt}
-                    label="Instruments"
+                    label={t('menu.instruments')}
                     onClick={() => handleSetRightView('instrument')}
                 />
 
                 <MenuButton
                     icon={faVideo}
-                    label="Webcam"
+                    label={t('menu.webcam')}
                     onClick={() => handleSetRightView('webcam1')}
                 />
 
                 <MenuButton
                     icon={faMapMarkedAlt}
-                    label="Navigation"
+                    label={t('menu.navigation')}
                     onClick={() => handleSetRightView('navigation')}
                 />
 
                 <MenuButton
                     icon={faCogs}
-                    label="Settings"
+                    label={t('menu.settings')}
                     onClick={() => handleSetRightView('settings')}
                 />
 
                 <MenuButton
                     icon={faCloudSun}
-                    label="Weather"
+                    label={t('menu.weather')}
                     onClick={() => handleSetRightView('weather')}
                 />
 
                 <MenuButton
                     icon={faBatteryFull}
-                    label="Battery"
+                    label={t('menu.battery')}
                     onClick={() => handleSetRightView('battery')}
                 />
 
                 <MenuButton
                     icon={faExclamationTriangle}
-                    label="Engine"
+                    label={t('menu.engine')}
                     onClick={() => handleSetRightView('motor')}
                 />
 
                 <MenuButton
                     icon={faHeadphones}
-                    label="Media player"
+                    label={t('menu.mediaPlayer')}
                     onClick={() => handleSetRightView('mediaplayer')}
                 />
 
                 <MenuButton
                     icon={faExpand}
-                    label="Toggle Fullscreen"
+                    label={t('menu.toggleFullscreen')}
                     onClick={toggleFullscreen}
                 />
 
@@ -145,7 +149,7 @@ const AppMenu = ({
                 {/* Refresh Page Button */}
                 <MenuButton
                     icon={faSyncAlt}
-                    label="Refresh"
+                    label={t('menu.refresh')}
                     onClick={() => {
                         window.location.reload();
                     }}

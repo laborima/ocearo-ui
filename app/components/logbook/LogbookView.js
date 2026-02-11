@@ -5,7 +5,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBook, faTimeline, faChartLine, faRobot, faPlus, faEdit, faTrash,
   faClock, faCompass, faTachometerAlt, faCloudSun, faThermometerHalf,
-  faMapMarkerAlt, faLocationDot, faRuler, faCar, faUser, faStickyNote
+  faMapMarkerAlt, faLocationDot, faRuler, faCar, faUser, faStickyNote,
+  faTimes, faSave
 } from '@fortawesome/free-solid-svg-icons';
 import configService from '../settings/ConfigService';
 import { 
@@ -18,12 +19,15 @@ import {
   addLogbookEntry,
   requestAnalysis
 } from '../utils/OcearoCoreUtils';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 /**
  * LogbookView component with three tabs: Timeline, Logbook, and Analysis
  * Integrates with SignalK logbook API and includes OcearoCore functionality
  */
 const LogbookView = () => {
+  const { t } = useTranslation();
   const { nightMode } = useOcearoContext();
   const [activeTab, setActiveTab] = useState('logbook');
   
@@ -205,7 +209,7 @@ const LogbookView = () => {
    */
   const addOcearoCoreEntry = useCallback(async () => {
     if (!ocearoCoreEnabled) {
-      setError('OcearoCore is not enabled');
+      setError(t('logbook.ocearoCoreNotEnabled'));
       return;
     }
 
@@ -250,7 +254,7 @@ const LogbookView = () => {
    */
   const getOcearoCoreAnalysis = useCallback(async (type) => {
     if (!ocearoCoreEnabled) {
-      setError('OcearoCore is not enabled');
+      setError(t('logbook.ocearoCoreNotEnabled'));
       return;
     }
 
@@ -281,7 +285,7 @@ const LogbookView = () => {
    */
   const getLogbookAnalysis = useCallback(async () => {
     if (!ocearoCoreEnabled) {
-      setError('OcearoCore is not enabled');
+      setError(t('logbook.ocearoCoreNotEnabled'));
       return;
     }
 
@@ -365,74 +369,81 @@ const LogbookView = () => {
    * Render logbook table view
    */
   const renderLogbookTable = () => (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-bold text-white">Logbook Entries</h3>
-        <div className="flex space-x-2">
+    <div className="p-4 flex flex-col h-full overflow-hidden">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xs font-black text-hud-main uppercase tracking-widest flex items-center">
+          <FontAwesomeIcon icon={faBook} className="mr-2 text-oBlue text-xs" />
+          {t('logbook.logbookEntries')}
+        </h3>
+        <div className="flex space-x-3">
           {ocearoCoreEnabled && (
             <button 
-              className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-50"
+              className="bg-oGreen/10 text-oGreen hover:bg-oGreen/20 px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft border border-oGreen/20"
               onClick={addOcearoCoreEntry}
               disabled={loading}
             >
               <FontAwesomeIcon icon={faRobot} className="mr-2" />
-              OcearoCore Entry
+              {t('logbook.aiEntry')}
             </button>
           )}
           <button 
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-50"
+            className="bg-oBlue hover:bg-blue-600 text-hud-main px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft"
             onClick={showAddEntryModal}
             disabled={loading}
           >
             <FontAwesomeIcon icon={faPlus} className="mr-2" />
-            Add Entry
+            {t('logbook.add')}
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-900 text-red-400 p-3 rounded-lg mb-4">
+        <div className="bg-oRed/10 text-oRed p-3 rounded text-xs font-black uppercase mb-4 animate-soft-pulse border border-oRed/20">
           {error}
         </div>
       )}
 
-      <div className="bg-oGray2 rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-oGray">
-            <tr>
-              <th className="text-white p-3 text-left"><FontAwesomeIcon icon={faClock} className="mr-2" />Time</th>
-              <th className="text-white p-3 text-left"><FontAwesomeIcon icon={faCompass} className="mr-2" />Course</th>
-              <th className="text-white p-3 text-left"><FontAwesomeIcon icon={faTachometerAlt} className="mr-2" />Speed</th>
-              <th className="text-white p-3 text-left"><FontAwesomeIcon icon={faCloudSun} className="mr-2" />Weather</th>
-              <th className="text-white p-3 text-left"><FontAwesomeIcon icon={faThermometerHalf} className="mr-2" />Baro</th>
-              <th className="text-white p-3 text-left"><FontAwesomeIcon icon={faMapMarkerAlt} className="mr-2" />Coordinates</th>
-              <th className="text-white p-3 text-left"><FontAwesomeIcon icon={faLocationDot} className="mr-2" />Fix</th>
-              <th className="text-white p-3 text-left"><FontAwesomeIcon icon={faRuler} className="mr-2" />Log</th>
-              <th className="text-white p-3 text-left"><FontAwesomeIcon icon={faCar} className="mr-2" />Engine</th>
-              <th className="text-white p-3 text-left"><FontAwesomeIcon icon={faUser} className="mr-2" />By</th>
-              <th className="text-white p-3 text-left"><FontAwesomeIcon icon={faStickyNote} className="mr-2" />Remarks</th>
+      <div className="tesla-card flex-1 overflow-auto bg-hud-bg">
+        <table className="w-full text-xs font-black uppercase tracking-tight">
+          <thead className="sticky top-0 bg-hud-bg backdrop-blur-md z-10">
+            <tr className="text-hud-secondary border-b border-hud">
+              <th className="p-3 text-left">{t('logbook.time')}</th>
+              <th className="p-3 text-left">{t('logbook.courseCol')}</th>
+              <th className="p-3 text-left">{t('logbook.sog')}</th>
+              <th className="p-3 text-left">{t('logbook.weatherCol')}</th>
+              <th className="p-3 text-left">{t('logbook.baro')}</th>
+              <th className="p-3 text-left">{t('logbook.position')}</th>
+              <th className="p-3 text-left">{t('logbook.log')}</th>
+              <th className="p-3 text-left">{t('logbook.eng')}</th>
+              <th className="p-3 text-left">{t('logbook.by')}</th>
+              <th className="p-3 text-left">{t('logbook.noteCol')}</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-hud">
             {entries.map((entry, index) => (
               <tr 
                 key={entry.datetime || index} 
                 onClick={() => editEntry(entry)}
-                className="cursor-pointer hover:bg-oGray text-white border-b border-gray-700"
+                className="tesla-hover cursor-pointer text-hud-main"
               >
-                <td className="p-3">{entry.date.toLocaleString('en-GB', {
-                  timeZone: displayTimeZone,
-                })}</td>
-                <td className="p-3">{getCourse(entry)}</td>
-                <td className="p-3">{entry.speed && !Number.isNaN(Number(entry.speed.sog)) ? `${entry.speed.sog}kt` : ''}</td>
-                <td className="p-3">{getWeather(entry)}</td>
-                <td className="p-3">{entry.barometer}</td>
-                <td className="p-3">{entry.point ? entry.point.toString() : 'n/a'}</td>
-                <td className="p-3">{entry.position ? entry.position.source || 'GPS' : ''}</td>
-                <td className="p-3">{!Number.isNaN(Number(entry.log)) ? `${entry.log}NM` : ''}</td>
-                <td className="p-3">{entry.engine && !Number.isNaN(Number(entry.engine.hours)) ? `${entry.engine.hours}h` : ''}</td>
-                <td className="p-3">{entry.author || 'auto'}</td>
-                <td className="p-3">{entry.text}</td>
+                <td className="p-3 whitespace-nowrap opacity-60">
+                  {entry.date.toLocaleString('en-GB', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: displayTimeZone,
+                  })}
+                </td>
+                <td className="p-3 gliding-value">{getCourse(entry)}</td>
+                <td className="p-3 gliding-value">{entry.speed && !Number.isNaN(Number(entry.speed.sog)) ? `${entry.speed.sog}kt` : ''}</td>
+                <td className="p-3 text-hud-secondary font-bold lowercase normal-case">{getWeather(entry)}</td>
+                <td className="p-3 gliding-value opacity-60">{entry.barometer}</td>
+                <td className="p-3 text-xs text-hud-muted font-mono tracking-tighter">{entry.point ? entry.point.toString() : 'n/a'}</td>
+                <td className="p-3 gliding-value">{!Number.isNaN(Number(entry.log)) ? `${entry.log}NM` : ''}</td>
+                <td className="p-3 gliding-value">{entry.engine && !Number.isNaN(Number(entry.engine.hours)) ? `${entry.engine.hours}h` : ''}</td>
+                <td className="p-3 text-oBlue opacity-80">{entry.author || 'auto'}</td>
+                <td className="p-3 normal-case font-bold text-hud-secondary truncate max-w-xs">{entry.text}</td>
               </tr>
             ))}
           </tbody>
@@ -448,33 +459,36 @@ const LogbookView = () => {
     const timelineEntries = [...entries].reverse();
     
     return (
-      <div className="p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-white">Timeline View</h3>
-          <div className="flex space-x-2">
+      <div className="p-4 space-y-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xs font-black text-hud-main uppercase tracking-widest flex items-center">
+            <FontAwesomeIcon icon={faTimeline} className="mr-2 text-oGreen text-xs" />
+            {t('logbook.cruiseTimeline')}
+          </h3>
+          <div className="flex space-x-3">
             {ocearoCoreEnabled && (
               <button 
-                className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-50"
+                className="bg-oGreen/10 text-oGreen hover:bg-oGreen/20 px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft border border-oGreen/20"
                 onClick={addOcearoCoreEntry}
                 disabled={loading}
               >
                 <FontAwesomeIcon icon={faRobot} className="mr-2" />
-                OcearoCore Entry
+                {t('logbook.aiAuto')}
               </button>
             )}
             <button 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-50"
+              className="bg-oBlue hover:bg-blue-600 text-hud-main px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft"
               onClick={addEntry}
               disabled={loading}
             >
               <FontAwesomeIcon icon={faPlus} className="mr-2" />
-              Add Entry
+              {t('logbook.manual')}
             </button>
           </div>
         </div>
 
         {error && (
-          <div className="bg-red-900 text-red-400 p-3 rounded-lg mb-4">
+          <div className="bg-oRed/10 text-oRed p-3 rounded text-xs font-black uppercase mb-4 animate-soft-pulse border border-oRed/20">
             {error}
           </div>
         )}
@@ -484,47 +498,54 @@ const LogbookView = () => {
             <div 
               key={entry.datetime || index} 
               onClick={() => editEntry(entry)}
-              className="bg-oGray2 border border-gray-700 cursor-pointer hover:bg-oGray transition-colors rounded-lg overflow-hidden"
+              className="tesla-card tesla-hover cursor-pointer group"
             >
-              <div className="bg-oGray border-b border-gray-600 p-4">
-                <div className="flex justify-between items-center">
-                  <div className="text-white font-medium">
-                    {entry.author || 'auto'}
-                  </div>
-                  <div className="text-white text-sm">
-                    {entry.date.toLocaleString('en-GB', {
-                      timeZone: displayTimeZone,
-                    })}
-                  </div>
+              <div className="bg-hud-elevated px-4 py-2 flex justify-between items-center border-b border-hud">
+                <div className="text-xs font-black text-oBlue uppercase tracking-widest group-hover:text-oBlue transition-colors">
+                  {entry.author || 'system'}
+                </div>
+                <div className="text-xs font-black text-hud-secondary uppercase tracking-tighter">
+                  {entry.date.toLocaleString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: displayTimeZone,
+                  })}
                 </div>
               </div>
               <div className="p-4">
-                <div className="text-white">
-                  <div className="grid grid-cols-2 gap-4 text-sm mb-3">
-                    <div>
-                      <strong>Course:</strong> {getCourse(entry)}
-                    </div>
-                    <div>
-                      <strong>Speed:</strong> {entry.speed && !Number.isNaN(Number(entry.speed.sog)) ? `${entry.speed.sog}kt` : 'N/A'}
-                    </div>
-                    <div>
-                      <strong>Position:</strong> {entry.point ? entry.point.toString() : 'N/A'}
-                    </div>
-                    <div>
-                      <strong>Log:</strong> {!Number.isNaN(Number(entry.log)) ? `${entry.log}NM` : 'N/A'}
-                    </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-black uppercase mb-4 tracking-tight text-hud-secondary">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-hud-dim mb-1">{t('logbook.courseCol')}</span>
+                    <span className="text-hud-main gliding-value">{getCourse(entry)}</span>
                   </div>
-                  {entry.text && (
-                    <div className="mt-3 p-2 bg-oGray rounded">
-                      <strong>Remarks:</strong> {entry.text}
-                    </div>
-                  )}
-                  {getWeather(entry) && (
-                    <div className="mt-2 text-gray-300">
-                      <strong>Weather:</strong> {getWeather(entry)}
-                    </div>
-                  )}
+                  <div className="flex flex-col">
+                    <span className="text-xs text-hud-dim mb-1">{t('logbook.speed')}</span>
+                    <span className="text-hud-main gliding-value">{entry.speed && !Number.isNaN(Number(entry.speed.sog)) ? `${entry.speed.sog}kt` : 'N/A'}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-hud-dim mb-1">{t('logbook.log')}</span>
+                    <span className="text-hud-main gliding-value">{!Number.isNaN(Number(entry.log)) ? `${entry.log}NM` : 'N/A'}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-hud-dim mb-1">{t('logbook.coord')}</span>
+                    <span className="text-hud-main text-xs font-mono truncate">{entry.point ? entry.point.toString() : 'N/A'}</span>
+                  </div>
                 </div>
+                
+                {entry.text && (
+                  <div className="p-3 bg-hud-elevated rounded-sm border-l-2 border-oBlue/30 text-xs font-bold text-hud-secondary normal-case leading-relaxed italic">
+                    {entry.text}
+                  </div>
+                )}
+                
+                {getWeather(entry) && (
+                  <div className="mt-3 flex items-center text-xs font-black text-hud-secondary uppercase tracking-widest">
+                    <FontAwesomeIcon icon={faCloudSun} className="mr-2 text-oYellow opacity-50" />
+                    {getWeather(entry)}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -537,175 +558,157 @@ const LogbookView = () => {
    * Render analysis view
    */
   const renderAnalysis = () => (
-    <div className="p-4">
-      <div className="mb-4">
-        <h3 className="text-xl font-bold text-white mb-2">Logbook Analysis</h3>
-        <p className="text-gray-400 text-sm">Select an analysis type to get AI-powered insights</p>
+    <div className="p-4 space-y-6">
+      <div className="mb-6">
+        <h3 className="text-xs font-black text-hud-main uppercase tracking-widest flex items-center mb-2">
+          <FontAwesomeIcon icon={faChartLine} className="mr-2 text-oBlue text-xs" />
+          {t('logbook.fleetIntelligence')}
+        </h3>
+        <p className="text-hud-secondary text-xs font-black uppercase tracking-tighter">{t('logbook.aiPoweredAnalysis')}</p>
       </div>
 
       {ocearoCoreEnabled && (
-        <div className="bg-oGray2 rounded-lg p-4 mb-4">
-          <h4 className="text-white font-medium mb-3">Analysis Options:</h4>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <button
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg transition-colors disabled:opacity-50 flex flex-col items-center"
-              onClick={getLogbookAnalysis}
-              disabled={analysisLoading}
-            >
-              <FontAwesomeIcon icon={faBook} className="mb-2" size="lg" />
-              <span className="text-sm font-medium">Logbook</span>
-            </button>
-            <button
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg transition-colors disabled:opacity-50 flex flex-col items-center"
-              onClick={() => getOcearoCoreAnalysis('weather')}
-              disabled={analysisLoading}
-            >
-              <FontAwesomeIcon icon={faCloudSun} className="mb-2" size="lg" />
-              <span className="text-sm font-medium">Weather</span>
-            </button>
-            <button
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg transition-colors disabled:opacity-50 flex flex-col items-center"
-              onClick={() => getOcearoCoreAnalysis('sail')}
-              disabled={analysisLoading}
-            >
-              <FontAwesomeIcon icon={faCompass} className="mb-2" size="lg" />
-              <span className="text-sm font-medium">Sail</span>
-            </button>
-            <button
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg transition-colors disabled:opacity-50 flex flex-col items-center"
-              onClick={() => getOcearoCoreAnalysis('alerts')}
-              disabled={analysisLoading}
-            >
-              <FontAwesomeIcon icon={faRobot} className="mb-2" size="lg" />
-              <span className="text-sm font-medium">Alerts</span>
-            </button>
-            <button
-              className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-3 rounded-lg transition-colors disabled:opacity-50 flex flex-col items-center"
-              onClick={() => getOcearoCoreAnalysis('status')}
-              disabled={analysisLoading}
-            >
-              <FontAwesomeIcon icon={faTachometerAlt} className="mb-2" size="lg" />
-              <span className="text-sm font-medium">Status</span>
-            </button>
+        <div className="tesla-card p-4 mb-6 bg-hud-bg">
+          <h4 className="text-xs font-black text-hud-secondary mb-4 uppercase tracking-widest">{t('logbook.selectOperation')}</h4>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {[
+              { id: 'logbook', label: 'LOGBOOK', icon: faBook, color: 'bg-purple-600', action: getLogbookAnalysis },
+              { id: 'weather', label: 'WEATHER', icon: faCloudSun, color: 'bg-blue-600', action: () => getOcearoCoreAnalysis('weather') },
+              { id: 'sail', label: 'SAIL', icon: faCompass, color: 'bg-oGreen', action: () => getOcearoCoreAnalysis('sail') },
+              { id: 'alerts', label: 'ALERTS', icon: faRobot, color: 'bg-oRed', action: () => getOcearoCoreAnalysis('alerts') },
+              { id: 'status', label: 'STATUS', icon: faTachometerAlt, color: 'bg-oYellow', action: () => getOcearoCoreAnalysis('status') }
+            ].map((opt) => (
+              <button
+                key={opt.id}
+                className="tesla-card tesla-hover p-4 flex flex-col items-center justify-center space-y-3 shadow-soft group border border-hud"
+                onClick={opt.action}
+                disabled={analysisLoading}
+              >
+                <div className={`${opt.color} w-10 h-10 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500`}>
+                  <FontAwesomeIcon icon={opt.icon} className="text-hud-main text-sm" />
+                </div>
+                <span className="text-xs font-black text-hud-main tracking-widest">{opt.label}</span>
+              </button>
+            ))}
           </div>
         </div>
       )}
 
       {error && (
-        <div className="bg-red-900 text-red-400 p-3 rounded-lg mb-4">
+        <div className="bg-oRed/10 text-oRed p-3 rounded text-xs font-black uppercase mb-4 animate-soft-pulse border border-oRed/20">
           {error}
         </div>
       )}
 
       {/* Loading indicator with progress bar */}
       {analysisLoading && (
-        <div className="bg-oGray2 rounded-lg p-6 mb-4">
-          <div className="text-center">
-            <FontAwesomeIcon icon={faRobot} size="3x" className="text-green-500 mb-4 animate-pulse" />
-            <h4 className="text-xl text-white mb-3">Analyzing {analysisType}...</h4>
-            <div className="w-full bg-gray-700 rounded-full h-2 mb-4">
-              <div className="bg-green-500 h-2 rounded-full animate-pulse" style={{ width: '100%' }}></div>
-            </div>
-            <p className="text-gray-400 text-sm">Please wait while OcearoCore processes the data</p>
+        <div className="tesla-card p-10 text-center bg-hud-bg">
+          <FontAwesomeIcon icon={faRobot} className="text-4xl text-oGreen mb-6 animate-soft-pulse" />
+          <h4 className="text-xs font-black text-hud-main uppercase tracking-widest mb-4">{t('logbook.neuralProcessing')}</h4>
+          <div className="w-48 mx-auto bg-hud-elevated h-1 rounded-full overflow-hidden">
+            <div className="bg-oGreen h-full animate-progress-indefinite rounded-full" style={{ width: '40%' }}></div>
           </div>
+          <p className="text-hud-muted text-xs font-black uppercase mt-4 tracking-tighter italic">{t('logbook.processNode')} {analysisType}</p>
         </div>
       )}
 
       {/* Analysis Results */}
       {analysisResult && !analysisLoading && (
-        <div className="bg-oGray2 rounded-lg p-6 mb-4">
-          <div className="flex items-center mb-4">
-            <FontAwesomeIcon icon={faChartLine} className="text-green-500 mr-3" size="lg" />
-            <h4 className="text-xl text-white font-bold">Analysis Results: {analysisType}</h4>
+        <div className="tesla-card p-6 shadow-xl animate-fade-in">
+          <div className="flex items-center mb-6 border-b border-hud pb-4">
+            <FontAwesomeIcon icon={faChartLine} className="text-oGreen mr-3 text-sm" />
+            <h4 className="text-xs font-black text-hud-main uppercase tracking-widest">{t('logbook.operationReport')} {analysisType}</h4>
           </div>
           
-          <div className="space-y-4">
-            {/* Display main analysis text (handles various backend formats) */}
+          <div className="space-y-6">
+            {/* Display main analysis text */}
             {(analysisResult.analysis || analysisResult.aiAnalysis || (typeof analysisResult.summary === 'string' ? analysisResult.summary : null)) && (
-              <div className="bg-oGray rounded-lg p-4">
-                <h5 className="text-white font-medium mb-2">Analysis Summary:</h5>
-                <p className="text-gray-300 whitespace-pre-wrap">
+              <div className="tesla-card bg-hud-bg p-4 border-l-2 border-oBlue/30 shadow-subtle">
+                <h5 className="text-xs font-black text-oBlue mb-3 uppercase tracking-widest">{t('logbook.executiveSummary')}</h5>
+                <p className="text-hud-secondary text-xs font-bold leading-relaxed italic normal-case">
                   {analysisResult.analysis || analysisResult.aiAnalysis || analysisResult.summary}
                 </p>
               </div>
             )}
 
-            {/* Display structured summary (e.g. weather conditions) */}
-            {analysisResult.summary && typeof analysisResult.summary === 'object' && (
-              <div className="bg-oGray rounded-lg p-4">
-                <h5 className="text-white font-medium mb-2">Conditions:</h5>
-                <div className="grid grid-cols-1 gap-2 text-gray-300 text-sm">
-                  {Object.entries(analysisResult.summary).map(([key, value]) => (
-                    <div key={key} className="flex">
-                      <span className="font-semibold w-24 capitalize">{key}:</span>
-                      <span>{value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Display insights/recommendations */}
+            {/* Insights & Recommendations */}
             {(analysisResult.insights || analysisResult.recommendations) && (
-              <div className="bg-oGray rounded-lg p-4">
-                <h5 className="text-white font-medium mb-2">Insights & Recommendations:</h5>
-                <ul className="list-disc list-inside text-gray-300 space-y-1">
-                  {(analysisResult.insights || []).map((item, i) => (
-                    <li key={`insight-${i}`} className="text-blue-300">{item}</li>
-                  ))}
-                  {(analysisResult.recommendations || []).map((item, i) => (
-                    <li key={`rec-${i}`} className="text-green-300">{typeof item === 'string' ? item : item.message || JSON.stringify(item)}</li>
-                  ))}
-                </ul>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {analysisResult.insights && (
+                  <div className="tesla-card bg-hud-bg p-4 shadow-subtle">
+                    <h5 className="text-xs font-black text-cyan-400 mb-3 uppercase tracking-widest flex items-center">
+                      <FontAwesomeIcon icon={faRobot} className="mr-2 text-xs" />
+                      {t('logbook.strategicInsights')}
+                    </h5>
+                    <ul className="space-y-2">
+                      {analysisResult.insights.map((item, i) => (
+                        <li key={i} className="text-xs font-bold text-hud-secondary normal-case flex items-start">
+                          <span className="text-oBlue mr-2 opacity-50">›</span>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {analysisResult.recommendations && (
+                  <div className="tesla-card bg-hud-bg p-4 shadow-subtle">
+                    <h5 className="text-xs font-black text-oGreen mb-3 uppercase tracking-widest flex items-center">
+                      <FontAwesomeIcon icon={faChartLine} className="mr-2 text-xs" />
+                      {t('logbook.operationalAdvice')}
+                    </h5>
+                    <ul className="space-y-2">
+                      {analysisResult.recommendations.map((item, i) => (
+                        <li key={i} className="text-xs font-bold text-hud-secondary normal-case flex items-start">
+                          <span className="text-oGreen mr-2 opacity-50">✓</span>
+                          {typeof item === 'string' ? item : item.message || JSON.stringify(item)}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
 
             {/* Display speech text if available */}
             {(analysisResult.speechText || analysisResult.speech) && (
-              <div className="bg-blue-900 bg-opacity-30 rounded-lg p-4 border border-blue-700">
-                <h5 className="text-blue-400 font-medium mb-2 flex items-center">
-                  <FontAwesomeIcon icon={faRobot} className="mr-2" />
-                  Spoken Analysis:
+              <div className="bg-oBlue/5 p-4 rounded-sm border border-oBlue/10 shadow-soft">
+                <h5 className="text-xs font-black text-oBlue mb-2 uppercase tracking-widest flex items-center">
+                  <FontAwesomeIcon icon={faRobot} className="mr-2 animate-soft-pulse" />
+                  {t('logbook.voiceTelemetry')}
                 </h5>
-                <p className="text-gray-300 whitespace-pre-wrap">{analysisResult.speechText || analysisResult.speech}</p>
+                <p className="text-hud-secondary text-xs font-bold leading-relaxed italic normal-case">{analysisResult.speechText || analysisResult.speech}</p>
               </div>
             )}
 
-            {/* Display raw data or technical details if available */}
+            {/* Display technical data */}
             {(analysisResult.data || analysisResult.weatherData || analysisResult.assessment) && (
-              <div className="bg-oGray rounded-lg p-4">
-                <h5 className="text-white font-medium mb-2">Technical Data:</h5>
-                <pre className="text-gray-300 text-xs overflow-auto max-h-60">
+              <div className="tesla-card bg-hud-bg p-4 border border-hud">
+                <h5 className="text-xs font-black text-hud-secondary mb-3 uppercase tracking-widest">{t('logbook.rawTelemetryData')}</h5>
+                <pre className="text-oGreen/70 text-xs font-mono overflow-auto max-h-40 font-bold scrollbar-thin">
                   {JSON.stringify(analysisResult.data || analysisResult.assessment || analysisResult.weatherData, null, 2)}
                 </pre>
               </div>
             )}
 
-            {/* Display timestamp */}
+            {/* Timestamp */}
             {analysisResult.timestamp && (
-              <div className="text-gray-500 text-sm text-right">
-                Generated: {new Date(analysisResult.timestamp).toLocaleString()}
+              <div className="text-hud-dim text-xs font-black text-right uppercase tracking-tighter">
+                {t('logbook.generated')} {new Date(analysisResult.timestamp).toLocaleString()} // OCEAROCORE V2.4
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Placeholder when no analysis */}
+      {/* Placeholder */}
       {!analysisResult && !analysisLoading && (
-        <div className="bg-oGray2 rounded-lg p-6">
-          <div className="text-center text-gray-400">
-            <FontAwesomeIcon icon={faChartLine} size="3x" className="mb-4" />
-            <h4 className="text-xl text-white mb-2">Analysis Results</h4>
-            <p>
-              This section will display detailed analysis of your logbook entries,
-              including route optimization, weather patterns, and performance metrics.
+        <div className="tesla-card p-12 text-center bg-hud-bg shadow-inner border border-hud">
+          <div className="text-hud-muted">
+            <FontAwesomeIcon icon={faRobot} size="3x" className="mb-6 opacity-20" />
+            <h4 className="text-xs font-black text-hud-main uppercase tracking-widest mb-3">{t('logbook.diagnosticReady')}</h4>
+            <p className="text-xs font-black uppercase tracking-tight max-w-xs mx-auto leading-relaxed">
+              {t('logbook.diagnosticReadyDesc')}
             </p>
-            {ocearoCoreEnabled && (
-              <p className="mt-4 text-green-400">
-                Select an analysis option above to generate AI-powered insights.
-              </p>
-            )}
           </div>
         </div>
       )}
@@ -713,131 +716,120 @@ const LogbookView = () => {
   );
 
   /**
-   * Render add/edit entry modal
+   * Render entry modal
    */
-  const renderEntryModal = () => {
-    if (!showEntryModal) return null;
+  const renderEntryModal = () => (
+    <div 
+      className="fixed inset-0 bg-hud-bg/60 backdrop-blur-sm flex items-center justify-center z-50"
+      onClick={() => setShowEntryModal(false)}
+    >
+      <div 
+        className="bg-hud-bg backdrop-blur-xl rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-hud"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-8">
+          <h3 className="text-xl font-black text-hud-main flex items-center tracking-tight">
+            <FontAwesomeIcon icon={faBook} className="mr-3 text-oBlue" />
+            {selectedEntry ? t('logbook.editEntry') : t('logbook.manualEntry')}
+          </h3>
+          <button
+            onClick={() => setShowEntryModal(false)}
+            className="w-10 h-10 rounded-full flex items-center justify-center text-hud-secondary hover:text-hud-main hover:bg-hud-elevated transition-all duration-300"
+          >
+            <FontAwesomeIcon icon={faTimes} size="lg" />
+          </button>
+        </div>
 
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowEntryModal(false)}>
-        <div className="bg-oGray2 rounded-lg p-6 max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold text-white">
-              {selectedEntry ? 'Edit Entry' : 'Add Logbook Entry'}
-            </h3>
-            <button
-              onClick={() => setShowEntryModal(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              ✕
-            </button>
+        <div className="space-y-6">
+          <div>
+            <label className="block text-xs font-black uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
+              <FontAwesomeIcon icon={faUser} className="mr-2 text-oBlue" />
+              {t('logbook.author')}
+            </label>
+            <input
+              type="text"
+              value={entryForm.author}
+              onChange={(e) => setEntryForm({ ...entryForm, author: e.target.value })}
+              className="w-full bg-hud-elevated text-hud-main px-4 py-3 rounded-xl border border-hud focus:border-oBlue focus:outline-none transition-all duration-300 font-bold"
+              placeholder={t('logbook.authorPlaceholder')}
+            />
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-white mb-2">Author</label>
-              <input
-                type="text"
-                value={entryForm.author}
-                onChange={(e) => setEntryForm({ ...entryForm, author: e.target.value })}
-                className="w-full bg-oGray text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-green-500 focus:outline-none"
-                placeholder="Enter author name"
-              />
-            </div>
+          <div>
+            <label className="block text-xs font-black uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
+              <FontAwesomeIcon icon={faStickyNote} className="mr-2 text-oYellow" />
+              {t('logbook.note')}
+            </label>
+            <textarea
+              value={entryForm.text}
+              onChange={(e) => setEntryForm({ ...entryForm, text: e.target.value })}
+              className="w-full bg-hud-elevated text-hud-main px-4 py-3 rounded-xl border border-hud focus:border-oBlue focus:outline-none transition-all duration-300 font-bold min-h-[120px]"
+              placeholder={t('logbook.notePlaceholder')}
+            />
+          </div>
 
-            <div>
-              <label className="block text-white mb-2">Remarks</label>
-              <textarea
-                value={entryForm.text}
-                onChange={(e) => setEntryForm({ ...entryForm, text: e.target.value })}
-                className="w-full bg-oGray text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-green-500 focus:outline-none"
-                rows="4"
-                placeholder="Enter logbook entry remarks"
-              />
-            </div>
-
-            <div className="bg-oGray rounded-lg p-3">
-              <p className="text-gray-400 text-sm">
-                Current vessel data (position, course, speed, wind, etc.) will be automatically captured when you save this entry.
-              </p>
-            </div>
-
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setShowEntryModal(false)}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={addEntry}
-                disabled={loading || !entryForm.text.trim()}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
-              >
-                <FontAwesomeIcon icon={faPlus} className="mr-2" />
-                Save Entry
-              </button>
-            </div>
+          <div className="flex justify-end space-x-4 pt-6 border-t border-hud">
+            <button
+              onClick={() => setShowEntryModal(false)}
+              className="px-6 py-3 bg-hud-elevated hover:bg-hud-bg text-hud-main font-bold rounded-xl transition-all duration-300"
+            >
+              {t('logbook.cancel')}
+            </button>
+            <button
+              onClick={addEntry}
+              className="px-8 py-3 bg-oBlue hover:bg-blue-600 text-hud-main font-bold rounded-xl transition-all duration-300 flex items-center shadow-lg shadow-oBlue/20"
+            >
+              <FontAwesomeIcon icon={faPlus} className="mr-2" />
+              {t('logbook.saveEntry')}
+            </button>
           </div>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
 
   return (
-    <div className="flex flex-col h-full rightPaneBg overflow-auto">
-      {/* Tab Navigation */}
-      <div className="flex border-b border-gray-800">
-        <button
-          onClick={() => setActiveTab('timeline')}
-          className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center transition-all ${
-            activeTab === 'timeline'
-              ? 'text-green-500 border-b-2 border-green-500'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          <FontAwesomeIcon icon={faTimeline} className="mr-2" />
-          Timeline
-        </button>
-        <button
-          onClick={() => setActiveTab('logbook')}
-          className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center transition-all ${
-            activeTab === 'logbook'
-              ? 'text-green-500 border-b-2 border-green-500'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          <FontAwesomeIcon icon={faBook} className="mr-2" />
-          Logbook
-        </button>
-        <button
-          onClick={() => setActiveTab('analysis')}
-          className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center transition-all ${
-            activeTab === 'analysis'
-              ? 'text-green-500 border-b-2 border-green-500'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          <FontAwesomeIcon icon={faChartLine} className="mr-2" />
-          Analysis
-        </button>
+    <div className="flex flex-col h-full bg-rightPaneBg overflow-hidden">
+      {/* Tab Navigation - Tesla style */}
+      <div className="flex border-b border-hud bg-hud-bg">
+        {[
+          { id: 'timeline', label: t('logbook.missionTimeline'), icon: faTimeline },
+          { id: 'logbook', label: t('logbook.tacticalLog'), icon: faBook },
+          { id: 'analysis', label: t('logbook.fleetIntelligence'), icon: faChartLine }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex-1 py-3 px-2 text-xs font-black uppercase flex items-center justify-center transition-all duration-500 ${
+              activeTab === tab.id
+                ? 'text-oGreen border-b-2 border-oGreen bg-hud-bg'
+                : 'text-hud-secondary hover:text-hud-main tesla-hover'
+            }`}
+          >
+            <FontAwesomeIcon icon={tab.icon} className="mr-2" />
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* Tab Content */}
-      <div className="flex-1 min-h-0">
-        {loading && (
-          <div className="flex items-center justify-center h-32">
-            <div className="text-white">Loading...</div>
-          </div>
-        )}
-        
-        {!loading && activeTab === 'timeline' && renderTimeline()}
-        {!loading && activeTab === 'logbook' && renderLogbookTable()}
-        {!loading && activeTab === 'analysis' && renderAnalysis()}
+      <div className="flex-1 flex flex-col min-h-0">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="h-full overflow-auto scrollbar-hide"
+          >
+            {activeTab === 'logbook' && renderLogbookTable()}
+            {activeTab === 'timeline' && renderTimeline()}
+            {activeTab === 'analysis' && renderAnalysis()}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      {/* Entry Modal */}
-      {renderEntryModal()}
+      {showEntryModal && renderEntryModal()}
     </div>
   );
 };

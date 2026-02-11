@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { toDegrees, oBlue, oGray, oGray2, useOcearoContext, oRed, oYellow, oNight } from '../context/OcearoContext';
+import { toDegrees, oBlue, useOcearoContext, oRed, oYellow, oNight, oGray, oGray2 } from '../context/OcearoContext';
 import { useSignalKPath } from '../hooks/useSignalK';
 import { drawAttitudeInstrument } from '../../lib/AttitudeDrawing';
+import { useTranslation } from 'react-i18next';
 
 export default function ThreeDBoatAttitudeIndicator() {
+  const { t } = useTranslation();
   const { nightMode } = useOcearoContext();
   const canvasRef = useRef(null);
   const [displayMode, setDisplayMode] = useState('canvas'); // 'canvas' or 'text'
@@ -56,8 +58,6 @@ export default function ThreeDBoatAttitudeIndicator() {
             boat: oBlue,
             pitchMarks: oGray,
             oBlue,
-            oGray,
-            oGray2,
             oRed,
             oYellow,
             oNight
@@ -71,27 +71,44 @@ export default function ThreeDBoatAttitudeIndicator() {
 
   return (
     <div
-        className="mt-4 cursor-pointer"
+        className="mt-6 cursor-pointer select-none group"
         style={{
             width: `${CANVAS_WIDTH}px`,
-            height: `${CANVAS_HEIGHT}px`,
+            minHeight: `${CANVAS_HEIGHT}px`,
             boxSizing: 'content-box'
         }}
         onClick={handleToggleClick}
-        title="Click to toggle view"
+        title={t('indicators.clickToToggle')}
     >
       {displayMode === 'canvas' ? (
-        <canvas
-          ref={canvasRef}
-          width={CANVAS_WIDTH}
-          height={CANVAS_HEIGHT}
-          className={nightMode ? 'brightness-75 contrast-125' : ''}
-        />
+        <div className="relative p-1 rounded-xl transition-all duration-300">
+          <canvas
+            ref={canvasRef}
+            width={CANVAS_WIDTH}
+            height={CANVAS_HEIGHT}
+            className={`w-full h-full ${nightMode ? 'brightness-75 contrast-125' : 'drop-shadow-lg'}`}
+          />
+        </div>
       ) : (
-        <div className={`text-[10px] font-black uppercase flex flex-col items-end w-full tracking-tighter ${nightMode ? 'text-oNight' : 'text-white'}`}>
-          <div className="text-right">Roll: <span className={`${nightMode ? 'text-oNight' : 'text-oRed'} font-mono`}>{attitudeValues.roll.toFixed(1)}°</span></div>
-          <div className="text-right">Pitch: <span className={`${nightMode ? 'text-oNight' : 'text-oBlue'} font-mono`}>{attitudeValues.pitch.toFixed(1)}°</span></div>
-          <div className="text-right">Yaw: <span className={`${nightMode ? 'text-oNight' : 'text-oYellow'} font-mono`}>{attitudeValues.yaw.toFixed(1)}°</span></div>
+        <div className={`p-3 rounded-xl transition-all duration-300 flex flex-col items-end space-y-2 ${nightMode ? 'text-oNight' : 'text-hud-main'}`}>
+          <div className="flex flex-col items-end">
+            <span className={`text-xs font-black uppercase tracking-widest leading-none mb-1 ${nightMode ? 'text-oNight/40' : 'text-hud-dim'}`}>{t('indicators.roll')}</span>
+            <span className={`text-xs font-mono font-bold ${nightMode ? 'text-oNight' : 'text-oRed'}`}>
+              {attitudeValues.roll.toFixed(1)}°
+            </span>
+          </div>
+          <div className="flex flex-col items-end">
+            <span className={`text-xs font-black uppercase tracking-widest leading-none mb-1 ${nightMode ? 'text-oNight/40' : 'text-hud-dim'}`}>{t('indicators.pitch')}</span>
+            <span className={`text-xs font-mono font-bold ${nightMode ? 'text-oNight' : 'text-oBlue'}`}>
+              {attitudeValues.pitch.toFixed(1)}°
+            </span>
+          </div>
+          <div className="flex flex-col items-end">
+            <span className={`text-xs font-black uppercase tracking-widest leading-none mb-1 ${nightMode ? 'text-oNight/40' : 'text-hud-dim'}`}>{t('indicators.yaw')}</span>
+            <span className={`text-xs font-mono font-bold ${nightMode ? 'text-oNight' : 'text-oYellow'}`}>
+              {attitudeValues.yaw.toFixed(1)}°
+            </span>
+          </div>
         </div>
       )}
     </div>

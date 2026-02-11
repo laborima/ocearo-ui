@@ -5,9 +5,10 @@ import { BATTERY_CONFIG, estimateStateOfCharge, getBatteryColorClass, isBatteryC
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faBolt, faBatteryFull, faChargingStation, faMicrochip, faCube, faMemory, faCode, faTemperatureHalf,
-  faCar, faSnowflake, faArrowUp, faArrowDown, faLeaf, faChartLine, faGaugeHigh, faQuestionCircle
+  faCar, faSnowflake, faArrowUp, faArrowDown, faLeaf, faChartLine, faGaugeHigh, faQuestionCircle, faClock
 } from '@fortawesome/free-solid-svg-icons';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 // Import extracted components
 import LineChart from '../charts/LineChart';
@@ -15,7 +16,10 @@ import LineChart from '../charts/LineChart';
 import * as THREE from 'three';
 
 const BatteryMonitor = () => {
+  const { t } = useTranslation();
   const { nightMode } = useOcearoContext();
+  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-hud-secondary';
+  const mutedTextClass = nightMode ? 'text-oNight/70' : 'text-hud-muted';
   const [activeTab, setActiveTab] = useState('battery'); // battery, graph, performance
   const [activeView, setActiveView] = useState('voltage'); // voltage, current, soc
   const [activePerformanceView, setActivePerformanceView] = useState('fps'); // fps, drawCalls, triangles, memory
@@ -171,7 +175,7 @@ const BatteryMonitor = () => {
     return () => clearTimeout(intervalId);
   }, [currentBatteryData]);
 
-  const [availableBatteries] = useState([{ id: '1', name: 'House Battery' }, { id: '0', name: 'Starter Battery' }]);
+  const [availableBatteries] = useState([{ id: '1', nameKey: 'battery.houseBattery' }, { id: '0', nameKey: 'battery.starterBattery' }]);
 
   const batteryScales = {
     voltage: { min: 10.5, max: 15, step: 1 },
@@ -193,39 +197,27 @@ const BatteryMonitor = () => {
   const hasTemperatureData = currentBatteryData.temperature !== null;
 
   return (
-    <div className="flex flex-col h-full rightPaneBg overflow-auto">
-      {/* Tab Navigation - Modern Style */}
-      <div className="flex border-b border-gray-800">
-        <button
-          onClick={() => setActiveTab('battery')}
-          className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center transition-all ${
-            activeTab === 'battery'
-              ? 'text-green-500 border-b-2 border-green-500'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          <FontAwesomeIcon icon={faLeaf} className="mr-2" /> Energy
-        </button>
-        <button
-          onClick={() => setActiveTab('graph')}
-          className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center transition-all ${
-            activeTab === 'graph'
-              ? 'text-green-500 border-b-2 border-green-500'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          <FontAwesomeIcon icon={faChartLine} className="mr-2" /> Consumption
-        </button>
-        <button
-          onClick={() => setActiveTab('performance')}
-          className={`flex-1 py-3 px-4 text-sm font-medium flex items-center justify-center transition-all ${
-            activeTab === 'performance'
-              ? 'text-green-500 border-b-2 border-green-500'
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          <FontAwesomeIcon icon={faGaugeHigh} className="mr-2" /> Performance
-        </button>
+    <div className="flex flex-col h-full bg-rightPaneBg overflow-hidden">
+      {/* Tab Navigation - Tesla Style */}
+      <div className="flex border-b border-hud bg-hud-bg">
+        {[
+          { id: 'battery', label: t('battery.energy'), icon: faLeaf },
+          { id: 'graph', label: t('battery.usage'), icon: faChartLine },
+          { id: 'performance', label: t('battery.perf'), icon: faGaugeHigh }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex-1 py-3 px-2 text-xs font-black uppercase flex items-center justify-center transition-all duration-500 ${
+              activeTab === tab.id
+                ? 'text-oGreen border-b-2 border-oGreen bg-hud-bg'
+                : 'text-hud-secondary hover:text-hud-main tesla-hover'
+            }`}
+          >
+            <FontAwesomeIcon icon={tab.icon} className="mr-2" />
+            {tab.label}
+          </button>
+        ))}
       </div>
       
       <div className="flex-1 flex flex-col min-h-0">
@@ -236,34 +228,33 @@ const BatteryMonitor = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-              className="p-4 flex flex-col flex-1 min-h-0 rightPaneBg"
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="p-4 flex flex-col flex-1 min-h-0 overflow-auto scrollbar-hide"
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-white flex items-center">
-                  Battery information {currentBatteryData.stateOfCharge.toFixed(0)}%
+                <h2 className="text-sm font-black text-hud-main uppercase tracking-[0.2em] flex items-center">
+                  <div className="w-2 h-2 rounded-full bg-oGreen mr-3 animate-soft-pulse" />
+                  {t('battery.powerGridStatus')}
                   <button 
-                    className="ml-2 bg-oGray2 rounded-full w-6 h-6 flex items-center justify-center text-gray-400 hover:bg-oGray focus:outline-none focus:ring-1 focus:ring-green-500"
+                    className="ml-4 bg-hud-elevated rounded-full w-7 h-7 flex items-center justify-center text-hud-secondary tesla-hover focus:outline-none border border-hud shadow-soft"
                     onClick={() => setShowBatteryDetails(!showBatteryDetails)}
-                    aria-label="Battery details"
+                    aria-label={t('battery.batteryDetails')}
                   >
                     <FontAwesomeIcon icon={faQuestionCircle} className="text-xs" />
                   </button>
                 </h2>
                 
-                <div className="flex items-center space-x-2">
-                  <select 
-                    className="bg-oGray2 px-2 py-1 rounded text-white text-sm border border-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500"
-                    value={selectedBattery}
-                    onChange={(e) => setSelectedBattery(e.target.value)}
-                  >
-                    {availableBatteries.map((battery) => (
-                      <option key={battery.id} value={battery.id}>
-                        {battery.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <select 
+                  className="bg-hud-elevated px-4 py-1.5 rounded-sm text-hud-main text-xs font-black uppercase border border-hud focus:outline-none tesla-hover transition-all duration-500 shadow-soft"
+                  value={selectedBattery}
+                  onChange={(e) => setSelectedBattery(e.target.value)}
+                >
+                  {availableBatteries.map((battery) => (
+                    <option key={battery.id} value={battery.id} className="bg-oNight">
+                      {t(battery.nameKey)}
+                    </option>
+                  ))}
+                </select>
               </div>
               
               <AnimatePresence>
@@ -272,87 +263,47 @@ const BatteryMonitor = () => {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="bg-oGray2 p-4 rounded-lg mb-6 relative overflow-hidden"
+                    className="tesla-card p-4 mb-4 relative overflow-hidden bg-hud-elevated"
                   >
                     <button 
-                      className="absolute top-2 right-2 text-gray-400 hover:text-white"
+                      className="absolute top-2 right-3 text-hud-secondary hover:text-hud-main font-black text-xl"
                       onClick={() => setShowBatteryDetails(false)}
                       aria-label="Close details"
                     >
                       ×
                     </button>
-                    <div className="text-gray-400 text-sm font-medium mb-4 uppercase">Battery Details</div>
+                    <div className="text-hud-secondary text-xs font-black mb-4 uppercase tracking-widest">{t('battery.batterySpecs')}</div>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="flex items-start">
-                        <div className="w-24 text-xs text-gray-400 uppercase">Name</div>
-                        <div className="text-sm text-white">{currentBatteryData.name || 'N/A'}</div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className="w-24 text-xs text-gray-400 uppercase">Chemistry</div>
-                        <div className="text-sm text-white">{currentBatteryData.chemistry || 'N/A'}</div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className="w-24 text-xs text-gray-400 uppercase">Manufacturer</div>
-                        <div className="text-sm text-white">{currentBatteryData.manufacturer || 'N/A'}</div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className="w-24 text-xs text-gray-400 uppercase">Location</div>
-                        <div className="text-sm text-white">{currentBatteryData.location || 'N/A'}</div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className="w-24 text-xs text-gray-400 uppercase">Bus</div>
-                        <div className="text-sm text-white">{currentBatteryData.associatedBus || 'N/A'}</div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className="w-24 text-xs text-gray-400 uppercase">Health</div>
-                        <div className="text-sm text-white">{currentBatteryData.stateOfHealth ? `${(currentBatteryData.stateOfHealth * 100).toFixed(0)}%` : 'N/A'}</div>
-                      </div>
+                      {[
+                        { label: t('battery.identifier'), value: currentBatteryData.name },
+                        { label: t('battery.chemistry'), value: currentBatteryData.chemistry },
+                        { label: t('battery.manufacturer'), value: currentBatteryData.manufacturer },
+                        { label: t('battery.position'), value: currentBatteryData.location },
+                        { label: t('battery.busLink'), value: currentBatteryData.associatedBus },
+                        { label: t('battery.condition'), value: currentBatteryData.stateOfHealth ? `${(currentBatteryData.stateOfHealth * 100).toFixed(0)}%` : null }
+                      ].map((item, idx) => (
+                        <div key={idx} className="flex flex-col">
+                          <div className="text-xs text-hud-muted uppercase font-black tracking-widest mb-0.5">{item.label}</div>
+                          <div className="text-xs text-hud-main font-black truncate uppercase gliding-value">{item.value || 'N/A'}</div>
+                        </div>
+                      ))}
                     </div>
 
                     {/* Capacity information if available */}
                     {(currentBatteryData.nominalCapacity || currentBatteryData.actualCapacity || currentBatteryData.remainingCapacity) && (
-                      <div className="mt-4">
-                        <div className="text-gray-400 text-xs mb-2">CAPACITY</div>
+                      <div className="mt-4 pt-3 border-t border-hud">
+                        <div className="text-hud-muted text-xs font-black mb-2 uppercase tracking-widest">{t('battery.energyCapacity')}</div>
                         <div className="grid grid-cols-3 gap-3">
-                          {currentBatteryData.nominalCapacity && (
-                            <div className="bg-oGray p-2 rounded-lg text-center">
-                              <div className="text-xs text-gray-400">NOMINAL</div>
-                              <div className="text-sm text-white">{(currentBatteryData.nominalCapacity / 3600).toFixed(1)} Wh</div>
+                          {[
+                            { label: t('battery.nominal'), value: currentBatteryData.nominalCapacity },
+                            { label: t('battery.actual'), value: currentBatteryData.actualCapacity },
+                            { label: t('battery.remaining'), value: currentBatteryData.remainingCapacity }
+                          ].map((cap, idx) => (
+                            <div key={idx} className="bg-hud-bg p-2 rounded text-center tesla-hover">
+                              <div className="text-xs text-hud-secondary uppercase font-black mb-1">{cap.label}</div>
+                              <div className="text-xs text-hud-main font-black gliding-value">{cap.value ? `${(cap.value / 3600).toFixed(1)} Wh` : 'N/A'}</div>
                             </div>
-                          )}
-                          {currentBatteryData.actualCapacity && (
-                            <div className="bg-oGray p-2 rounded-lg text-center">
-                              <div className="text-xs text-gray-400">ACTUAL</div>
-                              <div className="text-sm text-white">{(currentBatteryData.actualCapacity / 3600).toFixed(1)} Wh</div>
-                            </div>
-                          )}
-                          {currentBatteryData.remainingCapacity && (
-                            <div className="bg-oGray p-2 rounded-lg text-center">
-                              <div className="text-xs text-gray-400">REMAINING</div>
-                              <div className="text-sm text-white">{(currentBatteryData.remainingCapacity / 3600).toFixed(1)} Wh</div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Lifetime statistics if available */}
-                    {(currentBatteryData.lifetimeDischarge || currentBatteryData.lifetimeRecharge) && (
-                      <div className="mt-4">
-                        <div className="text-gray-400 text-xs mb-2">LIFETIME STATISTICS</div>
-                        <div className="grid grid-cols-2 gap-3">
-                          {currentBatteryData.lifetimeDischarge && (
-                            <div className="bg-oGray p-2 rounded-lg">
-                              <div className="text-xs text-gray-400">DISCHARGE</div>
-                              <div className="text-sm text-white">{(currentBatteryData.lifetimeDischarge / 3600).toFixed(0)} Ah</div>
-                            </div>
-                          )}
-                          {currentBatteryData.lifetimeRecharge && (
-                            <div className="bg-oGray p-2 rounded-lg">
-                              <div className="text-xs text-gray-400">RECHARGE</div>
-                              <div className="text-sm text-white">{(currentBatteryData.lifetimeRecharge / 3600).toFixed(0)} Ah</div>
-                            </div>
-                          )}
+                          ))}
                         </div>
                       </div>
                     )}
@@ -360,183 +311,93 @@ const BatteryMonitor = () => {
                 )}
               </AnimatePresence>
               
-              <div className="flex-1 flex flex-col justify-between">
-                <div className="relative bg-oGray2 rounded-lg p-4 mb-6">
-                  <div className="mb-2 flex justify-between items-center">
-                    <span className="text-gray-400 text-sm">BATTERY PERCENTAGE</span>
-                    <div className={`px-3 py-1 rounded-lg text-sm ${isCharging ? 'bg-green-900 text-green-400' : 'bg-red-900 text-red-400'}`}>
-                      <FontAwesomeIcon icon={isCharging ? faChargingStation : faBatteryFull} className="mr-2" />
-                      {isCharging ? 'Charging' : 'Discharging'}
+              <div className="flex-1 flex flex-col space-y-4">
+                <div className="relative tesla-card p-6 bg-hud-bg border border-hud">
+                  <div className="mb-6 flex justify-between items-center">
+                    <span className="text-hud-secondary text-xs font-black uppercase tracking-[0.2em] opacity-60">{t('battery.gridNodeStatus')}</span>
+                    <div className={`px-3 py-1 rounded-sm text-xs font-black uppercase tracking-widest shadow-soft ${isCharging ? 'bg-oGreen/10 text-oGreen border border-oGreen/20 animate-soft-pulse' : 'bg-oRed/10 text-oRed border border-oRed/20'}`}>
+                      {isCharging ? t('battery.systemInflow') : t('battery.systemOutflow')}
                     </div>
                   </div>
                   
-                  <div className="h-24 relative mt-4 flex flex-col justify-between">
-                    <div className="flex justify-between text-xs text-gray-400 mb-1">
-                      <span>State of Charge</span>
-                      {currentBatteryData.dischargeLimit && (
-                        <span>Discharge Limit: {(currentBatteryData.dischargeLimit * 100).toFixed(0)}%</span>
-                      )}
-                    </div>
-                    
-                    <div className="h-10 bg-oGray relative rounded-lg overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 opacity-20"></div>
-                      
-                      {/* Discharge limit marker if available */}
-                      {currentBatteryData.dischargeLimit && (
-                        <div className="absolute h-full border-r-2 border-yellow-500 border-dashed" 
-                             style={{left: `${currentBatteryData.dischargeLimit * 100}%`}}>
-                          <div className="absolute -right-1 top-0 w-2 h-2 bg-yellow-500 rounded-full"></div>
-                        </div>
-                      )}
+                  <div className="h-24 relative mt-8 flex flex-col justify-between">
+                    <div className="h-2 bg-hud-elevated relative rounded-full overflow-hidden shadow-inner">
+                      <div className="absolute inset-0 bg-gradient-to-r from-oRed/10 via-oYellow/10 to-oGreen/10 opacity-30"></div>
                       
                       <div 
-                        className={`h-full ${isCharging ? 'bg-gradient-to-r from-green-600 to-green-400' : 'bg-gradient-to-r from-orange-500 via-yellow-400 to-green-500'}`}
+                        className={`h-full transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${isCharging ? 'bg-gradient-to-r from-oGreen/60 to-oGreen shadow-[0_0_12px_var(--color-oGreen)]' : 'bg-gradient-to-r from-oRed/60 via-oYellow/60 to-oGreen/60 shadow-[0_0_12px_var(--color-oGreen)] shadow-opacity-30'}`}
                         style={{width: `${currentBatteryData.stateOfCharge}%`}}
                       />
-                      <div className="absolute top-0 h-full border-r-2 border-white" style={{left: `${currentBatteryData.stateOfCharge}%`}}>
-                        <div className="absolute -right-1 top-0 w-2 h-2 bg-white rounded-full"></div>
-                        <div className="absolute -right-6 -top-6 bg-oGray2 px-1 py-0.5 rounded text-xs text-white">
-                          {currentBatteryData.stateOfCharge.toFixed(0)}%
-                        </div>
-                      </div>
+                    </div>
+                    {/* Floating indicator */}
+                    <div 
+                      className="absolute top-0 flex flex-col items-center transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1)" 
+                      style={{left: `${currentBatteryData.stateOfCharge}%`, transform: 'translateX(-50%)', top: '-12px'}}
+                    >
+                      <div className="w-1 h-6 bg-hud-main shadow-[0_0_15px_var(--hud-text-main)] shadow-opacity-80 rounded-full"></div>
+                      <div className="mt-8 text-3xl font-black text-hud-main gliding-value tracking-tighter">{currentBatteryData.stateOfCharge.toFixed(0)}%</div>
                     </div>
                     
-                    <div className="flex justify-between mt-2">
-                      <div className="text-xs text-white flex items-center">
-                        <div className="w-3 h-3 bg-red-500 rounded-full mr-1"></div> Empty
+                    <div className="flex justify-between mt-12 text-xs font-black uppercase tracking-[0.2em]">
+                      <div className="text-oRed opacity-40">{t('battery.criticalNode')}</div>
+                      <div className="text-hud-main bg-hud-elevated px-4 py-1.5 rounded-sm flex items-center shadow-soft border border-hud">
+                        <FontAwesomeIcon icon={isCharging ? faChargingStation : faClock} className="mr-3 text-xs text-oBlue opacity-60" />
+                        <span className="gliding-value opacity-80 tracking-widest">
+                          {isCharging 
+                            ? t('battery.acquiringFullCharge') 
+                            : currentBatteryData.timeRemaining 
+                              ? t('battery.depletionIn', { hours: (currentBatteryData.timeRemaining / 3600).toFixed(1) }) 
+                              : t('battery.endurance', { hours: (currentBatteryData.stateOfCharge / (Math.abs(currentBatteryData.current) / 100 || 1)).toFixed(1) })}
+                        </span>
                       </div>
-                      <div className="text-xs text-white bg-oGray2 px-2 py-1 rounded">
-                        {isCharging 
-                          ? 'Charging' 
-                          : currentBatteryData.timeRemaining 
-                            ? `Time remaining: ${(currentBatteryData.timeRemaining / 3600).toFixed(1)} h` 
-                            : `Est. time: ${(currentBatteryData.stateOfCharge / (Math.abs(currentBatteryData.current) / 100 || 1)).toFixed(1)} h`}
-                      </div>
-                      <div className="text-xs text-white flex items-center">
-                        <div className="w-3 h-3 bg-green-500 rounded-full mr-1"></div> Full
-                      </div>
+                      <div className="text-oGreen opacity-40">{t('battery.nominalGrid')}</div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-oGray2 rounded-lg p-4">
-                  <div className="text-gray-400 text-sm font-medium mb-2">POWER CONSUMPTION</div>
-                  
-                  {/* Autopilot consumption */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-1">
-                      <div className="flex items-center">
-                        <FontAwesomeIcon icon={faMicrochip} className="text-gray-400 mr-2" />
-                        <span className="text-white">Autopilot</span>
-                        {currentBatteryData.autopilotState && <span className="ml-2 px-1.5 py-0.5 bg-green-900 text-green-400 text-xs rounded">Active</span>}
-                      </div>
-                      <div className="text-sm text-white font-bold">
-                        {currentBatteryData.autopilotState ? (Math.abs(currentBatteryData.current) * 0.4).toFixed(1) : "0.0"}%
-                      </div>
-                    </div>
-                    <div className="h-2 bg-oGray rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-blue-500" 
-                        style={{width: `${currentBatteryData.autopilotState ? Math.min(80, Math.abs(currentBatteryData.current) * 0.8) : 0}%`}}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* Navigation instruments consumption */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-1">
-                      <div className="flex items-center">
-                        <FontAwesomeIcon icon={faGaugeHigh} className="text-gray-400 mr-2" />
-                        <span className="text-white">Navigation Instruments</span>
-                      </div>
-                      <div className="text-sm text-white font-bold">
-                        {(Math.abs(currentBatteryData.current) * 0.3).toFixed(1)}%
-                      </div>
-                    </div>
-                    <div className="h-2 bg-oGray rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-cyan-500" 
-                        style={{width: `${Math.min(60, Math.abs(currentBatteryData.current) * 0.6)}%`}}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* Lighting consumption */}
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-1">
-                      <div className="flex items-center">
-                        <FontAwesomeIcon icon={faBolt} className="text-gray-400 mr-2" />
-                        <span className="text-white">Navigation Lights</span>
-                        {currentBatteryData.navigationLightsOn && 
-                          <span className="ml-2 px-1.5 py-0.5 bg-green-900 text-green-400 text-xs rounded">On</span>
-                        }
-                      </div>
-                      <div className="text-sm text-white font-bold">
-                        {(currentBatteryData.navigationLightsOn ? 0.2 : 0).toFixed(1)}%
-                      </div>
-                    </div>
-                    <div className="h-2 bg-oGray rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-amber-500" 
-                        style={{width: `${(currentBatteryData.navigationLightsOn ? 15 : 0)}%`}}
-                      ></div>
-                    </div>
-                  </div>
-
-                  {/* Battery temperature effect */}
-                  {hasTemperatureData && (
-                    <div className="mb-4">
-                      <div className="flex justify-between items-center mb-1">
-                        <div className="flex items-center">
-                          <FontAwesomeIcon icon={faTemperatureHalf} className="text-gray-400 mr-2" />
-                          <span className="text-white">Battery Temperature</span>
-                        </div>
-                        <div className="text-sm text-white font-bold">
-                          {(currentBatteryData.temperature * 0.01).toFixed(1)}%
-                        </div>
-                      </div>
-                      <div className="h-2 bg-oGray rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-orange-500" 
-                          style={{width: `${Math.min(30, currentBatteryData.temperature * 0.5)}%`}}
-                        ></div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Marine-specific power tips */}
-                  <div className="mt-8 rightPaneBg bg-opacity-50 p-3 rounded-lg text-sm">
-                    <div className="text-white font-medium mb-2">MARINE POWER SAVING TIPS</div>
-                    <div className="flex items-center text-green-400 mb-1">
-                      <FontAwesomeIcon icon={faBolt} className="mr-2" />
-                      <span>Turn off navigation lights during daylight to save ~{(currentBatteryData.voltage * 0.8).toFixed(1)} W</span>
-                    </div>
-                    <div className="flex items-center text-green-400 mb-1">
-                      <FontAwesomeIcon icon={faMicrochip} className="mr-2" />
-                      <span>Use wind vane steering when possible instead of autopilot</span>
-                    </div>
-                    <div className="flex items-center text-amber-400">
-                      <FontAwesomeIcon icon={faGaugeHigh} className="mr-2" />
-                      <span>Current power usage: {(currentBatteryData.voltage * currentBatteryData.current).toFixed(1)} W</span>
-                    </div>
+                <div className="tesla-card p-6 flex-1 bg-hud-bg border border-hud">
+                  <div className="text-hud-secondary text-xs font-black uppercase tracking-[0.2em] mb-8 flex items-center opacity-60">
+                    <div className="w-1.5 h-1.5 rounded-full bg-oBlue mr-3" />
+                    {t('battery.loadDistribution')}
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-4 mt-6 text-center">
-                    <div className="bg-oGray2 p-3 rounded-lg">
-                      <div className="text-xs text-gray-400">VOLTAGE</div>
-                      <div className="text-lg font-bold text-white">{currentBatteryData.voltage.toFixed(1)}V</div>
-                      {currentBatteryData.voltageRipple && (
-                        <div className="text-xs text-gray-400 mt-1">Ripple: {currentBatteryData.voltageRipple.toFixed(2)}V</div>
-                      )}
-                    </div>
-                    <div className="bg-oGray2 p-3 rounded-lg">
-                      <div className="text-xs text-gray-400">CURRENT</div>
-                      <div className="text-lg font-bold text-white">{currentBatteryData.current.toFixed(1)}A</div>
-                    </div>
-                    <div className="bg-oGray2 p-3 rounded-lg">
-                      <div className="text-xs text-gray-400">POWER</div>
-                      <div className="text-lg font-bold text-white">{(currentBatteryData.voltage * currentBatteryData.current).toFixed(0)}W</div>
-                    </div>
+                  <div className="space-y-6">
+                    {[
+                      { icon: faMicrochip, label: t('battery.autopilotNode'), color: 'bg-oBlue', value: currentBatteryData.autopilotState ? (Math.abs(currentBatteryData.current) * 0.4) : 0, state: currentBatteryData.autopilotState },
+                      { icon: faGaugeHigh, label: t('battery.telemetryArray'), color: 'bg-oGreen', value: (Math.abs(currentBatteryData.current) * 0.3), state: true }
+                    ].map((load, idx) => (
+                      <div key={idx} className="tesla-hover p-2 rounded-sm transition-all group">
+                        <div className="flex justify-between items-center mb-3">
+                          <div className="flex items-center">
+                            <FontAwesomeIcon icon={load.icon} className="text-hud-muted mr-3 text-xs opacity-50 group-hover:opacity-100 transition-opacity" />
+                            <span className="text-hud-main text-xs font-black uppercase tracking-widest">{load.label}</span>
+                            {load.state === 'auto' || load.state === true && load.label === 'Autopilot node' && (
+                              <span className="ml-3 px-2 py-0.5 bg-oGreen/10 text-oGreen text-xs font-black uppercase rounded-sm animate-soft-pulse border border-oGreen/20">Sync</span>
+                            )}
+                          </div>
+                          <div className="text-xs text-hud-main font-black gliding-value tracking-tighter">{load.value.toFixed(1)}%</div>
+                        </div>
+                        <div className="h-1 bg-hud-elevated rounded-full overflow-hidden shadow-inner">
+                          <div 
+                            className={`h-full ${load.color} gliding-value opacity-60 group-hover:opacity-100 transition-all duration-700`} 
+                            style={{width: `${Math.min(100, load.value * 2.5)}%`}}
+                          ></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4 mt-10">
+                    {[
+                      { label: t('battery.voltageNode'), value: `${currentBatteryData.voltage.toFixed(1)}V`, color: 'text-oBlue' },
+                      { label: t('battery.amperageLoad'), value: `${currentBatteryData.current.toFixed(1)}A`, color: 'text-oYellow' },
+                      { label: t('battery.gridOutput'), value: `${(currentBatteryData.voltage * currentBatteryData.current).toFixed(0)}W`, color: 'text-hud-main' }
+                    ].map((stat, idx) => (
+                      <div key={idx} className="bg-hud-elevated p-4 rounded-sm tesla-hover text-center border border-hud">
+                        <div className="text-xs text-hud-muted uppercase font-black tracking-widest mb-2 opacity-60">{stat.label}</div>
+                        <div className={`text-xl font-black gliding-value tracking-tighter ${stat.color}`}>{stat.value}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -549,93 +410,101 @@ const BatteryMonitor = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-              className="p-4 flex flex-col flex-1 min-h-0 rightPaneBg"
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="p-4 flex flex-col flex-1 min-h-0"
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-white">Consumption Graph</h2>
-                <div className="flex space-x-2 bg-oGray2 rounded-lg overflow-hidden p-1">
-                  {['voltage', 'current', 'soc', 'temperature'].map((view) => (
-                    (view !== 'temperature' || hasTemperatureData) && (
-                      <button 
-                        key={view}
-                        className={`px-3 py-1 rounded text-sm transition-all ${activeView === view ? 'bg-oGray text-white' : 'text-gray-400'}`}
-                        onClick={() => setActiveView(view)}
-                      >
-                        {view.charAt(0).toUpperCase() + view.slice(1)}
-                      </button>
-                    )
+                <h2 className="text-sm font-black text-hud-main uppercase tracking-[0.2em] flex items-center">
+                  <div className="w-2 h-2 rounded-full bg-oBlue mr-3 animate-soft-pulse" />
+                  {t('battery.telemetryHistory')}
+                </h2>
+                <div className="flex bg-hud-elevated rounded-sm p-1 border border-hud shadow-soft">
+                  {['voltage', 'current', 'soc'].map((view) => (
+                    <button
+                      key={view}
+                      onClick={() => setActiveView(view)}
+                      className={`px-4 py-1 rounded-sm text-xs font-black uppercase transition-all duration-500 ${
+                        activeView === view ? 'bg-oBlue text-hud-main shadow-lg shadow-oBlue/20' : 'text-hud-secondary hover:text-hud-main tesla-hover'
+                      }`}
+                    >
+                      {view === 'soc' ? 'SOC %' : view}
+                    </button>
                   ))}
                 </div>
               </div>
               
-              <div className="bg-oGray2 rounded-lg p-4 mb-6 flex-1 min-h-[300px]">
-                <div className="h-full relative overflow-hidden">
-                  <LineChart 
-                    data={batteryHistory} 
-                    dataKey={activeView === 'soc' ? 'stateOfCharge' : activeView} 
-                    color={activeView === 'voltage' ? "#3b82f6" : activeView === 'current' ? "#ef4444" : activeView === 'soc' ? "#22c55e" : "#f97316"}
-                    scale={batteryScales[activeView]}
-                    label={activeView.charAt(0).toUpperCase() + activeView.slice(1)}
-                    unit={activeView === 'voltage' ? "V" : activeView === 'current' ? "A" : activeView === 'soc' ? "%" : "°C"}
-                    showPoints
-                    fillGradient
-                  />
-                </div>
+              <div className="flex-1 tesla-card p-6 min-h-[220px] bg-hud-bg border border-hud">
+                <LineChart 
+                  data={batteryHistory}
+                  dataKey={activeView}
+                  color={activeView === 'voltage' ? 'var(--color-oBlue)' : activeView === 'current' ? 'var(--color-oYellow)' : 'var(--color-oGreen)'}
+                  unit={activeView === 'voltage' ? 'V' : activeView === 'current' ? 'A' : '%'}
+                  scale={batteryScales[activeView]}
+                />
               </div>
             </motion.div>
           )}
-          
+
           {activeTab === 'performance' && (
             <motion.div 
               key="performance"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-              className="p-4 flex flex-col flex-1 min-h-0 rightPaneBg"
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="p-4 flex flex-col flex-1 min-h-0 overflow-auto scrollbar-hide"
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-white">Performance Metrics</h2>
-                <div className="flex space-x-2 bg-oGray2 rounded-lg overflow-hidden p-1">
-                  {['fps', 'drawCalls', 'triangles', 'memory'].map((view) => (
-                    <button 
+                <h2 className="text-sm font-black text-hud-main uppercase tracking-[0.2em] flex items-center">
+                  <div className="w-2 h-2 rounded-full bg-oGreen mr-3 animate-soft-pulse" />
+                  {t('battery.systemDiagnostic')}
+                </h2>
+                <div className="flex bg-hud-elevated rounded-sm p-1 border border-hud shadow-soft">
+                  {['fps', 'ms', 'memory'].map((view) => (
+                    <button
                       key={view}
-                      className={`px-3 py-1 rounded text-sm transition-all ${activePerformanceView === view ? 'bg-oGray text-white' : 'text-gray-400'}`}
                       onClick={() => setActivePerformanceView(view)}
+                      className={`px-4 py-1 rounded-sm text-xs font-black uppercase transition-all duration-500 ${
+                        activePerformanceView === view ? 'bg-oBlue text-hud-main shadow-lg shadow-oBlue/20' : 'text-hud-secondary hover:text-hud-main tesla-hover'
+                      }`}
                     >
-                      {view === 'drawCalls' ? 'Calls' : view.charAt(0).toUpperCase() + view.slice(1)}
+                      {view}
                     </button>
                   ))}
                 </div>
               </div>
               
-              <div className="bg-oGray2 rounded-lg p-4 mb-6 flex-1 min-h-[300px]">
-                <div className="h-full relative overflow-hidden rounded-lg">
-                  <LineChart 
-                    data={performanceHistory} 
-                    dataKey={activePerformanceView} 
-                    color={activePerformanceView === 'fps' ? "#06b6d4" : activePerformanceView === 'drawCalls' ? "#8b5cf6" : activePerformanceView === 'triangles' ? "#6366f1" : "#10b981"}
-                    scale={performanceScales[activePerformanceView]}
-                    label={activePerformanceView.charAt(0).toUpperCase() + activePerformanceView.slice(1)}
-                    unit={activePerformanceView === 'memory' ? " MB" : ""}
-                    showPoints
-                    fillGradient
-                  />
-                </div>
+              <div className="flex-1 tesla-card p-6 min-h-[200px] mb-6 bg-hud-bg border border-hud">
+                <LineChart 
+                  data={performanceHistory}
+                  dataKey={activePerformanceView}
+                  color={'var(--color-oBlue)'}
+                  unit={activePerformanceView === 'fps' ? '' : activePerformanceView === 'ms' ? 'ms' : 'MB'}
+                  scale={performanceScales[activePerformanceView]}
+                />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-oGray2 p-4 rounded-lg border border-gray-800">
-                  <div className="text-xs text-gray-400 uppercase mb-1">Current FPS</div>
-                  <div className="text-xl font-bold text-cyan-400">
-                    {performanceHistory[performanceHistory.length - 1].fps.toFixed(1)}
+                <div className="tesla-card p-6 bg-hud-bg tesla-hover border border-hud">
+                  <div className="text-xs text-hud-muted font-black uppercase mb-4 tracking-[0.2em] opacity-60">{t('battery.graphicsEngine')}</div>
+                  <div className="flex justify-between items-center text-xs font-black text-hud-main uppercase mb-3">
+                    <span className="text-hud-secondary tracking-widest">{t('battery.drawCalls')}</span>
+                    <span className="gliding-value">{performanceHistory[performanceHistory.length-1].drawCalls}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs font-black text-hud-main uppercase">
+                    <span className="text-hud-secondary tracking-widest">{t('battery.geometry')}</span>
+                    <span className="gliding-value">{(performanceHistory[performanceHistory.length-1].triangles / 1000).toFixed(1)}k poly</span>
                   </div>
                 </div>
-                <div className="bg-oGray2 p-4 rounded-lg border border-gray-800">
-                  <div className="text-xs text-gray-400 uppercase mb-1">Memory Usage</div>
-                  <div className="text-xl font-bold text-green-400">
-                    {performanceHistory[performanceHistory.length - 1].memory} MB
+                <div className="tesla-card p-6 bg-hud-bg tesla-hover border border-hud">
+                  <div className="text-xs text-hud-muted font-black uppercase mb-4 tracking-[0.2em] opacity-60">{t('battery.memoryManagement')}</div>
+                  <div className="flex justify-between items-center text-xs font-black text-hud-main uppercase mb-3">
+                    <span className="text-hud-secondary tracking-widest">{t('battery.jsHeap')}</span>
+                    <span className="gliding-value">{performanceHistory[performanceHistory.length-1].memory} MB</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs font-black text-hud-main uppercase">
+                    <span className="text-hud-secondary tracking-widest">{t('battery.vramTextures')}</span>
+                    <span className="gliding-value">{performanceHistory[performanceHistory.length-1].textures} units</span>
                   </div>
                 </div>
               </div>

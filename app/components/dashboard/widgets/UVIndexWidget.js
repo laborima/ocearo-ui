@@ -1,10 +1,12 @@
 'use client';
 import React, { useMemo } from 'react';
 import { useSignalKPath } from '../../hooks/useSignalK';
+import { oGreen, oRed, oYellow, useOcearoContext } from '../../context/OcearoContext';
 import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSun } from '@fortawesome/free-solid-svg-icons';
 import BaseWidget from './BaseWidget';
+import { useTranslation } from 'react-i18next';
 
 const UV_CONFIG = {
   path: 'environment.outside.uvIndex',
@@ -12,6 +14,7 @@ const UV_CONFIG = {
 };
 
 export default function UVIndexWidget() {
+  const { t } = useTranslation();
   const debugMode = configService.get('debugMode');
   
   const uvValue = useSignalKPath(UV_CONFIG.path);
@@ -33,55 +36,69 @@ export default function UVIndexWidget() {
 
   const getUVInfo = (uv) => {
     const index = parseFloat(uv);
-    if (index <= 2) return { level: 'Low', color: 'text-oGreen', bg: 'bg-green-900/30 border-green-800' };
-    if (index <= 5) return { level: 'Moderate', color: 'text-oYellow', bg: 'bg-yellow-900/30 border-yellow-800' };
-    if (index <= 7) return { level: 'High', color: 'text-orange-400', bg: 'bg-orange-900/30 border-orange-800' };
-    if (index <= 10) return { level: 'Very High', color: 'text-oRed', bg: 'bg-red-900/30 border-red-800' };
-    return { level: 'Extreme', color: 'text-purple-400', bg: 'bg-purple-900/30 border-purple-800' };
+    if (index <= 2) return { level: t('widgets.uvLow'), color: 'text-oGreen', bg: 'bg-oGreen/10 border-oGreen/20' };
+    if (index <= 5) return { level: t('widgets.uvModerate'), color: 'text-oYellow', bg: 'bg-oYellow/10 border-oYellow/20' };
+    if (index <= 7) return { level: t('widgets.uvHigh'), color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/20' };
+    if (index <= 10) return { level: t('widgets.uvVeryHigh'), color: 'text-oRed', bg: 'bg-oRed/10 border-oRed/20' };
+    return { level: t('widgets.uvExtreme'), color: 'text-purple-400', bg: 'bg-purple-400/10 border-purple-400/20' };
   };
 
   const uvInfo = hasData ? getUVInfo(uvIndex) : null;
 
   return (
     <BaseWidget
-      title="UV Index"
+      title={t('widgets.solarRadiation')}
       icon={faSun}
       hasData={uvData.hasData}
-      noDataMessage="No UV index data available"
+      noDataMessage={t('widgets.signalLossUV')}
     >
-      <div className="flex-1 flex flex-col justify-center items-center min-h-0">
+      <div className="flex-1 flex flex-col justify-center py-4 space-y-8">
         {/* Main UV display */}
-        <div className="text-center mb-6">
-          <div className="text-5xl font-black text-white mb-1 tracking-tighter">
-            {uvIndex !== null ? uvIndex : 'N/A'}
+        <div className="text-center group">
+          <div className={`text-6xl font-black mb-4 leading-none gliding-value tracking-tighter ${uvIndex !== null ? getUVInfo(uvIndex).color : 'text-hud-muted'} ${parseFloat(uvIndex) >= 6 ? 'animate-soft-pulse' : ''}`}>
+            {uvIndex !== null ? uvIndex : t('common.na')}
           </div>
-          <div className={`text-xs font-black uppercase tracking-widest ${uvIndex !== null ? getUVInfo(uvIndex).color : 'text-gray-500'}`}>
-            {uvIndex !== null ? getUVInfo(uvIndex).level : 'Unknown'}
+          <div className={`text-xs font-black uppercase tracking-[0.3em] mt-4 ${uvIndex !== null ? getUVInfo(uvIndex).color : 'text-hud-muted'}`}>
+            {uvIndex !== null ? getUVInfo(uvIndex).level : t('widgets.offline')}
           </div>
         </div>
 
         {/* Risk level indicator */}
-        <div className={`px-4 py-1.5 rounded-lg border uppercase text-[10px] font-black tracking-widest ${uvInfo?.bg || 'bg-gray-900/30 border-gray-800'} mb-6`}>
-          <span className={uvInfo?.color || 'text-gray-500'}>
-            {uvInfo?.level || 'Unknown'} Risk
-          </span>
+        <div className="text-center">
+          <div className={`inline-block px-4 py-1.5 rounded-sm uppercase text-xs font-black tracking-[0.2em] shadow-soft ${uvInfo?.bg || 'bg-hud-bg border-hud'} border border-hud`}>
+            <span className={uvInfo?.color || 'text-hud-muted'}>
+              {uvInfo?.level || t('widgets.uvUnknown')} {t('widgets.riskThreshold')}
+            </span>
+          </div>
         </div>
 
         {/* UV scale bar */}
         <div className="w-full px-2">
-          <div className="flex h-2.5 rounded-full overflow-hidden border border-gray-800 shadow-inner">
-            <div className="flex-1 bg-oGreen shadow-[inset_0_0_5px_rgba(0,0,0,0.2)]"></div>
-            <div className="flex-1 bg-oYellow shadow-[inset_0_0_5px_rgba(0,0,0,0.2)]"></div>
-            <div className="flex-1 bg-orange-500 shadow-[inset_0_0_5px_rgba(0,0,0,0.2)]"></div>
-            <div className="flex-1 bg-oRed shadow-[inset_0_0_5px_rgba(0,0,0,0.2)]"></div>
-            <div className="flex-1 bg-purple-500 shadow-[inset_0_0_5px_rgba(0,0,0,0.2)]"></div>
+          <div className="flex h-1 rounded-full overflow-hidden shadow-inner bg-hud-elevated">
+            <div className="flex-1 bg-oGreen/40"></div>
+            <div className="flex-1 bg-oYellow/40"></div>
+            <div className="flex-1 bg-orange-500/40"></div>
+            <div className="flex-1 bg-oRed/40"></div>
+            <div className="flex-1 bg-purple-500/40"></div>
           </div>
-          <div className="flex justify-between text-[10px] font-bold text-gray-500 mt-2 uppercase tracking-tighter px-0.5">
+          {/* Current position indicator on scale */}
+          {uvIndex !== null && (
+            <div 
+              className="relative h-1 w-full"
+              style={{ top: '-4px' }}
+            >
+              <div 
+                className={`absolute w-2 h-2 rounded-full border border-hud-main shadow-soft transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${uvInfo.color.replace('text-', 'bg-')} shadow-[0_0_8px_currentColor]`}
+                style={{ left: `${Math.min(100, (parseFloat(uvIndex) / 11) * 100)}%`, transform: 'translateX(-50%)' }}
+              />
+            </div>
+          )}
+          <div className="flex justify-between text-xs font-black text-hud-muted mt-4 uppercase tracking-widest px-0.5">
             <span>0</span>
             <span>2</span>
             <span>5</span>
             <span>7</span>
-            <span>10+</span>
+            <span>11+</span>
           </div>
         </div>
       </div>

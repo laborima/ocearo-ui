@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import configService from './ConfigService';
+import { useOcearoContext } from '../context/OcearoContext';
+import { SUPPORTED_LANGUAGES } from '../../i18n/i18n';
 
 const ConfigPage = ({ onSave }) => {
+    const { t, i18n } = useTranslation();
+    const { theme, setTheme } = useOcearoContext();
     const initialConfig = configService.getAll();
     const computedSignalKUrl = configService.getComputedSignalKUrl();
     const boats = configService.getBoatsData(); // Get full list of boats
@@ -14,6 +20,8 @@ const ConfigPage = ({ onSave }) => {
     const [selectedBoat, setSelectedBoat] = useState(null);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [saveIndicator, setSaveIndicator] = useState({ visible: false, message: '' });
+
+    const [activeTab, setActiveTab] = useState('system'); // 'system' or 'interface'
 
     // Track changes by comparing current config with initial config
     const checkForChanges = useCallback(
@@ -51,6 +59,11 @@ const ConfigPage = ({ onSave }) => {
         // Auto-save when settings change
         const updatedConfig = { ...newConfig };
         
+        // Update theme in context if it changed
+        if (updates.theme && updates.theme !== theme) {
+            setTheme(updates.theme);
+        }
+        
         // Handle SignalK URL settings
         if (updates.hasOwnProperty('signalKUrlSet')) {
             // When toggling the signalKUrlSet checkbox
@@ -85,7 +98,7 @@ const ConfigPage = ({ onSave }) => {
         setHasUnsavedChanges(false);
         
         // Show save indicator
-        setSaveIndicator({ visible: true, message: 'Settings saved automatically' });
+        setSaveIndicator({ visible: true, message: t('settings.savedAuto') });
         setTimeout(() => setSaveIndicator({ visible: false, message: '' }), 2000);
     };
 
@@ -113,7 +126,7 @@ const ConfigPage = ({ onSave }) => {
         setHasUnsavedChanges(false);
         
         // Show save indicator
-        setSaveIndicator({ visible: true, message: 'Settings saved' });
+        setSaveIndicator({ visible: true, message: t('settings.saved') });
         setTimeout(() => setSaveIndicator({ visible: false, message: '' }), 2000);
     };
 
@@ -142,368 +155,451 @@ const ConfigPage = ({ onSave }) => {
     };
 
     return (
-        <div className="p-4 text-white">
-            <h1 className="text-2xl font-bold mb-4 flex justify-between items-center">
-                Ocearo Configuration
+        <div className="p-8 text-hud-main w-full">
+            <header className="mb-10 flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-black uppercase tracking-tighter mb-1">
+                        {t('settings.title')}
+                    </h1>
+                    <p className="text-hud-secondary text-sm font-medium uppercase tracking-widest">{t('settings.subtitle')}</p>
+                </div>
                 {saveIndicator.visible && (
-                    <span className="text-sm font-normal bg-green-500 text-white px-3 py-1 rounded-full animate-pulse">
+                    <motion.span 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-xs font-black bg-oGreen/20 text-oGreen border border-oGreen/30 px-4 py-2 rounded-full uppercase tracking-widest"
+                    >
                         {saveIndicator.message}
-                    </span>
+                    </motion.span>
                 )}
-            </h1>
+            </header>
 
-            <div className="space-y-4">
-                {/* Connection Settings */}
-                <div className="space-y-4">
-                    <h2 className="text-xl font-semibold">Connection Settings</h2>
+            {/* Tab Navigation */}
+            <div className="flex bg-hud-bg p-1 rounded-xl border border-hud mb-8">
+                <button
+                    onClick={() => setActiveTab('system')}
+                    className={`flex-1 py-3 px-6 text-xs font-black uppercase tracking-widest transition-all rounded-lg ${
+                        activeTab === 'system'
+                            ? 'bg-oBlue text-hud-main shadow-lg shadow-oBlue/20'
+                            : 'text-hud-secondary hover:text-hud-main'
+                    }`}
+                >
+                    {t('settings.tabSystem')}
+                </button>
+                <button
+                    onClick={() => setActiveTab('interface')}
+                    className={`flex-1 py-3 px-6 text-xs font-black uppercase tracking-widest transition-all rounded-lg ${
+                        activeTab === 'interface'
+                            ? 'bg-oBlue text-hud-main shadow-lg shadow-oBlue/20'
+                            : 'text-hud-secondary hover:text-hud-main'
+                    }`}
+                >
+                    {t('settings.tabInterface')}
+                </button>
+            </div>
 
-                    <div>
-                        <label className="flex items-center">
-                            <input
-                                type="checkbox"
-                                className="mr-2"
-                                checked={signalKUrlSet}
-                                onChange={(e) => {
-                                    setSignalKUrlSet(e.target.checked);
-                                    updateConfig({ signalKUrlSet: e.target.checked });
-                                }}
-                            />
-                            Set SignalK URL
-                            {!signalKUrlSet && <span className="ml-2">({computedSignalKUrl})</span>}
-                        </label>
-                    </div>
-
-                    {signalKUrlSet && (
-                        <>
-                            <div>
-                                <label className="block font-medium mb-1">SignalK Server URL:</label>
-                                <input
-                                    type="text"
-                                    className="border p-2 w-full text-black rounded"
-                                    value={config.signalkUrl || ''}
-                                    onChange={(e) => updateConfig({ signalkUrl: e.target.value })}
-                                />
+            <div className="space-y-8">
+                {activeTab === 'system' ? (
+                    <div className="space-y-8 animate-in fade-in duration-500">
+                        {/* Connection Settings */}
+                        <section className="tesla-card p-6 space-y-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.connection')}</h2>
+                                <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                             </div>
 
-                            <div>
-                                <label className="flex items-center">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-hud-bg tesla-hover">
+                                    <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.signalkServer')}</span>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={signalKUrlSet}
+                                            onChange={(e) => {
+                                                setSignalKUrlSet(e.target.checked);
+                                                updateConfig({ signalKUrlSet: e.target.checked });
+                                            }}
+                                        />
+                                        <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oBlue"></div>
+                                    </label>
+                                </div>
+
+                                {!signalKUrlSet && (
+                                    <div className="p-4 rounded-xl bg-hud-bg border border-hud">
+                                        <span className="text-xs font-bold uppercase tracking-widest text-hud-muted block mb-1">{t('settings.detectedUrl')}</span>
+                                        <span className="text-sm font-mono text-oBlue">{computedSignalKUrl}</span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {signalKUrlSet && (
+                                <motion.div 
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="space-y-6"
+                                >
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.customEndpoint')}</label>
+                                        <input
+                                            type="text"
+                                            className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors font-mono"
+                                            placeholder="https://your-signalk-server.local"
+                                            value={config.signalkUrl || ''}
+                                            onChange={(e) => updateConfig({ signalkUrl: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-between p-4 rounded-xl bg-hud-bg tesla-hover">
+                                        <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.authentication')}</span>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only peer"
+                                                checked={useAuthentication}
+                                                onChange={(e) => {
+                                                    setUseAuthentication(e.target.checked);
+                                                    updateConfig({ useAuthentication: e.target.checked });
+                                                }}
+                                            />
+                                            <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oBlue"></div>
+                                        </label>
+                                    </div>
+
+                                    {useAuthentication && (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.username')}</label>
+                                                <input
+                                                    type="text"
+                                                    className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors"
+                                                    value={config.username || ''}
+                                                    onChange={(e) => updateConfig({ username: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.password')}</label>
+                                                <input
+                                                    type="password"
+                                                    className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors"
+                                                    value={config.password || ''}
+                                                    onChange={(e) => updateConfig({ password: e.target.value })}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+                        </section>
+
+                        {/* Vessel Settings */}
+                        <section className="tesla-card p-6 space-y-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.vessel')}</h2>
+                                <div className="h-[1px] flex-grow bg-hud-border mx-4" />
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.activeProfile')}</label>
+                                    <select
+                                        className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors appearance-none cursor-pointer"
+                                        value={config.selectedBoat || ''}
+                                        onChange={handleBoatChange}
+                                    >
+                                        <option value="" className="bg-hud-bg">{t('settings.selectVessel')}</option>
+                                        {boats.map((boat) => (
+                                            <option key={boat.name} value={boat.name} className="bg-hud-bg">
+                                                {boat.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {selectedBoat && (
+                                    <div className="p-4 rounded-xl bg-oBlue/10 border border-oBlue/20 space-y-1">
+                                        <div className="text-xs font-black uppercase tracking-widest text-oBlue mb-2">{t('settings.specifications')}</div>
+                                        <div className="text-sm font-medium">{t('settings.model')}: <span className="text-hud-main">{selectedBoat.modelPath}</span></div>
+                                        <div className="text-sm font-medium">{t('settings.capabilities')}: <span className="text-hud-main">{selectedBoat.capabilities?.join(', ')}</span></div>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+
+                        {/* Advanced Settings */}
+                        <section className="tesla-card p-6 space-y-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.advanced')}</h2>
+                                <div className="h-[1px] flex-grow bg-hud-border mx-4" />
+                            </div>
+
+                            <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
+                                <label className="flex items-center justify-between cursor-pointer">
+                                    <div className="space-y-1">
+                                        <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.debugMode')}</span>
+                                        <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
+                                            {t('settings.debugModeDesc')}
+                                        </p>
+                                    </div>
                                     <input
                                         type="checkbox"
-                                        className="mr-2"
-                                        checked={useAuthentication}
+                                        className="sr-only peer"
+                                        checked={config.debugMode || false}
                                         onChange={(e) => {
-                                            setUseAuthentication(e.target.checked);
-                                            updateConfig({ useAuthentication: e.target.checked });
+                                            const updates = { debugMode: e.target.checked };
+                                            if (!signalKUrlSet && e.target.checked) {
+                                                updates.signalkUrl = 'https://demo.signalk.org:443';
+                                            }
+                                            updateConfig(updates);
                                         }}
                                     />
-                                    Use Authentication
+                                    <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oBlue"></div>
+                                </label>
+                            </div>
+                        </section>
+
+                        {/* Danger Zone */}
+                        <section className="tesla-card p-6 border-oRed/10">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-lg font-black uppercase tracking-widest text-oRed/80">{t('settings.critical')}</h2>
+                                <div className="h-[1px] flex-grow bg-oRed/5 mx-4" />
+                            </div>
+                            
+                            <div className="flex items-center justify-between p-4 rounded-xl bg-oRed/5 border border-oRed/10">
+                                <div className="space-y-1">
+                                    <span className="text-sm font-bold uppercase tracking-widest text-oRed/80">{t('settings.factoryReset')}</span>
+                                    <p className="text-xs text-oRed/40 font-medium uppercase tracking-wider">{t('settings.factoryResetDesc')}</p>
+                                </div>
+                                <button
+                                    onClick={handleReset}
+                                    className="bg-oRed/20 text-oRed border border-oRed/30 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-oRed hover:text-hud-main transition-all duration-300 shadow-lg shadow-oRed/10"
+                                >
+                                    {t('common.reset')}
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+                ) : (
+                    <div className="space-y-8 animate-in fade-in duration-500">
+                        {/* Appearance Settings */}
+                        <section className="tesla-card p-6 space-y-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.appearance')}</h2>
+                                <div className="h-[1px] flex-grow bg-hud-border mx-4" />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.themeMode')}</label>
+                                    <div className="flex bg-hud-bg p-1 rounded-xl border border-hud">
+                                        {['dark', 'light'].map((themeOption) => (
+                                            <button
+                                                key={themeOption}
+                                                onClick={() => updateConfig({ theme: themeOption })}
+                                                className={`flex-1 py-3 px-4 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
+                                                    config.theme === themeOption
+                                                        ? 'bg-oBlue text-hud-main shadow-lg shadow-oBlue/20'
+                                                        : 'text-hud-secondary hover:text-hud-main'
+                                                }`}
+                                            >
+                                                {themeOption}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.uiAccents')}</label>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="flex items-center justify-between p-4 rounded-xl bg-hud-bg tesla-hover self-end h-[60px]">
+                                            <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.metallic')}</span>
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only peer"
+                                                    checked={config.metallicEffect || false}
+                                                    onChange={(e) => updateConfig({ metallicEffect: e.target.checked })}
+                                                />
+                                                <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oBlue"></div>
+                                            </label>
+                                        </div>
+                                        <div className="p-2 rounded-xl bg-hud-bg border border-hud flex items-center space-x-4">
+                                            <input
+                                                type="color"
+                                                className="w-12 h-10 bg-transparent cursor-pointer rounded overflow-hidden border-none"
+                                                value={config.primaryColor || '#09bfff'}
+                                                onChange={(e) => updateConfig({ primaryColor: e.target.value })}
+                                            />
+                                            <span className="text-xs font-mono uppercase text-hud-main/60">{config.primaryColor || '#09bfff'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Language Settings */}
+                        <section className="tesla-card p-6 space-y-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.language')}</h2>
+                                <div className="h-[1px] flex-grow bg-hud-border mx-4" />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.languageDesc')}</label>
+                                <div className="flex bg-hud-bg p-1 rounded-xl border border-hud">
+                                    {SUPPORTED_LANGUAGES.map((lang) => (
+                                        <button
+                                            key={lang.code}
+                                            onClick={() => {
+                                                i18n.changeLanguage(lang.code);
+                                                updateConfig({ language: lang.code });
+                                            }}
+                                            className={`flex-1 py-3 px-4 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center space-x-2 ${
+                                                (config.language || 'en') === lang.code
+                                                    ? 'bg-oBlue text-hud-main shadow-lg shadow-oBlue/20'
+                                                    : 'text-hud-secondary hover:text-hud-main'
+                                            }`}
+                                        >
+                                            <span>{lang.flag}</span>
+                                            <span>{lang.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Navigation & HUD Settings */}
+                        <section className="tesla-card p-6 space-y-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.navigationHud')}</h2>
+                                <div className="h-[1px] flex-grow bg-hud-border mx-4" />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
+                                    <label className="flex items-center justify-between cursor-pointer">
+                                        <div className="space-y-1">
+                                            <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.compassOrientation')}</span>
+                                            <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
+                                                {config.compassNorthUp ? t('settings.northAtTop') : t('settings.northAtBottom')}
+                                            </p>
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={config.compassNorthUp || false}
+                                            onChange={(e) => updateConfig({ compassNorthUp: e.target.checked })}
+                                        />
+                                        <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oBlue"></div>
+                                    </label>
+                                </div>
+
+                                <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
+                                    <label className="flex items-center justify-between cursor-pointer">
+                                        <div className="space-y-1">
+                                            <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.attitudeIndicator')}</span>
+                                            <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
+                                                {config.showAttitudeIndicator !== false ? t('settings.visible') : t('settings.hidden')}
+                                            </p>
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={config.showAttitudeIndicator !== false}
+                                            onChange={(e) => updateConfig({ showAttitudeIndicator: e.target.checked })}
+                                        />
+                                        <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oBlue"></div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 pt-2">
+                                <div className="flex justify-between items-end">
+                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">
+                                        {t('settings.aisLengthScaling')}
+                                        <span className="block text-xs text-hud-muted font-medium mt-1 uppercase">{t('settings.mapTargetVisibility')}</span>
+                                    </label>
+                                    <span className="text-xl font-black text-oBlue bg-oBlue/10 px-3 py-1 rounded-lg">
+                                        {config.aisLengthScalingFactor || 0.7}
+                                    </span>
+                                </div>
+                                <input
+                                    type="range"
+                                    className="w-full h-1.5 bg-hud-bg-elevated rounded-lg appearance-none cursor-pointer accent-oBlue"
+                                    min="0.1"
+                                    max="2.0"
+                                    step="0.1"
+                                    value={config.aisLengthScalingFactor || 0.7}
+                                    onChange={(e) => updateConfig({
+                                        aisLengthScalingFactor: parseFloat(e.target.value)
+                                    })}
+                                />
+                            </div>
+                        </section>
+
+                        {/* External Links Settings */}
+                        <section className="tesla-card p-6 space-y-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.externalLinks')}</h2>
+                                <div className="h-[1px] flex-grow bg-hud-border mx-4" />
+                            </div>
+
+                            <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
+                                <label className="flex items-center justify-between cursor-pointer">
+                                    <div className="space-y-1">
+                                        <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.customToolUrls')}</span>
+                                        <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
+                                            {t('settings.customToolUrlsDesc')}
+                                        </p>
+                                    </div>
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={config.showCustomUrls || false}
+                                        onChange={(e) => updateConfig({
+                                            showCustomUrls: e.target.checked
+                                        })}
+                                    />
+                                    <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oBlue"></div>
                                 </label>
                             </div>
 
-                            {useAuthentication && (
-                                <>
-                                    <div>
-                                        <label className="block font-medium mb-1">Username:</label>
-                                        <input
-                                            type="text"
-                                            className="border p-2 w-full text-black rounded"
-                                            value={config.username || ''}
-                                            onChange={(e) => updateConfig({ username: e.target.value })}
-                                        />
+                            {config.showCustomUrls && (
+                                <motion.div 
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    className="space-y-6 pt-4 border-t border-hud"
+                                >
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {[
+                                            { id: 'navigation', label: t('settings.urlNavigation'), placeholder: "${signalkUrl}/@signalk/freeboard-sk/" },
+                                            { id: 'instrument', label: t('settings.urlInstruments'), placeholder: "${signalkUrl}/@mxtommy/kip/" },
+                                            { id: 'dashboard', label: t('settings.urlMetrics'), placeholder: "${signalkUrl}/grafana" },
+                                            { id: 'webcam1', label: t('settings.urlWebcamAlpha'), placeholder: "https://example.com/stream1" },
+                                            { id: 'webcam2', label: t('settings.urlWebcamBeta'), placeholder: "https://example.com/stream2" },
+                                            { id: 'weather', label: t('settings.urlAtmospheric'), placeholder: "https://windy.com/..." }
+                                        ].map((urlConfig) => (
+                                            <div key={urlConfig.id} className="space-y-2">
+                                                <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{urlConfig.label}</label>
+                                                <input
+                                                    type="text"
+                                                    className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-sm text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors font-mono"
+                                                    placeholder={urlConfig.placeholder}
+                                                    value={(config.customExternalUrls?.[urlConfig.id]) || ''}
+                                                    onChange={(e) => {
+                                                        const customExternalUrls = { ...config.customExternalUrls } || {};
+                                                        customExternalUrls[urlConfig.id] = e.target.value;
+                                                        updateConfig({ customExternalUrls });
+                                                    }}
+                                                />
+                                            </div>
+                                        ))}
                                     </div>
-                                    <div>
-                                        <label className="block font-medium mb-1">Password:</label>
-                                        <input
-                                            type="password"
-                                            className="border p-2 w-full text-black rounded"
-                                            value={config.password || ''}
-                                            onChange={(e) => updateConfig({ password: e.target.value })}
-                                        />
-                                    </div>
-                                </>
+                                </motion.div>
                             )}
-                        </>
-                    )}
-                </div>
-
-                {/* Vessel Settings */}
-                <div className="space-y-4">
-                    <h2 className="text-xl font-semibold">Vessel Settings</h2>
-
-                    <div>
-                        <label className="block font-medium mb-1">Select Vessel:</label>
-                        <select
-                            className="border p-2 w-full text-black rounded"
-                            value={config.selectedBoat || ''}
-                            onChange={handleBoatChange}
-                        >
-                            <option value="">-- Select a Vessel --</option>
-                            {boats.map((boat) => (
-                                <option key={boat.name} value={boat.name}>
-                                    {boat.name}
-                                </option>
-                            ))}
-                        </select>
+                        </section>
                     </div>
-
-                    {selectedBoat && (
-                        <div className="space-y-2 text-sm text-gray-400">
-                            <div>3D Model: {selectedBoat.modelPath}</div>
-                            <div>Features: {selectedBoat.capabilities?.join(', ')}</div>
-                        </div>
-                    )}
-
-                    <div>
-                        <label className="block font-medium mb-1">Vessel Color:</label>
-                        <input
-                            type="color"
-                            className="w-full h-10 rounded"
-                            value={config.primaryColor || '#000000'}
-                            onChange={(e) => updateConfig({ primaryColor: e.target.value })}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="flex items-center">
-                            <input
-                                type="checkbox"
-                                className="mr-2"
-                                checked={config.metallicEffect || false}
-                                onChange={(e) => updateConfig({ metallicEffect: e.target.checked })}
-                            />
-                            Enable Metallic Effect
-                        </label>
-                    </div>
-                </div>
-
-                {/* Display Settings */}
-                <div className="space-y-4">
-                    <h2 className="text-xl font-semibold">Display Settings</h2>
-
-                    <div>
-                        <label className="flex items-center text-base">
-                            <input
-                                type="checkbox"
-                                className="mr-3 h-5 w-5" // Larger checkbox for better touch interaction
-                                checked={config.compassNorthUp || false}
-                                onChange={(e) => updateConfig({ compassNorthUp: e.target.checked })}
-                            />
-                            <span>
-                                Compass Mode: North at Top
-                                <div className="text-sm text-gray-400">
-                                    {config.compassNorthUp ? 
-                                        "North at top (land navigation style)" : 
-                                        "North at bottom (marine navigation style)"}
-                                </div>
-                            </span>
-                        </label>
-                    </div>
-
-                    <div>
-                        <label className="flex items-center text-base">
-                            <input
-                                type="checkbox"
-                                className="mr-3 h-5 w-5" // Larger checkbox for better touch interaction
-                                checked={config.showAttitudeIndicator !== false}
-                                onChange={(e) => updateConfig({ showAttitudeIndicator: e.target.checked })}
-                            />
-                            <span>
-                                Show Attitude Indicator
-                                <div className="text-sm text-gray-400">
-                                    {config.showAttitudeIndicator !== false ? 
-                                        "Display roll, pitch, and yaw indicator" : 
-                                        "Hide attitude indicator"}
-                                </div>
-                            </span>
-                        </label>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium">
-                            AIS Length Scaling Factor
-                            <div className="text-xs text-gray-500">Controls the scaling of AIS boats on the map (0.1 - 2.0)</div>
-                        </label>
-                        <div className="flex items-center space-x-4">
-                            <span className="text-sm">0.1</span>
-                            <input
-                                type="range"
-                                className="w-full h-10 appearance-none bg-gray-700 rounded-lg outline-none cursor-pointer"
-                                style={{
-                                    WebkitAppearance: 'none',
-                                    appearance: 'none',
-                                    height: '20px',
-                                    background: 'linear-gradient(to right, #1E3A8A, #3B82F6)',
-                                    borderRadius: '10px',
-                                }}
-                                min="0.1"
-                                max="2.0"
-                                step="0.1"
-                                value={config.aisLengthScalingFactor || 0.7}
-                                onChange={(e) => updateConfig({
-                                    aisLengthScalingFactor: parseFloat(e.target.value)
-                                })}
-                            />
-                            <span className="text-sm">2.0</span>
-                            <span className="text-base font-semibold bg-blue-500 px-3 py-1 rounded-lg min-w-[3.5rem] text-center">
-                                {config.aisLengthScalingFactor || 0.7}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Advanced Settings */}
-                <div className="space-y-4">
-                    <h2 className="text-xl font-semibold">Advanced Settings</h2>
-
-                    <div>
-                        <label className="flex items-center">
-                            <input
-                                type="checkbox"
-                                className="mr-2"
-                                checked={config.debugMode || false}
-                                onChange={(e) => {
-                                    const updates = { debugMode: e.target.checked };
-                                    // Only update SignalK URL if it's not manually set
-                                    if (!signalKUrlSet && e.target.checked) {
-                                        updates.signalkUrl = 'https://demo.signalk.org:443';
-                                    }
-                                    updateConfig(updates);
-                                }}
-                            />
-                            Debug Mode
-                        </label>
-                    </div>
-                    
-                    <div>
-                        <label className="flex items-center">
-                            <input
-                                type="checkbox"
-                                className="mr-2"
-                                checked={config.showCustomUrls || false}
-                                onChange={(e) => updateConfig({
-                                    showCustomUrls: e.target.checked
-                                })}
-                            />
-                            Set Custom External Tools URLs
-                        </label>
-                    </div>
-                    
-                    {config.showCustomUrls && (
-                        <div className="space-y-4 p-4 border border-gray-700 rounded-lg">
-                            <h3 className="text-lg font-medium">Custom External URLs</h3>
-                            <p className="text-sm text-gray-400 mb-4">
-                                Customize URLs for external tools. Use <code>{'${signalkUrl}'}</code> as placeholder for the SignalK URL, 
-                                and <code>{'${latitude}'}</code> or <code>{'${longitude}'}</code> for position values.
-                                Leave empty to use the default URL.
-                            </p>
-                            
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block font-medium mb-1">Navigation URL:</label>
-                                    <input
-                                        type="text"
-                                        className="border p-2 w-full text-black rounded"
-                                        placeholder={"${signalkUrl}/@signalk/freeboard-sk/"}
-                                        value={(config.customExternalUrls?.navigation) || ''}
-                                        onChange={(e) => {
-                                            const customExternalUrls = { ...config.customExternalUrls } || {};
-                                            customExternalUrls.navigation = e.target.value;
-                                            updateConfig({ customExternalUrls });
-                                        }}
-                                    />
-                                </div>
-                                
-                                <div>
-                                    <label className="block font-medium mb-1">Instrument URL:</label>
-                                    <input
-                                        type="text"
-                                        className="border p-2 w-full text-black rounded"
-                                        placeholder={"${signalkUrl}/@mxtommy/kip/"}
-                                        value={(config.customExternalUrls?.instrument) || ''}
-                                        onChange={(e) => {
-                                            const customExternalUrls = { ...config.customExternalUrls } || {};
-                                            customExternalUrls.instrument = e.target.value;
-                                            updateConfig({ customExternalUrls });
-                                        }}
-                                    />
-                                </div>
-                                
-                                <div>
-                                    <label className="block font-medium mb-1">Dashboard URL:</label>
-                                    <input
-                                        type="text"
-                                        className="border p-2 w-full text-black rounded"
-                                        placeholder={"${signalkUrl}/grafana"} 
-                                        value={(config.customExternalUrls?.dashboard) || ''}
-                                        onChange={(e) => {
-                                            const customExternalUrls = { ...config.customExternalUrls } || {};
-                                            customExternalUrls.dashboard = e.target.value;
-                                            updateConfig({ customExternalUrls });
-                                        }}
-                                    />
-                                </div>
-                                
-                                <div>
-                                    <label className="block font-medium mb-1">Webcam 1 URL:</label>
-                                    <input
-                                        type="text"
-                                        className="border p-2 w-full text-black rounded"
-                                        placeholder="https://example.com/webcam1"
-                                        value={(config.customExternalUrls?.webcam1) || ''}
-                                        onChange={(e) => {
-                                            const customExternalUrls = { ...config.customExternalUrls } || {};
-                                            customExternalUrls.webcam1 = e.target.value;
-                                            updateConfig({ customExternalUrls });
-                                        }}
-                                    />
-                                </div>
-                                
-                                <div>
-                                    <label className="block font-medium mb-1">Webcam 2 URL:</label>
-                                    <input
-                                        type="text"
-                                        className="border p-2 w-full text-black rounded"
-                                        placeholder="https://example.com/webcam2"
-                                        value={(config.customExternalUrls?.webcam2) || ''}
-                                        onChange={(e) => {
-                                            const customExternalUrls = { ...config.customExternalUrls } || {};
-                                            customExternalUrls.webcam2 = e.target.value;
-                                            updateConfig({ customExternalUrls });
-                                        }}
-                                    />
-                                </div>
-                                
-                                <div>
-                                    <label className="block font-medium mb-1">Weather URL:</label>
-                                    <input
-                                        type="text"
-                                        className="border p-2 w-full text-black rounded"
-                                        placeholder={"https://embed.windy.com/embed.html?location=coordinates&lat=${latitude}&lon=${longitude}"}
-                                        value={(config.customExternalUrls?.weather) || ''}
-                                        onChange={(e) => {
-                                            const customExternalUrls = { ...config.customExternalUrls } || {};
-                                            customExternalUrls.weather = e.target.value;
-                                            updateConfig({ customExternalUrls });
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    
-                   
-
-                   
-                </div>
-                {/* Action Buttons */}
-                <div className="flex space-x-4 pt-4">
-                    <button
-                        onClick={handleReset}
-                        className="bg-oRed text-white px-4 py-2 rounded hover:bg-red-600"
-                    >
-                        Reset Configuration
-                    </button>
-                </div>
+                )}
             </div>
         </div>
     );

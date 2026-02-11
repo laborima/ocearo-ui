@@ -31,16 +31,16 @@ const StaticMarkers = React.memo(({ radius, isOuter, markerColorPrimary, markerC
     for (let deg = 0; deg < 360; deg += 10) {
       const angle = MathUtils.degToRad(deg - 90);
       const isMainMarker = deg % 30 === 0;
-      const markerSize = isOuter ? (isMainMarker ? 0.4 : 0.2) : (isMainMarker ? 0.3 : 0.15);
+      const markerSize = isOuter ? (isMainMarker ? 0.35 : 0.15) : (isMainMarker ? 0.25 : 0.1);
       const x = (radius + markerSize * 0.5 + 0.2) * Math.cos(angle);
       const z = (radius + markerSize * 0.5 + 0.2) * Math.sin(angle);
 
       const isGreenZone = isOuter && deg > 0 && deg < 61;
       const isRedZone = isOuter && deg >= 300 && deg < 360;
+      // In HUD style, we prefer more translucent colors
       const currentMarkerColor = isGreenZone ? markerColorGreen : isRedZone ? markerColorRed : markerColorPrimary;
 
       if (!isOuter && isMainMarker) {
-        // Add cardinal directions (N, S, W, E) at their respective degrees
         let label;
         if (deg === 0) label = "N";
         else if (deg === 90) label = "E";
@@ -51,12 +51,13 @@ const StaticMarkers = React.memo(({ radius, isOuter, markerColorPrimary, markerC
         markersArray.push(
           <Text characters="NESW0123456789"
             key={`text-${deg}`}
-            position={[x, 0.01, z]}
+            position={[x, 0.02, z]}
             color={markerColorPrimary}
-            fontSize={0.5}
+            fontSize={0.6}
             rotation={[-Math.PI / 2, 0, Math.PI / 2 - angle]}
             font="fonts/Roboto-Bold.ttf"
             anchorY="middle"
+            fillOpacity={0.9}
           >
             {label}
           </Text>
@@ -68,7 +69,11 @@ const StaticMarkers = React.memo(({ radius, isOuter, markerColorPrimary, markerC
             args={[markerSize / 2, 16, 16]}
             position={[x, 0, z]}
           >
-            <meshBasicMaterial color={currentMarkerColor} />
+            <meshBasicMaterial 
+                color={currentMarkerColor} 
+                transparent={true} 
+                opacity={isMainMarker ? 0.8 : 0.4} 
+            />
           </Sphere>
         );
       }
@@ -81,17 +86,6 @@ const StaticMarkers = React.memo(({ radius, isOuter, markerColorPrimary, markerC
 
 StaticMarkers.displayName = 'StaticMarkers';
 
-/**
- * StaticRing Component
- * 
- * Creates a ring for the compass dial with configurable properties.
- * 
- * @param {number} innerRadius - Inner radius of the ring
- * @param {number} outerRadius - Outer radius of the ring
- * @param {number} dialColor - Color of the ring
- * @param {number} opacity - Opacity of the ring (default: 1)
- * @param {boolean} transparent - Whether the ring material is transparent (default: false)
- */
 const StaticRing = React.memo(({ innerRadius, outerRadius, dialColor, opacity = 1, transparent = false }) => (
   <Ring
     args={[innerRadius, outerRadius, 64]}
@@ -102,33 +96,23 @@ const StaticRing = React.memo(({ innerRadius, outerRadius, dialColor, opacity = 
       side={DoubleSide}
       transparent={transparent}
       opacity={opacity}
+      depthWrite={false}
     />
   </Ring>
 ));
 
 StaticRing.displayName = 'StaticRing';
 
-/**
- * CompassDial Component
- * 
- * Main component that renders a 3D compass dial with the following features:
- * - Rotating inner dial that shows the current heading
- * - Static outer dial with color-coded markers
- * - Clockwise rotation that matches standard compass behavior
- * - North (0°) positioned at the bottom of the compass
- * 
- * @param {number} outerRadius - Outer radius of the compass dial
- * @param {number} innerRadius - Inner radius of the compass dial
- */
 const CompassDial = ({ outerRadius, innerRadius }) => {
-  // Constants for visual appearance
-  const outerDialOpacity = 0.5;
-  const markerColorPrimary = 0x000000;
-  const markerColorGreen = oGreen;
-  const markerColorRed = oRed;
-
   // Get context values and night mode setting
   const { nightMode } = useOcearoContext();
+
+  // Constants for visual appearance - Tesla UI High Contrast HUD
+  const outerDialOpacity = 0.15;
+  const innerDialOpacity = 0.1;
+  const markerColorPrimary = nightMode ? oNight : "#ffffff";
+  const markerColorGreen = oGreen;
+  const markerColorRed = oRed;
   
   // Subscribe to relevant SignalK paths for heading
   const headingPaths = useMemo(() => [
@@ -147,7 +131,7 @@ const CompassDial = ({ outerRadius, innerRadius }) => {
     return cog || heading || 0;
   }, [skValues]);
 
-  const dialColor = nightMode ? oNight : 0xffffff;
+  const dialColor = nightMode ? "#000000" : "#0a0a0a";
   
   // Get compass orientation preference from settings
   const isNorthUp = configService.get('compassNorthUp');
@@ -171,32 +155,13 @@ const CompassDial = ({ outerRadius, innerRadius }) => {
 
   return (
     <>
-      {/* 
-        Rotating inner dial
-        
-        Compass rotation calculation:  
-        1. In Three.js, Y-rotation of 0 points to -Z axis
-        2. We rotate clockwise using the heading value directly
-        3. We add Math.PI (180°) to position North at the bottom of the compass for standard marine view
-           OR we don't add it for North at top (aeronautical/land navigation style)
-        4. This creates either:
-           Standard marine compass (North at bottom):
-           - North (0°) at the bottom
-           - East (90°) on the left
-           - South (180°) at the top
-           - West (270°) on the right
-           OR North-up compass:
-           - North (0°) at the top
-           - East (90°) on the right
-           - South (180°) at the bottom
-           - West (270°) on the left
-        5. The rotation is always clockwise, matching standard compass behavior
-      */}
       <group rotation={[0, compassHeading + (isNorthUp ? 0 : Math.PI), 0]}>
         <StaticRing
           innerRadius={staticProps.innerRadius}
           outerRadius={staticProps.outerRadius}
           dialColor={staticProps.dialColor}
+          transparent={true}
+          opacity={innerDialOpacity}
         />
         <StaticMarkers
           radius={staticProps.innerRadius}
@@ -207,23 +172,16 @@ const CompassDial = ({ outerRadius, innerRadius }) => {
         />
       </group>
 
-      {/* 
-        Static outer dial
-        - Remains fixed while inner dial rotates
-        - Contains color-coded markers:
-          - Green zone: 0-60° (starboard side)
-          - Red zone: 300-360° (port side)
-      */}
       <group>
         <StaticRing
-          innerRadius={staticProps.innerRadius + 1}
-          outerRadius={staticProps.outerRadius + 1}
+          innerRadius={staticProps.innerRadius + 0.8}
+          outerRadius={staticProps.outerRadius + 0.8}
           dialColor={staticProps.dialColor}
           transparent={true}
           opacity={outerDialOpacity}
         />
         <StaticMarkers
-          radius={staticProps.innerRadius + 1}
+          radius={staticProps.innerRadius + 0.8}
           isOuter={true}
           markerColorPrimary={staticProps.markerColorPrimary}
           markerColorGreen={staticProps.markerColorGreen}

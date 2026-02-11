@@ -7,7 +7,7 @@
  */
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { convertWindSpeed, oBlue, useOcearoContext } from '../../context/OcearoContext';
+import { convertWindSpeed, oBlue, oGreen, oNight, useOcearoContext } from '../../context/OcearoContext';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import { Vector3, DoubleSide } from 'three';
 import { Text } from '@react-three/drei';
@@ -39,16 +39,20 @@ const WindArrow = ({
     position = [0, 0, 0],
     rotation = [0, 0, 0],
     speed,
-    color = '#ffffff',
+    color,
     fontSize = 0.5,
     textPosition = [0, 0.8, 0],
     arrowSize = 1
-}) => (
+}) => {
+    const { nightMode } = useOcearoContext();
+    const finalColor = color || (nightMode ? oNight : "#ffffff");
+    
+    return (
     <group position={position} rotation={rotation}>
         {/* Wind speed text */}
         <Text
             characters=".0123456789"
-            color={color}
+            color={finalColor}
             fontSize={fontSize * arrowSize}
             position={textPosition}
             font="fonts/Roboto-Bold.ttf"
@@ -68,16 +72,19 @@ const WindArrow = ({
                     new THREE.Vector2(0.5 * arrowSize * Math.cos(5 * Math.PI / 6), 0.5 * arrowSize * Math.sin(5 * Math.PI / 6)),
                     // Tip point (at bottom)
                     new THREE.Vector2(0, -0.577 * arrowSize),
+                    // Tip point (at bottom)
+                    new THREE.Vector2(0, -0.577 * arrowSize),
                     // Left point (pointing down)
                     new THREE.Vector2(-0.5 * arrowSize * Math.cos(5 * Math.PI / 6), 0.5 * arrowSize * Math.sin(5 * Math.PI / 6)),
                     // Back to center
                     new THREE.Vector2(0, 0),
                 ])
             ]} />
-            <meshStandardMaterial color={color} side={DoubleSide} />
+            <meshStandardMaterial color={finalColor} side={DoubleSide} />
         </mesh>
     </group>
 );
+};
 
 WindArrow.propTypes = {
     position: PropTypes.oneOfType([
@@ -144,7 +151,7 @@ const WindSector3D = ({ outerRadius }) => {
                     position={trueWindPosition}
                     rotation={[-Math.PI / 2, 0, -(Math.PI / 2 - trueWindAngle)]}
                     speed={trueWindSpeed}
-                    color="#0000FF" /* Using hex color for consistency */
+                    color={oGreen}
                     fontSize={FONT_SIZE.TRUE_WIND}
                 />
             )}

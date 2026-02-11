@@ -41,34 +41,43 @@ class ErrorBoundary extends React.Component {
       const { error, errorInfo } = this.state;
 
       return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 text-gray-900">
-          <h1 className="text-3xl font-bold text-red-600 mb-4">
-            Something went wrong.
-          </h1>
-          <p className="text-lg mb-2">
-            <strong>Error:</strong> {error ? error.toString() : "Unknown error"}
-          </p>
-          {errorInfo && (
-            <details className="whitespace-pre-wrap bg-gray-200 p-4 rounded-lg mb-4">
-              <summary className="cursor-pointer text-blue-500 underline">
-                Stack Trace
-              </summary>
-              <pre className="mt-2">{errorInfo.componentStack}</pre>
-            </details>
-          )}
-          <div className="flex space-x-4">
-            <button
-              onClick={this.handleRefresh}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              Refresh Page
-            </button>
-            <button
-              onClick={this.handleExitFullscreen}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-            >
-              Exit Fullscreen
-            </button>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-hud-bg text-hud-main p-6">
+          <div className="tesla-card p-10 max-w-2xl w-full bg-hud-elevated backdrop-blur-xl border border-hud rounded-3xl shadow-2xl flex flex-col items-center text-center">
+            <div className="w-20 h-20 rounded-full bg-oRed/20 flex items-center justify-center mb-8">
+              <div className="w-4 h-4 rounded-full bg-oRed animate-soft-pulse" />
+            </div>
+            <h1 className="text-3xl font-black uppercase tracking-tighter text-oRed mb-6">
+              System Critical Error
+            </h1>
+            <p className="text-lg font-medium text-hud-main/80 mb-8 max-w-md">
+              <span className="text-hud-muted uppercase text-xs font-black tracking-widest block mb-2">Technical Status</span>
+              {error ? error.toString() : "Unknown exception detected in UI thread"}
+            </p>
+            {errorInfo && (
+              <details className="w-full whitespace-pre-wrap bg-hud-bg/5 p-6 rounded-2xl mb-10 text-left border border-hud group">
+                <summary className="cursor-pointer text-oBlue text-xs font-black uppercase tracking-widest hover:text-hud-main transition-colors flex items-center justify-between">
+                  <span>Diagnostic Stack Trace</span>
+                  <span className="opacity-40 group-open:rotate-180 transition-transform">▼</span>
+                </summary>
+                <pre className="mt-6 text-xs font-mono text-hud-muted overflow-auto max-h-60 custom-scrollbar leading-relaxed">
+                  {errorInfo.componentStack}
+                </pre>
+              </details>
+            )}
+            <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
+              <button
+                onClick={this.handleRefresh}
+                className="px-8 py-4 bg-oBlue hover:bg-blue-600 text-hud-main rounded-xl text-xs font-black uppercase tracking-[0.2em] transition-all duration-500 shadow-lg shadow-oBlue/20 active:scale-95"
+              >
+                Reboot Session
+              </button>
+              <button
+                onClick={this.handleExitFullscreen}
+                className="px-8 py-4 bg-hud-elevated hover:bg-hud-bg text-hud-main border border-hud rounded-xl text-xs font-black uppercase tracking-[0.2em] transition-all duration-500 active:scale-95"
+              >
+                Exit Console
+              </button>
+            </div>
           </div>
         </div>
       );

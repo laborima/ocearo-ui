@@ -2,25 +2,26 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import BaseWidget from './BaseWidget';
-import { toDegrees, oBlue, oRed, oYellow, oGreen, oNight, useOcearoContext } from '../../context/OcearoContext';
+import { useTranslation } from 'react-i18next';
+import { toDegrees, oBlue, oRed, oYellow, oGreen, oNight, oGray, oGray2, useOcearoContext } from '../../context/OcearoContext';
 import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCompass, faPlane } from '@fortawesome/free-solid-svg-icons';
 import { drawAttitudeInstrument } from '../../../lib/AttitudeDrawing';
 
-const colors = {
-  leftPaneBg: '#0e0e0e',
-  rightPaneBg: '#1e1e1e',
-  oBlue,
-  oRed,
-  oYellow,
-  oGreen,
-  oGray: '#989898',
-  oGray2: '#424242',
-  oNight
+const getThemeColors = () => {
+  if (typeof document !== 'undefined') {
+    const style = getComputedStyle(document.documentElement);
+    return {
+      leftPaneBg: style.getPropertyValue('--color-leftPaneBg').trim() || '#0e0e0e',
+      rightPaneBg: style.getPropertyValue('--color-rightPaneBg').trim() || '#1e1e1e',
+    };
+  }
+  return { leftPaneBg: '#0e0e0e', rightPaneBg: '#1e1e1e' };
 };
 
 export default function AttitudeWidget() {
+  const { t } = useTranslation();
   const { nightMode } = useOcearoContext();
   const canvasRef = useRef(null);
   const debugMode = configService.get('debugMode');
@@ -64,6 +65,8 @@ export default function AttitudeWidget() {
     const sw = (v) => v * s; // scale width/length
     const slw = (v) => Math.max(1, v * s); // scaled line width with minimum 1px
 
+    const themeColors = getThemeColors();
+
     function drawInstrument(roll, pitch, yaw) {
       drawAttitudeInstrument(ctx, {
         w,
@@ -79,7 +82,7 @@ export default function AttitudeWidget() {
             oYellow,
             oGreen,
             oNight,
-            rightPaneBg: colors.rightPaneBg
+            rightPaneBg: themeColors.rightPaneBg
         }
       });
     }
@@ -89,59 +92,49 @@ export default function AttitudeWidget() {
 
   return (
     <BaseWidget
-      title="Attitude & Heading"
+      title={t('widgets.attitudeInertial')}
       icon={faCompass}
       hasData={attitudeData.hasData}
-      noDataMessage="No attitude data available"
+      noDataMessage={t('widgets.signalLossIMU')}
     >
-      <div className="absolute top-4 right-4 z-10 flex items-center space-x-2 text-sm">
-        <FontAwesomeIcon icon={faCompass} className={`${nightMode ? 'text-oNight' : 'text-oYellow'} text-xs`} />
-        <span className={`${nightMode ? 'text-oNight' : 'text-white'} font-bold`}>{Math.round(attitudeData.heading)}°</span>
+      <div className="absolute top-4 right-4 z-10 flex items-center space-x-2">
+        <FontAwesomeIcon icon={faCompass} className={`${nightMode ? 'text-oNight' : 'text-oYellow'} text-xs opacity-50`} />
+        <span className={`${nightMode ? 'text-oNight' : 'text-hud-main'} text-xs font-black uppercase tracking-widest gliding-value`}>{Math.round(attitudeData.heading)}°</span>
       </div>
       
       {/* Attitude Instrument */}
-      <div className="flex-1 flex items-center justify-center min-h-0">
+      <div className="flex-1 flex items-center justify-center min-h-0 scale-95 group transition-transform duration-700">
         <div className="relative">
           <canvas
             ref={canvasRef}
-            width={240}
-            height={240}
-            className={` ${nightMode ? 'brightness-75 contrast-125' : ''}`}
+            width={220}
+            height={220}
+            className={`${nightMode ? 'brightness-75 contrast-125' : ''} transition-all duration-700 group-hover:scale-105`}
           />
           
           {/* Center crosshair */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className={`w-7 h-0.5 ${nightMode ? 'bg-oNight' : 'bg-oYellow'} absolute`}></div>
-            <div className={`w-0.5 h-7 ${nightMode ? 'bg-oNight' : 'bg-oYellow'} absolute`}></div>
+            <div className={`w-8 h-px ${nightMode ? 'bg-oNight' : 'bg-oYellow/40'}`}></div>
+            <div className={`w-px h-8 ${nightMode ? 'bg-oNight' : 'bg-oYellow/40'}`}></div>
           </div>
         </div>
       </div>
       
       {/* Bottom data display */}
-      <div className="grid grid-cols-3 gap-4 mt-4 text-center text-sm">
-        <div>
-          <div className="flex items-center justify-center space-x-1 mb-1">
-            <FontAwesomeIcon icon={faPlane} className={`${nightMode ? 'text-oNight' : 'text-oRed'} text-xs transform rotate-90`} />
-            <span className={`${nightMode ? 'text-oNight/60' : 'text-gray-400'} uppercase text-[10px]`}>Roll</span>
+      <div className="grid grid-cols-3 gap-4 mt-4 text-center">
+        {[
+          { label: 'ROLL', value: attitudeData.roll, color: 'text-oRed', icon: faPlane, rotate: 90 },
+          { label: 'PITCH', value: attitudeData.pitch, color: 'text-oBlue', icon: faPlane, rotate: 0 },
+          { label: 'HDG', value: attitudeData.heading, color: 'text-oYellow', icon: faCompass, rotate: 0 }
+        ].map((item, idx) => (
+          <div key={idx} className="tesla-card p-2 tesla-hover bg-hud-bg border border-hud">
+            <div className="flex items-center justify-center space-x-2 mb-1 opacity-60">
+              <FontAwesomeIcon icon={item.icon} className={`${nightMode ? 'text-oNight' : item.color} text-xs ${item.rotate ? `transform rotate-${item.rotate}` : ''}`} />
+              <span className={`${nightMode ? 'text-oNight/60' : 'text-hud-muted'} uppercase text-xs font-black tracking-widest`}>{item.label}</span>
+            </div>
+            <div className={`${nightMode ? 'text-oNight' : 'text-hud-main'} font-black text-lg gliding-value tracking-tighter`}>{Math.round(item.value)}°</div>
           </div>
-          <div className={`${nightMode ? 'text-oNight' : 'text-white'} font-bold`}>{Math.round(attitudeData.roll)}°</div>
-        </div>
-        
-        <div>
-          <div className="flex items-center justify-center space-x-1 mb-1">
-            <FontAwesomeIcon icon={faPlane} className={`${nightMode ? 'text-oNight' : 'text-oBlue'} text-xs`} />
-            <span className={`${nightMode ? 'text-oNight/60' : 'text-gray-400'} uppercase text-[10px]`}>Pitch</span>
-          </div>
-          <div className={`${nightMode ? 'text-oNight' : 'text-white'} font-bold`}>{Math.round(attitudeData.pitch)}°</div>
-        </div>
-        
-        <div>
-          <div className="flex items-center justify-center space-x-1 mb-1">
-            <FontAwesomeIcon icon={faCompass} className={`${nightMode ? 'text-oNight' : 'text-oYellow'} text-xs`} />
-            <span className={`${nightMode ? 'text-oNight/60' : 'text-gray-400'} uppercase text-[10px]`}>HDG</span>
-          </div>
-          <div className={`${nightMode ? 'text-oNight' : 'text-white'} font-bold`}>{Math.round(attitudeData.heading)}°</div>
-        </div>
+        ))}
       </div>
     </BaseWidget>
   );

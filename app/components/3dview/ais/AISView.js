@@ -2,7 +2,7 @@ import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react'
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three'; // Import THREE for Color
 
-import { useOcearoContext, toKnots, toDegrees } from '../../context/OcearoContext';
+import { useOcearoContext, toKnots, toDegrees, oRed } from '../../context/OcearoContext';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import { useAIS } from './AISContext';
 import AISBoat from './AISBoat'; // Assuming AISBoat accepts onClick prop now
@@ -127,7 +127,7 @@ const AISView = ({ onUpdateInfoPanel }) => {
                         originalColor: originalMaterial.color.clone(),
                     };
                     materialsCache.current[mmsi].white.color.copy(materialsCache.current[mmsi].originalColor); // Ensure white is original
-                    materialsCache.current[mmsi].red.color.set('red');
+                    materialsCache.current[mmsi].red.color.set(oRed);
                 }
 
                 const boatMaterials = materialsCache.current[mmsi];
@@ -246,18 +246,18 @@ const AISView = ({ onUpdateInfoPanel }) => {
 
     // --- Prepare Info Panel Content ---
     const infoPanelContent = selectedBoat ? [
-        formatBoatData('Name', selectedBoat.name),  // Only show Name if it exists
+        formatBoatData('Vessel', selectedBoat.name),
         formatBoatData('MMSI', formatMMSI(selectedBoat.mmsi)),
-        formatBoatData('Distance', selectedBoat.distanceMeters ? selectedBoat.distanceMeters.toFixed(0) : 0, 'm'),
-        formatBoatData('Length', selectedBoat.length, 'm'),
+        formatBoatData('RNG', selectedBoat.distanceMeters ? selectedBoat.distanceMeters.toFixed(0) : 0, ' m'),
+        formatBoatData('LOA', selectedBoat.length, ' m'),
         formatBoatData('Type', selectedBoat.shipType),
-        formatBoatData('SOG', selectedBoat.sog, ' kts', false, true),
+        formatBoatData('SOG', selectedBoat.sog, ' kn', false, true),
         formatBoatData('COG', selectedBoat.cog, '°', true),
-        formatBoatData('Heading', selectedBoat.heading, '°', true),
-        formatBoatData('Beam', selectedBoat.beam, 'm'),
-        formatBoatData('Draft', selectedBoat.draft, 'm'),
-        formatBoatData('Callsign', selectedBoat.callsign),
-        formatBoatData('Destination', selectedBoat.destination)
+        formatBoatData('HDG', selectedBoat.heading, '°', true),
+        formatBoatData('Beam', selectedBoat.beam, ' m'),
+        formatBoatData('Draft', selectedBoat.draft, ' m'),
+        formatBoatData('Call', selectedBoat.callsign),
+        formatBoatData('Dest', selectedBoat.destination)
     ]
         .filter(item => item !== null) // Remove any unavailable information
         .join('\n') : ''; // Format with newlines for display

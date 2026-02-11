@@ -171,11 +171,11 @@ function Ocean3D() {
       waterUniforms.sunDirection.value.copy(sun).normalize();
       
       // Adjust water color based on night factor
-      // Day: 0x001e0f (Deep Teal), Night: 0x000510 (Dark Blue/Black)
-      const dayColor = new THREE.Color(0x0077be);
-      const nightColor = new THREE.Color(0x000a12);
+      // Day: Technical Deep Teal, Night: Ultra Dark Blue/Black
+      const dayColor = new THREE.Color(0x004466);
+      const nightColor = new THREE.Color(0x000205);
       const currentColor = dayColor.clone().lerp(nightColor, nightFactor);
-      waterUniforms.sunColor.value.setHex(isNightSky ? 0x88aaee : 0xffffff); // Moonlight vs Sunlight
+      waterUniforms.sunColor.value.setHex(isNightSky ? 0x4488ff : 0xffffff); // More blueish moonlight
       waterUniforms.waterColor.value.copy(currentColor);
       
       // Animate waves
@@ -186,25 +186,23 @@ function Ocean3D() {
     if (skyRef.current) {
       const uniforms = skyRef.current.material.uniforms;
       
-      // Weather influence (e.g., from humidity/pressure if available)
+      // Weather influence
       const weather = getCurrentWeather();
-      // Simple heuristic: higher humidity = higher turbidity (hazier)
-      // Normal range: 0.2 (clear) to 1.0 (hazy)
       const humidity = weather?.humidity ?? 0.6; 
       const baseTurbidity = 0.5 + (humidity * 0.5); 
 
       const dayParams = {
         turbidity: baseTurbidity,
-        rayleigh: 1.5,
+        rayleigh: 1.2, // Slightly clearer
         mieCoefficient: 0.005,
-        mieDirectionalG: 0.7,
+        mieDirectionalG: 0.8,
       };
 
       const nightParams = {
-        turbidity: 0.1, // Clearer at night usually
-        rayleigh: 0.3,
-        mieCoefficient: 0.001,
-        mieDirectionalG: 0.9,
+        turbidity: 0.05, 
+        rayleigh: 0.1,
+        mieCoefficient: 0.0005,
+        mieDirectionalG: 0.95,
       };
 
       const lerpParam = (key) => dayParams[key] + (nightParams[key] - dayParams[key]) * nightFactor;
@@ -230,9 +228,9 @@ function Ocean3D() {
   
   // Set background and fog
   useEffect(() => {
-    const fogColor = nightMode ? new THREE.Color(0x000a12) : new THREE.Color(0x87CEEB);
+    const fogColor = nightMode ? new THREE.Color(0x000205) : new THREE.Color(0x001a26);
     scene.background = fogColor;
-    scene.fog = new THREE.FogExp2(fogColor, 0.00025);
+    scene.fog = new THREE.FogExp2(fogColor, 0.00035); // Slightly denser fog for depth
     gl.outputColorSpace = THREE.SRGBColorSpace;
     
     return () => {

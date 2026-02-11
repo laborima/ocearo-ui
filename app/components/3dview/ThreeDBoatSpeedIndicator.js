@@ -1,6 +1,7 @@
 import { convertSpeed, useOcearoContext } from '../context/OcearoContext';
 import { useState, useMemo, useCallback } from 'react';
 import { useSignalKPaths } from '../hooks/useSignalK';
+import { useTranslation } from 'react-i18next';
 
 // Define speed types and their corresponding SignalK paths
 const SPEED_CONFIG = {
@@ -11,6 +12,7 @@ const SPEED_CONFIG = {
 };
 
 const ThreeDBoatSpeedIndicator = () => {
+    const { t } = useTranslation();
     const { nightMode } = useOcearoContext();
     const [speedType, setSpeedType] = useState('SOG');
 
@@ -50,23 +52,22 @@ const ThreeDBoatSpeedIndicator = () => {
         setSpeedType(nextType);
     }, [availableTypes, currentSpeedType]);
 
-    const textColor = nightMode ? 'text-oNight' : 'text-oGray';
-    const speedTextColor = nightMode ? 'text-oNight' : 'text-white';
+    const speedTextColor = nightMode ? 'text-oNight' : 'text-hud-main';
 
     // If no speed data is available at all
     if (availableTypes.length === 0) {
         return (
-            <div className="mt-4">
-                <div className="text-6xl font-bold text-gray-400">--</div>
-                <div className={`text-lg ${textColor}`}>NO DATA</div>
+            <div className="mt-6 ml-2">
+                <div className="text-7xl font-black text-hud-dim tracking-tighter">--</div>
+                <div className="text-xs font-black uppercase tracking-[0.2em] text-hud-muted ml-1">{t('common.na')}</div>
             </div>
         );
     }
 
     return (
-        <div className="mt-4">
+        <div className="mt-6 ml-2 select-none group">
             <div
-                className={`text-6xl font-bold cursor-pointer ${speedTextColor}`}
+                className={`text-7xl font-black cursor-pointer tracking-tighter drop-shadow-2xl transition-all duration-300 group-hover:scale-105 active:scale-95 ${speedTextColor}`}
                 onClick={toggleSpeedType}
                 role="button"
                 tabIndex={0}
@@ -74,7 +75,15 @@ const ThreeDBoatSpeedIndicator = () => {
             >
                 {currentSpeed?.toFixed(1) || '--'}
             </div>
-            <div className={`text-lg ${textColor}`}>{currentSpeedType}</div>
+            <div className="flex items-center space-x-2 ml-1">
+                <div className={`text-xs font-black uppercase tracking-[0.3em] ${nightMode ? 'text-oNight' : 'text-hud-secondary'}`}>
+                    {currentSpeedType}
+                </div>
+                <div className="h-[2px] w-4 bg-oBlue/40 rounded-full" />
+                <div className={`text-xs font-bold uppercase tracking-widest ${nightMode ? 'text-oNight/60' : 'text-hud-muted'}`}>
+                    {t('common.knots')}
+                </div>
+            </div>
         </div>
     );
 };

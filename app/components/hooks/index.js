@@ -2,4 +2,4 @@
  * Hooks index - Export all custom hooks
  */
 
-export { useWeatherFallback, useMultipleWeatherFallback } from './useWeatherFallback';
+export { useSignalKPath, useSignalKPaths } from './useSignalK';
