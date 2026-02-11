@@ -11,6 +11,7 @@
 
 import Client from '@signalk/client';
 import configService from '../settings/ConfigService';
+import { kelvinToCelsius as _kelvinToCelsius, msToKnots as _msToKnots, radiansToDegrees as _radiansToDegrees } from '../utils/UnitConversions';
 
 class SignalKService {
     constructor() {
@@ -158,7 +159,7 @@ class SignalKService {
         const headers = this.getAuthHeaders();
 
         const config = configService.getAll();
-        const credentialsOption = config.useAuthentication && config.username ? 'omit' : 'include';
+        const credentialsOption = config.useAuthentication && config.username ? 'include' : 'omit';
 
         try {
             const response = await fetch(url, {
@@ -173,13 +174,17 @@ class SignalKService {
 
             return await response.json();
         } catch (error) {
-            if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+            if (error.name === 'TypeError' && (error.message === 'Failed to fetch' || error.message.includes('NetworkError'))) {
                 const networkError = new Error(`SignalK server unreachable at ${baseUrl}`);
                 networkError.name = 'NetworkError';
                 console.warn(`SignalKService: Server unreachable for ${path}:`, error.message);
                 throw networkError;
             }
-            console.error(`SignalKService: API call failed for ${path}:`, error);
+            if (error.message && (error.message.includes('(400)') || error.message.includes('(404)'))) {
+                console.warn(`SignalKService: API call returned error for ${path}:`, error.message);
+            } else {
+                console.error(`SignalKService: API call failed for ${path}:`, error);
+            }
             throw error;
         }
     }
@@ -199,7 +204,7 @@ class SignalKService {
             this.weatherApiAvailable = response.ok;
             return this.weatherApiAvailable;
         } catch (error) {
-            if (error.name !== 'TypeError' || error.message !== 'Failed to fetch') {
+            if (error.name !== 'TypeError' || (error.message !== 'Failed to fetch' && !error.message.includes('NetworkError'))) {
                 console.warn('SignalKService: Weather API check failed:', error.message);
             }
             this.weatherApiAvailable = false;
@@ -216,13 +221,13 @@ class SignalKService {
     }
 
     /**
-     * Get weather forecast for a specific position
-     * Similar to freeboard-sk implementation
+     * Get hourly weather forecast for a specific position
      * @param {number} latitude - Latitude
      * @param {number} longitude - Longitude
+     * @param {number} count - Number of forecast periods (default 48 for 2 days)
      * @returns {Promise<Object>} Weather forecast data
      */
-    async getWeatherForecast(latitude, longitude) {
+    async getWeatherForecast(latitude, longitude, count = 48) {
         if (this.weatherApiAvailable === false) {
             throw new Error('Weather API is not available');
         }
@@ -231,7 +236,27 @@ class SignalKService {
             throw new Error('Position is required for weather forecast');
         }
 
-        const path = `/signalk/v2/api/weather/forecasts/point?lat=${latitude}&lon=${longitude}`;
+        const path = `/signalk/v2/api/weather/forecasts/point?lat=${latitude}&lon=${longitude}&count=${count}`;
+        return await this.apiCall(path);
+    }
+
+    /**
+     * Get daily weather forecast (includes sunrise/sunset)
+     * @param {number} latitude - Latitude
+     * @param {number} longitude - Longitude
+     * @param {number} count - Number of days (default 7)
+     * @returns {Promise<Object>} Daily weather forecast data
+     */
+    async getDailyWeatherForecast(latitude, longitude, count = 7) {
+        if (this.weatherApiAvailable === false) {
+            throw new Error('Weather API is not available');
+        }
+
+        if (latitude === null || latitude === undefined || longitude === null || longitude === undefined) {
+            throw new Error('Position is required for weather forecast');
+        }
+
+        const path = `/signalk/v2/api/weather/forecasts/daily?lat=${latitude}&lon=${longitude}&count=${count}`;
         return await this.apiCall(path);
     }
 
@@ -261,6 +286,7 @@ class SignalKService {
         Object.values(rawForecast).forEach((v) => {
             const forecast = {
                 description: v.description || '',
+                date: v.date || null,
                 time: '',
                 temperature: null,
                 temperatureMin: null,
@@ -300,7 +326,9 @@ class SignalKService {
             }
 
             // Parse other values
-            if (typeof v.outside?.absoluteHumidity !== 'undefined') {
+            if (typeof v.outside?.relativeHumidity !== 'undefined') {
+                forecast.humidity = v.outside.relativeHumidity;
+            } else if (typeof v.outside?.absoluteHumidity !== 'undefined') {
                 forecast.humidity = v.outside.absoluteHumidity;
             }
             if (typeof v.outside?.pressure !== 'undefined') {
@@ -309,10 +337,14 @@ class SignalKService {
             if (typeof v.outside?.uvIndex !== 'undefined') {
                 forecast.uvIndex = v.outside.uvIndex;
             }
-            if (typeof v.outside?.clouds !== 'undefined') {
+            if (typeof v.outside?.cloudCover !== 'undefined') {
+                forecast.clouds = v.outside.cloudCover;
+            } else if (typeof v.outside?.clouds !== 'undefined') {
                 forecast.clouds = v.outside.clouds;
             }
-            if (typeof v.outside?.visibility !== 'undefined') {
+            if (typeof v.outside?.horizontalVisibility !== 'undefined') {
+                forecast.visibility = v.outside.horizontalVisibility;
+            } else if (typeof v.outside?.visibility !== 'undefined') {
                 forecast.visibility = v.outside.visibility;
             }
             if (typeof v.outside?.precipitationVolume !== 'undefined') {
@@ -344,7 +376,7 @@ class SignalKService {
      * @returns {number} Temperature in Celsius
      */
     kelvinToCelsius(kelvin) {
-        return Math.round((kelvin - 273.15) * 10) / 10;
+        return _kelvinToCelsius(kelvin);
     }
 
     /**
@@ -353,7 +385,7 @@ class SignalKService {
      * @returns {number} Speed in knots
      */
     msToKnots(ms) {
-        return Math.round(ms * 1.94384 * 10) / 10;
+        return _msToKnots(ms);
     }
 
     /**
@@ -362,7 +394,7 @@ class SignalKService {
      * @returns {number} Angle in degrees
      */
     radiansToDegrees(radians) {
-        return Math.round((radians * 180 / Math.PI) % 360);
+        return _radiansToDegrees(radians);
     }
 
     /**
@@ -391,7 +423,7 @@ class SignalKService {
             this.authToken = data.token;
             return this.authToken;
         } catch (error) {
-            if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+            if (error.name === 'TypeError' && (error.message === 'Failed to fetch' || error.message.includes('NetworkError'))) {
                 const networkError = new Error(`SignalK server unreachable at ${baseUrl}`);
                 networkError.name = 'NetworkError';
                 throw networkError;
@@ -412,7 +444,7 @@ class SignalKService {
             });
             return response.ok;
         } catch (error) {
-            if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+            if (error.name === 'TypeError' && (error.message === 'Failed to fetch' || error.message.includes('NetworkError'))) {
                 return false;
             }
             return false;
@@ -1117,6 +1149,53 @@ class SignalKService {
             return devices.length > 0;
         } catch (error) {
             return false;
+        }
+    }
+
+    // ==========================================
+    // TIDES API
+    // ==========================================
+
+    /**
+     * Check if a tides plugin is available on the SignalK server.
+     * Tries the signalk-tides plugin endpoint first, then falls back
+     * to checking if tide data exists in the full data model.
+     * @returns {Promise<boolean>} True if tide data is available
+     */
+    async checkTideApiAvailability() {
+        try {
+            const response = await fetch(
+                `${this.getBaseUrl()}/signalk/v1/api/vessels/self/environment/tide`,
+                { method: 'GET', headers: this.getAuthHeaders() }
+            );
+            if (response.ok) {
+                const data = await response.json();
+                return data !== null && typeof data === 'object' && Object.keys(data).length > 0;
+            }
+            return false;
+        } catch (error) {
+            if (error.name !== 'TypeError' ||
+                (error.message !== 'Failed to fetch' && !error.message.includes('NetworkError'))) {
+                console.warn('SignalKService: Tide API check failed:', error.message);
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Get current tide data from SignalK server.
+     * Returns the environment.tide subtree which may contain:
+     * heightHigh, heightLow, heightNow, timeLow, timeHigh, coeffNow
+     * @returns {Promise<Object|null>} Tide data object or null
+     */
+    async getTideData() {
+        try {
+            const path = '/signalk/v1/api/vessels/self/environment/tide';
+            const data = await this.apiCall(path);
+            return data;
+        } catch (error) {
+            console.warn('SignalKService: Could not fetch tide data:', error.message);
+            return null;
         }
     }
 }
