@@ -94,13 +94,13 @@ export const ratioToPercent = (ratio) => {
  * @returns {string} - CSS class for color indication
  */
 export const getTemperatureColorClass = (temperatureKelvin, warningThreshold = 90, criticalThreshold = 100) => {
-  if (temperatureKelvin === null || temperatureKelvin === undefined) return 'text-gray-400';
+  if (temperatureKelvin === null || temperatureKelvin === undefined) return 'text-hud-muted';
   
   const tempCelsius = temperatureKelvin - 273.15;
   
-  if (tempCelsius >= criticalThreshold) return 'text-red-500';
-  if (tempCelsius >= warningThreshold) return 'text-yellow-500';
-  return 'text-green-500';
+  if (tempCelsius >= criticalThreshold) return 'text-oRed';
+  if (tempCelsius >= warningThreshold) return 'text-oYellow';
+  return 'text-oGreen';
 };
 
 /**
@@ -111,11 +111,11 @@ export const getTemperatureColorClass = (temperatureKelvin, warningThreshold = 9
  * @returns {string} - CSS class for color indication
  */
 export const getPressureColorClass = (pressure, minThreshold, maxThreshold) => {
-  if (pressure === null || pressure === undefined) return 'text-gray-400';
+  if (pressure === null || pressure === undefined) return 'text-hud-muted';
   
-  if (pressure < minThreshold) return 'text-red-500';
-  if (pressure > maxThreshold) return 'text-red-500';
-  return 'text-green-500';
+  if (pressure < minThreshold) return 'text-oRed';
+  if (pressure > maxThreshold) return 'text-oRed';
+  return 'text-oGreen';
 };
 
 /**
@@ -195,35 +195,4 @@ export const COOLANT_TEMPERATURE_THRESHOLDS = {
   critical: 100, // °C
 };
 
-/**
- * Convert Kelvin to Celsius
- * @param {number} kelvin - Temperature in Kelvin
- * @returns {number} - Temperature in Celsius (rounded to 1 decimal place) or null if input is invalid
- */
-export const kelvinToCelsius = (kelvin) => {
-  if (kelvin === null || kelvin === undefined) return null;
-  return Math.round((kelvin - 273.15) * 10) / 10;
-};
-
-/**
- * Convert meters per second to knots
- * @param {number} ms - Speed in meters per second
- * @returns {number} - Speed in knots (rounded to 1 decimal place) or null if input is invalid
- */
-export const msToKnots = (ms) => {
-  if (ms === null || ms === undefined) return null;
-  const MS_TO_KNOTS = 1.94384; // Conversion factor
-  return Math.round(ms * MS_TO_KNOTS * 10) / 10;
-};
-
-/**
- * Convert radians to degrees
- * @param {number} radians - Angle in radians
- * @returns {number} - Angle in degrees (rounded to 1 decimal place) or null if input is invalid
- */
-export const radiansToDegrees = (radians) => {
-  if (radians === null || radians === undefined) return null;
-  return Math.round((radians * 180 / Math.PI) * 10) / 10;
-};
-
-
+export { kelvinToCelsius, msToKnots, radiansToDegrees } from './UnitConversions';
