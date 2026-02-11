@@ -5,7 +5,9 @@ import dynamic from 'next/dynamic';
 import { useDrag } from '@use-gesture/react';
 import { OcearoContextProvider } from './components/context/OcearoContext';
 import { WeatherContextProvider } from './components/context/WeatherContext';
+import { TideContextProvider } from './components/context/TideContext';
 import ErrorBoundary from './ErrorBoundary';
+import I18nProvider from './i18n/I18nProvider';
 import configService from './components/settings/ConfigService';
 
 // Dynamically import components for code splitting
@@ -21,7 +23,7 @@ const AppMenu = dynamic(() => import('./components/AppMenu'));
 const ThreeDMainView = dynamic(() => import('./components/3dview/ThreeDMainView'), {
   loading: () => (
     <div className="w-full h-full flex items-center justify-center">
-      <div className="text-white text-2xl">Loading 3D View...</div>
+      <div className="text-hud-main text-2xl">Loading 3D View...</div>
     </div>
   ),
   ssr: false // Disable server-side rendering for 3D components
@@ -115,15 +117,19 @@ export default function Home() {
         configService.setCurrentView(view);
     }, [currentViewMode, toggleViewMode]);
 
+    const previousViewModeRef = useRef(null);
+
     const toggleSettings = useCallback(() => {
         if (isSettingsView) {
-            toggleViewMode(VIEW_MODES.BOAT);
+            toggleViewMode(previousViewModeRef.current || VIEW_MODES.BOAT);
             setIsSettingsView(false);
         } else {
+            previousViewModeRef.current = currentViewMode;
             handleSetRightView('settings');
+            toggleViewMode(VIEW_MODES.APP);
             setIsSettingsView(true);
         }
-    }, [isSettingsView, toggleViewMode, handleSetRightView]);
+    }, [isSettingsView, currentViewMode, toggleViewMode, handleSetRightView]);
 
     // Memoize layout classes to prevent unnecessary recalculations
     const layoutClasses = useMemo(() => {
@@ -151,17 +157,19 @@ export default function Home() {
     if (!initialRenderComplete.current) {
         // Return a skeleton layout that matches your app's structure
         return (
-            <div className="h-screen bg-black flex items-center justify-center">
-                <div className="animate-pulse text-white">Loading...</div>
+            <div className="h-screen bg-hud-bg flex items-center justify-center">
+                <div className="animate-pulse text-hud-main">Loading...</div>
             </div>
         );
     }
 
     return (
         <ErrorBoundary>
+            <I18nProvider>
             <OcearoContextProvider>
                 <WeatherContextProvider>
-                    <div className="h-screen flex flex-col bg-black relative overflow-hidden">
+                <TideContextProvider>
+                    <div className="h-screen flex flex-col bg-hud-bg relative overflow-hidden">
                         <div className="flex flex-1 min-h-0">
                             <div className={layoutClasses.leftPane}>
                                 <ThreeDMainView  />
@@ -172,7 +180,7 @@ export default function Home() {
                                 {...bind()} 
                                 className="handle w-1 bg-leftPaneBg h-full cursor-col-resize transition-all duration-200 flex items-center justify-center touch-none"
                             >
-                                <div className="rounded-full w-3 bg-gray-600 h-40 transition-all duration-200 hover:bg-gray-500" />
+                                <div className="rounded-full w-3 bg-hud-dim h-40 transition-all duration-200 hover:bg-hud-muted border border-hud" />
                             </div>
 
                             <div className={layoutClasses.rightPane}>
@@ -180,7 +188,7 @@ export default function Home() {
                             </div>
                         </div>
 
-                        <div className="w-full h-16 min-h-16 bg-black flex items-center justify-center shrink-0">
+                        <div className="w-full h-16 min-h-16 bg-leftPaneBg border-t border-hud flex items-center justify-center shrink-0">
                             <BottomNavigation
                                 setRightView={handleSetRightView}
                                 toggleAppMenu={toggleAppMenu}
@@ -198,8 +206,10 @@ export default function Home() {
                             />
                         )}
                     </div>
+                </TideContextProvider>
                 </WeatherContextProvider>
             </OcearoContextProvider>
+            </I18nProvider>
         </ErrorBoundary>
     );
 }
