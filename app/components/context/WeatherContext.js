@@ -10,7 +10,7 @@
 import React, { createContext, useState, useEffect, useContext, useCallback, useRef, useMemo } from 'react';
 import signalKService from '../services/SignalKService';
 import { useOcearoContext } from './OcearoContext';
-import { useSignalKPaths } from '../hooks/useSignalK';
+import { useSignalKPath, useSignalKPaths } from '../hooks/useSignalK';
 
 const WeatherContext = createContext();
 
@@ -26,9 +26,11 @@ const WEATHER_REFRESH_INTERVAL = 30 * 60 * 1000;
 const INITIAL_FETCH_DELAY = 5000;
 
 export const WeatherContextProvider = ({ children }) => {
-    // Define paths for subscription
-    const weatherPaths = useMemo(() => [
-        'navigation.position',
+    // Subscribe to position separately — only used for forecast fetch trigger
+    const position = useSignalKPath('navigation.position');
+
+    // Subscribe to weather sensor paths
+    const weatherSensorPaths = useMemo(() => [
         'environment.outside.temperature',
         'environment.outside.humidity',
         'environment.outside.pressure',
@@ -37,28 +39,28 @@ export const WeatherContextProvider = ({ children }) => {
         'environment.wind.gust'
     ], []);
 
-    const skValues = useSignalKPaths(weatherPaths);
+    const sensorValues = useSignalKPaths(weatherSensorPaths);
     
     // Weather forecast state
     const [forecasts, setForecasts] = useState([]);
-    const [currentForecast, setCurrentForecast] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [weatherApiAvailable, setWeatherApiAvailable] = useState(null);
     const [lastFetchTime, setLastFetchTime] = useState(null);
     
-    // Refs for cleanup
+    // Refs for cleanup and stable position access
     const fetchTimeoutRef = useRef(null);
     const refreshIntervalRef = useRef(null);
+    const positionRef = useRef(position);
+    positionRef.current = position;
 
     /**
      * Fetch weather forecast from SignalK Weather API
      */
     const fetchWeatherForecast = useCallback(async () => {
-        const position = skValues['navigation.position'];
+        const pos = positionRef.current;
         
-        if (!position?.latitude || !position?.longitude) {
-            console.warn('WeatherContext: No position available for weather forecast');
+        if (!pos?.latitude || !pos?.longitude) {
             return;
         }
 
@@ -66,8 +68,10 @@ export const WeatherContextProvider = ({ children }) => {
         setError(null);
 
         try {
-            // Check if weather API is available
-            const isAvailable = await signalKService.checkWeatherApiAvailability();
+            let isAvailable = signalKService.isWeatherApiAvailable();
+            if (isAvailable === null) {
+                isAvailable = await signalKService.checkWeatherApiAvailability();
+            }
             setWeatherApiAvailable(isAvailable);
 
             if (!isAvailable) {
@@ -75,29 +79,26 @@ export const WeatherContextProvider = ({ children }) => {
                 return;
             }
 
-            // Fetch forecast
             const rawForecast = await signalKService.getWeatherForecast(
-                position.latitude,
-                position.longitude
+                pos.latitude,
+                pos.longitude
             );
 
-            // Parse forecast data
             const parsedForecasts = signalKService.parseWeatherForecast(rawForecast);
             setForecasts(parsedForecasts);
-            
-            // Set current forecast (first item)
-            if (parsedForecasts.length > 0) {
-                setCurrentForecast(parsedForecasts[0]);
-            }
-            
             setLastFetchTime(new Date());
         } catch (err) {
-            console.error('WeatherContext: Failed to fetch forecast:', err);
+            if (err.message && err.message.includes('400')) {
+                console.warn('WeatherContext: Weather forecast not supported by this server');
+                setWeatherApiAvailable(false);
+            } else {
+                console.warn('WeatherContext: Failed to fetch forecast:', err.message);
+            }
             setError(err.message);
         } finally {
             setIsLoading(false);
         }
-    }, [skValues]);
+    }, []);
 
     /**
      * Get weather data for a specific time offset (hours from now)
@@ -108,121 +109,75 @@ export const WeatherContextProvider = ({ children }) => {
         if (!forecasts || forecasts.length === 0) {
             return null;
         }
-        
-        // Assuming forecasts are hourly, find the closest one
         const index = Math.min(Math.floor(hoursFromNow), forecasts.length - 1);
         return forecasts[index] || null;
     }, [forecasts]);
 
     /**
-     * Get current weather data with fallback to forecast
+     * Get current weather data with per-field merge (sensor first, then forecast fallback).
+     * Returns values in SignalK raw units (Kelvin, ratio, Pa, m/s, radians).
      * @returns {Object} Current weather data
      */
     const getCurrentWeather = useCallback(() => {
-        // First try to get sensor data from subscribed values
-        const sensorData = {
-            temperature: skValues['environment.outside.temperature'],
-            humidity: skValues['environment.outside.humidity'],
-            pressure: skValues['environment.outside.pressure'],
-            windSpeed: skValues['environment.wind.speedTrue'],
-            windDirection: skValues['environment.wind.directionTrue']
-        };
+        const currentForecast = forecasts.length > 0 ? forecasts[0] : null;
 
-        const hasSensorData = Object.values(sensorData).some(v => v !== null);
+        // Per-field merge: sensor value first, then forecast fallback
+        // Forecast values need conversion back to SignalK units
+        const temperature = sensorValues['environment.outside.temperature']
+            ?? (currentForecast?.temperature != null ? currentForecast.temperature + 273.15 : null);
+        const humidity = sensorValues['environment.outside.humidity']
+            ?? (currentForecast?.humidity ?? null);
+        const pressure = sensorValues['environment.outside.pressure']
+            ?? (currentForecast?.pressure ?? null);
+        const windSpeed = sensorValues['environment.wind.speedTrue']
+            ?? (currentForecast?.wind?.speed != null ? currentForecast.wind.speed / 1.94384 : null);
+        const windDirection = sensorValues['environment.wind.directionTrue']
+            ?? (currentForecast?.wind?.direction != null ? currentForecast.wind.direction * Math.PI / 180 : null);
 
-        if (hasSensorData) {
-            return {
-                source: 'sensors',
-                temperature: sensorData.temperature,
-                humidity: sensorData.humidity,
-                pressure: sensorData.pressure,
-                windSpeed: sensorData.windSpeed,
-                windDirection: sensorData.windDirection,
-                description: null
-            };
-        }
-
-        // Fall back to forecast data
-        if (currentForecast) {
-            return {
-                source: 'forecast',
-                temperature: currentForecast.temperature !== null 
-                    ? currentForecast.temperature + 273.15 // Convert back to Kelvin
-                    : null,
-                humidity: currentForecast.humidity !== null 
-                    ? currentForecast.humidity / 100 // Convert to ratio
-                    : null,
-                pressure: currentForecast.pressure,
-                windSpeed: currentForecast.wind?.speed !== null 
-                    ? currentForecast.wind.speed / 1.94384 // Convert knots to m/s
-                    : null,
-                windDirection: currentForecast.wind?.direction !== null 
-                    ? currentForecast.wind.direction * Math.PI / 180 // Convert to radians
-                    : null,
-                description: currentForecast.description
-            };
-        }
+        const hasAny = temperature !== null || humidity !== null || pressure !== null || windSpeed !== null;
+        const hasSensor = Object.values(sensorValues).some(v => v !== null);
 
         return {
-            source: null,
-            temperature: null,
-            humidity: null,
-            pressure: null,
-            windSpeed: null,
-            windDirection: null,
-            description: null
+            source: hasAny ? (hasSensor ? 'sensors' : 'forecast') : null,
+            temperature,
+            humidity,
+            pressure,
+            windSpeed,
+            windDirection,
+            description: currentForecast?.description || null
         };
-    }, [skValues, currentForecast]);
+    }, [sensorValues, forecasts]);
 
     /**
-     * Get wind data with fallback to forecast
-     * @returns {Object} Wind data
+     * Get wind data with per-field fallback to forecast
+     * @returns {Object} Wind data in SignalK units (m/s, radians)
      */
     const getWindData = useCallback(() => {
-        const sensorSpeed = skValues['environment.wind.speedTrue'];
-        const sensorDirection = skValues['environment.wind.directionTrue'];
-        const sensorGust = skValues['environment.wind.gust'];
+        const currentForecast = forecasts.length > 0 ? forecasts[0] : null;
 
-        if (sensorSpeed !== null || sensorDirection !== null) {
-            return {
-                source: 'sensors',
-                speed: sensorSpeed,
-                direction: sensorDirection,
-                gust: sensorGust
-            };
-        }
+        const speed = sensorValues['environment.wind.speedTrue']
+            ?? (currentForecast?.wind?.speed != null ? currentForecast.wind.speed / 1.94384 : null);
+        const direction = sensorValues['environment.wind.directionTrue']
+            ?? (currentForecast?.wind?.direction != null ? currentForecast.wind.direction * Math.PI / 180 : null);
+        const gust = sensorValues['environment.wind.gust']
+            ?? (currentForecast?.wind?.gust != null ? currentForecast.wind.gust / 1.94384 : null);
 
-        if (currentForecast?.wind) {
-            return {
-                source: 'forecast',
-                speed: currentForecast.wind.speed !== null 
-                    ? currentForecast.wind.speed / 1.94384 
-                    : null,
-                direction: currentForecast.wind.direction !== null 
-                    ? currentForecast.wind.direction * Math.PI / 180 
-                    : null,
-                gust: currentForecast.wind.gust !== null 
-                    ? currentForecast.wind.gust / 1.94384 
-                    : null
-            };
-        }
+        const hasSensor = sensorValues['environment.wind.speedTrue'] !== null || sensorValues['environment.wind.directionTrue'] !== null;
 
         return {
-            source: null,
-            speed: null,
-            direction: null,
-            gust: null
+            source: (speed !== null || direction !== null) ? (hasSensor ? 'sensors' : 'forecast') : null,
+            speed,
+            direction,
+            gust
         };
-    }, [skValues, currentForecast]);
+    }, [sensorValues, forecasts]);
 
-    // Initialize weather data fetch
+    // Initialize weather data fetch — stable callback, no re-trigger on sensor changes
     useEffect(() => {
-        // Initial fetch after delay
         fetchTimeoutRef.current = setTimeout(() => {
             fetchWeatherForecast();
         }, INITIAL_FETCH_DELAY);
 
-        // Set up periodic refresh
         refreshIntervalRef.current = setInterval(() => {
             fetchWeatherForecast();
         }, WEATHER_REFRESH_INTERVAL);
@@ -237,21 +192,18 @@ export const WeatherContextProvider = ({ children }) => {
         };
     }, [fetchWeatherForecast]);
 
-    const contextValue = {
-        // State
+    const contextValue = useMemo(() => ({
         forecasts,
-        currentForecast,
         isLoading,
         error,
         weatherApiAvailable,
         lastFetchTime,
-        
-        // Methods
         fetchWeatherForecast,
         getForecastForTime,
         getCurrentWeather,
         getWindData
-    };
+    }), [forecasts, isLoading, error, weatherApiAvailable, lastFetchTime,
+         fetchWeatherForecast, getForecastForTime, getCurrentWeather, getWindData]);
 
     return (
         <WeatherContext.Provider value={contextValue}>
