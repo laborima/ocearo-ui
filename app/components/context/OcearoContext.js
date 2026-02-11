@@ -5,6 +5,15 @@ import signalKService from '../services/SignalKService';
 import { updateOcearoCoreMode, isOcearoCoreEnabled, handleOcearoCoreError } from '../utils/OcearoCoreUtils';
 import { MathUtils } from 'three';
 
+export {
+    radToDeg, toDegrees, degToRad, toKnots, toKelvin,
+    convertTemperature, convertWindSpeed, convertSpeed, convertPressure,
+    MS_TO_KNOTS, KNOTS_TO_MPS, EARTH_RADIUS_METERS
+} from '../utils/UnitConversions';
+
+import { MS_TO_KNOTS } from '../utils/UnitConversions';
+import { SAMPLE_DATA, SAMPLE_DATA_INTERVAL } from './SampleData';
+
 const OcearoContext = createContext();
 
 
@@ -16,63 +25,6 @@ export const oNight = '#ef4444';
 export const oGray = '#989898';
 export const oGray2 = '#424242';
 
-/**
- * Convert radians to degrees
- * @param {number} rad - Angle in radians
- * @returns {number} - Angle in degrees
- */
-export const radToDeg = (rad) => rad === null || rad === undefined ? null : rad * (180 / Math.PI);
-
-/**
- * Convert radians to degrees and format as rounded integer with normalization to 0-360 range
- * @param {number} rad - Angle in radians
- * @returns {number} - Angle in degrees (0-360)
- */
-export const toDegrees = (rad) => {
-  if (rad === null || rad === undefined) return null;
-  return Math.round((rad * 180 / Math.PI + 360) % 360);
-};
-
-/**
- * Convert degrees to radians
- * @param {number} deg - Angle in degrees
- * @returns {number} - Angle in radians
- */
-export const degToRad = (deg) => deg === null || deg === undefined ? null : deg * (Math.PI / 180);
-
-/**
- * Convert meters per second to knots
- * @param {number} mps - Speed in meters per second
- * @returns {string} - Speed in knots, formatted to 1 decimal place
- */
-export const toKnots = (mps) => {
-  if (mps === null || mps === undefined) return null;
-  return (mps * MS_TO_KNOTS).toFixed(1);
-};
-
-/**
- * Constants for maritime navigation and coordinate conversion
- */
-
-/**
- * Conversion factor from m/s to knots (1 m/s = 1.94384 knots)
- * @constant {number}
- */
-export const MS_TO_KNOTS = 1.94384;
-export const EARTH_RADIUS_METERS = 6371000;
-export const KNOTS_TO_MPS = 0.51444; // Convert knots to meters per second
-
-
-
-// Utility functions
-export const toKelvin = (degrees) => degrees + 273.15;
-export const convertTemperature = (kelvin) => kelvin != null ? Math.round((kelvin - 273.15) * 10) / 10 : null;
-export const convertWindSpeed = (mps) => mps != null ? Math.round((mps * 1.94384) * 10) / 10 : null;
-export const convertSpeed = convertWindSpeed;
-export const convertPressure = (pa) => pa != null ? Math.round((pa / 100) * 10) / 10 : null;
-
-// Constants
-const SAMPLE_DATA_INTERVAL = 1000;
 const INITIAL_STATES = {
     autopilot: true,
     anchorWatch: false,
@@ -84,159 +36,38 @@ const INITIAL_STATES = {
     showLaylines3D: false
 };
 
-// Separate sample data into its own object for better organization
-const SAMPLE_DATA = {
-    wind: {
-        'environment.wind.angleTrueWater': MathUtils.degToRad(0),
-        'environment.wind.speedTrue': 10.288,
-        'environment.wind.angleApparent': MathUtils.degToRad(0),
-        'environment.wind.speedApparent': 10.288,
-    },
-    temperature: {
-        'environment.water.temperature': toKelvin(17),
-        'environment.outside.temperature': toKelvin(21),
-        'propulsion.main.exhaustTemperature': toKelvin(95),
-        'environment.inside.fridge.temperature': toKelvin(4),
-    },
-    environment: {
-        'environment.outside.pressure': 102300,
-        'environment.inside.relativeHumidity': 0.74,
-        'environment.inside.voc': 0.03,
-    },
-    performance: {
-        'performance.beatAngle': MathUtils.degToRad(45),
-        'performance.gybeAngle': MathUtils.degToRad(135),
-        'performance.beatAngleVelocityMadeGood': 6,
-        'performance.gybeAngleVelocityMadeGood': 5,
-        'performance.targetAngle': MathUtils.degToRad(45),
-        'performance.polarSpeed': 8,
-        'performance.polarSpeedRatio': 0.95,
-        'performance.velocityMadeGood': 5,
-        'performance.polarVelocityMadeGood': 6,
-        'performance.polarVelocityMadeGoodRatio': 0.9,
-    },
-    navigation: {
-        'navigation.speedThroughWater': 7,
-        'navigation.headingTrue': MathUtils.degToRad(0),
-        'navigation.courseOverGround': MathUtils.degToRad(20),
-        'navigation.courseGreatCircle.nextPoint.bearingTrue': MathUtils.degToRad(30),
-        'navigation.attitude': { "roll":MathUtils.degToRad(5), "pitch": MathUtils.degToRad(2), "yaw": MathUtils.degToRad(2) },
-    },
-    racing: {
-        'navigation.racing.layline': MathUtils.degToRad(10),
-        'navigation.racing.layline.distance': 100,
-        'navigation.racing.layline.time': 180,
-        'navigation.racing.oppositeLayline': MathUtils.degToRad(45),
-        'navigation.racing.oppositeLayline.distance': 80,
-        'navigation.racing.oppositeLayline.time': 180,
-        'navigation.racing.startLineStb': { latitude: 0, longitude: 0, altitude: 0 },
-        'navigation.racing.startLinePort': { latitude: 0, longitude: 0, altitude: 0 },
-        'navigation.racing.distanceStartline': 50,
-        'navigation.racing.timeToStart': 120,
-        'navigation.racing.timePortDown': 60,
-        'navigation.racing.timePortUp': 70,
-        'navigation.racing.timeStbdDown': 65,
-        'navigation.racing.timeStbdUp': 75,
-    },
-    electrical: {
-        // Battery data for VARTA Professional Dual Purpose RA 595 985
-        'electrical.batteries.1.name': 'House Battery',
-        'electrical.batteries.1.location': 'Under Starboard Bed',
-        'electrical.batteries.1.capacity.nominal': 768, // 64Ah × 12V = 768 Wh
-        'electrical.batteries.1.capacity.actual': 707, // 92% of nominal (ex. légèrement dégradée)
-        'electrical.batteries.1.capacity.remaining': 601, // 85% of actual
-        'electrical.batteries.1.capacity.dischargeLimit': 0.2, // Don't discharge below 20%
-        'electrical.batteries.1.capacity.timeRemaining': 9860, // In seconds
-        'electrical.batteries.1.lifetimeDischarge': 540000, // In Ah converted to Coulombs
-        'electrical.batteries.1.lifetimeRecharge': 545000,
-        'electrical.batteries.1.voltage.ripple': 0.05,
-        'electrical.batteries.1.chemistry': 'LeadAcid',
-        'electrical.batteries.1.manufacturer.name': 'VARTA',
-        'electrical.batteries.1.manufacturer.model': 'Professional Dual Purpose RA 595 985',
-        'electrical.batteries.1.manufacturer.URL': 'https://www.varta-automotive.com',
-        'electrical.batteries.1.dateInstalled': '2020-06-15T00:00:00Z',
-        'electrical.batteries.1.associatedBus': 'House Bus',
-        'electrical.batteries.1.voltage': 12.6,
-        'electrical.batteries.1.current': -2.3,
-
-        // Engine battery - VARTA E11 Blue Dynamic
-        'electrical.batteries.0.name': 'Engine Start Battery',
-        'electrical.batteries.0.location': 'Engine Compartment',
-        'electrical.batteries.0.capacity.nominal': 888, // 74Ah × 12V = 888 Wh
-        'electrical.batteries.0.capacity.actual': 861, // 97% of nominal
-        'electrical.batteries.0.chemistry': 'LeadAcid',
-        'electrical.batteries.0.manufacturer.name': 'VARTA',
-        'electrical.batteries.0.manufacturer.model': 'Blue Dynamic E11',
-        'electrical.batteries.0.manufacturer.URL': 'https://www.varta-automotive.com',
-        'electrical.batteries.0.dateInstalled': '2022-04-10T00:00:00Z',
-        'electrical.batteries.0.associatedBus': 'Start Bus',
-        'electrical.batteries.0.voltage': 12.4,
-        'electrical.batteries.0.current': 0.1,
-
-        // Alternators
-        'electrical.alternators.0.voltage': 14.2,
-        'electrical.alternators.0.current': 35.5,
-
-        // Switches and systems status
-        'navigation.lights': false,
-        'steering.autopilot.state': 'auto', // 'auto' or 'standby'
-    },
-    propulsion: {
-        // Main Engine (instance 0) - Comprehensive data
-        'propulsion.0.revolutions': 25, // 25 Hz = 1500 RPM
-        'propulsion.0.runTime': 125000, // ~34.7 hours in seconds
-        'propulsion.0.coolantTemperature': 353.15, // 80°C in Kelvin
-        'propulsion.0.coolantPressure': 180000, // 1.8 bar in Pascals
-        'propulsion.0.oilPressure': 350000, // 3.5 bar in Pascals
-        'propulsion.0.oilTemperature': 363.15, // 90°C in Kelvin
-        'propulsion.0.exhaustTemperature': 623.15, // 350°C in Kelvin
-        'propulsion.0.intakeManifoldTemperature': 313.15, // 40°C in Kelvin
-        'propulsion.0.boostPressure': 150000, // 1.5 bar in Pascals
-        'propulsion.0.load': 0.45, // 45% load
-        'propulsion.0.torque': 0.52, // 52% torque
-        'propulsion.0.state': 'started',
-        'propulsion.0.fuel.rate': 0.000002778, // 10 L/h in m³/s (10 / (1000 * 3600))
-        'propulsion.0.fuel.pressure': 280000, // 2.8 bar in Pascals
-        'propulsion.0.fuel.economyRate': 0.45, // L/NM
-        'propulsion.0.transmission.gear': 1, // Forward gear
-        'propulsion.0.transmission.oilPressure': 320000, // 3.2 bar in Pascals
-        'propulsion.0.transmission.oilTemperature': 343.15, // 70°C in Kelvin
-        'propulsion.0.tilt': 0, // Neutral tilt in radians
-        
-        // Starboard Engine (instance 1) - For dual engine setups
-        'propulsion.1.revolutions': 26, // 26 Hz = 1560 RPM
-        'propulsion.1.runTime': 128000, // ~35.5 hours in seconds
-        'propulsion.1.coolantTemperature': 355.15, // 82°C in Kelvin
-        'propulsion.1.coolantPressure': 185000, // 1.85 bar in Pascals
-        'propulsion.1.oilPressure': 360000, // 3.6 bar in Pascals
-        'propulsion.1.oilTemperature': 365.15, // 92°C in Kelvin
-        'propulsion.1.exhaustTemperature': 633.15, // 360°C in Kelvin
-        'propulsion.1.intakeManifoldTemperature': 315.15, // 42°C in Kelvin
-        'propulsion.1.boostPressure': 155000, // 1.55 bar in Pascals
-        'propulsion.1.load': 0.48, // 48% load
-        'propulsion.1.torque': 0.54, // 54% torque
-        'propulsion.1.state': 'started',
-        'propulsion.1.fuel.rate': 0.000002917, // 10.5 L/h in m³/s
-        'propulsion.1.fuel.pressure': 285000, // 2.85 bar in Pascals
-        'propulsion.1.transmission.gear': 1, // Forward gear
-        'propulsion.1.transmission.oilPressure': 325000, // 3.25 bar in Pascals
-        'propulsion.1.transmission.oilTemperature': 345.15, // 72°C in Kelvin
-        'propulsion.1.tilt': 0, // Neutral tilt in radians
-    },
-    tanks: {
-        // Fuel tanks
-        'tanks.fuel.0.currentLevel': 0.75, // 75% full
-        'tanks.fuel.0.capacity': 200, // 200 liters
-        'tanks.fuel.0.currentVolume': 150, // 150 liters
-        'tanks.fuel.0.type': 'fuel',
-    },
-};
-
 
 
 export const OcearoContextProvider = ({ children }) => {
-    const [nightMode, setNightMode] = useState(false); // Night mode state
+    const [theme, setTheme] = useState(() => configService.get('theme') || 'dark');
+    const [nightMode, setNightMode] = useState(false); // Night mode state (separate from theme, for red HUD)
     const [states, setStates] = useState(INITIAL_STATES);
+    
+    // Apply theme and night mode to document root
+    useEffect(() => {
+        if (typeof document !== 'undefined') {
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+    }, [theme]);
+
+    useEffect(() => {
+        if (typeof document !== 'undefined') {
+            document.documentElement.setAttribute('data-night', nightMode ? 'true' : 'false');
+        }
+    }, [nightMode]);
+
+    // Listen for config changes from other components (like ConfigPage)
+    useEffect(() => {
+        const handleConfigChange = (newConfig) => {
+            if (newConfig.theme && newConfig.theme !== theme) {
+                setTheme(newConfig.theme);
+            }
+        };
+        
+        // We might need a way to listen to config changes if ConfigService doesn't emit events
+        // For now, since ConfigPage calls onSave, we can assume it works if we wrap the app correctly
+        // Or we can just use the theme from config directly if we use it in a hook
+    }, [theme]);
     
     // Store subscribers for each path
     const subscribersRef = useRef({});
@@ -402,7 +233,11 @@ export const OcearoContextProvider = ({ children }) => {
                     }
                 }
             } catch (error) {
-                console.error('Failed to update OcearoCore mode for anchorWatch:', handleOcearoCoreError(error));
+                if (error.name === 'NetworkError') {
+                    console.warn('OcearoCore unreachable for anchorWatch update');
+                } else {
+                    console.error('Failed to update OcearoCore mode for anchorWatch:', handleOcearoCoreError(error));
+                }
             }
         }
 
@@ -416,7 +251,11 @@ export const OcearoContextProvider = ({ children }) => {
                     }
                 }
             } catch (error) {
-                console.error('Failed to update OcearoCore mode for parkingMode:', handleOcearoCoreError(error));
+                if (error.name === 'NetworkError') {
+                    console.warn('OcearoCore unreachable for parkingMode update');
+                } else {
+                    console.error('Failed to update OcearoCore mode for parkingMode:', handleOcearoCoreError(error));
+                }
             }
         }
 
@@ -435,8 +274,59 @@ export const OcearoContextProvider = ({ children }) => {
                     }
                 }
             } catch (error) {
-                console.error('Failed to update OcearoCore mode for racing:', handleOcearoCoreError(error));
+                if (error.name === 'NetworkError') {
+                    console.warn('OcearoCore unreachable for racing update');
+                } else {
+                    console.error('Failed to update OcearoCore mode for racing:', handleOcearoCoreError(error));
+                }
             }
+        }
+    };
+
+    /**
+     * Toggles a state exclusively, turning off other exclusive states
+     * Exclusive states are: autopilot, anchorWatch, parkingMode
+     */
+    const toggleExclusiveMode = async (key) => {
+        const exclusiveKeys = ['autopilot', 'anchorWatch', 'parkingMode'];
+        if (!exclusiveKeys.includes(key)) {
+            return toggleState(key);
+        }
+
+        const newValue = !states[key];
+        
+        // If we're turning it ON, we turn OFF all others
+        if (newValue) {
+            setStates((prevState) => {
+                const newState = { ...prevState };
+                exclusiveKeys.forEach(k => {
+                    newState[k] = (k === key);
+                });
+                return newState;
+            });
+
+            // Handle OcearoCore mode updates for the new state
+            try {
+                if (isOcearoCoreEnabled()) {
+                    if (key === 'anchorWatch') await updateOcearoCoreMode('anchored');
+                    else if (key === 'parkingMode') await updateOcearoCoreMode('moored');
+                    else if (key === 'autopilot') {
+                         const data = signalkDataRef.current;
+                         const engineState = data['propulsion.main.state'] || data['propulsion.main.revolutions'];
+                         const navigationMode = (engineState === 'running' || (typeof engineState === 'number' && engineState > 0)) ? 'motoring' : 'sailing';
+                         await updateOcearoCoreMode(navigationMode);
+                    }
+                }
+            } catch (error) {
+                if (error.name === 'NetworkError') {
+                    console.warn(`OcearoCore unreachable for exclusive mode update: ${key}`);
+                } else {
+                    console.error(`Failed to update OcearoCore mode for ${key}:`, handleOcearoCoreError(error));
+                }
+            }
+        } else {
+            // If we're turning it OFF, we just toggle it
+            return toggleState(key, false);
         }
     };
 
@@ -531,93 +421,8 @@ export const OcearoContextProvider = ({ children }) => {
         };
 
 
-        const fetchTideData = async () => {
-            const date = new Date();
-            const year = date.getFullYear();
-            const month = (date.getMonth() + 1).toString().padStart(2, '0');
-            const filePath = `/tides/larochelle/${month}_${year}.json`;
-        
-            const response = await fetch(filePath);
-            if (!response.ok) {
-                console.warn("No tide data found");
-                return;
-            }
-        
-            const tideData = await response.json();
-            const today = date.toISOString().split('T')[0];
-            if (!tideData[today]) return;
-        
-            const now = new Date();
-            const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
-        
-            let lastTide = null;
-            let nextTide = null;
-        
-            const sortedTides = tideData[today].map(([type, time, height, coef]) => {
-                const [hours, minutes] = time.split(':').map(Number);
-                return {
-                    type,
-                    height: parseFloat(height),
-                    time,
-                    timeInMinutes: hours * 60 + minutes,
-                    coef
-                };
-            }).sort((a, b) => a.timeInMinutes - b.timeInMinutes);
-        
-            for (const tide of sortedTides) {
-                if (tide.timeInMinutes <= currentTimeInMinutes) {
-                    lastTide = tide;
-                } else {
-                    nextTide = tide;
-                    break;
-                }
-            }
-        
-            if (!lastTide || !nextTide) {
-                throw new Error("Cannot determine tide trend");
-            }
-    
-            const isRising = lastTide.type === "tide.low" && nextTide.type === "tide.high";
-        
-            let closestHighTide, closestLowTide;
-            if (isRising) {
-                closestHighTide = nextTide.type === "tide.high" ? nextTide : null;
-                closestLowTide = lastTide.type === "tide.low" ? lastTide : null;
-            } else {
-                closestHighTide = lastTide.type === "tide.high" ? lastTide : null;
-                closestLowTide = nextTide.type === "tide.low" ? nextTide : null;
-            }
-        
-            if (closestHighTide && closestLowTide) {
-                const nowTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-                const currentTideHeight = calculateTideHeightUsingTwelfths(
-                    closestHighTide.height,
-                    closestLowTide.height,
-                    nowTime,
-                    closestHighTide.time,
-                    closestLowTide.time
-                );
-        
-                // Update SignalK data using the new subscription-aware method
-                updateSignalKData({
-                    "environment.tide.heightNow": currentTideHeight,
-                    "environment.tide.heightHigh": closestHighTide.height,
-                    "environment.tide.heightLow": closestLowTide.height,
-                    "environment.tide.timeLow": closestLowTide.time,
-                    "environment.tide.timeHigh": closestHighTide.time,
-                    "environment.tide.coeffNow": closestHighTide.coef
-                });
-            } else {
-                throw new Error("Tide data for today is incomplete.");
-            }
-        };
-        
-
-
         // Initialize SignalK client connection
         connectSignalKClient();
-
-            fetchTideData();
 
 
             // Cleanup function to disconnect from SignalK and clear interval on unmount
@@ -641,12 +446,16 @@ export const OcearoContextProvider = ({ children }) => {
                     getSignalKValue,
                     subscribe,
                     unsubscribe,
+                    updateSignalKData,
                     getBoatRotationAngle,
                     convertLatLonToXY,
+                    theme,
+                    setTheme,
                     nightMode,
                     setNightMode,
                     states,
                     toggleState,
+                    toggleExclusiveMode,
                 }}
             >
                 {children}
@@ -657,111 +466,4 @@ export const OcearoContextProvider = ({ children }) => {
 // Hook to access the Ocearo context throughout the application
 export const useOcearoContext = () => useContext(OcearoContext);
 
-/**
- * Calculates the tide height at a specific time using the Rule of Twelfths.
- * 
- * The Rule of Twelfths is a simple method used by sailors to estimate the height of the tide at a given time,
- * based on the principle that the tide rises and falls in a sinusoidal pattern. The rule divides the tidal range
- * into 12 equal parts and distributes them over a 6-hour cycle as follows:
- * 
- * Hour 1: 1/12 of the range
- * Hour 2: 2/12 of the range
- * Hour 3: 3/12 of the range
- * Hour 4: 3/12 of the range
- * Hour 5: 2/12 of the range
- * Hour 6: 1/12 of the range
- * 
- * @param {number} highTideHeight - The water height at high tide in meters
- * @param {number} lowTideHeight - The water height at low tide in meters
- * @param {string} currentTime - The current time in 24-hour format (HH:MM)
- * @param {string} highTideTime - The time of high tide in 24-hour format (HH:MM)
- * @param {string} lowTideTime - The time of low tide in 24-hour format (HH:MM)
- * @returns {number} The estimated tide height at the current time in meters
- */
-export const calculateTideHeightUsingTwelfths = function(highTideHeight, lowTideHeight, currentTime, highTideTime, lowTideTime) {
-    // Validate input time strings
-    if (!currentTime || !highTideTime || !lowTideTime || 
-        !/^\d{1,2}:\d{2}$/.test(currentTime) || 
-        !/^\d{1,2}:\d{2}$/.test(highTideTime) || 
-        !/^\d{1,2}:\d{2}$/.test(lowTideTime)) {
-        console.error('Invalid time format provided to calculateTideHeightUsingTwelfths');
-        return (highTideHeight + lowTideHeight) / 2; // Return average as fallback
-    }
-    
-    /**
-     * Converts a time string (HH:MM) to total minutes since midnight
-     * @param {string} timeString - Time in format HH:MM
-     * @returns {number} Total minutes since midnight
-     */
-    const convertTimeToMinutes = (timeString) => {
-        const [hours, minutes] = timeString.split(':').map(Number);
-        return hours * 60 + minutes;
-    };
-
-    // Convert all times to minutes for easier calculation
-    const highTideMinutes = convertTimeToMinutes(highTideTime);
-    const lowTideMinutes = convertTimeToMinutes(lowTideTime);
-    const currentMinutes = convertTimeToMinutes(currentTime);
-
-    // Determine if tide is rising or falling and set calculation parameters
-    let isRising = false;
-    let startHeight, endHeight, startMinutes, endMinutes;
-
-    if (lowTideMinutes <= currentMinutes && currentMinutes <= highTideMinutes) {
-        // We are in a rising tide cycle (low to high)
-        isRising = true;
-        startHeight = lowTideHeight;
-        endHeight = highTideHeight;
-        startMinutes = lowTideMinutes;
-        endMinutes = highTideMinutes;
-    } else {
-        // We are in a falling tide cycle (high to low)
-        startHeight = highTideHeight;
-        endHeight = lowTideHeight;
-        startMinutes = highTideMinutes;
-        // Handle case where low tide is on the next day (midnight overlap)
-        endMinutes = lowTideMinutes + (lowTideMinutes < highTideMinutes ? 1440 : 0); 
-    }
-
-    // Calculate total duration of this tide cycle and the total height change
-    const tideCycleDuration = Math.abs(endMinutes - startMinutes);
-    const tideChange = Math.abs(endHeight - startHeight);
-    
-    // Calculate elapsed time since start of cycle, handling day wraparound
-    let elapsedTime = currentMinutes - startMinutes;
-    if (elapsedTime < 0) elapsedTime += 1440; // Add minutes in a day (24*60) if negative
-
-    // Calculate one twelfth of the total tide change
-    const twelfth = tideChange / 12;
-    let heightChange = 0;
-
-    // Apply the Rule of Twelfths based on elapsed time
-    // First hour: 1/12 of the range
-    if (elapsedTime <= tideCycleDuration / 6) {
-        heightChange = twelfth * Math.ceil(elapsedTime / (tideCycleDuration / 12));
-    } 
-    // Second hour: 2/12 of the range (total 3/12)
-    else if (elapsedTime <= 2 * tideCycleDuration / 6) {
-        heightChange = twelfth * 2 + twelfth * Math.ceil((elapsedTime - tideCycleDuration / 6) / (tideCycleDuration / 12));
-    } 
-    // Third hour: 3/12 of the range (total 6/12)
-    else if (elapsedTime <= 3 * tideCycleDuration / 6) {
-        heightChange = twelfth * 5;
-    } 
-    // Fourth hour: 3/12 of the range (total 9/12)
-    else if (elapsedTime <= 4 * tideCycleDuration / 6) {
-        heightChange = twelfth * 8;
-    } 
-    // Fifth hour: 2/12 of the range (total 11/12)
-    else if (elapsedTime <= 5 * tideCycleDuration / 6) {
-        heightChange = twelfth * 10;
-    } 
-    // Sixth hour: 1/12 of the range (total 12/12)
-    else {
-        heightChange = tideChange;
-    }
-
-    // Return the final calculated height based on whether tide is rising or falling
-    return isRising ? startHeight + heightChange : startHeight - heightChange;
-}
-
+export { calculateTideHeightUsingTwelfths } from './TideContext';
