@@ -66,8 +66,14 @@ const ThreeDMainView = () => {
     return (
         <div className="w-full h-full relative ">
 
-            <div className="absolute top-2 left-2 z-10">
+            <div className="absolute top-2 left-2 right-2 z-20 flex items-center justify-between">
                 <ThreeDBoatToolbar />
+                <div className="flex items-center space-x-4">
+                    <span className={`text-lg font-black uppercase tracking-[0.2em] ${nightMode ? 'text-oNight' : 'text-hud-muted'}`}>
+                        {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </span>
+                    <ThreeDBoatThanksIndicator />
+                </div>
             </div>
 
             <div className="absolute top-14 left-2 z-10">
@@ -75,17 +81,12 @@ const ThreeDMainView = () => {
                 {states.anchorWatch && <ThreeDBoatPositionDateIndicator/> }
             </div>
 
-            {/* Top-right indicators */}
-            <div className="absolute top-2 right-2 z-20 flex flex-col items-end space-y-2">
-              
-                <div className="flex items-center space-x-4">
-                    <span className={`text-lg font-black uppercase tracking-[0.2em] ${nightMode ? 'text-oNight' : 'text-hud-muted'}`}>
-                        {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                    </span>
-                    <ThreeDBoatThanksIndicator />
+            {/* Attitude indicator - top right, below toolbar row */}
+            {showAttitudeIndicator && (
+                <div className="absolute top-14 right-2 z-20">
+                    <ThreeDBoatAttitudeIndicator />
                 </div>
-                {showAttitudeIndicator && <ThreeDBoatAttitudeIndicator />}
-            </div>
+            )}
 
             {/* Floating vessel info panel - top left, below speed indicator */}
             {infoPanelContent && (

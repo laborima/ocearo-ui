@@ -14,6 +14,7 @@
 - Redesigned 3D view tank/battery indicators with Tesla-style mini gauge bars, transparent background, and proper sizing.
 - Made 3D toolbar background fully transparent, removing opaque backdrop.
 - Increased clock and tank/battery indicator sizes in 3D view to match toolbar proportions.
+- Unified top toolbar row alignment: toolbar, clock, and indicators now share a single flex container for consistent vertical alignment.
 - Debug data injection in OcearoContext now only activates when debugMode is explicitly enabled, even on SignalK connection failure.
 
 ## [0.1.16] - 2026-01-07
