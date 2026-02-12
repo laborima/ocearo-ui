@@ -82,7 +82,7 @@ export default function UVIndexWidget() {
             <div className="flex-1 bg-purple-500/40"></div>
           </div>
           {/* Current position indicator on scale */}
-          {uvIndex !== null && (
+          {uvIndex !== null && uvInfo && (
             <div 
               className="relative h-1 w-full"
               style={{ top: '-4px' }}

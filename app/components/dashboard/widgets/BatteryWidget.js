@@ -28,8 +28,10 @@ export default function BatteryWidget() {
 
     const hasData = houseVoltage !== null || starterVoltage !== null || debugMode;
 
+    const emptyBattery = { voltage: null, current: null, percentage: null };
+
     if (!hasData) {
-      return { hasData: false };
+      return { hasData: false, house: emptyBattery, starter: emptyBattery };
     }
 
     const house = houseVoltage || (debugMode ? 12.6 : null);
@@ -153,7 +155,7 @@ export default function BatteryWidget() {
             batteryData.house.percentage !== null && batteryData.starter.percentage !== null 
               ? getBatteryColor(Math.min(batteryData.house.percentage, batteryData.starter.percentage)) 
               : 'text-hud-muted'
-          } ${Math.min(batteryData.house.percentage, batteryData.starter.percentage) < 20 ? 'animate-soft-pulse' : ''}`}>
+          } ${batteryData.house.percentage !== null && batteryData.starter.percentage !== null && Math.min(batteryData.house.percentage, batteryData.starter.percentage) < 20 ? 'animate-soft-pulse' : ''}`}>
             {batteryData.house.percentage !== null && batteryData.starter.percentage !== null 
               ? `${getBatteryStatus(Math.min(batteryData.house.percentage, batteryData.starter.percentage))} ${t('widgets.health')}` 
               : t('widgets.analyzingCells')}

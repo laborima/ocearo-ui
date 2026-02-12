@@ -446,7 +446,7 @@ const ConfigPage = ({ onSave }) => {
 
                             <div className="space-y-2">
                                 <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.languageDesc')}</label>
-                                <div className="flex bg-hud-bg p-1 rounded-xl border border-hud">
+                                <div className="grid grid-cols-3 md:grid-cols-4 gap-1 bg-hud-bg p-1 rounded-xl border border-hud">
                                     {SUPPORTED_LANGUAGES.map((lang) => (
                                         <button
                                             key={lang.code}
@@ -454,7 +454,7 @@ const ConfigPage = ({ onSave }) => {
                                                 i18n.changeLanguage(lang.code);
                                                 updateConfig({ language: lang.code });
                                             }}
-                                            className={`flex-1 py-3 px-4 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center space-x-2 ${
+                                            className={`py-3 px-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center space-x-2 ${
                                                 (config.language || 'en') === lang.code
                                                     ? 'bg-oBlue text-hud-main shadow-lg shadow-oBlue/20'
                                                     : 'text-hud-secondary hover:text-hud-main'

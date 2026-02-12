@@ -32,7 +32,7 @@ export const WeatherContextProvider = ({ children }) => {
     // Subscribe to weather sensor paths
     const weatherSensorPaths = useMemo(() => [
         'environment.outside.temperature',
-        'environment.outside.humidity',
+        'environment.outside.relativeHumidity',
         'environment.outside.pressure',
         'environment.wind.speedTrue',
         'environment.wind.directionTrue',
@@ -125,7 +125,7 @@ export const WeatherContextProvider = ({ children }) => {
         // Forecast values need conversion back to SignalK units
         const temperature = sensorValues['environment.outside.temperature']
             ?? (currentForecast?.temperature != null ? currentForecast.temperature + 273.15 : null);
-        const humidity = sensorValues['environment.outside.humidity']
+        const humidity = sensorValues['environment.outside.relativeHumidity']
             ?? (currentForecast?.humidity ?? null);
         const pressure = sensorValues['environment.outside.pressure']
             ?? (currentForecast?.pressure ?? null);

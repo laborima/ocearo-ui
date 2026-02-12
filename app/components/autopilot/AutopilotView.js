@@ -84,6 +84,10 @@ export default function AutopilotView() {
     const [controllerConfig, setControllerConfig] = useState(null);
     const [controllerConnected, setControllerConnected] = useState(false);
 
+    // Keep a ref to skValues so the polling callback doesn't depend on it
+    const skValuesRef = React.useRef(skValues);
+    skValuesRef.current = skValues;
+
     /**
      * Fetch autopilot data from SignalK
      */
@@ -96,11 +100,12 @@ export default function AutopilotView() {
             setIsAutopilotAvailable(available);
             
             if (!available) {
-                // Use subscribed SignalK values as fallback
-                const state = skValues['steering.autopilot.state'];
-                const mode = skValues['steering.autopilot.mode'];
-                const target = skValues['steering.autopilot.target.headingTrue'] || 
-                              skValues['steering.autopilot.target.windAngleApparent'];
+                // Use subscribed SignalK values as fallback (via ref to avoid dep loop)
+                const vals = skValuesRef.current;
+                const state = vals['steering.autopilot.state'];
+                const mode = vals['steering.autopilot.mode'];
+                const target = vals['steering.autopilot.target.headingTrue'] || 
+                              vals['steering.autopilot.target.windAngleApparent'];
                 
                 setAutopilotData({
                     state: state || (debugMode ? 'standby' : 'off-line'),
@@ -129,7 +134,7 @@ export default function AutopilotView() {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedDevice, skValues, debugMode]);
+    }, [selectedDevice, debugMode]);
 
     /**
      * Fetch controller configuration from OcearoCore
@@ -308,9 +313,9 @@ export default function AutopilotView() {
 
     // Render control tab
     const renderControlTab = () => (
-        <div className="p-2 space-y-4">
+        <div className="space-y-3">
             {/* Status Display */}
-            <div className="bg-hud-bg rounded-lg p-3 border border-hud">
+            <div className="tesla-card p-3 border border-hud bg-hud-bg">
                 <div className="grid grid-cols-3 gap-2 text-center">
                     {/* State */}
                     <div>
@@ -384,7 +389,7 @@ export default function AutopilotView() {
             </div>
 
             {/* Mode Selection */}
-            <div className="bg-hud-bg rounded-lg p-3 border border-hud">
+            <div className="tesla-card p-3 border border-hud bg-hud-bg">
                 <div className={`text-xs font-black uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.modeSelection')}</div>
                 <div className="grid grid-cols-4 gap-2">
                     {['compass', 'wind', 'gps', 'route'].map(mode => (
@@ -405,7 +410,7 @@ export default function AutopilotView() {
             </div>
 
             {/* Heading Adjustment */}
-            <div className="bg-hud-bg rounded-lg p-3 border border-hud">
+            <div className="tesla-card p-3 border border-hud bg-hud-bg">
                 <div className={`text-xs font-black uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.targetAdjustment')}</div>
                 <div className="grid grid-cols-4 gap-2">
                     <button
@@ -446,7 +451,7 @@ export default function AutopilotView() {
             </div>
 
             {/* Tack & Gybe */}
-            <div className="bg-hud-bg rounded-lg p-3 border border-hud">
+            <div className="tesla-card p-3 border border-hud bg-hud-bg">
                 <div className={`text-xs font-black uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.maneuvers')}</div>
                 <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -490,9 +495,9 @@ export default function AutopilotView() {
 
     // Render controller config tab
     const renderControllerTab = () => (
-        <div className="p-2 space-y-4">
+        <div className="space-y-3">
             {/* Controller Status */}
-            <div className="bg-hud-bg rounded-lg p-3 border border-hud">
+            <div className="tesla-card p-3 border border-hud bg-hud-bg">
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
                         <FontAwesomeIcon 
@@ -523,7 +528,7 @@ export default function AutopilotView() {
             </div>
 
             {/* Button Mappings */}
-            <div className="bg-hud-bg rounded-lg p-3 border border-hud">
+            <div className="tesla-card p-3 border border-hud bg-hud-bg">
                 <div className={`text-xs font-black uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.buttonMappings')}</div>
                 
                 <div className="space-y-2">
@@ -622,7 +627,7 @@ export default function AutopilotView() {
             </div>
 
             {/* Sensitivity Settings */}
-            <div className="bg-hud-bg rounded-lg p-3 border border-hud">
+            <div className="tesla-card p-3 border border-hud bg-hud-bg">
                 <div className={`text-xs font-black uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.sensitivity')}</div>
                 
                 <div className="space-y-4">
@@ -677,7 +682,7 @@ export default function AutopilotView() {
     );
 
     return (
-        <div className="flex flex-col h-full bg-rightPaneBg overflow-auto">
+        <div className="flex flex-col h-full bg-rightPaneBg overflow-hidden">
             {/* Tab Navigation - Tesla Style */}
             <div className="flex border-b border-hud bg-hud-bg">
                 {[
@@ -730,7 +735,7 @@ export default function AutopilotView() {
             )}
 
             {/* Tab Content */}
-            <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="flex-1 min-h-0 overflow-auto scrollbar-hide">
                 <AnimatePresence mode="wait">
                     {isLoading ? (
                         <motion.div 
@@ -745,10 +750,11 @@ export default function AutopilotView() {
                     ) : (
                         <motion.div
                             key={activeTab}
-                            initial={{ opacity: 0, x: 20 }}
+                            initial={{ opacity: 0, x: 10 }}
                             animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.2 }}
+                            exit={{ opacity: 0, x: -10 }}
+                            transition={{ duration: 0.4, ease: "easeOut" }}
+                            className="p-3"
                         >
                             {activeTab === 'control' ? renderControlTab() : renderControllerTab()}
                         </motion.div>
