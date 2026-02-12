@@ -106,16 +106,30 @@ export const OcearoContextProvider = ({ children }) => {
     }, []);
 
     /**
-     * Update SignalK data and notify subscribers
+     * Update SignalK data and notify subscribers only when values actually change.
+     * This prevents unnecessary re-renders when demo/sample data is re-pushed
+     * with identical values.
      */
     const updateSignalKData = useCallback((updates) => {
-        // Update the ref for immediate access
-        signalkDataRef.current = { ...signalkDataRef.current, ...updates };
-        
-        // Notify subscribers for each changed path
-        Object.entries(updates).forEach(([path, value]) => {
+        const current = signalkDataRef.current;
+        let hasChanges = false;
+
+        for (const [path, value] of Object.entries(updates)) {
+            const prev = current[path];
+            if (prev === value) continue;
+            if (typeof prev === 'object' && typeof value === 'object' &&
+                prev !== null && value !== null &&
+                JSON.stringify(prev) === JSON.stringify(value)) {
+                continue;
+            }
+            current[path] = value;
+            hasChanges = true;
             notifySubscribers(path, value);
-        });
+        }
+
+        if (hasChanges) {
+            signalkDataRef.current = current;
+        }
     }, [notifySubscribers]);
 
     /**
@@ -354,27 +368,41 @@ export const OcearoContextProvider = ({ children }) => {
                     clearInterval(sampleDataIntervalRef.current);
                 }
 
-                // Track the wind angle for incremental changes
+                // Track angles for smooth incremental changes
                 let currentWindAngle = 0;
+                let currentRudderAngle = 0;
+                let rudderDirection = 1;
 
-                // Create new interval for sample data
+                // Push initial sample data immediately (only once)
+                updateSignalKData({
+                    'steering.rudderAngle': MathUtils.degToRad(currentRudderAngle),
+                    ...SAMPLE_DATA.wind,
+                    ...SAMPLE_DATA.temperature,
+                    ...SAMPLE_DATA.environment,
+                    ...SAMPLE_DATA.performance,
+                    ...SAMPLE_DATA.navigation,
+                    ...SAMPLE_DATA.racing,
+                    ...SAMPLE_DATA.electrical,
+                    ...SAMPLE_DATA.propulsion,
+                    ...SAMPLE_DATA.tanks,
+                });
+
+                // Create interval that only updates values that actually change
                 sampleDataIntervalRef.current = setInterval(() => {
-                    const randomAngle = Math.floor(Math.random() * 91) - 45;
+                    // Smooth rudder oscillation instead of random jumps
+                    currentRudderAngle += rudderDirection * 2;
+                    if (currentRudderAngle >= 15 || currentRudderAngle <= -15) {
+                        rudderDirection *= -1;
+                    }
 
                     // Increment the wind angle by 5 degrees each interval
                     currentWindAngle = (currentWindAngle + 5) % 360;
 
-                    // Update SignalK data using the new subscription-aware method
+                    // Only push values that actually vary over time
                     updateSignalKData({
-                        'steering.rudderAngle': MathUtils.degToRad(randomAngle),
-                        ...SAMPLE_DATA.temperature,
-                        ...SAMPLE_DATA.environment,
-                        ...SAMPLE_DATA.performance,
-                        ...SAMPLE_DATA.navigation,
-                        ...SAMPLE_DATA.racing,
-                        ...SAMPLE_DATA.electrical,
-                        ...SAMPLE_DATA.propulsion,
-                        ...SAMPLE_DATA.tanks,
+                        'steering.rudderAngle': MathUtils.degToRad(currentRudderAngle),
+                        'environment.wind.angleTrueWater': MathUtils.degToRad(currentWindAngle),
+                        'environment.wind.angleApparent': MathUtils.degToRad(currentWindAngle),
                     });
                 }, SAMPLE_DATA_INTERVAL);
             };
@@ -414,9 +442,10 @@ export const OcearoContextProvider = ({ children }) => {
             } catch (error) {
                 console.error('Failed to connect to SignalK:', error);
                 
-                // If connection fails, enable debug data regardless of config setting
-                // This ensures the app has data to display even without a server connection
-                setupDebugDataInterval();
+                // Only enable debug data if debugMode is configured
+                if (debugMode) {
+                    setupDebugDataInterval();
+                }
             }
         };
 

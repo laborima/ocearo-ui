@@ -99,8 +99,13 @@ const LogbookView = () => {
       const errorMessage = handleOcearoCoreError(err, 'Logbook fetch');
       setError(errorMessage);
       
-      // Fallback to sample data for development
-      setEntries(getSampleEntries());
+      // Fallback to sample data only in debug mode
+      const debugMode = configService.get('debugMode');
+      if (debugMode) {
+        setEntries(getSampleEntries());
+      } else {
+        setEntries([]);
+      }
     } finally {
       setLoading(false);
     }

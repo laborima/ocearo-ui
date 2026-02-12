@@ -90,6 +90,12 @@ export const makeOcearoCoreApiCall = async (endpoint, options = {}) => {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
+      const contentType = response.headers.get('content-type') || '';
+      if (response.status === 404 || contentType.includes('text/html')) {
+        const notFoundError = new Error(`OcearoCore plugin not available at ${url}`);
+        notFoundError.name = 'NetworkError';
+        throw notFoundError;
+      }
       const errorText = await response.text().catch(() => response.statusText);
       throw new Error(`OcearoCore API error (${response.status}): ${errorText}`);
     }

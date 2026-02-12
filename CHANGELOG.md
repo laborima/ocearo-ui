@@ -1,3 +1,21 @@
+## [0.1.17] - 2026-02-12
+
+### Fixed
+- Fixed tank data mismatch between 3D view and dashboard widget by centralizing all tank sample data in SampleData.js and removing widget-level debug fallbacks.
+- Fixed battery monitor displaying misleading default values (12V/18%/18H) when no real data is available; now shows 0V/0% and N/A for endurance.
+- Fixed battery percentage text (100%) overlapping adjacent labels by reducing font size and clamping indicator position.
+- Fixed logbook view showing fake sample entries when not in debug mode.
+- Fixed corrupted Swedish and Finnish flag emojis in the language selector.
+- Fixed OcearoCore API 404 errors flooding the console with full HTML pages; now handled silently as NetworkError.
+- Fixed motor view not taking full available height in the right pane.
+
+### Changed
+- Redesigned AIS vessel info panel as a compact floating overlay with close button and horizontal label/value layout.
+- Redesigned 3D view tank/battery indicators with Tesla-style mini gauge bars, transparent background, and proper sizing.
+- Made 3D toolbar background fully transparent, removing opaque backdrop.
+- Increased clock and tank/battery indicator sizes in 3D view to match toolbar proportions.
+- Debug data injection in OcearoContext now only activates when debugMode is explicitly enabled, even on SignalK connection failure.
+
 ## [0.1.16] - 2026-01-07
 
 ### Added

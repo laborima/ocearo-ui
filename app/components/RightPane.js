@@ -132,6 +132,9 @@ const RightPane = ({ view }) => {
         }
     }, [view, myPosition, signalkUrl]);
 
+    // Views that manage their own internal scrolling (flex layout with overflow-auto content area)
+    const FULL_HEIGHT_VIEWS = ['motor', 'logbook', 'autopilot', 'battery', 'dashboard'];
+
     // Render component based on view type
     const renderContent = () => {
         if (error) {
@@ -167,6 +170,8 @@ const RightPane = ({ view }) => {
         }
     };
 
+    const isFullHeight = FULL_HEIGHT_VIEWS.includes(view);
+
     return (
         <div className="flex flex-col w-full h-full overflow-hidden bg-hud-bg backdrop-blur-sm">
             <AnimatePresence mode="wait">
@@ -179,7 +184,8 @@ const RightPane = ({ view }) => {
                         duration: 0.4, 
                         ease: [0.16, 1, 0.3, 1] // Custom ease-out cubic for "gliding" feel
                     }}
-                    className="flex flex-col w-full h-full overflow-auto"
+                    style={{ flex: '1 1 0%', minHeight: 0 }}
+                    className={`flex flex-col w-full ${isFullHeight ? 'overflow-hidden' : 'overflow-auto'}`}
                 >
                     {renderContent()}
                 </motion.div>

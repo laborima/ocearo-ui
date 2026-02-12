@@ -75,21 +75,24 @@ const ThreeDMainView = () => {
                 {states.anchorWatch && <ThreeDBoatPositionDateIndicator/> }
             </div>
 
-            {/* InfoPanel positioned above Thanks indicators */}
+            {/* Top-right indicators */}
             <div className="absolute top-2 right-2 z-20 flex flex-col items-end space-y-2">
               
-                <div className="flex items-center space-x-3">
-                    <span className={`text-sm font-black uppercase tracking-[0.2em] ${nightMode ? 'text-oNight' : 'text-hud-muted'}`}>
+                <div className="flex items-center space-x-4">
+                    <span className={`text-lg font-black uppercase tracking-[0.2em] ${nightMode ? 'text-oNight' : 'text-hud-muted'}`}>
                         {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     </span>
                     <ThreeDBoatThanksIndicator />
                 </div>
-                {/* Only render the attitude indicator if showAttitudeIndicator is true */}
                 {showAttitudeIndicator && <ThreeDBoatAttitudeIndicator />}
-                <div>
-                    <InfoPanel content={infoPanelContent} />
-                </div>
             </div>
+
+            {/* Floating vessel info panel - top left, below speed indicator */}
+            {infoPanelContent && (
+                <div className="absolute top-28 left-2 z-30">
+                    <InfoPanel content={infoPanelContent} onClose={() => setInfoPanelContent(null)} />
+                </div>
+            )}
 
             {/* See Level Indicator (left-side) */}
             <div className="absolute left-2 bottom-2 z-20 flex flex-col items-center">
@@ -133,7 +136,6 @@ const ThreeDMainView = () => {
                     )}
                 </Canvas>
             </div>
-            {/* InfoPanel moved above Thanks indicators */}
 
         </div>
     );

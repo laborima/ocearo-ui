@@ -3,10 +3,30 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import en from './locales/en.json';
 import fr from './locales/fr.json';
+import de from './locales/de.json';
+import es from './locales/es.json';
+import it from './locales/it.json';
+import pt from './locales/pt.json';
+import nl from './locales/nl.json';
+import pl from './locales/pl.json';
+import sv from './locales/sv.json';
+import da from './locales/da.json';
+import fi from './locales/fi.json';
+import el from './locales/el.json';
 
 const resources = {
     en: { translation: en },
-    fr: { translation: fr }
+    fr: { translation: fr },
+    de: { translation: de },
+    es: { translation: es },
+    it: { translation: it },
+    pt: { translation: pt },
+    nl: { translation: nl },
+    pl: { translation: pl },
+    sv: { translation: sv },
+    da: { translation: da },
+    fi: { translation: fi },
+    el: { translation: el }
 };
 
 /**
@@ -15,7 +35,17 @@ const resources = {
  */
 export const SUPPORTED_LANGUAGES = [
     { code: 'en', label: 'English', flag: '🇬🇧' },
-    { code: 'fr', label: 'Français', flag: '🇫🇷' }
+    { code: 'fr', label: 'Français', flag: '🇫🇷' },
+    { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+    { code: 'es', label: 'Español', flag: '🇪🇸' },
+    { code: 'it', label: 'Italiano', flag: '🇮🇹' },
+    { code: 'pt', label: 'Português', flag: '🇵🇹' },
+    { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
+    { code: 'pl', label: 'Polski', flag: '🇵🇱' },
+    { code: 'sv', label: 'Svenska', flag: '🇸🇪' },
+    { code: 'da', label: 'Dansk', flag: '🇩🇰' },
+    { code: 'fi', label: 'Suomi', flag: '🇫🇮' },
+    { code: 'el', label: 'Ελληνικά', flag: '🇬🇷' }
 ];
 
 /**

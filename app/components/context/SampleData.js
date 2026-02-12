@@ -10,9 +10,10 @@ import { MathUtils } from 'three';
 import { toKelvin } from '../utils/UnitConversions';
 
 /**
- * Interval in milliseconds between sample data updates
+ * Interval in milliseconds between sample data updates.
+ * Set to 5 seconds to avoid constant flickering in demo mode.
  */
-export const SAMPLE_DATA_INTERVAL = 1000;
+export const SAMPLE_DATA_INTERVAL = 5000;
 
 /**
  * Sample SignalK data grouped by domain
@@ -154,5 +155,17 @@ export const SAMPLE_DATA = {
         'tanks.fuel.0.capacity': 200,
         'tanks.fuel.0.currentVolume': 150,
         'tanks.fuel.0.type': 'fuel',
+        'tanks.freshWater.0.currentLevel': 0.45,
+        'tanks.freshWater.0.capacity': 200,
+        'tanks.freshWater.0.type': 'freshWater',
+        'tanks.wasteWater.0.currentLevel': 0.25,
+        'tanks.wasteWater.0.capacity': 200,
+        'tanks.wasteWater.0.type': 'wasteWater',
+        'tanks.blackWater.0.currentLevel': 0.25,
+        'tanks.blackWater.0.capacity': 200,
+        'tanks.blackWater.0.type': 'blackWater',
+        'tanks.oil.0.currentLevel': 0.90,
+        'tanks.oil.0.capacity': 5,
+        'tanks.oil.0.type': 'oil',
     },
 };

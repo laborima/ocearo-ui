@@ -1,7 +1,6 @@
 'use client';
 import React, { useMemo } from 'react';
 import { useSignalKPaths } from '../../hooks/useSignalK';
-import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGasPump, faTint, faOilCan, faToilet, faTemperatureHalf } from '@fortawesome/free-solid-svg-icons';
 import BaseWidget from './BaseWidget';
@@ -9,8 +8,6 @@ import { useTranslation } from 'react-i18next';
 
 export default function TankLevelsWidget() {
   const { t } = useTranslation();
-  const debugMode = configService.get('debugMode');
-  
   const tankPaths = [
     'tanks.fuel.0.currentLevel', 'tanks.fuel.0.capacity', 'tanks.fuel.0.name', 'tanks.fuel.0.type', 'tanks.fuel.0.temperature',
     'tanks.freshWater.0.currentLevel', 'tanks.freshWater.0.capacity', 'tanks.freshWater.0.name', 'tanks.freshWater.0.type', 'tanks.freshWater.0.temperature',
@@ -25,8 +22,8 @@ export default function TankLevelsWidget() {
       const level = tankValues[`tanks.${type}.0.currentLevel`];
       const capacity = tankValues[`tanks.${type}.0.capacity`];
       return {
-        level: level ?? (debugMode ? (type === 'fuel' ? 0.75 : type === 'freshWater' ? 0.45 : type === 'wasteWater' ? 0.25 : 0.90) : null),
-        capacity: capacity ?? (debugMode ? (type === 'oil' ? 5 : 200) : null),
+        level: level ?? null,
+        capacity: capacity ?? null,
         tankName: tankValues[`tanks.${type}.0.name`],
         tankType: tankValues[`tanks.${type}.0.type`],
         temperature: tankValues[`tanks.${type}.0.temperature`],
@@ -44,9 +41,9 @@ export default function TankLevelsWidget() {
       oil: getTankInfo('oil', t('widgets.tankEngineOil'), faOilCan, 'text-orange-400', 'bg-orange-400')
     };
 
-    const hasData = Object.values(data).some(tank => tank.level !== null) || debugMode;
+    const hasData = Object.values(data).some(tank => tank.level !== null);
     return { hasData, ...data };
-  }, [tankValues, debugMode]);
+  }, [tankValues, t]);
 
   const getTankStatus = (level) => {
     if (level < 0.1) return t('widgets.tankEmpty');

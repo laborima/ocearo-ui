@@ -149,7 +149,7 @@ export default function Home() {
                     : currentViewMode === VIEW_MODES.BOAT 
                         ? 'hidden' 
                         : 'w-3/5'
-            } h-full bg-rightPaneBg p-4`
+            } h-full bg-rightPaneBg`
         };
     }, [currentViewMode]);
 

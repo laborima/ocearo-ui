@@ -38,7 +38,7 @@ const ThreeDBoatToolbar = () => {
     );
 
     return (
-        <div className="flex items-center space-x-1 bg-hud-bg/60 backdrop-blur-2xl p-1.5 rounded-2xl shadow-2xl">
+        <div className="flex items-center space-x-1 p-1.5 rounded-2xl">
             <ToolbarButton
                 onClick={() => toggleExclusiveMode('autopilot')}
                 icon={faShip}

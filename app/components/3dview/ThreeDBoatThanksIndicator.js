@@ -1,5 +1,5 @@
 import { useOcearoContext } from '../context/OcearoContext';
-import { BATTERY_CONFIG, estimateStateOfCharge, isBatteryCharging, getBatteryColorClass } from '../utils/BatteryUtils';
+import { BATTERY_CONFIG, estimateStateOfCharge, isBatteryCharging } from '../utils/BatteryUtils';
 import { useState, useMemo } from 'react';
 import { useSignalKPaths } from '../hooks/useSignalK';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -54,80 +54,48 @@ const TANK_TYPES = {
  * @param {number} level - The tank level percentage (0-100)
  * @param {string} type - The tank type key from TANK_TYPES
  */
-const TankIndicator = ({ level, type, styles }) => {
+const TankIndicator = ({ level, type }) => {
     const { t } = useTranslation();
-    const [showTooltip, setShowTooltip] = useState(false);
     const percentage = Math.max(0, Math.min(100, level));
     const { labelKey, icon, color } = TANK_TYPES[type];
-    const label = t(labelKey);
+    const isDanger = percentage <= TANK_CONFIG.DANGER_THRESHOLD;
+    const textColor = color.replace('bg-', 'text-');
     
     return (
-        <div 
-            className="flex items-center space-x-3 relative group"
-            onMouseEnter={() => setShowTooltip(true)}
-            onMouseLeave={() => setShowTooltip(false)}
-        >
-            <div className="flex items-center space-x-2">
-                <FontAwesomeIcon icon={icon} className={`text-xs ${styles.icon} opacity-40 group-hover:opacity-100 transition-opacity`} />
-                <div className={`relative w-10 h-4 rounded-md flex items-center justify-center ${styles.indicatorShell} overflow-hidden`}>
-                    <div
-                        className={`absolute left-0 top-0 h-full ${color} transition-all duration-1000 ease-in-out`}
-                        style={{ width: `${percentage}%` }}
-                    />
-                    <span 
-                        className={`relative z-10 text-xs font-black uppercase tracking-tighter ${styles.indicatorValue} ${percentage <= TANK_CONFIG.DANGER_THRESHOLD ? 'text-oRed animate-soft-pulse' : ''}`}
-                    >
-                        {percentage}%
-                    </span>
-                </div>
+        <div className="flex items-center space-x-2" title={t(labelKey)}>
+            <FontAwesomeIcon icon={icon} className={`text-xs ${textColor} opacity-60`} />
+            <div className="relative w-14 h-[8px] rounded-full bg-hud-elevated/60 overflow-hidden">
+                <div
+                    className={`absolute left-0 top-0 h-full rounded-full ${isDanger ? 'bg-oRed' : color} transition-all duration-1000 ease-out`}
+                    style={{ width: `${percentage}%` }}
+                />
             </div>
-            
-            {showTooltip && (
-                <div className={`absolute left-0 top-full mt-2 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest whitespace-nowrap z-20 shadow-2xl backdrop-blur-md ${styles.tooltip}`}>
-                    {label}: {percentage}%
-                </div>
-            )}
+            <span className={`text-xs font-black tabular-nums min-w-[30px] text-right ${isDanger ? 'text-oRed animate-soft-pulse' : 'text-hud-main/80'}`}>
+                {percentage}%
+            </span>
         </div>
     );
 };
 
-const BatteryIndicator = ({ batteryLevel, batteryNumber, voltage, styles }) => {
+const BatteryIndicator = ({ batteryLevel, batteryNumber, voltage }) => {
     const { t } = useTranslation();
-    const [showTooltip, setShowTooltip] = useState(false);
     const percentage = Math.max(0, Math.min(100, batteryLevel));
     const isCharging = isBatteryCharging(voltage);
-    const batteryColor = useMemo(() => getBatteryColorClass(percentage), [percentage]);
+    const isDanger = percentage <= BATTERY_CONFIG.DANGER_THRESHOLD;
+    const barColor = isDanger ? 'bg-oRed' : isCharging ? 'bg-oGreen' : 'bg-oBlue';
 
     return (
-        <div
-            className="flex items-center space-x-3 relative group"
-            onMouseEnter={() => setShowTooltip(true)}
-            onMouseLeave={() => setShowTooltip(false)}
-        >
-            <div className="flex items-center space-x-2">
-                <FontAwesomeIcon icon={faBolt} className={`text-xs ${styles.icon} ${isCharging ? 'text-oYellow animate-pulse' : 'opacity-40'} group-hover:opacity-100 transition-opacity`} />
-                <div className={`relative w-10 h-4 rounded-md flex items-center justify-center ${styles.indicatorShell} overflow-hidden`}>
-                    <div
-                        className={`absolute left-0 top-0 h-full ${batteryColor} transition-all duration-1000 ease-in-out`}
-                        style={{ width: `${percentage}%` }}
-                    />
-                    {isCharging ? (
-                        <span className={`relative z-10 text-xs font-black ${styles.indicatorValue}`}>⚡︎</span>
-                    ) : (
-                        <span 
-                            className={`relative z-10 text-xs font-black uppercase tracking-tighter ${styles.indicatorValue} ${percentage <= BATTERY_CONFIG.DANGER_THRESHOLD ? 'text-oRed animate-soft-pulse' : ''}`}
-                        >
-                            {percentage}%
-                        </span>
-                    )}
-                </div>
-
-                {showTooltip && (
-                    <div className={`absolute left-0 top-full mt-2 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest whitespace-nowrap z-20 shadow-2xl backdrop-blur-md ${styles.tooltip}`}>
-                        {voltage?.toFixed(1)}V {isCharging && t('common.charging')}
-                    </div>
-                )}
+        <div className="flex items-center space-x-2" title={`${voltage?.toFixed(1)}V${isCharging ? ' ' + t('common.charging') : ''}`}>
+            <FontAwesomeIcon icon={faBolt} className={`text-xs ${isCharging ? 'text-oYellow animate-pulse' : 'text-oGreen opacity-60'}`} />
+            <div className="relative w-14 h-[8px] rounded-full bg-hud-elevated/60 overflow-hidden">
+                <div
+                    className={`absolute left-0 top-0 h-full rounded-full ${barColor} transition-all duration-1000 ease-out ${isCharging ? 'shadow-[0_0_6px_var(--color-oGreen)]' : ''}`}
+                    style={{ width: `${percentage}%` }}
+                />
             </div>
+            <span className={`text-xs font-black tabular-nums min-w-[30px] text-right ${isDanger ? 'text-oRed animate-soft-pulse' : 'text-hud-main/80'}`}>
+                {isCharging ? '⚡' : `${percentage}%`}
+            </span>
         </div>
     );
 };
@@ -175,9 +143,9 @@ const ThreeDBoatTankIndicator = () => {
         const blackWaterLevel = skValues['tanks.blackWater.0.currentLevel'];
         
         return {
-            FRESH_WATER: freshWaterLevel !== null ? freshWaterLevel * 100 : 40,
-            FUEL: fuelLevel !== null ? fuelLevel * 100 : 75,
-            BLACK_WATER: blackWaterLevel !== null ? blackWaterLevel * 100 : 20
+            FRESH_WATER: freshWaterLevel !== null ? freshWaterLevel * 100 : 0,
+            FUEL: fuelLevel !== null ? fuelLevel * 100 : 0,
+            BLACK_WATER: blackWaterLevel !== null ? blackWaterLevel * 100 : 0
         };
     }, [skValues]);
 
@@ -188,48 +156,39 @@ const ThreeDBoatTankIndicator = () => {
         );
     };
 
-    const styles = useMemo(() => ({
-        container: 'bg-hud-bg/60',
-        icon: 'text-hud-main',
-        indicatorShell: 'bg-hud-elevated',
-        indicatorValue: 'text-hud-main',
-        tooltip: 'bg-hud-bg/90 text-hud-main border-hud'
-    }), []);
     const isBatteryMode = displayMode === INDICATOR_TYPES.BATTERIES;
 
     return (
         <div
-            className={`${styles.container} p-3 rounded-2xl backdrop-blur-md shadow-2xl transition-all duration-300 cursor-pointer select-none`}
+            className="p-2 rounded-2xl transition-all duration-300 cursor-pointer select-none"
             onClick={toggleDisplayMode}
             role="button"
             tabIndex={0}
             aria-label={`Toggle between ${isBatteryMode ? 'tanks' : 'batteries'} display`}
             onKeyDown={(e) => e.key === 'Enter' && toggleDisplayMode()} 
         >
-            <div className="flex flex-col space-y-3">
+            <div className="flex flex-col space-y-1.5">
                 {isBatteryMode ? (
-                    <div className="space-y-2">
+                    <>
                         {batteries.map(battery => (
                             <BatteryIndicator
                                 key={battery.number}
                                 batteryLevel={battery.level}
                                 batteryNumber={battery.number}
                                 voltage={battery.voltage}
-                                styles={styles}
                             />
                         ))}
-                    </div>
+                    </>
                 ) : (
-                    <div className="space-y-2">
+                    <>
                         {Object.keys(TANK_TYPES).map(key => (
                             <TankIndicator
                                 key={key}
                                 type={key}
                                 level={tankLevels[key]}
-                                styles={styles}
                             />
                         ))}
-                    </div>
+                    </>
                 )}
             </div>
         </div>

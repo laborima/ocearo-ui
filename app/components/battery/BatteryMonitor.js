@@ -58,16 +58,16 @@ const BatteryMonitor = () => {
 
   // Process current battery data
   const currentBatteryData = useMemo(() => {
-    const voltage = batteryValues[`electrical.batteries.${selectedBattery}.voltage`] || 12;
-    const current = batteryValues[`electrical.batteries.${selectedBattery}.current`] || 0;
+    const voltage = batteryValues[`electrical.batteries.${selectedBattery}.voltage`] ?? null;
+    const current = batteryValues[`electrical.batteries.${selectedBattery}.current`] ?? 0;
     const stateOfCharge = batteryValues[`electrical.batteries.${selectedBattery}.capacity.stateOfCharge`];
     const temperatureKelvin = batteryValues[`electrical.batteries.${selectedBattery}.temperature`];
     
     return {
-      voltage,
+      voltage: voltage ?? 0,
       current,
-      stateOfCharge: (stateOfCharge !== null && stateOfCharge !== undefined) ? (stateOfCharge * 100) : estimateStateOfCharge(voltage),
-      power: voltage * current,
+      stateOfCharge: (stateOfCharge !== null && stateOfCharge !== undefined) ? (stateOfCharge * 100) : (voltage !== null ? estimateStateOfCharge(voltage) : 0),
+      power: (voltage ?? 0) * current,
       temperature: temperatureKelvin !== null ? convertTemperature(temperatureKelvin) : null,
       chemistry: batteryValues[`electrical.batteries.${selectedBattery}.chemistry`],
       name: batteryValues[`electrical.batteries.${selectedBattery}.name`],
@@ -332,10 +332,10 @@ const BatteryMonitor = () => {
                     {/* Floating indicator */}
                     <div 
                       className="absolute top-0 flex flex-col items-center transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1)" 
-                      style={{left: `${currentBatteryData.stateOfCharge}%`, transform: 'translateX(-50%)', top: '-12px'}}
+                      style={{left: `clamp(10%, ${currentBatteryData.stateOfCharge}%, 90%)`, transform: 'translateX(-50%)', top: '-12px'}}
                     >
                       <div className="w-1 h-6 bg-hud-main shadow-[0_0_15px_var(--hud-text-main)] shadow-opacity-80 rounded-full"></div>
-                      <div className="mt-8 text-3xl font-black text-hud-main gliding-value tracking-tighter">{currentBatteryData.stateOfCharge.toFixed(0)}%</div>
+                      <div className="mt-8 text-lg font-black text-hud-main gliding-value tracking-tighter">{currentBatteryData.stateOfCharge.toFixed(0)}%</div>
                     </div>
                     
                     <div className="flex justify-between mt-12 text-xs font-black uppercase tracking-[0.2em]">
@@ -347,7 +347,9 @@ const BatteryMonitor = () => {
                             ? t('battery.acquiringFullCharge') 
                             : currentBatteryData.timeRemaining 
                               ? t('battery.depletionIn', { hours: (currentBatteryData.timeRemaining / 3600).toFixed(1) }) 
-                              : t('battery.endurance', { hours: (currentBatteryData.stateOfCharge / (Math.abs(currentBatteryData.current) / 100 || 1)).toFixed(1) })}
+                              : (currentBatteryData.voltage > 0 && Math.abs(currentBatteryData.current) > 0)
+                                ? t('battery.endurance', { hours: (currentBatteryData.stateOfCharge / (Math.abs(currentBatteryData.current) / 100)).toFixed(1) })
+                                : t('common.na')}
                         </span>
                       </div>
                       <div className="text-oGreen opacity-40">{t('battery.nominalGrid')}</div>
