@@ -51,6 +51,10 @@ const AutopilotView = dynamic(() => import('./autopilot/AutopilotView'), {
   loading: () => <LoadingFallback messageKey="common.loadingAutopilot" />
 });
 
+const DebugView = dynamic(() => import('./debug/DebugView'), {
+  loading: () => <LoadingFallback messageKey="common.loading" />
+});
+
 
 // Constants
 const POSITION_UPDATE_INTERVAL = 10000; // 10 seconds
@@ -133,7 +137,7 @@ const RightPane = ({ view }) => {
     }, [view, myPosition, signalkUrl]);
 
     // Views that manage their own internal scrolling (flex layout with overflow-auto content area)
-    const FULL_HEIGHT_VIEWS = ['motor', 'logbook', 'autopilot', 'battery', 'dashboard'];
+    const FULL_HEIGHT_VIEWS = ['motor', 'logbook', 'autopilot', 'battery', 'dashboard', 'debug'];
 
     // Render component based on view type
     const renderContent = () => {
@@ -158,6 +162,8 @@ const RightPane = ({ view }) => {
                 return <LogbookView />;
             case 'autopilot':
                 return <AutopilotView />;
+            case 'debug':
+                return <DebugView />;
             default:
                 return iframeSrc && (
                     <iframe

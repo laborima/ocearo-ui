@@ -10,11 +10,13 @@ import { useOcearoContext } from '../context/OcearoContext';
 import { AISProvider } from './ais/AISContext';
 import PolarProjection from './polar/Polar3D';
 import BoatLighting from './BoatLighting';
+import configService from '../settings/ConfigService';
 
 const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
     const { states } = useOcearoContext(); // Application state from context
     const isCompassLayerVisible = false; // Compass visibility
     const sailBoatRef = useRef();
+    const showAxes = configService.get('debugShowAxes');
 
 
     return (
@@ -77,6 +79,9 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 {/* Compass */}
                 <ThreeDCompassView visible={isCompassLayerVisible} />
             </group>
+
+            {/* Debug 3D axes */}
+            {showAxes && <axesHelper args={[100]} />}
         </Suspense>
     );
 };

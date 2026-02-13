@@ -16,8 +16,10 @@ import {
     faChartLine,
     faExclamationTriangle,
     faBook,
-    faCompass
+    faCompass,
+    faBug
 } from '@fortawesome/free-solid-svg-icons';
+import configService from './settings/ConfigService';
 import { VIEW_MODES } from '../page';
 import { isOcearoCoreEnabled } from './utils/OcearoCoreUtils';
 import { useTranslation } from 'react-i18next';
@@ -31,6 +33,7 @@ const AppMenu = ({
 }) => {
     const { t } = useTranslation();
     const jarvisEnabled = isOcearoCoreEnabled();
+    const debugMode = configService.get('debugMode');
 
     const MenuButton = ({ icon, label, onClick }) => (
         <button
@@ -145,6 +148,14 @@ const AppMenu = ({
                     onClick={toggleFullscreen}
                 />
 
+
+                {debugMode && (
+                    <MenuButton
+                        icon={faBug}
+                        label={t('menu.debug')}
+                        onClick={() => handleSetRightView('debug')}
+                    />
+                )}
 
                 {/* Refresh Page Button */}
                 <MenuButton
