@@ -1,3 +1,22 @@
+## [0.1.18] - 2026-02-13
+
+### Added
+- Added configurable units for speed (kn, km/h, mph, m/s), depth (m, ft, fa), temperature (°C, °F), and distance (nm, km, mi) in settings.
+- Added preferred paths settings for wind speed, wind direction, and heading/COG with French/English labels.
+- Added debug panel as a dedicated right-pane view accessible from the Apps menu when debug mode is active.
+- Added 3D axes toggle in the debug panel to display XYZ axes in the 3D view.
+- Added wind override controls (speed slider + direction slider) in the debug panel.
+
+### Fixed
+- Fixed wind override flickering caused by SignalK delta updates and sample data interval overwriting override values.
+- Fixed POL speed indicator showing speed unit instead of `%`.
+
+### Changed
+- All speed, depth, temperature, and distance displays now respect user-configured units across 3D view, dashboard widgets, and bottom bar.
+- Compass dial and boat rotation now use the preferred heading path from settings.
+- Preferred paths radio options in settings now display translated labels instead of raw SignalK path names.
+- Moved debug info from a 3D popup overlay to a proper right-pane view with scrollable sections.
+
 ## [0.1.17] - 2026-02-12
 
 ### Fixed
