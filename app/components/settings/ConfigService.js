@@ -19,7 +19,23 @@ class ConfigService {
       customExternalUrls: {}, 
       currentView: 'default',
       theme: 'dark', // Default theme
-      language: 'en' // Default language
+      language: 'en', // Default language
+      // Units & Values
+      distanceUnits: 'nm', // nm, km, mi
+      depthUnits: 'm', // m, ft, fa
+      speedUnits: 'kn', // kn, km/h, mph, m/s
+      temperatureUnits: 'C', // C, F
+      positionFormat: 'DD', // DD, DM, DMS
+      preferTrueValues: true, // true = True, false = Magnetic
+      // Preferred Paths
+      preferredWindSpeedPath: 'speedTrue', // speedTrue, speedApparent
+      preferredWindDirectionPath: 'directionTrue', // directionTrue, angleApparent, angleTrueWater
+      preferredHeadingPath: 'courseOverGroundTrue', // courseOverGroundTrue, headingTrue, courseOverGroundMagnetic, headingMagnetic
+      // Debug wind overrides
+      debugWindOverride: false,
+      debugWindSpeed: 10, // knots
+      debugWindDirection: 0, // degrees
+      debugShowAxes: false
     };
 
     this.configKey = 'ocearoConfig'; // Key used to store the config

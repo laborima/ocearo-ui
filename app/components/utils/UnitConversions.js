@@ -129,3 +129,113 @@ export const convertPressure = (pa) => {
     if (pa === null || pa === undefined) return null;
     return Math.round((pa / 100) * 10) / 10;
 };
+
+// ---------------------------------------------------------------------------
+// Config-aware conversion helpers
+// ---------------------------------------------------------------------------
+
+let _configService = null;
+
+/**
+ * Lazily loads ConfigService to avoid circular dependency issues.
+ * @returns {Object} The configService singleton
+ */
+const getConfigService = () => {
+    if (!_configService) {
+        _configService = require('../settings/ConfigService').default;
+    }
+    return _configService;
+};
+
+/**
+ * Convert speed from m/s to the user-configured unit.
+ * @param {number} mps - Speed in meters per second (SI)
+ * @returns {number|null} Converted speed, or null if input is invalid
+ */
+export const convertSpeedUnit = (mps) => {
+    if (mps === null || mps === undefined) return null;
+    const unit = getConfigService().get('speedUnits') || 'kn';
+    switch (unit) {
+        case 'km/h': return Math.round(mps * 3.6 * 10) / 10;
+        case 'mph': return Math.round(mps * 2.23694 * 10) / 10;
+        case 'm/s':  return Math.round(mps * 10) / 10;
+        default:     return Math.round(mps * MS_TO_KNOTS * 10) / 10;
+    }
+};
+
+/**
+ * Returns the display label for the current speed unit setting.
+ * @returns {string} Unit abbreviation (e.g. "kn", "km/h")
+ */
+export const getSpeedUnitLabel = () => {
+    return getConfigService().get('speedUnits') || 'kn';
+};
+
+/**
+ * Convert depth from metres to the user-configured unit.
+ * @param {number} metres - Depth in metres (SI)
+ * @returns {number|null} Converted depth, or null if input is invalid
+ */
+export const convertDepthUnit = (metres) => {
+    if (metres === null || metres === undefined) return null;
+    const unit = getConfigService().get('depthUnits') || 'm';
+    switch (unit) {
+        case 'ft': return Math.round(metres * 3.28084 * 10) / 10;
+        case 'fa': return Math.round(metres * 0.546807 * 10) / 10;
+        default:   return Math.round(metres * 10) / 10;
+    }
+};
+
+/**
+ * Returns the display label for the current depth unit setting.
+ * @returns {string} Unit abbreviation (e.g. "m", "ft", "fa")
+ */
+export const getDepthUnitLabel = () => {
+    return getConfigService().get('depthUnits') || 'm';
+};
+
+/**
+ * Convert temperature from Kelvin to the user-configured unit.
+ * @param {number} kelvin - Temperature in Kelvin (SI)
+ * @returns {number|null} Converted temperature, or null if input is invalid
+ */
+export const convertTemperatureUnit = (kelvin) => {
+    if (kelvin === null || kelvin === undefined) return null;
+    const unit = getConfigService().get('temperatureUnits') || 'C';
+    if (unit === 'F') {
+        return Math.round(((kelvin - 273.15) * 9 / 5 + 32) * 10) / 10;
+    }
+    return Math.round((kelvin - 273.15) * 10) / 10;
+};
+
+/**
+ * Returns the display label for the current temperature unit setting.
+ * @returns {string} Unit symbol (e.g. "°C", "°F")
+ */
+export const getTemperatureUnitLabel = () => {
+    const unit = getConfigService().get('temperatureUnits') || 'C';
+    return unit === 'F' ? '°F' : '°C';
+};
+
+/**
+ * Convert distance from metres to the user-configured unit.
+ * @param {number} metres - Distance in metres (SI)
+ * @returns {number|null} Converted distance, or null if input is invalid
+ */
+export const convertDistanceUnit = (metres) => {
+    if (metres === null || metres === undefined) return null;
+    const unit = getConfigService().get('distanceUnits') || 'nm';
+    switch (unit) {
+        case 'km': return Math.round(metres / 1000 * 100) / 100;
+        case 'mi': return Math.round(metres / 1609.344 * 100) / 100;
+        default:   return Math.round(metres / 1852 * 100) / 100;
+    }
+};
+
+/**
+ * Returns the display label for the current distance unit setting.
+ * @returns {string} Unit abbreviation (e.g. "nm", "km", "mi")
+ */
+export const getDistanceUnitLabel = () => {
+    return getConfigService().get('distanceUnits') || 'nm';
+};

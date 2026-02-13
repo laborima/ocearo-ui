@@ -5,6 +5,10 @@ import configService from './ConfigService';
 import { useOcearoContext } from '../context/OcearoContext';
 import { SUPPORTED_LANGUAGES } from '../../i18n/i18n';
 
+const SettingsBadge = ({ color }) => (
+    <span className={`inline-block w-2.5 h-2.5 rounded-full ${color} animate-pulse ml-2 shrink-0`} />
+);
+
 const ConfigPage = ({ onSave }) => {
     const { t, i18n } = useTranslation();
     const { theme, setTheme } = useOcearoContext();
@@ -210,7 +214,10 @@ const ConfigPage = ({ onSave }) => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="flex items-center justify-between p-4 rounded-xl bg-hud-bg tesla-hover">
-                                    <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.signalkServer')}</span>
+                                    <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary flex items-center">
+                                        {t('settings.signalkServer')}
+                                        {!signalKUrlSet && <SettingsBadge color="bg-oBlue" />}
+                                    </span>
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input
                                             type="checkbox"
@@ -251,7 +258,10 @@ const ConfigPage = ({ onSave }) => {
                                     </div>
 
                                     <div className="flex items-center justify-between p-4 rounded-xl bg-hud-bg tesla-hover">
-                                        <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.authentication')}</span>
+                                        <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary flex items-center">
+                                            {t('settings.authentication')}
+                                            {signalKUrlSet && !useAuthentication && <SettingsBadge color="bg-oBlue" />}
+                                        </span>
                                         <label className="relative inline-flex items-center cursor-pointer">
                                             <input
                                                 type="checkbox"
@@ -336,7 +346,10 @@ const ConfigPage = ({ onSave }) => {
                             <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
                                 <label className="flex items-center justify-between cursor-pointer">
                                     <div className="space-y-1">
-                                        <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.debugMode')}</span>
+                                        <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary flex items-center">
+                                            {t('settings.debugMode')}
+                                            {config.debugMode && <SettingsBadge color="bg-yellow-400" />}
+                                        </span>
                                         <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
                                             {t('settings.debugModeDesc')}
                                         </p>
@@ -534,6 +547,162 @@ const ConfigPage = ({ onSave }) => {
                                         aisLengthScalingFactor: parseFloat(e.target.value)
                                     })}
                                 />
+                            </div>
+                        </section>
+
+                        {/* Units & Values Settings */}
+                        <section className="tesla-card p-6 space-y-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.unitsValues')}</h2>
+                                <div className="h-[1px] flex-grow bg-hud-border mx-4" />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.distanceUnits')}</label>
+                                    <select
+                                        className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors appearance-none cursor-pointer"
+                                        value={config.distanceUnits || 'nm'}
+                                        onChange={(e) => updateConfig({ distanceUnits: e.target.value })}
+                                    >
+                                        <option value="nm" className="bg-hud-bg">Nautical Miles</option>
+                                        <option value="km" className="bg-hud-bg">Kilometres</option>
+                                        <option value="mi" className="bg-hud-bg">Miles</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.depthUnits')}</label>
+                                    <select
+                                        className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors appearance-none cursor-pointer"
+                                        value={config.depthUnits || 'm'}
+                                        onChange={(e) => updateConfig({ depthUnits: e.target.value })}
+                                    >
+                                        <option value="m" className="bg-hud-bg">metres</option>
+                                        <option value="ft" className="bg-hud-bg">feet</option>
+                                        <option value="fa" className="bg-hud-bg">fathoms</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.speedUnits')}</label>
+                                    <select
+                                        className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors appearance-none cursor-pointer"
+                                        value={config.speedUnits || 'kn'}
+                                        onChange={(e) => updateConfig({ speedUnits: e.target.value })}
+                                    >
+                                        <option value="kn" className="bg-hud-bg">knots</option>
+                                        <option value="km/h" className="bg-hud-bg">km/h</option>
+                                        <option value="mph" className="bg-hud-bg">mph</option>
+                                        <option value="m/s" className="bg-hud-bg">m/s</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.temperatureUnits')}</label>
+                                    <select
+                                        className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors appearance-none cursor-pointer"
+                                        value={config.temperatureUnits || 'C'}
+                                        onChange={(e) => updateConfig({ temperatureUnits: e.target.value })}
+                                    >
+                                        <option value="C" className="bg-hud-bg">Celsius</option>
+                                        <option value="F" className="bg-hud-bg">Fahrenheit</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.positionFormat')}</label>
+                                    <select
+                                        className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors appearance-none cursor-pointer"
+                                        value={config.positionFormat || 'DD'}
+                                        onChange={(e) => updateConfig({ positionFormat: e.target.value })}
+                                    >
+                                        <option value="DD" className="bg-hud-bg">-128.12345</option>
+                                        <option value="DM" className="bg-hud-bg">-128° 07.407&apos;</option>
+                                        <option value="DMS" className="bg-hud-bg">-128° 07&apos; 24.4&quot;</option>
+                                    </select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.preferTrueValues')}</label>
+                                    <select
+                                        className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors appearance-none cursor-pointer"
+                                        value={config.preferTrueValues !== false ? 'true' : 'false'}
+                                        onChange={(e) => updateConfig({ preferTrueValues: e.target.value === 'true' })}
+                                    >
+                                        <option value="true" className="bg-hud-bg">{t('settings.preferTrue')}</option>
+                                        <option value="false" className="bg-hud-bg">{t('settings.preferMagnetic')}</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Preferred Paths Settings */}
+                        <section className="tesla-card p-6 space-y-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.preferredPaths')}</h2>
+                                <div className="h-[1px] flex-grow bg-hud-border mx-4" />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.trueWindSpeed')}</label>
+                                    <div className="space-y-2 p-4 rounded-xl bg-hud-bg border border-hud">
+                                        {[{value: 'speedTrue', label: t('settings.pathSpeedTrue')}, {value: 'speedApparent', label: t('settings.pathSpeedApparent')}].map((option) => (
+                                            <label key={option.value} className="flex items-center space-x-3 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="preferredWindSpeedPath"
+                                                    value={option.value}
+                                                    checked={(config.preferredWindSpeedPath || 'speedTrue') === option.value}
+                                                    onChange={(e) => updateConfig({ preferredWindSpeedPath: e.target.value })}
+                                                    className="w-4 h-4 accent-oBlue"
+                                                />
+                                                <span className="text-sm text-hud-main">{option.label}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.trueWindDirection')}</label>
+                                    <div className="space-y-2 p-4 rounded-xl bg-hud-bg border border-hud">
+                                        {[{value: 'directionTrue', label: t('settings.pathDirectionTrue')}, {value: 'angleApparent', label: t('settings.pathAngleApparent')}, {value: 'angleTrueWater', label: t('settings.pathAngleTrueWater')}].map((option) => (
+                                            <label key={option.value} className="flex items-center space-x-3 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="preferredWindDirectionPath"
+                                                    value={option.value}
+                                                    checked={(config.preferredWindDirectionPath || 'directionTrue') === option.value}
+                                                    onChange={(e) => updateConfig({ preferredWindDirectionPath: e.target.value })}
+                                                    className="w-4 h-4 accent-oBlue"
+                                                />
+                                                <span className="text-sm text-hud-main">{option.label}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.headingCog')}</label>
+                                    <div className="space-y-2 p-4 rounded-xl bg-hud-bg border border-hud">
+                                        {[{value: 'courseOverGroundTrue', label: t('settings.pathCourseOverGroundTrue')}, {value: 'headingTrue', label: t('settings.pathHeadingTrue')}, {value: 'courseOverGroundMagnetic', label: t('settings.pathCourseOverGroundMagnetic')}, {value: 'headingMagnetic', label: t('settings.pathHeadingMagnetic')}].map((option) => (
+                                            <label key={option.value} className="flex items-center space-x-3 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="preferredHeadingPath"
+                                                    value={option.value}
+                                                    checked={(config.preferredHeadingPath || 'courseOverGroundTrue') === option.value}
+                                                    onChange={(e) => updateConfig({ preferredHeadingPath: e.target.value })}
+                                                    className="w-4 h-4 accent-oBlue"
+                                                />
+                                                <span className="text-sm text-hud-main">{option.label}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         </section>
 
