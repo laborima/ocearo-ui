@@ -7,7 +7,7 @@
  */
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { convertWindSpeed, oBlue, oGreen, oNight, useOcearoContext } from '../../context/OcearoContext';
+import { convertSpeedUnit, oBlue, oGreen, oNight, useOcearoContext } from '../../context/OcearoContext';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import { Vector3, DoubleSide } from 'three';
 import { Text } from '@react-three/drei';
@@ -120,9 +120,9 @@ const WindSector3D = ({ outerRadius }) => {
     // Get wind data from subscribed values and convert to appropriate units
     // Note: Math.PI/2 adjustment aligns with compass coordinate system
     const trueWindAngle = useMemo(() => (Math.PI / 2 - (skValues['environment.wind.angleTrueGround'] || 0)), [skValues]);
-    const trueWindSpeed = useMemo(() => convertWindSpeed(skValues['environment.wind.speedOverGround']) || 0, [skValues]);
+    const trueWindSpeed = useMemo(() => convertSpeedUnit(skValues['environment.wind.speedOverGround']) || 0, [skValues]);
     const appWindAngle = useMemo(() => (Math.PI / 2 - (skValues['environment.wind.angleApparent'] || 0)), [skValues]);
-    const appWindSpeed = useMemo(() => convertWindSpeed(skValues['environment.wind.speedApparent']) || 0, [skValues]);
+    const appWindSpeed = useMemo(() => convertSpeedUnit(skValues['environment.wind.speedApparent']) || 0, [skValues]);
     // Calculate positions for wind indicators based on their angles
     // These are memoized to avoid recalculation on every render
     const trueWindPosition = useMemo(

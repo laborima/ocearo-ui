@@ -1,7 +1,7 @@
 'use client';
 import React, { useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { toDegrees, MS_TO_KNOTS, useOcearoContext } from '../../context/OcearoContext';
+import { toDegrees, MS_TO_KNOTS, convertSpeedUnit, getSpeedUnitLabel, useOcearoContext } from '../../context/OcearoContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
 import { faTachometerAlt, faCompass, faWater, faWind } from '@fortawesome/free-solid-svg-icons';
@@ -34,12 +34,13 @@ const SpeedWidget = React.memo(() => {
     
     return {
       hasData: true,
-      sog: sog !== null ? Math.round(sog * MS_TO_KNOTS * 10) / 10 : null,
-      stw: stw !== null ? Math.round(stw * MS_TO_KNOTS * 10) / 10 : null,
+      sog: sog !== null ? convertSpeedUnit(sog) : null,
+      stw: stw !== null ? convertSpeedUnit(stw) : null,
       heading: heading !== null ? Math.round(toDegrees(heading)) : null,
       cog: cog !== null ? Math.round(toDegrees(cog)) : null,
-      windSpeed: windSpeed !== null ? Math.round(windSpeed * MS_TO_KNOTS * 10) / 10 : null,
-      drift: sog !== null && stw !== null ? Math.round((sog - stw) * MS_TO_KNOTS * 10) / 10 : null
+      windSpeed: windSpeed !== null ? convertSpeedUnit(windSpeed) : null,
+      drift: sog !== null && stw !== null ? convertSpeedUnit(sog - stw) : null,
+      speedUnitLabel: getSpeedUnitLabel()
     };
   }, [sogValue, stwValue, headingValue, cogValue, windSpeedValue, debugMode]);
 
@@ -73,7 +74,7 @@ const SpeedWidget = React.memo(() => {
           <div className="text-center mb-6">
             <div className="text-5xl font-black text-hud-main leading-none gliding-value tracking-tighter">
               {speedData.sog !== null ? speedData.sog : t('common.na')}
-              {speedData.sog !== null && <span className="text-xl text-hud-secondary ml-2 uppercase font-black tracking-widest">kts</span>}
+              {speedData.sog !== null && <span className="text-xl text-hud-secondary ml-2 uppercase font-black tracking-widest">{speedData.speedUnitLabel}</span>}
             </div>
             <div className={`text-xs font-black uppercase tracking-[0.3em] mt-3 ${speedData.sog !== null ? getSpeedColor(speedData.sog) : 'text-hud-muted'}`}>
               {speedData.sog !== null ? getSpeedStatus(speedData.sog) : t('widgets.offline')}
@@ -129,12 +130,12 @@ const SpeedWidget = React.memo(() => {
             <div className="flex items-center space-x-2">
               <span className="text-hud-secondary">{t('widgets.driftEffect')}</span>
               <span className={`gliding-value ${speedData.drift !== null && speedData.drift > 0 ? 'text-oGreen' : speedData.drift !== null && speedData.drift < 0 ? 'text-oRed' : 'text-hud-muted'}`}>
-                {speedData.drift !== null ? `${speedData.drift > 0 ? '+' : ''}${speedData.drift} kts` : t('common.na')}
+                {speedData.drift !== null ? `${speedData.drift > 0 ? '+' : ''}${speedData.drift} ${speedData.speedUnitLabel}` : t('common.na')}
               </span>
             </div>
             <div className="flex items-center space-x-2">
               <FontAwesomeIcon icon={faWind} className="text-oBlue text-xs opacity-50" />
-              <span className="text-hud-main gliding-value">{speedData.windSpeed !== null ? `${speedData.windSpeed} kts` : t('common.na')}</span>
+              <span className="text-hud-main gliding-value">{speedData.windSpeed !== null ? `${speedData.windSpeed} ${speedData.speedUnitLabel}` : t('common.na')}</span>
             </div>
           </div>
         </div>

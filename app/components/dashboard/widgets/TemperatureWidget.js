@@ -1,6 +1,6 @@
 'use client';
 import React, { useMemo, useRef } from 'react';
-import { convertTemperature } from '../../context/OcearoContext';
+import { convertTemperatureUnit, getTemperatureUnitLabel } from '../../utils/UnitConversions';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
 import { faThermometerHalf } from '@fortawesome/free-solid-svg-icons';
@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 const TEMPERATURE_CONFIG = {
   airPath: 'environment.outside.temperature',
   seaPath: 'environment.water.temperature',
-  transform: value => value != null ? convertTemperature(value) : null
+  transform: value => value != null ? convertTemperatureUnit(value) : null
 };
 
 const TemperatureWidget = React.memo(() => {
@@ -94,7 +94,7 @@ const TemperatureWidget = React.memo(() => {
             <div key={idx} className="space-y-2">
               <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest text-hud-muted">
                 <span>{item.label}</span>
-                <span className="text-hud-main opacity-80">{item.value !== null ? `${item.value}°C` : t('widgets.offline')}</span>
+                <span className="text-hud-main opacity-80">{item.value !== null ? `${item.value}${getTemperatureUnitLabel()}` : t('widgets.offline')}</span>
               </div>
               <div className="h-1 bg-hud-elevated rounded-full overflow-hidden shadow-inner">
                 <div 

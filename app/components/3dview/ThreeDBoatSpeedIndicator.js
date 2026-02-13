@@ -1,4 +1,4 @@
-import { convertSpeed, useOcearoContext } from '../context/OcearoContext';
+import { convertSpeedUnit, getSpeedUnitLabel, useOcearoContext } from '../context/OcearoContext';
 import { useState, useMemo, useCallback } from 'react';
 import { useSignalKPaths } from '../hooks/useSignalK';
 import { useTranslation } from 'react-i18next';
@@ -28,7 +28,7 @@ const ThreeDBoatSpeedIndicator = () => {
             // Only include speed type if data is available
             if (value !== undefined && value !== null) {
                 // Polar ratio is already a percentage/ratio, no need for speed conversion if it's POL
-                types[type] = type === 'POL' ? value * 100 : convertSpeed(value);
+                types[type] = type === 'POL' ? value * 100 : convertSpeedUnit(value);
             }
         }
         return types;
@@ -81,7 +81,7 @@ const ThreeDBoatSpeedIndicator = () => {
                 </div>
                 <div className="h-[2px] w-4 bg-oBlue/40 rounded-full" />
                 <div className={`text-xs font-bold uppercase tracking-widest ${nightMode ? 'text-oNight/60' : 'text-hud-muted'}`}>
-                    {t('common.knots')}
+                    {currentSpeedType === 'POL' ? '%' : getSpeedUnitLabel()}
                 </div>
             </div>
         </div>

@@ -124,8 +124,11 @@ const CompassDial = ({ outerRadius, innerRadius }) => {
   
   const skValues = useSignalKPaths(headingPaths);
   
-  // Logic from getBoatRotationAngle
+  // Use preferred heading path from settings, with fallback chain
   const compassHeading = useMemo(() => {
+    const preferred = configService.get('preferredHeadingPath') || 'courseOverGroundTrue';
+    const preferredValue = skValues[`navigation.${preferred}`];
+    if (preferredValue != null) return preferredValue;
     const heading = skValues['navigation.headingTrue'] || skValues['navigation.headingMagnetic'];
     const cog = skValues['navigation.courseOverGroundTrue'] || skValues['navigation.courseOverGroundMagnetic'];
     return cog || heading || 0;

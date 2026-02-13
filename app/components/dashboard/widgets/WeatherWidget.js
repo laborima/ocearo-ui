@@ -2,6 +2,7 @@
 import React, { useMemo } from 'react';
 import BaseWidget from './BaseWidget';
 import configService from '../../settings/ConfigService';
+import { convertSpeedUnit, getSpeedUnitLabel, convertTemperatureUnit, getTemperatureUnitLabel } from '../../utils/UnitConversions';
 import { useWeather } from '../../context/WeatherContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -28,10 +29,10 @@ export default function WeatherWidget() {
     const currentForecast = forecasts.length > 0 ? forecasts[0] : null;
     
     // Convert from SignalK raw units to display units
-    const tempDisplay = weather.temperature != null ? Math.round((weather.temperature - 273.15) * 10) / 10 : null;
+    const tempDisplay = weather.temperature != null ? convertTemperatureUnit(weather.temperature) : null;
     const humidityDisplay = weather.humidity != null ? Math.round(weather.humidity * 100) : null;
     const pressureDisplay = weather.pressure != null ? Math.round(weather.pressure / 100) : null;
-    const windSpeedDisplay = weather.windSpeed != null ? Math.round(weather.windSpeed * 1.94384 * 10) / 10 : null;
+    const windSpeedDisplay = weather.windSpeed != null ? convertSpeedUnit(weather.windSpeed) : null;
     const windDirDisplay = weather.windDirection != null ? Math.round((weather.windDirection * 180 / Math.PI) % 360) : null;
     const description = weather.description;
     let dataSource = weather.source;
@@ -196,7 +197,7 @@ export default function WeatherWidget() {
               />
             </div>
             <div className="text-5xl font-black text-hud-main leading-none gliding-value tracking-tighter">
-              {weatherData.temperature !== null ? `${weatherData.temperature}°` : t('common.na')}
+              {weatherData.temperature !== null ? `${weatherData.temperature}${getTemperatureUnitLabel()}` : t('common.na')}
             </div>
             <div className="text-xs font-black text-hud-secondary uppercase tracking-[0.3em] mt-3 opacity-60">
               {weatherData.description || getWeatherDescription(weatherData.condition)}
@@ -230,7 +231,7 @@ export default function WeatherWidget() {
                   <div className="flex items-center space-x-2">
                     <FontAwesomeIcon icon={faWind} className="text-oBlue text-xs opacity-50" />
                     <span className="text-hud-main text-xs font-black gliding-value">
-                      {dayWindSpeed !== null ? `${dayWindSpeed} kts` : '--'}
+                      {dayWindSpeed !== null ? `${dayWindSpeed} ${getSpeedUnitLabel()}` : '--'}
                     </span>
                     {dayWindDir && (
                       <span className="text-hud-muted text-xs font-black tracking-widest opacity-60">{dayWindDir}</span>
@@ -250,7 +251,7 @@ export default function WeatherWidget() {
           </div>
           <div className="text-right">
             <span className="text-hud-main text-sm font-black gliding-value tracking-tight">
-              {weatherData.windSpeed !== null ? `${weatherData.windSpeed} kts` : t('common.na')}
+              {weatherData.windSpeed !== null ? `${weatherData.windSpeed} ${getSpeedUnitLabel()}` : t('common.na')}
             </span>
             <span className="text-hud-muted text-xs uppercase font-black tracking-widest ml-2 opacity-60">
               {weatherData.windDirection !== null ? getWindDirection(weatherData.windDirection) : ''}

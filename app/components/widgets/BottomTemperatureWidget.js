@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { convertTemperature, useOcearoContext } from '../context/OcearoContext';
+import { useOcearoContext } from '../context/OcearoContext';
+import { convertTemperatureUnit, getTemperatureUnitLabel } from '../utils/UnitConversions';
 import { useSignalKPaths } from '../hooks/useSignalK';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -16,32 +17,32 @@ const TEMPERATURE_MODES = {
     path: 'environment.water.temperature',
     icon: faWater,
     labelKey: 'temperature.waterTemperature',
-    format: (value) => `${value}°C`,
-    transform: convertTemperature
+    format: (value) => `${value}${getTemperatureUnitLabel()}`,
+    transform: convertTemperatureUnit
   },
   airTemp: {
     key: 'airTemp',
     path: 'environment.outside.temperature',
     icon: faThermometerHalf,
     labelKey: 'temperature.airTemperature',
-    format: (value) => `${value}°C`,
-    transform: convertTemperature
+    format: (value) => `${value}${getTemperatureUnitLabel()}`,
+    transform: convertTemperatureUnit
   },
   exhaustTemp: {
     key: 'exhaustTemp',
     path: 'propulsion.main.exhaustTemperature',
     icon: faFire,
     labelKey: 'temperature.exhaustTemperature',
-    format: (value) => `${value}°C`,
-    transform: convertTemperature
+    format: (value) => `${value}${getTemperatureUnitLabel()}`,
+    transform: convertTemperatureUnit
   },
   fridgeTemp: {
     key: 'fridgeTemp',
     path: 'environment.inside.fridge.temperature',
     icon: faSnowflake,
     labelKey: 'temperature.fridgeTemperature',
-    format: (value) => `${value}°C`,
-    transform: convertTemperature
+    format: (value) => `${value}${getTemperatureUnitLabel()}`,
+    transform: convertTemperatureUnit
   }
 };
 

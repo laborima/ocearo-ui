@@ -1,4 +1,5 @@
 import { useOcearoContext } from '../context/OcearoContext';
+import { convertDepthUnit, getDepthUnitLabel } from '../utils/UnitConversions';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSignalKPath } from '../hooks/useSignalK';
 import { useTranslation } from 'react-i18next';
@@ -73,7 +74,7 @@ const ThreeDBoatSeaLevelIndicator = () => {
   // Format depth display
   const formattedDepth = useCallback((depth) => {
     if (depth === null) return '--';
-    return `${Math.round(depth * 10) / 10} m`;
+    return `${convertDepthUnit(depth)} ${getDepthUnitLabel()}`;
   }, []);
 
   // Render progress bar

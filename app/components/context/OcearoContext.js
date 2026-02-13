@@ -8,7 +8,11 @@ import { MathUtils } from 'three';
 export {
     radToDeg, toDegrees, degToRad, toKnots, toKelvin,
     convertTemperature, convertWindSpeed, convertSpeed, convertPressure,
-    MS_TO_KNOTS, KNOTS_TO_MPS, EARTH_RADIUS_METERS
+    MS_TO_KNOTS, KNOTS_TO_MPS, EARTH_RADIUS_METERS,
+    convertSpeedUnit, getSpeedUnitLabel,
+    convertDepthUnit, getDepthUnitLabel,
+    convertTemperatureUnit, getTemperatureUnitLabel,
+    convertDistanceUnit, getDistanceUnitLabel
 } from '../utils/UnitConversions';
 
 import { MS_TO_KNOTS } from '../utils/UnitConversions';
@@ -151,6 +155,9 @@ export const OcearoContextProvider = ({ children }) => {
      */
     const getBoatRotationAngle = useCallback(() => {
         const data = signalkDataRef.current;
+        const preferred = configService.get('preferredHeadingPath') || 'courseOverGroundTrue';
+        const preferredValue = data[`navigation.${preferred}`];
+        if (preferredValue != null) return preferredValue;
         const heading = data['navigation.headingTrue'] || data['navigation.headingMagnetic'];
         const courseOverGroundAngle = data['navigation.courseOverGroundTrue']
         || data['navigation.courseOverGroundMagnetic'];
@@ -374,9 +381,8 @@ export const OcearoContextProvider = ({ children }) => {
                 let rudderDirection = 1;
 
                 // Push initial sample data immediately (only once)
-                updateSignalKData({
+                const initialData = {
                     'steering.rudderAngle': MathUtils.degToRad(currentRudderAngle),
-                    ...SAMPLE_DATA.wind,
                     ...SAMPLE_DATA.temperature,
                     ...SAMPLE_DATA.environment,
                     ...SAMPLE_DATA.performance,
@@ -385,7 +391,14 @@ export const OcearoContextProvider = ({ children }) => {
                     ...SAMPLE_DATA.electrical,
                     ...SAMPLE_DATA.propulsion,
                     ...SAMPLE_DATA.tanks,
-                });
+                };
+
+                // Only push sample wind data if wind override is not active
+                if (!configService.get('debugWindOverride')) {
+                    Object.assign(initialData, SAMPLE_DATA.wind);
+                }
+
+                updateSignalKData(initialData);
 
                 // Create interval that only updates values that actually change
                 sampleDataIntervalRef.current = setInterval(() => {
@@ -395,15 +408,18 @@ export const OcearoContextProvider = ({ children }) => {
                         rudderDirection *= -1;
                     }
 
-                    // Increment the wind angle by 5 degrees each interval
-                    currentWindAngle = (currentWindAngle + 5) % 360;
-
-                    // Only push values that actually vary over time
-                    updateSignalKData({
+                    const updates = {
                         'steering.rudderAngle': MathUtils.degToRad(currentRudderAngle),
-                        'environment.wind.angleTrueWater': MathUtils.degToRad(currentWindAngle),
-                        'environment.wind.angleApparent': MathUtils.degToRad(currentWindAngle),
-                    });
+                    };
+
+                    // Skip wind angle updates when wind override is active
+                    if (!configService.get('debugWindOverride')) {
+                        currentWindAngle = (currentWindAngle + 5) % 360;
+                        updates['environment.wind.angleTrueWater'] = MathUtils.degToRad(currentWindAngle);
+                        updates['environment.wind.angleApparent'] = MathUtils.degToRad(currentWindAngle);
+                    }
+
+                    updateSignalKData(updates);
                 }, SAMPLE_DATA_INTERVAL);
             };
             
@@ -419,13 +435,27 @@ export const OcearoContextProvider = ({ children }) => {
             // Connect to the client
             await client.connect();
 
+            // Wind paths that should be blocked when wind override is active
+            const WIND_OVERRIDE_PATHS = [
+                'environment.wind.speedTrue',
+                'environment.wind.speedApparent',
+                'environment.wind.angleTrueWater',
+                'environment.wind.angleApparent',
+                'environment.wind.directionTrue',
+                'environment.wind.speedOverGround',
+                'environment.wind.angleTrueGround',
+            ];
+
             // Listen for delta updates from SignalK server
             client.on('delta', (delta) => {
                         if (!isMounted) return;
                         delta.updates.forEach((update) => {
                     if (update.values) {
                         update.values.forEach((value) => {
-                    // Update SignalK data state and notify subscribers
+                    // Skip wind paths when wind override is active
+                    if (configService.get('debugWindOverride') && WIND_OVERRIDE_PATHS.includes(value.path)) {
+                        return;
+                    }
                     updateSignalKData({
                         [value.path]: value.value,
                     });

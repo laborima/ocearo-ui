@@ -4,7 +4,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import BaseWidget from './BaseWidget';
 import { useNavigation } from '../../context/NavigationContext';
-import { toDegrees, toKnots } from '../../context/OcearoContext';
+import { toDegrees } from '../../context/OcearoContext';
+import { convertSpeedUnit, getSpeedUnitLabel, convertDistanceUnit, getDistanceUnitLabel } from '../../utils/UnitConversions';
 import configService from '../../settings/ConfigService';
 import { 
     faRoute, 
@@ -98,8 +99,7 @@ export default function CourseWidget() {
     const formatDistance = (meters) => {
         if (meters === null || meters === undefined) return t('common.na');
         if (meters < 1000) return `${Math.round(meters)} m`;
-        const nm = meters / 1852;
-        return `${nm.toFixed(2)} NM`;
+        return `${convertDistanceUnit(meters)} ${getDistanceUnitLabel()}`;
     };
 
     // Format time
@@ -336,8 +336,8 @@ export default function CourseWidget() {
                         <div className="tesla-card p-4 text-center tesla-hover bg-hud-bg">
                             <FontAwesomeIcon icon={faPlay} className="text-oGreen text-xs mb-2 opacity-50" />
                             <div className="text-hud-main text-2xl font-black gliding-value tracking-tighter">
-                                {courseData.velocityMadeGood !== null ? `${toKnots(courseData.velocityMadeGood)}` : t('common.na')}
-                                <span className="text-xs text-hud-secondary ml-1">kts</span>
+                                {courseData.velocityMadeGood !== null ? `${convertSpeedUnit(courseData.velocityMadeGood)}` : t('common.na')}
+                                <span className="text-xs text-hud-secondary ml-1">{getSpeedUnitLabel()}</span>
                             </div>
                             <div className="text-hud-secondary text-xs uppercase font-black mt-2 tracking-[0.2em]">VMG</div>
                         </div>
