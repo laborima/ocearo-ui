@@ -2,6 +2,8 @@
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![License](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
+[English 🇺🇸](README.md)
+
 # Ocearo UI
 
 **La navigation rendue plus intelligente**
@@ -12,15 +14,41 @@ Inspiré par l'interface de l'autopilote Tesla, ce système offre une expérienc
 
 ---
 
-## **Dernières mises à jour (v0.1.18)**
+## **Dernières mises à jour (v2.0.0)**
 
-- **Unités configurables** : Vitesse (kn, km/h, mph, m/s), profondeur (m, ft, fa), température (°C, °F) et distance (nm, km, mi).
-- **Chemins préférés** : Chemins Signal K personnalisés pour le vent et le cap avec des étiquettes traduites.
-- **Panneau de débogage amélioré** : Vue dédiée dans le panneau droit pour le débogage avec bascule des axes XYZ et curseurs de forçage du vent.
-- **Indicateurs de réglage des voiles** : Nouveaux indicateurs de position des chariots de voiles (GV et foc) intégrés au compas 3D.
-- **UI/UX améliorée** : Panneau AIS repensé, barres de jauge style Tesla pour les réservoirs/batteries et barres d'outils transparentes.
-- **Navigation & Météo** : Nouvelle vue Autopilote, widget de Route et contexte Météo avec support des prévisions hors ligne.
-- **Stack technique moderne** : Migration vers Next.js 16, React 19 et Tailwind CSS v4.
+- **Physique 3D avancée et Voiles** : Foc/génois et grand-voile en 3D complète avec cambrure dynamique, vrillage et visualisation de l'étai.
+- **Gréement dynamique et tensions** : Visualisation en temps réel des lignes de gréement (pataras, hale-bas, cunningham, bordure) avec des dégradés de couleurs basés sur la tension.
+- **HUD de réglage des voiles** : Indicateurs en arc pour le chariot de GV et les chariots de foc (FP/FS) intégrés au compas 3D.
+- **Autopilote et Navigation** : Vue Autopilote dédiée, widget de Route avec les routes/waypoints Signal K, et laylines 3D haute précision.
+- **Tableau de bord intégré** : Panneau droit avec radar AIS, marées, météo et niveaux de réservoirs pour une vision consolidée.
+- **Surveillance complète** : Nouvelles jauges moteur (temp, pression, carburant), gestion du journal de carburant et vue journal de bord.
+- **Météo et Prévisions** : Contexte météo avec support de l'API de prévisions Signal K et repli sur données hors ligne.
+- **Unités et Chemins configurables** : Support des unités personnalisées (kn, m/s, °C, etc.) et des chemins de données Signal K préférés pour le vent et le cap.
+- **UI/UX améliorée** : Panneau AIS repensé, barres de jauge style Tesla, barres d'outils transparentes et ciel dynamique jour/nuit.
+- **Outils de débogage** : Panneau de débogage dédié avec contrôles de forçage du vent et bascule des axes 3D.
+- **Stack technique moderne** : Migration complète vers Next.js 16, React 19 et Tailwind CSS v4.
+
+---
+
+## **Caractéristiques Clés**
+
+### **Environnement 3D Dynamique**
+- **Voiles Physiques** : Représentation 3D en temps réel de la grand-voile et du foc/génois avec cambrure, vrillage et prise de ris dynamiques selon le vent.
+- **Gréement Interactif** : Visualisation des lignes de gréement (pataras, hale-bas, cunningham, bordure) avec dégradés de couleurs selon la tension.
+- **Compas Intelligent** : **HUD de réglage** intégré affichant les positions recommandées des chariots pour une performance optimale.
+- **Ciel Jour/Nuit** : Éclairage dynamique et environnement océanique synchronisés avec l'heure du navire.
+
+### **Navigation et Conscience Situationnelle**
+- **Radar AIS** : Visualisation 3D des navires à proximité avec des panneaux d'informations détaillés.
+- **Routes et Navigation** : Widget dédié pour les routes Signal K, les waypoints et les calculs de navigation en temps réel.
+- **Contexte Environnemental** : Niveaux de marée, prévisions météo (API Signal K) et surveillance de la profondeur avec assiette du navire.
+- **Laylines** : Visualisation haute précision des laylines en 3D pour l'aide à la navigation tactique.
+
+### **Systèmes du Navire**
+- **Contrôle Autopilote** : Interface autopilote entièrement intégrée pour une gestion fluide du navire.
+- **Surveillance Moteur** : Jauges complètes pour les températures, pressions et consommation de carburant avec suivi des pleins.
+- **Indicateurs Style Tesla** : Barres modernes haute visibilité pour l'état des batteries et les niveaux de réservoirs.
+- **Interface Personnalisable** : Support de 12 langues et unités configurables (métrique, impérial, nautique).
 
 ---
 
@@ -28,11 +56,12 @@ Inspiré par l'interface de l'autopilote Tesla, ce système offre une expérienc
 
 ### **Vue Croisière**
 - **Visualisation 3D** : Fournit une vue 3D dynamique du navire, affichant des éléments critiques tels que :
-  - Direction du vent avec laylines
-  - Compas
-  - Niveau de profondeur
-  - Bateaux à proximité (représentés en 3D via les données AIS)
-  - Recommandations de réglage des voiles en temps réel selon le vent et la position des voiles
+  - Direction du vent avec **laylines actives**
+  - Compas 3D de haute précision
+  - Niveau de profondeur et assiette du navire
+  - Navires à proximité représentés en 3D via les données AIS
+  - **HUD de réglage des voiles** : Indicateurs en arc en temps réel pour le chariot de GV et les chariots de foc au niveau du compas.
+  - Forme de voile basée sur la physique (cambrure et vrillage) reflétant les conditions de vent actuelles.
 
 ![Vue Croisière](docs/cruising.png)
 
@@ -56,6 +85,22 @@ Inspiré par l'interface de l'autopilote Tesla, ce système offre une expérienc
 
 ![Vue Aide au Stationnement](docs/parking.png)
 
+### **Autres Vues**
+Visuels additionnels améliorant les fonctionnalités du système :
+
+![Other Views](docs/ais.png)  
+![Other Views](docs/ocean.png)
+![Other Views](docs/meteo.png)  
+![Other Views](docs/navigation.png)  
+![Other Views](docs/instruments.png)
+![Other Views](docs/webcam.png)
+![Other Views](docs/battery.png)
+![Other Views](docs/performances.png)
+![Other Views](docs/dashboard1.png)
+![Other Views](docs/dashboard2.png)
+![Other Views](docs/dashboard3.png)
+![Other Views](docs/engine.png)
+
 ---
 
 ## **Vision pour le Futur**
@@ -66,7 +111,6 @@ La feuille de route d'Ocean Robot inclut des fonctionnalités avancées visant �
 - **Améliorations futures** :
   - Surveillance par caméra des penons pour des suggestions de réglage optimal
   - Visualisation de la bathymétrie en 3D
-  - Visualisation des laylines en 3D
   - Visualisation des lignes de départ en 3D
 
 ---
@@ -104,7 +148,7 @@ cd ocearo-ui
 Installer les dépendances :
 
 ```bash
-npm install next react react-dom
+npm install
 ```
 
 Démarrer le serveur de développement :
@@ -136,9 +180,9 @@ Pour déployer votre propre compilation :
 ```bash
 git clone https://github.com/laborima/ocearo-ui.git
 cd ocearo-ui
-npm install next react react-dom
+npm install
 NODE_ENV=production npm run build
-scp -r -P 22 ./out/* pi@openplotter.local:/home/pi/.signalk/node_modules/ocearo-ui
+scp -r ./out/* pi@openplotter.local:/home/pi/.signalk/node_modules/ocearo-ui
 ```
 
 ---
