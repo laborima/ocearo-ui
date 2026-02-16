@@ -12,6 +12,7 @@ import * as Wind from './Wind';
 import SailShape from './SailShape';
 import { oBlue, useOcearoContext } from '../../context/OcearoContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
+import { getReefHeightFactor } from './SailTrimUtils';
 
 // Sail dimensions in millimeters
 const SAIL_HEIGHT = 8000;                                      // Total sail height
@@ -52,6 +53,8 @@ const Sail3D = ({
     windParams = { speed: 5.0, hellman: 0.27 },
     boatParams = { mastrotation: 0.0, heading: 130.0, speed: 5.0 },
     sailParams = { mastArea: 0, sailArea: 0, cunningham: 1, angleOfAttack: 20 },
+    reefLevel = 0,
+    mainCamber = 1.0,
 }) => {
     // Access to SignalK data through specialized hooks for better performance
     const appWindAngle = useSignalKPath('environment.wind.angleApparent', 0);
@@ -216,12 +219,7 @@ const Sail3D = ({
 
                 lastX = v === 0 ? 0 : lastX + finalSegWidth;
 
-                // Define vertex colors (alternating red and gray stripes)
-                const sailStripeInterval = Math.floor(SAIL_LEVELS / 10);
-                colors.push(...(level % sailStripeInterval === 0 ? 
-                    [0.8, 0.0, 0.047] :   // Red for indicator stripes
-                    [0.596, 0.596, 0.596]  // Gray for the rest of the sail
-                ));
+                colors.push(0.35, 0.38, 0.42);
             }
 
             // Store the clipping width for this level
@@ -289,6 +287,13 @@ const Sail3D = ({
         if (!flatSailGeometryRef.current) {
             flatSailGeometryRef.current = sailGeometry.clone();
         }
+
+        // Reef: compute effective sail height based on reef level
+        const reefHeightFactor = getReefHeightFactor(reefLevel);
+        const effectiveSailHeight = SAIL_HEIGHT * reefHeightFactor;
+
+        const colorAttr = sailGeometry.attributes.color;
+        const colorArray = colorAttr.array;
 
         // Height of mast foot above water (convert m to mm)
         const mastFootOverWaterHeight = BOAT_LIMITS.waterlineToMastFootHeight * 1000;
@@ -415,38 +420,59 @@ const Sail3D = ({
              * Appliquer la rotation à chaque sommet (vertex) de ce niveau
              * On ignore le premier vertex (v=0) car c'est le point d'attache au mât
              */
-            for (let v = 1; v < SAIL_VERTICES_PER_LEVEL; v++) {
-                // Calcul de l'index dans le tableau de positions (3 composantes x,y,z par sommet)
+            for (let v = 0; v < SAIL_VERTICES_PER_LEVEL; v++) {
                 const i = (level * SAIL_VERTICES_PER_LEVEL + v) * 3;
-                
-                // Récupérer la position d'origine (la voile plate)
+                const ci = (level * SAIL_VERTICES_PER_LEVEL + v) * 3;
+
                 const originalPos = new THREE.Vector3(
-                    flatSailGeometryRef.current.attributes.position.array[i],     // x
-                    flatSailGeometryRef.current.attributes.position.array[i + 1], // y
-                    flatSailGeometryRef.current.attributes.position.array[i + 2]  // z
+                    flatSailGeometryRef.current.attributes.position.array[i],
+                    flatSailGeometryRef.current.attributes.position.array[i + 1],
+                    flatSailGeometryRef.current.attributes.position.array[i + 2]
                 );
 
-                /**
-                 * Appliquer la rotation autour de l'axe vertical (luffAxis)
-                 * - Le signe négatif inverse la direction de rotation
-                 * - dirFact (-1 ou 1) tient compte du côté d'où vient le vent
-                 * - verticeAnglesRad[v] ajoute une rotation supplémentaire selon la position
-                 *   du vertex pour créer la courbe du profil de la voile
-                 */
+                // Reef: clamp height — collapse vertices above effective sail height
+                const levelHeightMm = level * SAIL_LEVEL_HEIGHT;
+                if (levelHeightMm > effectiveSailHeight) {
+                    originalPos.y = effectiveSailHeight / 1000;
+                    originalPos.x = 0;
+                    originalPos.z = 0;
+                    positions[i] = originalPos.x;
+                    positions[i + 1] = originalPos.y;
+                    positions[i + 2] = originalPos.z;
+
+                    // Gray out collapsed vertices
+                    colorArray[ci] = 0.2;
+                    colorArray[ci + 1] = 0.2;
+                    colorArray[ci + 2] = 0.2;
+                    continue;
+                }
+
+                colorArray[ci] = 0.35;
+                colorArray[ci + 1] = 0.38;
+                colorArray[ci + 2] = 0.42;
+
+                // Skip rotation for the first vertex (mast attachment point)
+                if (v === 0) {
+                    positions[i] = originalPos.x;
+                    positions[i + 1] = originalPos.y;
+                    positions[i + 2] = originalPos.z;
+                    continue;
+                }
+
                 originalPos.applyAxisAngle(
                     luffAxis,
                     -(chordRotationRad + verticeAnglesRad[v]) * dirFact
                 );
 
-                // Mettre à jour les positions dans le tableau de la géométrie
-                positions[i] = originalPos.x;     // Nouvelle position x
-                positions[i + 1] = originalPos.y; // Nouvelle position y
-                positions[i + 2] = originalPos.z; // Nouvelle position z
+                positions[i] = originalPos.x;
+                positions[i + 1] = originalPos.y;
+                positions[i + 2] = originalPos.z;
             }
         }
 
-        // Indiquer que les positions des vertex ont changé et doivent être mises à jour
+        // Indiquer que les positions et couleurs des vertex ont changé
         sailGeometry.attributes.position.needsUpdate = true;
+        colorAttr.needsUpdate = true;
 
         // Mettre à jour les paramètres du bateau avec la nouvelle rotation du mât
         const newBoatParams = {
@@ -479,7 +505,9 @@ const Sail3D = ({
         sailParams.cunningham,    // Tension du cunningham (forme de la voile)
         sailParams.angleOfAttack, // Angle d'attaque de la voile
         boatParams,               // Paramètres du bateau (direction, vitesse, etc.)
-        sailClipWidthPerLevel     // Largeurs de découpage par niveau
+        sailClipWidthPerLevel,    // Largeurs de découpage par niveau
+        reefLevel,                // Niveau de ris (0, 1, ou 2)
+        mainCamber                // Creux de la grand-voile
     ]);
 
     /**

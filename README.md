@@ -14,6 +14,18 @@ Inspired by Tesla's autopilot UI, this system delivers a futuristic and streamli
 
 ---
 
+## **Latest Updates (v0.1.18)**
+
+- **Configurable Units**: Speed (kn, km/h, mph, m/s), depth (m, ft, fa), temperature (°C, °F), and distance (nm, km, mi).
+- **Preferred Paths**: Custom Signal K paths for wind and heading with translated labels.
+- **Enhanced Debug Panel**: Dedicated right-pane view for debugging with XYZ axes toggle and wind override sliders.
+- **Sail Trim Indicators**: New compass-style arc indicators for sail car positions (Mainsail & Jib).
+- **Improved UI/UX**: Redesigned AIS panel, Tesla-style gauge bars for tanks/batteries, and transparent toolbars.
+- **Navigation & Weather**: New Autopilot view, Course widget, and Weather context with offline forecast support.
+- **Modern Tech Stack**: Migrated to Next.js 16, React 19, and Tailwind CSS v4.
+
+---
+
 ## **Core Views**
 
 ### **Cruising View**

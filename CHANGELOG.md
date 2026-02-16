@@ -1,3 +1,33 @@
+## [2.0.0] - 2026-02-16
+
+### Added
+- Full 3D jib/genoa sail with dynamic camber, twist, and forestay visualization (`Jib3D.js`).
+- Mainsail reef management with dynamic geometry updates based on true wind speed (`Sail3D.js`).
+- Rigging lines (backstay, boom vang, cunningham, outhaul) with tension-based color gradient: green → yellow → orange → red → violet (`Rigging3D.js`).
+- Tension lines visualization for mainsheet, jib sheet, vang, and cunningham (`TensionLines3D.js`).
+- Compass-style sail trim sliders at compass level:
+  - GV (Grand-Voile): position-mode indicator showing traveller port/centre/starboard.
+  - FP/FS (Foc Port/Starboard): fill-mode indicators showing jib car forward/aft position.
+  - Inactive (leeward) jib car is fully greyed out; active (windward) side shows colored fill.
+  - All sliders react dynamically to apparent wind angle and speed.
+- Sail trim computation engine (`SailTrimUtils.js`, `useSailTrim.js`) deriving reef level, camber, twist, and tension from SignalK wind data.
+- Settings toggles to show/hide sail trim sliders and rigging lines (Navigation & HUD section).
+- Translations for new settings in all 12 supported languages.
+- Debug wind override panel with speed and direction sliders for testing sail behavior.
+- Debug 3D axes toggle in debug panel.
+
+### Fixed
+- Fixed jib top (HEAD) attachment point alignment with masthead at y=10.0.
+- Fixed settings toggle using stale `isSettingsView` state instead of `rightView`.
+- Fixed wind override flickering caused by SignalK delta updates overwriting override values.
+- Fixed POL speed indicator showing speed unit instead of `%`.
+
+### Changed
+- Redesigned 3D sail visualization with physically-based camber and twist calculations.
+- Rigging reduced to essential control lines only (backstay, boom vang, cunningham, outhaul).
+- Sail trim sliders moved from inside boat model to compass level for better visibility.
+- Bumped version to 2.0.0.
+
 ## [0.1.18] - 2026-02-13
 
 ### Added

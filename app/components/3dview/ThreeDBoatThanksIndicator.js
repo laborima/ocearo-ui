@@ -70,7 +70,7 @@ const TankIndicator = ({ level, type }) => {
                     style={{ width: `${percentage}%` }}
                 />
             </div>
-            <span className={`text-xs font-black tabular-nums min-w-[30px] text-right ${isDanger ? 'text-oRed animate-soft-pulse' : 'text-hud-main/80'}`}>
+            <span className={`text-[10px] font-black tabular-nums min-w-[28px] text-right ${isDanger ? 'text-oRed animate-soft-pulse' : 'text-hud-main'}`}>
                 {percentage}%
             </span>
         </div>
@@ -85,7 +85,7 @@ const BatteryIndicator = ({ batteryLevel, batteryNumber, voltage }) => {
     const barColor = isDanger ? 'bg-oRed' : isCharging ? 'bg-oGreen' : 'bg-oBlue';
 
     return (
-        <div className="flex items-center space-x-2" title={`${voltage?.toFixed(1)}V${isCharging ? ' ' + t('common.charging') : ''}`}>
+        <div className="flex items-center space-x-2" title={`${percentage}% — ${voltage?.toFixed(1)}V${isCharging ? ' ' + t('common.charging') : ''}`}>
             <FontAwesomeIcon icon={faBolt} className={`text-xs ${isCharging ? 'text-oYellow animate-pulse' : 'text-oGreen opacity-60'}`} />
             <div className="relative w-14 h-[8px] rounded-full bg-hud-elevated/60 overflow-hidden">
                 <div
@@ -93,9 +93,6 @@ const BatteryIndicator = ({ batteryLevel, batteryNumber, voltage }) => {
                     style={{ width: `${percentage}%` }}
                 />
             </div>
-            <span className={`text-xs font-black tabular-nums min-w-[30px] text-right ${isDanger ? 'text-oRed animate-soft-pulse' : 'text-hud-main/80'}`}>
-                {isCharging ? '⚡' : `${percentage}%`}
-            </span>
         </div>
     );
 };
@@ -160,14 +157,14 @@ const ThreeDBoatTankIndicator = () => {
 
     return (
         <div
-            className="p-2 rounded-2xl transition-all duration-300 cursor-pointer select-none"
+            className="p-1.5 rounded-2xl transition-all duration-300 cursor-pointer select-none"
             onClick={toggleDisplayMode}
             role="button"
             tabIndex={0}
             aria-label={`Toggle between ${isBatteryMode ? 'tanks' : 'batteries'} display`}
             onKeyDown={(e) => e.key === 'Enter' && toggleDisplayMode()} 
         >
-            <div className="flex flex-col space-y-1.5">
+            <div className="flex flex-col space-y-1">
                 {isBatteryMode ? (
                     <>
                         {batteries.map(battery => (

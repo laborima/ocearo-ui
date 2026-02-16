@@ -1,4 +1,4 @@
-import React, { Suspense, useRef, useState, useEffect } from 'react';
+import React, { Suspense, useRef, useMemo } from 'react';
 import { OrbitControls, PerspectiveCamera, Html, Environment } from '@react-three/drei';
 import SailBoat3D from './SailBoat3D';
 import { Trail } from './ocean/Trail3D';
@@ -11,12 +11,29 @@ import { AISProvider } from './ais/AISContext';
 import PolarProjection from './polar/Polar3D';
 import BoatLighting from './BoatLighting';
 import configService from '../settings/ConfigService';
+import useSailTrim from '../hooks/useSailTrim';
+import { updateSailTrim } from './sail/SailTrimUtils';
+import SailTrimSliders from './sail/SailTrimSliders';
 
 const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
     const { states } = useOcearoContext(); // Application state from context
     const isCompassLayerVisible = false; // Compass visibility
     const sailBoatRef = useRef();
     const showAxes = configService.get('debugShowAxes');
+
+    const sailTrim = useSailTrim();
+
+    const sailTrimData = useMemo(() => {
+        const computed = updateSailTrim({
+            tws: sailTrim.windData.tws,
+            twa: sailTrim.windData.twa,
+            awa: sailTrim.windData.awa,
+            mainCar: sailTrim.trimState.mainCar,
+            jibCar: sailTrim.trimState.jibCar,
+            tension: sailTrim.trimState.tension,
+        });
+        return { ...computed, trimState: sailTrim.trimState };
+    }, [sailTrim.windData, sailTrim.trimState]);
 
 
     return (
@@ -54,11 +71,12 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
             <group position={[0, -3, 0]} >
                 {/* Sailboat */}
                 <SailBoat3D 
-                    position={[0, 0, 0.7]} 
+                    position={[0, 0, 0]} 
                     scale={[0.7, 0.7, 0.7]} 
                     ref={sailBoatRef} 
                     showSail={true} 
-                    onUpdateInfoPanel={onUpdateInfoPanel} 
+                    onUpdateInfoPanel={onUpdateInfoPanel}
+                    sailTrimData={sailTrimData}
                 />
 
                 {/* Ocean */}
@@ -78,6 +96,9 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
 
                 {/* Compass */}
                 <ThreeDCompassView visible={isCompassLayerVisible} />
+
+                {/* Sail trim car indicators at compass level */}
+                {configService.get('showSailTrimSliders') !== false && <SailTrimSliders />}
             </group>
 
             {/* Debug 3D axes */}

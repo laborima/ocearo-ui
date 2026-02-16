@@ -1,0 +1,11 @@
+Model Information:
+* title:	Fishing ship
+* source:	https://sketchfab.com/3d-models/fishing-ship-abbc69633d69488984cf4a07a10d5979
+* author:	MaxChe (https://sketchfab.com/maxche)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Fishing ship" (https://sketchfab.com/3d-models/fishing-ship-abbc69633d69488984cf4a07a10d5979) by MaxChe (https://sketchfab.com/maxche) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

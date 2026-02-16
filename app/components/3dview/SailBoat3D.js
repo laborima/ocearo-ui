@@ -6,6 +6,9 @@ import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import Sail3D from './sail/Sail3D';
+import Jib3D from './sail/Jib3D';
+import TensionLines3D from './sail/TensionLines3D';
+import Rigging3D from './sail/Rigging3D';
 
 /**
  * Find a mesh with material in an object hierarchy
@@ -35,7 +38,7 @@ const defaultBoat = {
 };
 
 
-const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, ...props }) => {
+const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, ...props }) => {
     const boatRef = useRef();
     const rudderRef = useRef();
     const config = configService.getAll();
@@ -342,7 +345,23 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, ...props }) => {
             dispose={null}
             onClick={handleInfoPanelToggle}
         >
-            {capabilities.includes('sail') && showSail && <Sail3D />}
+            {capabilities.includes('sail') && showSail && (
+                <>
+                    <Sail3D
+                        reefLevel={sailTrimData ? sailTrimData.reefLevel : 0}
+                        mainCamber={sailTrimData ? sailTrimData.mainCamber : 1.0}
+                    />
+                    <Jib3D
+                        jibCar={sailTrimData ? sailTrimData.trimState.jibCar : 0.5}
+                        camber={sailTrimData ? sailTrimData.jibCamber : 0.8}
+                        twist={sailTrimData ? sailTrimData.jibTwist : 0}
+                    />
+                    {configService.get('showRigging') !== false && <Rigging3D />}
+                    {sailTrimData && sailTrimData.tensions && (
+                        <TensionLines3D tensions={sailTrimData.tensions} />
+                    )}
+                </>
+            )}
             <BoatMeshes />
         </group>
     );

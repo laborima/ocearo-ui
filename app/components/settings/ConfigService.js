@@ -35,7 +35,9 @@ class ConfigService {
       debugWindOverride: false,
       debugWindSpeed: 10, // knots
       debugWindDirection: 0, // degrees
-      debugShowAxes: false
+      debugShowAxes: false,
+      showSailTrimSliders: true,
+      showRigging: true
     };
 
     this.configKey = 'ocearoConfig'; // Key used to store the config

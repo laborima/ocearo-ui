@@ -524,6 +524,42 @@ const ConfigPage = ({ onSave }) => {
                                         <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oBlue"></div>
                                     </label>
                                 </div>
+
+                                <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
+                                    <label className="flex items-center justify-between cursor-pointer">
+                                        <div className="space-y-1">
+                                            <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.sailTrimSliders')}</span>
+                                            <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
+                                                {config.showSailTrimSliders !== false ? t('settings.visible') : t('settings.hidden')}
+                                            </p>
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={config.showSailTrimSliders !== false}
+                                            onChange={(e) => updateConfig({ showSailTrimSliders: e.target.checked })}
+                                        />
+                                        <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oBlue"></div>
+                                    </label>
+                                </div>
+
+                                <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
+                                    <label className="flex items-center justify-between cursor-pointer">
+                                        <div className="space-y-1">
+                                            <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.rigging')}</span>
+                                            <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
+                                                {config.showRigging !== false ? t('settings.visible') : t('settings.hidden')}
+                                            </p>
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={config.showRigging !== false}
+                                            onChange={(e) => updateConfig({ showRigging: e.target.checked })}
+                                        />
+                                        <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oBlue"></div>
+                                    </label>
+                                </div>
                             </div>
 
                             <div className="space-y-4 pt-2">

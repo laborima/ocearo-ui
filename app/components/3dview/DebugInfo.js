@@ -1,11 +1,67 @@
-import React, { Suspense, useRef, useState, useEffect, useMemo } from 'react';
+import React, { Suspense, useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { useSignalKPaths } from '../hooks/useSignalK';
 import { useTranslation } from 'react-i18next';
 import { Html } from '@react-three/drei';
+import configService from '../settings/ConfigService';
+import { useOcearoContext } from '../context/OcearoContext';
+import { KNOTS_TO_MPS } from '../utils/UnitConversions';
 
 const toRadians = (degrees) => (degrees * Math.PI) / 180;
 
 const DebugInfo = (sampleData = true) => {
+    const { updateSignalKData } = useOcearoContext();
+    const [windOverride, setWindOverride] = useState(() => configService.get('debugWindOverride') || false);
+    const [overrideSpeed, setOverrideSpeed] = useState(() => configService.get('debugWindSpeed') ?? 10);
+    const [overrideDirection, setOverrideDirection] = useState(() => configService.get('debugWindDirection') ?? 0);
+
+    /**
+     * Pushes overridden wind values into the SignalK data stream
+     */
+    const applyWindOverride = useCallback((speed, direction) => {
+        const speedMps = speed * KNOTS_TO_MPS;
+        const directionRad = (direction * Math.PI) / 180;
+        updateSignalKData({
+            'environment.wind.speedTrue': speedMps,
+            'environment.wind.speedApparent': speedMps,
+            'environment.wind.angleTrueWater': directionRad,
+            'environment.wind.angleApparent': directionRad,
+            'environment.wind.directionTrue': directionRad,
+        });
+    }, [updateSignalKData]);
+
+    useEffect(() => {
+        if (!windOverride) return;
+        applyWindOverride(overrideSpeed, overrideDirection);
+        const interval = setInterval(() => {
+            applyWindOverride(overrideSpeed, overrideDirection);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [windOverride, overrideSpeed, overrideDirection, applyWindOverride]);
+
+    /**
+     * @param {boolean} enabled
+     */
+    const handleWindOverrideToggle = (enabled) => {
+        setWindOverride(enabled);
+        configService.set('debugWindOverride', enabled);
+    };
+
+    /**
+     * @param {number} speed - Wind speed in knots
+     */
+    const handleSpeedChange = (speed) => {
+        setOverrideSpeed(speed);
+        configService.set('debugWindSpeed', speed);
+    };
+
+    /**
+     * @param {number} direction - Wind direction in degrees
+     */
+    const handleDirectionChange = (direction) => {
+        setOverrideDirection(direction);
+        configService.set('debugWindDirection', direction);
+    };
+
     // Define all paths for subscription
     const debugPaths = useMemo(() => [
         'environment.wind.angleTrueWater',
@@ -104,7 +160,7 @@ const DebugInfo = (sampleData = true) => {
 
             <Html 
                 position={[5, 5, 0]} 
-                className="select-none pointer-events-none"
+                className="select-none"
             >
                 <div className="tesla-card p-6 min-w-[350px] bg-hud-bg backdrop-blur-xl border border-hud shadow-2xl rounded-3xl space-y-6">
                     <header className="flex items-center justify-between border-b border-hud pb-2">
@@ -180,6 +236,56 @@ const DebugInfo = (sampleData = true) => {
                                 <DebugRow label="Stbd DW" value={`${timeStbdDown}s`} />
                                 <DebugRow label="Stbd UW" value={`${timeStbdUp}s`} />
                             </div>
+                        </section>
+
+                        {/* Wind Override Controls */}
+                        <section className="space-y-3 pointer-events-auto">
+                            <div className="flex items-center justify-between">
+                                <div className="text-xs font-black uppercase tracking-[0.15em] text-oYellow/80">{t('settings.debugWindOverride')}</div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={windOverride}
+                                        onChange={(e) => handleWindOverrideToggle(e.target.checked)}
+                                    />
+                                    <div className="relative w-9 h-5 bg-hud-bg-elevated rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-oYellow"></div>
+                                </label>
+                            </div>
+                            {windOverride && (
+                                <div className="space-y-3 p-3 rounded-xl bg-oYellow/5 border border-oYellow/20">
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs font-black uppercase tracking-widest text-hud-muted">{t('settings.debugWindSpeed')}</span>
+                                            <span className="text-sm font-black text-oYellow bg-oYellow/10 px-2 py-0.5 rounded-md">{overrideSpeed} kn</span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            className="w-full h-1.5 bg-hud-bg-elevated rounded-lg appearance-none cursor-pointer accent-oYellow"
+                                            min="0"
+                                            max="60"
+                                            step="0.5"
+                                            value={overrideSpeed}
+                                            onChange={(e) => handleSpeedChange(parseFloat(e.target.value))}
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-xs font-black uppercase tracking-widest text-hud-muted">{t('settings.debugWindDirection')}</span>
+                                            <span className="text-sm font-black text-oYellow bg-oYellow/10 px-2 py-0.5 rounded-md">{overrideDirection}°</span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            className="w-full h-1.5 bg-hud-bg-elevated rounded-lg appearance-none cursor-pointer accent-oYellow"
+                                            min="0"
+                                            max="359"
+                                            step="1"
+                                            value={overrideDirection}
+                                            onChange={(e) => handleDirectionChange(parseInt(e.target.value, 10))}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </section>
                     </div>
                 </div>

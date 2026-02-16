@@ -13,15 +13,19 @@ import BottomTemperatureWidget from './widgets/BottomTemperatureWidget';
 import BottomEnvironmentalWidget from './widgets/BottomEnvironmentalWidget';
 import { useOcearoContext } from './context/OcearoContext';
 import { useTranslation } from 'react-i18next';
+import configService from './settings/ConfigService';
 
-const NavButton = ({ icon, onClick, label, textColor }) => (
+const NavButton = ({ icon, onClick, label, textColor, badgeColor }) => (
   <button
     onClick={onClick}
-    className={`${textColor} flex flex-col items-center justify-center p-2 rounded-xl tesla-hover transition-all duration-300 group`}
+    className={`${textColor} flex flex-col items-center justify-center p-2 rounded-xl tesla-hover transition-all duration-300 group relative`}
     aria-label={label}
   >
-    <div className="w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-hud-elevated transition-colors">
+    <div className="w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-hud-elevated transition-colors relative">
       <FontAwesomeIcon icon={icon} className="text-xl group-hover:scale-110 transition-transform" />
+      {badgeColor && (
+        <span className={`absolute top-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-leftPaneBg ${badgeColor} animate-pulse`} />
+      )}
     </div>
     <span className="text-xs font-black uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100 transition-opacity">
       {label}
@@ -34,6 +38,13 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
   const { nightMode } = useOcearoContext();
   const textColor = nightMode ? 'text-hud-main/90' : 'text-hud-main';
 
+  const config = configService.getAll();
+  const settingsBadgeColor = config.debugMode
+    ? 'bg-yellow-400'
+    : !config.signalKUrlSet
+      ? 'bg-oBlue'
+      : null;
+
   const navigationItems = [
     {
       section: 'left',
@@ -41,7 +52,8 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
         {
           icon: faShip,
           onClick: () => toggleSettings(),
-          label: t('nav.system')
+          label: t('nav.system'),
+          badgeColor: settingsBadgeColor
         }
       ]
     },
@@ -88,6 +100,7 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
         onClick={item.onClick}
         label={item.label}
         textColor={textColor}
+        badgeColor={item.badgeColor}
       />
     ));
   };

@@ -1,0 +1,11 @@
+Model Information:
+* title:	Low Poly Cargo Ship
+* source:	https://sketchfab.com/3d-models/low-poly-cargo-ship-4c22cbaf01c1427f8ab60b3a07b1b32c
+* author:	Javier_Fernandez (https://sketchfab.com/Javier.Fernandez)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Low Poly Cargo Ship" (https://sketchfab.com/3d-models/low-poly-cargo-ship-4c22cbaf01c1427f8ab60b3a07b1b32c) by Javier_Fernandez (https://sketchfab.com/Javier.Fernandez) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

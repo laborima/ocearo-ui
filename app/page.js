@@ -120,7 +120,7 @@ export default function Home() {
     const previousViewModeRef = useRef(null);
 
     const toggleSettings = useCallback(() => {
-        if (isSettingsView) {
+        if (rightView === 'settings') {
             toggleViewMode(previousViewModeRef.current || VIEW_MODES.BOAT);
             setIsSettingsView(false);
         } else {
@@ -129,7 +129,7 @@ export default function Home() {
             toggleViewMode(VIEW_MODES.APP);
             setIsSettingsView(true);
         }
-    }, [isSettingsView, currentViewMode, toggleViewMode, handleSetRightView]);
+    }, [rightView, currentViewMode, toggleViewMode, handleSetRightView]);
 
     // Memoize layout classes to prevent unnecessary recalculations
     const layoutClasses = useMemo(() => {
