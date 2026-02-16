@@ -2,7 +2,7 @@
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![License](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
-[Français 🇫🇷](README.md.fr)
+[Français 🇫🇷](README.fr.md)
 
 # Ocearo UI
 
