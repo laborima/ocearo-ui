@@ -6,6 +6,7 @@ on:
       - main
 
 permissions:
+  id-token: write
   contents: write
 
 jobs:
@@ -36,14 +37,11 @@ jobs:
           cp README.md out/
           cp README.fr.md out/
           cd out
-          # No npm pack here to avoid including the tarball in the package
 
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd out
-          npm publish --access public # Ensure package is set to public if needed
+          npm publish --access public
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
