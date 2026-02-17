@@ -24,7 +24,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: npm ci  # Uses package-lock.json for deterministic installs
+        run: npm ci
 
       - name: Build project
         env:
@@ -36,12 +36,11 @@ jobs:
           cp package.json out/
           cp README.md out/
           cp README.fr.md out/
-          cd out
 
       - name: Publish to npm
         run: |
           cd out
-          npm publish --access public
+          npm publish --access public --provenance
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
