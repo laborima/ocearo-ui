@@ -36,7 +36,7 @@ jobs:
           cp README.md out/
           cp README.fr.md out/
           cd out
-          npm pack  # Optional: Ensures packaging is correct
+          # No npm pack here to avoid including the tarball in the package
 
       - name: Publish to npm
         env:
