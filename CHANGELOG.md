@@ -1,4 +1,4 @@
-## [2.0.0] - 2026-02-16
+## [0.1.16] - 2026-02-18
 
 ### Added
 - Full 3D jib/genoa sail with dynamic camber, twist, and forestay visualization (`Jib3D.js`).
@@ -15,42 +15,22 @@
 - Translations for new settings in all 12 supported languages.
 - Debug wind override panel with speed and direction sliders for testing sail behavior.
 - Debug 3D axes toggle in debug panel.
+- Configurable units for speed (kn, km/h, mph, m/s), depth (m, ft, fa), temperature (°C, °F), and distance (nm, km, mi) in settings.
+- Preferred paths settings for wind speed, wind direction, and heading/COG with French/English labels.
+- Debug panel as a dedicated right-pane view accessible from the Apps menu when debug mode is active.
+- Introduced a dedicated Autopilot view with controller tooling and exposed it via the right pane menu for quick access.
+- Delivered a Navigation context plus Course widget that surfaces SignalK routes, waypoints, and course calculations directly on the dashboard.
+- Centralized weather handling with a Weather context, reusable fallback hooks, and an upgraded widget that can display forecast data when sensors are offline.
+- Enhanced the 3D experience with toggleable laylines, improved toolbar state management, AIS client authentication, and a dynamic day/night ocean skybox.
+- Added fuel log utilities, a refill modal, and richer motor/logbook presentations to capture consumption history and analytics.
+- Integrated `recharts` for data visualization and `framer-motion` for enhanced UI animations.
 
 ### Fixed
 - Fixed jib top (HEAD) attachment point alignment with masthead at y=10.0.
 - Fixed settings toggle using stale `isSettingsView` state instead of `rightView`.
 - Fixed wind override flickering caused by SignalK delta updates overwriting override values.
 - Fixed POL speed indicator showing speed unit instead of `%`.
-
-### Changed
-- Redesigned 3D sail visualization with physically-based camber and twist calculations.
-- Rigging reduced to essential control lines only (backstay, boom vang, cunningham, outhaul).
-- Sail trim sliders moved from inside boat model to compass level for better visibility.
-- Bumped version to 2.0.0.
-
-## [0.1.18] - 2026-02-13
-
-### Added
-- Added configurable units for speed (kn, km/h, mph, m/s), depth (m, ft, fa), temperature (°C, °F), and distance (nm, km, mi) in settings.
-- Added preferred paths settings for wind speed, wind direction, and heading/COG with French/English labels.
-- Added debug panel as a dedicated right-pane view accessible from the Apps menu when debug mode is active.
-- Added 3D axes toggle in the debug panel to display XYZ axes in the 3D view.
-- Added wind override controls (speed slider + direction slider) in the debug panel.
-
-### Fixed
-- Fixed wind override flickering caused by SignalK delta updates and sample data interval overwriting override values.
-- Fixed POL speed indicator showing speed unit instead of `%`.
-
-### Changed
-- All speed, depth, temperature, and distance displays now respect user-configured units across 3D view, dashboard widgets, and bottom bar.
-- Compass dial and boat rotation now use the preferred heading path from settings.
-- Preferred paths radio options in settings now display translated labels instead of raw SignalK path names.
-- Moved debug info from a 3D popup overlay to a proper right-pane view with scrollable sections.
-
-## [0.1.17] - 2026-02-12
-
-### Fixed
-- Fixed tank data mismatch between 3D view and dashboard widget by centralizing all tank sample data in SampleData.js and removing widget-level debug fallbacks.
+- Fixed tank data mismatch between 3D view and dashboard widget by centralizing all tank sample data in SampleData.js.
 - Fixed battery monitor displaying misleading default values (12V/18%/18H) when no real data is available; now shows 0V/0% and N/A for endurance.
 - Fixed battery percentage text (100%) overlapping adjacent labels by reducing font size and clamping indicator position.
 - Fixed logbook view showing fake sample entries when not in debug mode.
@@ -59,32 +39,23 @@
 - Fixed motor view not taking full available height in the right pane.
 
 ### Changed
-- Redesigned AIS vessel info panel as a compact floating overlay with close button and horizontal label/value layout.
-- Redesigned 3D view tank/battery indicators with Tesla-style mini gauge bars, transparent background, and proper sizing.
-- Made 3D toolbar background fully transparent, removing opaque backdrop.
-- Increased clock and tank/battery indicator sizes in 3D view to match toolbar proportions.
-- Unified top toolbar row alignment: toolbar, clock, and indicators now share a single flex container for consistent vertical alignment.
-- Debug data injection in OcearoContext now only activates when debugMode is explicitly enabled, even on SignalK connection failure.
-
-## [0.1.16] - 2026-01-07
-
-### Added
-- Introduced a dedicated Autopilot view with controller tooling and exposed it via the right pane menu for quick access.
-- Delivered a Navigation context plus Course widget that surfaces SignalK routes, waypoints, and course calculations directly on the dashboard.
-- Centralized weather handling with a Weather context, reusable fallback hooks, and an upgraded widget that can display forecast data when sensors are offline.
-- Enhanced the 3D experience with toggleable laylines, improved toolbar state management, AIS client authentication, and a dynamic day/night ocean skybox.
-- Added fuel log utilities, a refill modal, and richer motor/logbook presentations to capture consumption history and analytics.
-- Checked in documentation specs, new 3D vessel models, and AIS test scaffolding to support future UX/content work.
-- Integrated `recharts` for data visualization and `framer-motion` for enhanced UI animations.
-
-### Changed
 - Major infrastructure upgrade: Migrated to **Next.js 16**, **React 19**, and **Tailwind CSS v4**.
 - Modernized CSS architecture by moving theme configurations to CSS variables in `globals.css` and adopting the new `@theme` block.
 - Updated core dependencies: `three` (0.182.0), `@react-three/fiber` (9.4.2), and `@react-three/drei` (10.7.7).
 - Refactored PostCSS configuration to use `@tailwindcss/postcss`.
 - Bumped FontAwesome icons to version 7.1.0.
 - Updated tide data year to 2026 for La Rochelle.
-- Bumped the application version to 0.1.16 in both root and public manifests.
+- Redesigned 3D sail visualization with physically-based camber and twist calculations.
+- Rigging reduced to essential control lines only (backstay, boom vang, cunningham, outhaul).
+- Sail trim sliders moved from inside boat model to compass level for better visibility.
+- All speed, depth, temperature, and distance displays now respect user-configured units across 3D view, dashboard widgets, and bottom bar.
+- Compass dial and boat rotation now use the preferred heading path from settings.
+- Moved debug info from a 3D popup overlay to a proper right-pane view with scrollable sections.
+- Redesigned AIS vessel info panel as a compact floating overlay with close button and horizontal label/value layout.
+- Redesigned 3D view tank/battery indicators with Tesla-style mini gauge bars, transparent background, and proper sizing.
+- Made 3D toolbar background fully transparent, removing opaque backdrop.
+- Unified top toolbar row alignment: toolbar, clock, and indicators now share a single flex container for consistent vertical alignment.
+- Debug data injection in OcearoContext now only activates when debugMode is explicitly enabled, even on SignalK connection failure.
 
 ## [0.1.15] - 2025-10-27
 

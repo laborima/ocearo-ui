@@ -14,7 +14,7 @@ Inspiré par l'interface de l'autopilote Tesla, ce système offre une expérienc
 
 ---
 
-## **Dernières mises à jour (v2.0.0)**
+## **Dernières mises à jour (v0.1.16)**
 
 - **Physique 3D avancée et Voiles** : Foc/génois et grand-voile en 3D complète avec cambrure dynamique, vrillage et visualisation de l'étai.
 - **Gréement dynamique et tensions** : Visualisation en temps réel des lignes de gréement (pataras, hale-bas, cunningham, bordure) avec des dégradés de couleurs basés sur la tension.

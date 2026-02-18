@@ -14,7 +14,7 @@ Inspired by Tesla's autopilot UI, this system delivers a futuristic and streamli
 
 ---
 
-## **Latest Updates (v2.0.0)**
+## **Latest Updates (v0.1.16)**
 
 - **Advanced 3D Physics & Sails**: Full 3D jib/genoa and mainsail with dynamic camber, twist, and forestay visualization.
 - **Dynamic Rigging & Tensions**: Real-time visualization of rigging lines (backstay, vang, cunningham, outhaul) with tension-based color gradients.
