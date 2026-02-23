@@ -1,0 +1,3 @@
+:HL["/ocearo-ui/_next/static/chunks/6926ca3c1cb43721.css","style"]
+:HC["/",""]
+0:{"buildId":"j0dnutZt7X7hNE629Eyy1","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":true},"staleTime":300}
