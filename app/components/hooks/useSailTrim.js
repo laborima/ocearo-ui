@@ -1,6 +1,7 @@
 'use client';
 import { useState, useCallback, useRef, useMemo } from 'react';
-import { useSignalKPath } from './useSignalK';
+import { useSignalKPath, useSignalKPaths } from './useSignalK';
+import configService from '../settings/ConfigService';
 
 /**
  * Default sail trim state values.
@@ -24,10 +25,27 @@ const DEFAULT_SAIL_TRIM = {
 const useSailTrim = () => {
     const [trimState, setTrimState] = useState(DEFAULT_SAIL_TRIM);
 
-    const trueWindSpeed = useSignalKPath('environment.wind.speedTrue', 0);
-    const trueWindAngle = useSignalKPath('environment.wind.angleTrueWater', 0);
-    const appWindAngle = useSignalKPath('environment.wind.angleApparent', 0);
-    const appWindSpeed = useSignalKPath('environment.wind.speedApparent', 0);
+    const preferredSpeed = configService.get('preferredWindSpeedPath') || 'speedTrue';
+    const preferredDir = configService.get('preferredWindDirectionPath') || 'angleTrueWater';
+
+    const windPaths = useMemo(() => [
+        `environment.wind.${preferredSpeed}`,
+        `environment.wind.${preferredDir}`,
+        'environment.wind.speedTrue',
+        'environment.wind.angleTrueWater',
+        'environment.wind.angleApparent',
+        'environment.wind.speedApparent'
+    ], [preferredSpeed, preferredDir]);
+
+    const skWind = useSignalKPaths(windPaths);
+
+    const trueWindSpeed = skWind[`environment.wind.${preferredSpeed}`]
+        ?? skWind['environment.wind.speedTrue'] ?? 0;
+    const trueWindAngle = (preferredDir === 'directionTrue' || preferredDir === 'angleTrueGround')
+        ? (skWind[`environment.wind.${preferredDir}`] ?? skWind['environment.wind.angleTrueWater'] ?? 0)
+        : (skWind[`environment.wind.${preferredDir}`] ?? skWind['environment.wind.angleTrueWater'] ?? 0);
+    const appWindAngle = skWind['environment.wind.angleApparent'] ?? 0;
+    const appWindSpeed = skWind['environment.wind.speedApparent'] ?? 0;
 
     /**
      * Updates a single trim parameter by key.

@@ -33,7 +33,7 @@ export default function WeatherWidget() {
     const humidityDisplay = weather.humidity != null ? Math.round(weather.humidity * 100) : null;
     const pressureDisplay = weather.pressure != null ? Math.round(weather.pressure / 100) : null;
     const windSpeedDisplay = weather.windSpeed != null ? convertSpeedUnit(weather.windSpeed) : null;
-    const windDirDisplay = weather.windDirection != null ? Math.round((weather.windDirection * 180 / Math.PI) % 360) : null;
+    const windDirDisplay = weather.windDirection != null ? Math.round(((weather.windDirection * 180 / Math.PI) % 360 + 360) % 360) : null;
     const description = weather.description;
     let dataSource = weather.source;
 

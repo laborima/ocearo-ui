@@ -1,6 +1,6 @@
 {
   "name": "ocearo-ui",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "private": false,
   "description": "Ocean Robot UI: 3D visualization dashboard for signalk",
   "license": "Apache-2.0",
@@ -40,9 +40,17 @@
     "three": "^0.182.0"
   },
   "devDependencies": {
-    "eslint": "^9",
-    "eslint-config-next": "^16.1.1",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "16.1.6",
     "tailwindcss": "^4.1.18"
+  },
+  "overrides": {
+    "ajv": "^8.18.0",
+    "minimatch": "^10.2.1",
+    "glob": "^11.0.0",
+    "rimraf": "^6.0.0",
+    "flat-cache": "^6.0.0",
+    "file-entry-cache": "^9.0.0"
   },
   "signalk": {
     "appIcon": "./icons/ocearo.webp",

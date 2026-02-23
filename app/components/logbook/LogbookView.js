@@ -60,6 +60,7 @@ const LogbookView = () => {
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [analysisType, setAnalysisType] = useState(null);
+  const [aiEntryLoading, setAiEntryLoading] = useState(false);
 
   // Check if OcearoCore is enabled from config
   const config = configService.getAll();
@@ -219,7 +220,8 @@ const LogbookView = () => {
     }
 
     try {
-      setLoading(true);
+      setAiEntryLoading(true);
+      setError(null);
       
       // Collect current boat data for OcearoCore analysis using current values
       const currentData = {
@@ -241,16 +243,22 @@ const LogbookView = () => {
       };
 
       // Call OcearoCore API to generate intelligent logbook entry
-      await generateOcearoCoreLogbookEntry(currentData);
+      const result = await generateOcearoCoreLogbookEntry(currentData);
       
       // Refresh entries after successful generation
-      fetchLogbookEntriesData();
+      await fetchLogbookEntriesData();
+
+      if (result && result.analysis) {
+        setAnalysisResult(result.analysis);
+        setAnalysisType('auto-entry');
+        setActiveTab('analysis');
+      }
       
     } catch (err) {
       const errorMessage = handleOcearoCoreError(err, 'OcearoCore entry generation');
       setError(errorMessage);
     } finally {
-      setLoading(false);
+      setAiEntryLoading(false);
     }
   }, [ocearoCoreEnabled, skValues, fetchLogbookEntriesData]);
 
@@ -383,12 +391,12 @@ const LogbookView = () => {
         <div className="flex space-x-3">
           {ocearoCoreEnabled && (
             <button 
-              className="bg-oGreen/10 text-oGreen hover:bg-oGreen/20 px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft border border-oGreen/20"
+              className="bg-oGreen/10 text-oGreen hover:bg-oGreen/20 px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft border border-oGreen/20 disabled:opacity-50"
               onClick={addOcearoCoreEntry}
-              disabled={loading}
+              disabled={aiEntryLoading || loading}
             >
-              <FontAwesomeIcon icon={faRobot} className="mr-2" />
-              {t('logbook.aiEntry')}
+              <FontAwesomeIcon icon={faRobot} className={`mr-2 ${aiEntryLoading ? 'animate-spin' : ''}`} />
+              {aiEntryLoading ? t('logbook.aiEntryGenerating') : t('logbook.aiEntry')}
             </button>
           )}
           <button 
@@ -473,21 +481,21 @@ const LogbookView = () => {
           <div className="flex space-x-3">
             {ocearoCoreEnabled && (
               <button 
-                className="bg-oGreen/10 text-oGreen hover:bg-oGreen/20 px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft border border-oGreen/20"
+                className="bg-oGreen/10 text-oGreen hover:bg-oGreen/20 px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft border border-oGreen/20 disabled:opacity-50"
                 onClick={addOcearoCoreEntry}
-                disabled={loading}
+                disabled={aiEntryLoading || loading}
               >
-                <FontAwesomeIcon icon={faRobot} className="mr-2" />
-                {t('logbook.aiAuto')}
+                <FontAwesomeIcon icon={faRobot} className={`mr-2 ${aiEntryLoading ? 'animate-spin' : ''}`} />
+                {aiEntryLoading ? t('logbook.aiEntryGenerating') : t('logbook.aiAuto')}
               </button>
             )}
             <button 
               className="bg-oBlue hover:bg-blue-600 text-hud-main px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft"
-              onClick={addEntry}
+              onClick={showAddEntryModal}
               disabled={loading}
             >
               <FontAwesomeIcon icon={faPlus} className="mr-2" />
-              {t('logbook.manual')}
+              {t('logbook.add')}
             </button>
           </div>
         </div>
@@ -618,92 +626,126 @@ const LogbookView = () => {
       )}
 
       {/* Analysis Results */}
-      {analysisResult && !analysisLoading && (
-        <div className="tesla-card p-6 shadow-xl animate-fade-in">
-          <div className="flex items-center mb-6 border-b border-hud pb-4">
-            <FontAwesomeIcon icon={faChartLine} className="text-oGreen mr-3 text-sm" />
-            <h4 className="text-xs font-black text-hud-main uppercase tracking-widest">{t('logbook.operationReport')} {analysisType}</h4>
+      {analysisResult && !analysisLoading && (() => {
+        // analysis field may be an object {speech, text, recommendations, expertAdvice, summary} (weather)
+        // or a string (other types), or absent (sail: {course, settings, timestamp})
+        const analysisObj = analysisResult.analysis && typeof analysisResult.analysis === 'object'
+          ? analysisResult.analysis : null;
+        const analysisStr = typeof analysisResult.analysis === 'string' ? analysisResult.analysis : null;
+
+        const isSailResult = analysisResult.settings !== undefined && !analysisResult.analysis;
+
+        const mainText = analysisStr
+          || analysisObj?.text
+          || analysisObj?.summary
+          || analysisResult.aiAnalysis
+          || (typeof analysisResult.summary === 'string' ? analysisResult.summary : null)
+          || (isSailResult ? (analysisResult.settings?.analysis?.speech || analysisResult.course?.analysis?.speech || null) : null);
+
+        const speechText = analysisResult.speechText
+          || (typeof analysisResult.speech === 'string' ? analysisResult.speech : null)
+          || analysisObj?.speech
+          || (isSailResult ? (analysisResult.settings?.analysis?.speech || analysisResult.course?.analysis?.speech) : null);
+
+        const rawRecs = analysisResult.recommendations || analysisObj?.recommendations
+          || (isSailResult && analysisResult.settings?.adjustments?.length > 0
+            ? analysisResult.settings.adjustments.map(adj => adj.action || adj.message || JSON.stringify(adj))
+            : null);
+        const recommendations = Array.isArray(rawRecs) ? rawRecs : null;
+
+        const rawInsights = analysisResult.insights || analysisObj?.expertAdvice;
+        const insights = Array.isArray(rawInsights) ? rawInsights : null;
+
+        const technicalData = analysisResult.data || analysisResult.weatherData || analysisResult.assessment ||
+          (isSailResult ? { course: analysisResult.course, settings: analysisResult.settings } : null);
+
+        return (
+          <div className="tesla-card p-6 shadow-xl animate-fade-in">
+            <div className="flex items-center mb-6 border-b border-hud pb-4">
+              <FontAwesomeIcon icon={faChartLine} className="text-oGreen mr-3 text-sm" />
+              <h4 className="text-xs font-black text-hud-main uppercase tracking-widest">{t('logbook.operationReport')} {analysisType}</h4>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Display main analysis text */}
+              {mainText && (
+                <div className="tesla-card bg-hud-bg p-4 border-l-2 border-oBlue/30 shadow-subtle">
+                  <h5 className="text-xs font-black text-oBlue mb-3 uppercase tracking-widest">{t('logbook.executiveSummary')}</h5>
+                  <p className="text-hud-secondary text-xs font-bold leading-relaxed italic normal-case">
+                    {mainText}
+                  </p>
+                </div>
+              )}
+
+              {/* Insights & Recommendations */}
+              {(insights || recommendations) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {insights && (
+                    <div className="tesla-card bg-hud-bg p-4 shadow-subtle">
+                      <h5 className="text-xs font-black text-cyan-400 mb-3 uppercase tracking-widest flex items-center">
+                        <FontAwesomeIcon icon={faRobot} className="mr-2 text-xs" />
+                        {t('logbook.strategicInsights')}
+                      </h5>
+                      <ul className="space-y-2">
+                        {insights.map((item, i) => (
+                          <li key={i} className="text-xs font-bold text-hud-secondary normal-case flex items-start">
+                            <span className="text-oBlue mr-2 opacity-50">›</span>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {recommendations && (
+                    <div className="tesla-card bg-hud-bg p-4 shadow-subtle">
+                      <h5 className="text-xs font-black text-oGreen mb-3 uppercase tracking-widest flex items-center">
+                        <FontAwesomeIcon icon={faChartLine} className="mr-2 text-xs" />
+                        {t('logbook.operationalAdvice')}
+                      </h5>
+                      <ul className="space-y-2">
+                        {recommendations.map((item, i) => (
+                          <li key={i} className="text-xs font-bold text-hud-secondary normal-case flex items-start">
+                            <span className="text-oGreen mr-2 opacity-50">✓</span>
+                            {typeof item === 'string' ? item : item.message || JSON.stringify(item)}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Display speech text if available */}
+              {speechText && (
+                <div className="bg-oBlue/5 p-4 rounded-sm border border-oBlue/10 shadow-soft">
+                  <h5 className="text-xs font-black text-oBlue mb-2 uppercase tracking-widest flex items-center">
+                    <FontAwesomeIcon icon={faRobot} className="mr-2 animate-soft-pulse" />
+                    {t('logbook.voiceTelemetry')}
+                  </h5>
+                  <p className="text-hud-secondary text-xs font-bold leading-relaxed italic normal-case">{speechText}</p>
+                </div>
+              )}
+
+              {/* Display technical data */}
+              {technicalData && (
+                <div className="tesla-card bg-hud-bg p-4 border border-hud">
+                  <h5 className="text-xs font-black text-hud-secondary mb-3 uppercase tracking-widest">{t('logbook.rawTelemetryData')}</h5>
+                  <pre className="text-oGreen/70 text-xs font-mono overflow-auto max-h-40 font-bold scrollbar-thin">
+                    {JSON.stringify(technicalData, null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              {/* Timestamp */}
+              {analysisResult.timestamp && (
+                <div className="text-hud-dim text-xs font-black text-right uppercase tracking-tighter">
+                  {t('logbook.generated')} {new Date(analysisResult.timestamp).toLocaleString()} // OCEAROCORE V2.4
+                </div>
+              )}
+            </div>
           </div>
-          
-          <div className="space-y-6">
-            {/* Display main analysis text */}
-            {(analysisResult.analysis || analysisResult.aiAnalysis || (typeof analysisResult.summary === 'string' ? analysisResult.summary : null)) && (
-              <div className="tesla-card bg-hud-bg p-4 border-l-2 border-oBlue/30 shadow-subtle">
-                <h5 className="text-xs font-black text-oBlue mb-3 uppercase tracking-widest">{t('logbook.executiveSummary')}</h5>
-                <p className="text-hud-secondary text-xs font-bold leading-relaxed italic normal-case">
-                  {analysisResult.analysis || analysisResult.aiAnalysis || analysisResult.summary}
-                </p>
-              </div>
-            )}
-
-            {/* Insights & Recommendations */}
-            {(analysisResult.insights || analysisResult.recommendations) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {analysisResult.insights && (
-                  <div className="tesla-card bg-hud-bg p-4 shadow-subtle">
-                    <h5 className="text-xs font-black text-cyan-400 mb-3 uppercase tracking-widest flex items-center">
-                      <FontAwesomeIcon icon={faRobot} className="mr-2 text-xs" />
-                      {t('logbook.strategicInsights')}
-                    </h5>
-                    <ul className="space-y-2">
-                      {analysisResult.insights.map((item, i) => (
-                        <li key={i} className="text-xs font-bold text-hud-secondary normal-case flex items-start">
-                          <span className="text-oBlue mr-2 opacity-50">›</span>
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {analysisResult.recommendations && (
-                  <div className="tesla-card bg-hud-bg p-4 shadow-subtle">
-                    <h5 className="text-xs font-black text-oGreen mb-3 uppercase tracking-widest flex items-center">
-                      <FontAwesomeIcon icon={faChartLine} className="mr-2 text-xs" />
-                      {t('logbook.operationalAdvice')}
-                    </h5>
-                    <ul className="space-y-2">
-                      {analysisResult.recommendations.map((item, i) => (
-                        <li key={i} className="text-xs font-bold text-hud-secondary normal-case flex items-start">
-                          <span className="text-oGreen mr-2 opacity-50">✓</span>
-                          {typeof item === 'string' ? item : item.message || JSON.stringify(item)}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Display speech text if available */}
-            {(analysisResult.speechText || analysisResult.speech) && (
-              <div className="bg-oBlue/5 p-4 rounded-sm border border-oBlue/10 shadow-soft">
-                <h5 className="text-xs font-black text-oBlue mb-2 uppercase tracking-widest flex items-center">
-                  <FontAwesomeIcon icon={faRobot} className="mr-2 animate-soft-pulse" />
-                  {t('logbook.voiceTelemetry')}
-                </h5>
-                <p className="text-hud-secondary text-xs font-bold leading-relaxed italic normal-case">{analysisResult.speechText || analysisResult.speech}</p>
-              </div>
-            )}
-
-            {/* Display technical data */}
-            {(analysisResult.data || analysisResult.weatherData || analysisResult.assessment) && (
-              <div className="tesla-card bg-hud-bg p-4 border border-hud">
-                <h5 className="text-xs font-black text-hud-secondary mb-3 uppercase tracking-widest">{t('logbook.rawTelemetryData')}</h5>
-                <pre className="text-oGreen/70 text-xs font-mono overflow-auto max-h-40 font-bold scrollbar-thin">
-                  {JSON.stringify(analysisResult.data || analysisResult.assessment || analysisResult.weatherData, null, 2)}
-                </pre>
-              </div>
-            )}
-
-            {/* Timestamp */}
-            {analysisResult.timestamp && (
-              <div className="text-hud-dim text-xs font-black text-right uppercase tracking-tighter">
-                {t('logbook.generated')} {new Date(analysisResult.timestamp).toLocaleString()} // OCEAROCORE V2.4
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Placeholder */}
       {!analysisResult && !analysisLoading && (

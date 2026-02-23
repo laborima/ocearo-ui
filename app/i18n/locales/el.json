@@ -512,6 +512,8 @@
     "liters": "Λίτρα",
     "refillCost": "Κόστος ανεφοδιασμού",
     "hmr": "Ώρες",
+    "avgConsumption": "Μέση κατανάλωση",
+    "fuelAutonomy": "Αυτονομία",
     "additive": "Πρόσθ.",
     "warningsSummary": "Σύνοψη ειδοποιήσεων",
     "allSystemsNominal": "Όλα τα συστήματα ονομαστικά",
@@ -521,8 +523,10 @@
   "fuelLog": {
     "logFuelRefill": "Καταγραφή ανεφοδιασμού",
     "litersAdded": "Λίτρα που προστέθηκαν *",
-    "cost": "Κόστος (€) *",
+    "cost": "Κόστος (€)",
+    "optional": "προαιρετικό",
     "currentEngineHours": "Τρέχουσες ώρες κινητήρα *",
+    "noSignalkHours": "Ώρες κινητήρα μη διαθέσιμες από SignalK",
     "hoursSinceLastRefill": "Ώρες από τον τελευταίο ανεφοδιασμό",
     "signalkValue": "Τιμή SignalK:",
     "lastRefillAt": "Τελευταίος ανεφοδιασμός στις",
@@ -532,7 +536,8 @@
     "save": "Αποθήκευση",
     "errorLiters": "Εισάγετε έγκυρο αριθμό λίτρων",
     "errorCost": "Εισάγετε έγκυρο κόστος",
-    "errorEngineHours": "Εισάγετε τις ώρες κινητήρα"
+    "errorEngineHours": "Εισάγετε τις ώρες κινητήρα",
+    "autoCalculated": "Υπολογίστηκε αυτόματα"
   },
   "errors": {
     "errorGeneratingUrl": "Σφάλμα κατά τη δημιουργία του URL της εφαρμογής",

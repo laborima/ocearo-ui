@@ -512,6 +512,8 @@
     "liters": "Litry",
     "refillCost": "Koszt tankowania",
     "hmr": "Godz.",
+    "avgConsumption": "Śr. zużycie",
+    "fuelAutonomy": "Zasięg",
     "additive": "Dod.",
     "warningsSummary": "Podsumowanie alarmów",
     "allSystemsNominal": "Wszystkie systemy nominalne",
@@ -521,8 +523,10 @@
   "fuelLog": {
     "logFuelRefill": "Zarejestruj tankowanie",
     "litersAdded": "Zatankowane litry *",
-    "cost": "Koszt (€) *",
+    "cost": "Koszt (€)",
+    "optional": "opcjonalne",
     "currentEngineHours": "Aktualne godziny silnika *",
+    "noSignalkHours": "Godziny silnika niedostępne w SignalK",
     "hoursSinceLastRefill": "Godziny od ostatniego tankowania",
     "signalkValue": "Wartość SignalK:",
     "lastRefillAt": "Ostatnie tankowanie przy",
@@ -532,7 +536,8 @@
     "save": "Zapisz",
     "errorLiters": "Wprowadź prawidłową liczbę litrów",
     "errorCost": "Wprowadź prawidłowy koszt",
-    "errorEngineHours": "Wprowadź godziny silnika"
+    "errorEngineHours": "Wprowadź godziny silnika",
+    "autoCalculated": "Obliczone automatycznie"
   },
   "errors": {
     "errorGeneratingUrl": "Błąd generowania adresu URL aplikacji",

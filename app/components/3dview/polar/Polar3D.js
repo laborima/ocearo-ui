@@ -3,15 +3,9 @@ import { Line } from '@react-three/drei';
 import { Vector3, CatmullRomCurve3, Group, MathUtils } from 'three';
 import { useFrame } from '@react-three/fiber';
 import polarData from '@/public/boats/default/polar/polar.json';
-import { 
-    convertSpeed, 
-    convertWindSpeed, 
-    oBlue, 
-    oGreen, 
-    oRed, 
-    useOcearoContext 
-} from '../../context/OcearoContext';
-import { useSignalKPath, useSignalKPaths } from '../../hooks/useSignalK';
+import { convertWindSpeed, oBlue, oGreen, oRed } from '../../context/OcearoContext';
+import { useSignalKPaths } from '../../hooks/useSignalK';
+import configService from '../../settings/ConfigService';
 
 // Constants
 const CONSTANTS = {
@@ -206,29 +200,65 @@ function PolarProjection() {
     const previousAngles = useRef([]);
     const lastSOG = useRef(CONSTANTS.DEFAULT_SOG);
 
-    // Use subscription model for performance data
+    // Read preferred paths from settings — same logic as WindSector3D / useSailTrim
+    const preferredWindSpeed = configService.get('preferredWindSpeedPath') || 'speedTrue';
+    const preferredWindDir = configService.get('preferredWindDirectionPath') || 'angleTrueWater';
+
+    // Subscribe to all candidate wind paths + navigation SOG
     const polarPaths = useMemo(() => [
-        'environment.wind.angleApparent',
+        `environment.wind.${preferredWindDir}`,
+        `environment.wind.${preferredWindSpeed}`,
+        'environment.wind.angleTrueWater',
+        'environment.wind.angleTrueGround',
+        'environment.wind.speedTrue',
         'environment.wind.speedOverGround',
-        'navigation.speedOverGround'
-    ], []);
+        'navigation.speedOverGround',
+        'navigation.headingTrue',
+        'navigation.courseOverGroundTrue'
+    ], [preferredWindDir, preferredWindSpeed]);
 
     const skValues = useSignalKPaths(polarPaths);
 
-    const appWindAngle = - (skValues['environment.wind.angleApparent'] || 0);
-    const trueWindSpeed = useMemo(() => convertWindSpeed(skValues['environment.wind.speedOverGround']) || 0, [skValues]);
+    // True wind angle (relative to vessel) for rotating the polar diagram.
+    // The polar is defined vs. true wind, so we must use a true-wind angle path.
+    // If the preferred path is absolute (directionTrue), derive the relative angle
+    // by subtracting the vessel heading — same fallback chain as WindSector3D.
+    const trueWindAngle = useMemo(() => {
+        const isAbsolute = preferredWindDir === 'directionTrue';
+
+        if (isAbsolute) {
+            const dirTrue = skValues['environment.wind.directionTrue'];
+            if (dirTrue != null) {
+                const heading = skValues['navigation.headingTrue']
+                    ?? skValues['navigation.courseOverGroundTrue']
+                    ?? 0;
+                return -(dirTrue - heading);
+            }
+            const rel = skValues['environment.wind.angleTrueGround']
+                ?? skValues['environment.wind.angleTrueWater'];
+            return rel != null ? -rel : 0;
+        }
+
+        const rel = skValues[`environment.wind.${preferredWindDir}`]
+            ?? skValues['environment.wind.angleTrueWater']
+            ?? skValues['environment.wind.angleTrueGround'];
+        return rel != null ? -rel : 0;
+    }, [skValues, preferredWindDir]);
+
+    // True wind speed in knots — polar.speeds are in knots, SignalK values are m/s
+    const trueWindSpeed = useMemo(() => {
+        const raw = skValues[`environment.wind.${preferredWindSpeed}`]
+            ?? skValues['environment.wind.speedTrue']
+            ?? skValues['environment.wind.speedOverGround'];
+        return convertWindSpeed(raw) || 0;
+    }, [skValues, preferredWindSpeed]);
+
     const sog = skValues['navigation.speedOverGround'] || CONSTANTS.DEFAULT_SOG;
-    
-    // Add a ref to track the previous wind speed for detecting changes
+
     const prevWindSpeedRef = useRef(trueWindSpeed);
-
-    // React Three Fiber handles automatic cleanup of Three.js objects
-    // We will use React's key prop to force remounting of components when needed
-
-    // State to force remounting of polar plots when needed
     const [redrawKey, setRedrawKey] = useState(Date.now());
     const redrawIntervalRef = useRef(null);
-    
+
     useEffect(() => {
         const initialPlots = Array.from({ length: CONSTANTS.PLOTS_COUNT }, (_, index) => ({
             id: index,
@@ -238,15 +268,12 @@ function PolarProjection() {
         setPlots(initialPlots);
         groupRefs.current = initialPlots.map(() => new Group());
         previousAngles.current = Array(CONSTANTS.PLOTS_COUNT).fill(0);
-        
-        // Set up interval to periodically force redraw of plots (every 2 minutes)
+
         redrawIntervalRef.current = setInterval(() => {
             setRedrawKey(Date.now());
-            frameCount.current = 0; // Reset frame counter when redrawing
-            console.log('Forcing redraw of polar plots');
-        }, 120000); // 120 seconds = 2 minutes
-        
-        // Cleanup on component unmount
+            frameCount.current = 0;
+        }, 120000);
+
         return () => {
             if (redrawIntervalRef.current) {
                 clearInterval(redrawIntervalRef.current);
@@ -254,27 +281,19 @@ function PolarProjection() {
         };
     }, []);
 
-    // Effect to recreate polar curves when wind speed changes significantly
+    // Recreate polar curves when wind speed changes significantly (> 5 kn)
     useEffect(() => {
-        // If wind speed has changed significantly (more than 5 knots)
         if (Math.abs(prevWindSpeedRef.current - trueWindSpeed) > 5) {
-            console.log(`Wind speed changed from ${prevWindSpeedRef.current} to ${trueWindSpeed}, recreating polar curves`);
-            
-            // Force redraw by updating the key
             setRedrawKey(Date.now());
-            
-            // Reset the frame counter
             frameCount.current = 0;
-            
-            // Update the ref with current wind speed
             prevWindSpeedRef.current = trueWindSpeed;
         }
     }, [trueWindSpeed]);
 
-    useFrame((_, delta) => {
+    useFrame(() => {
         frameCount.current += 1;
         lastSOG.current = MathUtils.lerp(lastSOG.current, sog, CONSTANTS.SOG_SMOOTHING_FACTOR);
-        
+
         plots.forEach((plot, index) => {
             const group = groupRefs.current[index];
             if (!group) return;
@@ -284,18 +303,16 @@ function PolarProjection() {
             if (remainingTime > 0) {
                 const prevAngle = previousAngles.current[index];
                 const interpolatedAngle = MathUtils.lerp(
-                    prevAngle, 
-                    appWindAngle, 
+                    prevAngle,
+                    trueWindAngle,
                     CONSTANTS.ROTATION_INTERPOLATION_FACTOR
                 );
-                
+
                 group.rotation.set(0, interpolatedAngle, 0);
                 previousAngles.current[index] = interpolatedAngle;
             }
         });
     });
-    
-
 
     return (
         <>

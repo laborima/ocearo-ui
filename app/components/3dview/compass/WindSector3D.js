@@ -9,6 +9,7 @@ import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { convertSpeedUnit, oBlue, oGreen, oNight, useOcearoContext } from '../../context/OcearoContext';
 import { useSignalKPaths } from '../../hooks/useSignalK';
+import configService from '../../settings/ConfigService';
 import { Vector3, DoubleSide } from 'three';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -107,20 +108,74 @@ WindArrow.propTypes = {
  * @param {number} outerRadius - Outer radius of the compass dial
  */
 const WindSector3D = ({ outerRadius }) => {
+    // Read preferred paths from settings
+    const preferredWindSpeed = configService.get('preferredWindSpeedPath') || 'speedTrue';
+    const preferredWindDir = configService.get('preferredWindDirectionPath') || 'directionTrue';
+    const preferredHeading = configService.get('preferredHeadingPath') || 'courseOverGroundTrue';
+
     // Subscribe to all relevant wind paths
     const windPaths = useMemo(() => [
         'environment.wind.angleTrueGround',
         'environment.wind.speedOverGround',
+        'environment.wind.directionTrue',
+        'environment.wind.speedTrue',
         'environment.wind.angleApparent',
-        'environment.wind.speedApparent'
+        'environment.wind.speedApparent',
+        'environment.wind.angleTrueWater',
+        'navigation.headingTrue',
+        'navigation.headingMagnetic',
+        'navigation.courseOverGroundTrue',
+        'navigation.courseOverGroundMagnetic'
     ], []);
 
     const skValues = useSignalKPaths(windPaths);
 
-    // Get wind data from subscribed values and convert to appropriate units
-    // Note: Math.PI/2 adjustment aligns with compass coordinate system
-    const trueWindAngle = useMemo(() => (Math.PI / 2 - (skValues['environment.wind.angleTrueGround'] || 0)), [skValues]);
-    const trueWindSpeed = useMemo(() => convertSpeedUnit(skValues['environment.wind.speedOverGround']) || 0, [skValues]);
+    // Compute true wind angle relative to vessel using preferred direction path.
+    // - If preferred path is a relative angle (angleTrueWater, angleTrueGround): use directly.
+    // - If preferred path is an absolute direction (directionTrue): subtract vessel heading.
+    // Falls back through angleTrueGround → directionTrue → 0.
+    const trueWindAngle = useMemo(() => {
+        const isAbsolute = preferredWindDir === 'directionTrue';
+
+        if (isAbsolute) {
+            const dirTrue = skValues[`environment.wind.${preferredWindDir}`]
+                ?? skValues['environment.wind.directionTrue'];
+            if (dirTrue != null) {
+                const heading = skValues[`navigation.${preferredHeading}`]
+                    ?? skValues['navigation.headingTrue']
+                    ?? skValues['navigation.courseOverGroundTrue']
+                    ?? 0;
+                return Math.PI / 2 - (dirTrue - heading);
+            }
+            // fallback to relative angle
+            const relAngle = skValues['environment.wind.angleTrueGround']
+                ?? skValues['environment.wind.angleTrueWater'];
+            if (relAngle != null) return Math.PI / 2 - relAngle;
+        } else {
+            const relAngle = skValues[`environment.wind.${preferredWindDir}`]
+                ?? skValues['environment.wind.angleTrueGround']
+                ?? skValues['environment.wind.angleTrueWater'];
+            if (relAngle != null) return Math.PI / 2 - relAngle;
+            // fallback to absolute
+            const dirTrue = skValues['environment.wind.directionTrue'];
+            if (dirTrue != null) {
+                const heading = skValues[`navigation.${preferredHeading}`]
+                    ?? skValues['navigation.headingTrue']
+                    ?? skValues['navigation.courseOverGroundTrue']
+                    ?? 0;
+                return Math.PI / 2 - (dirTrue - heading);
+            }
+        }
+        return Math.PI / 2;
+    }, [skValues, preferredWindDir, preferredHeading]);
+
+    const trueWindSpeed = useMemo(() => {
+        const speed = skValues[`environment.wind.${preferredWindSpeed}`]
+            ?? skValues['environment.wind.speedOverGround']
+            ?? skValues['environment.wind.speedTrue'];
+        return convertSpeedUnit(speed) || 0;
+    }, [skValues, preferredWindSpeed]);
+
     const appWindAngle = useMemo(() => (Math.PI / 2 - (skValues['environment.wind.angleApparent'] || 0)), [skValues]);
     const appWindSpeed = useMemo(() => convertSpeedUnit(skValues['environment.wind.speedApparent']) || 0, [skValues]);
     // Calculate positions for wind indicators based on their angles

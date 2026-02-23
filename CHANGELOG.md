@@ -1,3 +1,21 @@
+## [0.1.17] - 2026-02-23
+
+### Added
+
+- Anchor watch plugin with anchor state management and alarm functionality.
+- AIS analysis feature in OcearoCore.
+- Local logbook store fallback for when signalk-logbook is unavailable.
+- Voice/TTS improvements including Piper fallback mechanisms.
+
+### Fixed
+
+- Fixed error handling and fallback behavior in LogbookManager when connecting to signalk-logbook.
+
+### Changed
+
+- Updated various translations and component layouts (motor view, logbook view, 3D compass, fuel log modal).
+- Package dependencies minor version bumps and cleanups.
+
 ## [0.1.16] - 2026-02-18
 
 ### Added

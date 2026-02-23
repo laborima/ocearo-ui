@@ -792,12 +792,20 @@ const MotorView = () => {
                         <th className="text-hud-muted p-4 text-left font-black">{t('motor.liters')}</th>
                         <th className="text-hud-muted p-4 text-left font-black">{t('motor.refillCost')}</th>
                         <th className="text-hud-muted p-4 text-left font-black">{t('motor.hmr')}</th>
+                        <th className="text-hud-muted p-4 text-left font-black">{t('motor.avgConsumption')}</th>
+                        <th className="text-hud-muted p-4 text-left font-black">{t('motor.fuelAutonomy')}</th>
                         <th className="text-hud-muted p-4 text-center font-black">{t('motor.additive')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-hud">
                       {fuelLogEntries.slice(-5).reverse().map((entry, index) => {
                         const fuel = entry.fuel || {};
+                        const entryConsumption = (fuel.liters && fuel.hoursSinceLastRefill && fuel.hoursSinceLastRefill > 0)
+                          ? Math.round((fuel.liters / fuel.hoursSinceLastRefill) * 10) / 10
+                          : null;
+                        const entryAutonomy = (entryConsumption && engineData.fuelCapacity && fuel.liters)
+                          ? Math.round((fuel.liters / entryConsumption) * 10) / 10
+                          : null;
                         return (
                           <tr key={entry.datetime || index} className="text-hud-main tesla-hover group">
                             <td className="p-4 opacity-60 group-hover:opacity-100 transition-opacity">
@@ -808,8 +816,14 @@ const MotorView = () => {
                               })}
                             </td>
                             <td className="p-4 gliding-value text-oBlue">{fuel.liters} L</td>
-                            <td className="p-4 gliding-value">{fuel.cost} €</td>
+                            <td className="p-4 gliding-value">{fuel.cost != null ? `${fuel.cost} €` : '—'}</td>
                             <td className="p-4 gliding-value opacity-60">{fuel.engineHoursAtRefill} h</td>
+                            <td className="p-4 gliding-value text-oYellow">
+                              {entryConsumption != null ? `${entryConsumption} L/h` : '—'}
+                            </td>
+                            <td className="p-4 gliding-value text-oGreen">
+                              {entryAutonomy != null ? `${entryAutonomy} h` : '—'}
+                            </td>
                             <td className="p-4 text-center">
                               {fuel.additive ? (
                                 <span className="text-purple-400 animate-soft-pulse">

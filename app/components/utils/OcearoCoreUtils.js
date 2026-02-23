@@ -24,7 +24,7 @@ const getOcearoCoreConfig = () => {
   return {
     enabled: config.ocearoCoreEnabled !== false,
     baseUrl,
-    timeout: 10000, // 10 second timeout
+    timeout: 60000, // 60 second timeout for AI responses
     useAuthentication: config.useAuthentication || false,
     username: config.username || '',
     password: config.password || ''
@@ -139,7 +139,7 @@ export const getOcearoCoreStatus = async () => {
  * Request manual analysis from OcearoCore
  */
 export const requestAnalysis = async (analysisType, data = {}) => {
-  const validTypes = ['weather', 'sail', 'alerts', 'status', 'logbook'];
+  const validTypes = ['weather', 'sail', 'alerts', 'ais', 'status', 'logbook'];
   
   if (!validTypes.includes(analysisType)) {
     throw new Error(`Invalid analysis type. Valid types: ${validTypes.join(', ')}`);
@@ -311,23 +311,47 @@ export const addFuelLogEntry = async (fuelData, position = null) => {
     throw new Error('Fuel data is required and must be an object');
   }
 
-  const entry = {
-    datetime: new Date().toISOString(),
-    type: 'fuel_refill',
-    position: position || { latitude: null, longitude: null },
-    fuel: {
+  // Try the dedicated fuel endpoint first (ocearo-core local store)
+  try {
+    const record = {
+      datetime: new Date().toISOString(),
+      type: 'fuel_refill',
+      position: position || { latitude: null, longitude: null },
+      fuel: {
+        liters: fuelData.liters,
+        cost: fuelData.cost,
+        additive: fuelData.additive || false,
+        engineHoursAtRefill: fuelData.engineHours,
+        previousEngineHours: fuelData.previousEngineHours || null,
+        hoursSinceLastRefill: fuelData.hoursSinceLastRefill || null
+      },
       liters: fuelData.liters,
-      cost: fuelData.cost,
-      additive: fuelData.additive || false,
-      engineHoursAtRefill: fuelData.engineHours,
-      previousEngineHours: fuelData.previousEngineHours || null,
-      hoursSinceLastRefill: fuelData.hoursSinceLastRefill || null
-    },
-    author: 'fuel_log',
-    text: `Fuel refill: ${fuelData.liters}L - ${fuelData.cost}€${fuelData.additive ? ' (with additive)' : ''} - Engine hours: ${fuelData.engineHours}h`
-  };
-
-  return await addLogbookEntry(entry);
+      author: 'fuel_log',
+      text: `Fuel refill: ${fuelData.liters}L - ${fuelData.cost}€${fuelData.additive ? ' (with additive)' : ''} - Engine hours: ${fuelData.engineHours}h`
+    };
+    return await makeOcearoCoreApiCall('/logbook/fuel', {
+      method: 'POST',
+      body: JSON.stringify(record)
+    });
+  } catch (err) {
+    // Fallback: store as regular logbook entry via the proxy
+    const entry = {
+      datetime: new Date().toISOString(),
+      type: 'fuel_refill',
+      position: position || { latitude: null, longitude: null },
+      fuel: {
+        liters: fuelData.liters,
+        cost: fuelData.cost,
+        additive: fuelData.additive || false,
+        engineHoursAtRefill: fuelData.engineHours,
+        previousEngineHours: fuelData.previousEngineHours || null,
+        hoursSinceLastRefill: fuelData.hoursSinceLastRefill || null
+      },
+      author: 'fuel_log',
+      text: `Fuel refill: ${fuelData.liters}L - ${fuelData.cost}€${fuelData.additive ? ' (with additive)' : ''} - Engine hours: ${fuelData.engineHours}h`
+    };
+    return await addLogbookEntry(entry);
+  }
 };
 
 /**
@@ -335,6 +359,15 @@ export const addFuelLogEntry = async (fuelData, position = null) => {
  * @returns {Promise<Array>} - Array of fuel log entries
  */
 export const fetchFuelLogEntries = async () => {
+  // Try the dedicated fuel endpoint first (ocearo-core local store)
+  try {
+    const entries = await makeOcearoCoreApiCall('/logbook/fuel');
+    if (Array.isArray(entries) && entries.length >= 0) {
+      return entries;
+    }
+  } catch (err) {
+    // Fallback: filter from general logbook entries
+  }
   const entries = await fetchLogbookEntries();
   return entries.filter(entry => entry.type === 'fuel_refill' || entry.author === 'fuel_log');
 };
@@ -373,10 +406,8 @@ export const calculateFuelStats = (fuelEntries, tankCapacity = null) => {
     totalLiters += fuel.liters || 0;
     totalCost += fuel.cost || 0;
 
-    if (i > 0 && fuel.hoursSinceLastRefill && fuel.hoursSinceLastRefill > 0) {
-      const previousEntry = sortedEntries[i - 1];
-      const previousFuel = previousEntry.fuel || {};
-      const litersUsed = previousFuel.liters || 0;
+    if (fuel.hoursSinceLastRefill && fuel.hoursSinceLastRefill > 0) {
+      const litersUsed = fuel.liters || 0;
       const hours = fuel.hoursSinceLastRefill;
       
       if (litersUsed > 0 && hours > 0) {
@@ -457,6 +488,60 @@ export const estimateTankLevel = (fuelEntries, currentEngineHours, tankCapacity,
     basedOnSensor: currentTankLevel !== null,
     sensorLevel: currentTankLevel !== null ? Math.round(currentTankLevel * 100) : null
   };
+};
+
+// ===== ANCHOR API FUNCTIONS =====
+
+/**
+ * Drop anchor at current vessel position
+ * @returns {Promise<Object>} - { state, statusCode, position, anchorState }
+ */
+export const anchorDrop = async () => {
+  return await makeOcearoCoreApiCall('/navigation/anchor/drop', { method: 'POST', body: '{}' });
+};
+
+/**
+ * Raise anchor
+ * @returns {Promise<Object>}
+ */
+export const anchorRaise = async () => {
+  return await makeOcearoCoreApiCall('/navigation/anchor/raise', { method: 'POST', body: '{}' });
+};
+
+/**
+ * Set anchor alarm radius
+ * @param {number} radiusMetres
+ * @returns {Promise<Object>}
+ */
+export const anchorSetRadius = async (radiusMetres) => {
+  if (!radiusMetres || radiusMetres <= 0) throw new Error('Radius must be a positive number (metres)');
+  return await makeOcearoCoreApiCall('/navigation/anchor/radius', {
+    method: 'POST',
+    body: JSON.stringify({ value: radiusMetres })
+  });
+};
+
+/**
+ * Reposition anchor using rode length and depth
+ * @param {number} rodeLength  metres
+ * @param {number} anchorDepth metres
+ * @returns {Promise<Object>}
+ */
+export const anchorReposition = async (rodeLength, anchorDepth) => {
+  if (!rodeLength || rodeLength <= 0) throw new Error('rodeLength must be a positive number (metres)');
+  if (!anchorDepth || anchorDepth <= 0) throw new Error('anchorDepth must be a positive number (metres)');
+  return await makeOcearoCoreApiCall('/navigation/anchor/reposition', {
+    method: 'POST',
+    body: JSON.stringify({ rodeLength, anchorDepth })
+  });
+};
+
+/**
+ * Get current anchor status
+ * @returns {Promise<Object>} - { state, position, maxRadius, currentRadius, rodeLength, droppedAt, dragging }
+ */
+export const getAnchorStatus = async () => {
+  return await makeOcearoCoreApiCall('/navigation/anchor/status');
 };
 
 // ===== LOGBOOK PROXY FUNCTIONS =====
@@ -567,10 +652,9 @@ export const handleOcearoCoreError = (error, context = 'OcearoCore operation') =
   }
   
   // Check for logbook-specific errors
-  if (error.message.includes('Logbook service unavailable') || 
-      error.message.includes('Logbook plugin not installed') ||
-      error.message.includes('Logbook server not available')) {
-    return 'SignalK-Logbook plugin is not installed. Please install it from the SignalK App Store to use logbook features.';
+  if (error.message.includes('Logbook write failed') ||
+      error.message.includes('Logbook manager not initialized')) {
+    return 'Logbook service error. Please check the ocearo-core plugin status.';
   }
   
   if (error.message.includes('503')) {
@@ -662,6 +746,13 @@ const OcearoCoreUtils = {
   fetchFuelLogEntries,
   calculateFuelStats,
   estimateTankLevel,
+
+  // Anchor API functions
+  anchorDrop,
+  anchorRaise,
+  anchorSetRadius,
+  anchorReposition,
+  getAnchorStatus,
   
   // Utility functions
   handleOcearoCoreError,

@@ -512,6 +512,8 @@
     "liters": "Litrat",
     "refillCost": "Tankkauskustannus",
     "hmr": "Tun.",
+    "avgConsumption": "Keskim. kulutus",
+    "fuelAutonomy": "Toimintamatka",
     "additive": "Lis.",
     "warningsSummary": "Varoitusyhteenveto",
     "allSystemsNominal": "Kaikki järjestelmät nimellisiä",
@@ -521,8 +523,10 @@
   "fuelLog": {
     "logFuelRefill": "Rekisteröi tankkaus",
     "litersAdded": "Tankatut litrat *",
-    "cost": "Kustannus (€) *",
+    "cost": "Kustannus (€)",
+    "optional": "valinnainen",
     "currentEngineHours": "Nykyiset moottorin tunnit *",
+    "noSignalkHours": "Moottorin tunnit eivät ole saatavilla SignalK:sta",
     "hoursSinceLastRefill": "Tunteja edellisestä tankkauksesta",
     "signalkValue": "SignalK-arvo:",
     "lastRefillAt": "Edellinen tankkaus kohdassa",
@@ -532,7 +536,8 @@
     "save": "Tallenna",
     "errorLiters": "Syötä kelvollinen litramäärä",
     "errorCost": "Syötä kelvollinen kustannus",
-    "errorEngineHours": "Syötä moottorin tunnit"
+    "errorEngineHours": "Syötä moottorin tunnit",
+    "autoCalculated": "Laskettu automaattisesti"
   },
   "errors": {
     "errorGeneratingUrl": "Virhe sovelluksen URL-osoitteen luomisessa",

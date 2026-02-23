@@ -445,6 +445,7 @@
   "logbook": {
     "logbookEntries": "Entrées du journal",
     "aiEntry": "Entrée IA",
+    "aiEntryGenerating": "IA en cours...",
     "add": "Ajouter",
     "cruiseTimeline": "Chronologie de croisière",
     "aiAuto": "IA Auto",
@@ -548,6 +549,8 @@
     "liters": "Litres",
     "refillCost": "Coût du plein",
     "hmr": "Hmr",
+    "avgConsumption": "Conso. moy.",
+    "fuelAutonomy": "Autonomie",
     "additive": "Add.",
     "warningsSummary": "Résumé des alertes",
     "allSystemsNominal": "Tous les systèmes nominaux",
@@ -557,8 +560,10 @@
   "fuelLog": {
     "logFuelRefill": "Enregistrer un plein",
     "litersAdded": "Litres ajoutés *",
-    "cost": "Coût (€) *",
+    "cost": "Coût (€)",
+    "optional": "optionnel",
     "currentEngineHours": "Heures moteur actuelles *",
+    "noSignalkHours": "Heures moteur non disponibles via SignalK",
     "hoursSinceLastRefill": "Heures depuis le dernier plein",
     "signalkValue": "Valeur SignalK :",
     "lastRefillAt": "Dernier plein à",
@@ -568,7 +573,8 @@
     "save": "Enregistrer",
     "errorLiters": "Veuillez entrer un nombre de litres valide",
     "errorCost": "Veuillez entrer un coût valide",
-    "errorEngineHours": "Veuillez entrer les heures moteur"
+    "errorEngineHours": "Veuillez entrer les heures moteur",
+    "autoCalculated": "Calculé automatiquement"
   },
   "errors": {
     "errorGeneratingUrl": "Erreur de génération de l'URL de l'application",

@@ -512,6 +512,8 @@
     "liters": "Liters",
     "refillCost": "Tankkosten",
     "hmr": "Uur",
+    "avgConsumption": "Gem. verbruik",
+    "fuelAutonomy": "Autonomie",
     "additive": "Toev.",
     "warningsSummary": "Waarschuwingsoverzicht",
     "allSystemsNominal": "Alle systemen nominaal",
@@ -521,8 +523,10 @@
   "fuelLog": {
     "logFuelRefill": "Tanken registreren",
     "litersAdded": "Getankte liters *",
-    "cost": "Kosten (€) *",
+    "cost": "Kosten (€)",
+    "optional": "optioneel",
     "currentEngineHours": "Huidige motoruren *",
+    "noSignalkHours": "Motoruren niet beschikbaar via SignalK",
     "hoursSinceLastRefill": "Uren sinds laatste tankbeurt",
     "signalkValue": "SignalK-waarde:",
     "lastRefillAt": "Laatste tankbeurt bij",
@@ -532,7 +536,8 @@
     "save": "Opslaan",
     "errorLiters": "Voer een geldig aantal liters in",
     "errorCost": "Voer geldige kosten in",
-    "errorEngineHours": "Voer de motoruren in"
+    "errorEngineHours": "Voer de motoruren in",
+    "autoCalculated": "Automatisch berekend"
   },
   "errors": {
     "errorGeneratingUrl": "Fout bij het genereren van de applicatie-URL",

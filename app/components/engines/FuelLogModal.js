@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 /**
  * Modal component for logging fuel refills
- * Captures liters, cost, additive usage, and engine hours
+ * Captures liters, cost (optional), additive usage, and engine hours
  */
 const FuelLogModal = ({ 
   isOpen, 
@@ -56,7 +56,7 @@ const FuelLogModal = ({
       newErrors.liters = t('fuelLog.errorLiters');
     }
     
-    if (!formData.cost || parseFloat(formData.cost) < 0) {
+    if (formData.cost !== '' && parseFloat(formData.cost) < 0) {
       newErrors.cost = t('fuelLog.errorCost');
     }
     
@@ -68,6 +68,21 @@ const FuelLogModal = ({
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleEngineHoursChange = (value) => {
+    const parsed = parseFloat(value);
+    let hoursSince = formData.hoursSinceLastRefill;
+    if (!isNaN(parsed) && lastRefillEngineHours !== null) {
+      const computed = Math.round((parsed - lastRefillEngineHours) * 10) / 10;
+      if (computed >= 0) {
+        hoursSince = computed;
+      }
+    }
+    setFormData(prev => ({ ...prev, engineHours: value, hoursSinceLastRefill: hoursSince }));
+    if (errors.engineHours) {
+      setErrors(prev => ({ ...prev, engineHours: null }));
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -75,9 +90,11 @@ const FuelLogModal = ({
       return;
     }
 
+    const costValue = formData.cost !== '' ? parseFloat(formData.cost) : null;
+
     onSave({
       liters: parseFloat(formData.liters),
-      cost: parseFloat(formData.cost),
+      cost: costValue,
       additive: formData.additive,
       engineHours: parseFloat(formData.engineHours),
       hoursSinceLastRefill: formData.hoursSinceLastRefill 
@@ -145,7 +162,7 @@ const FuelLogModal = ({
           <div>
             <label className="block text-xs font-black uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
               <FontAwesomeIcon icon={faEuroSign} className="mr-2 text-oGreen" />
-              {t('fuelLog.cost')}
+              {t('fuelLog.cost')} <span className="text-hud-dim font-normal normal-case ml-1">({t('fuelLog.optional')})</span>
             </label>
             <input
               type="number"
@@ -174,7 +191,7 @@ const FuelLogModal = ({
               step="0.1"
               min="0"
               value={formData.engineHours}
-              onChange={(e) => handleInputChange('engineHours', e.target.value)}
+              onChange={(e) => handleEngineHoursChange(e.target.value)}
               className={`w-full bg-hud-elevated text-hud-main px-4 py-3 rounded-xl border ${
                 errors.engineHours ? 'border-red-500' : 'border-hud'
               } focus:border-oBlue focus:outline-none transition-all duration-300`}
@@ -187,6 +204,11 @@ const FuelLogModal = ({
             {currentEngineHours !== null && (
               <p className="text-hud-dim text-xs mt-2 font-medium">
                 {t('fuelLog.signalkValue')} {Math.round(currentEngineHours * 10) / 10} h
+              </p>
+            )}
+            {currentEngineHours === null && (
+              <p className="text-hud-dim text-xs mt-2 font-medium">
+                {t('fuelLog.noSignalkHours')}
               </p>
             )}
           </div>
@@ -202,9 +224,9 @@ const FuelLogModal = ({
               min="0"
               value={formData.hoursSinceLastRefill}
               onChange={(e) => handleInputChange('hoursSinceLastRefill', e.target.value)}
-              className="w-full bg-hud-elevated text-hud-main px-4 py-3 rounded-xl border border-hud focus:border-oBlue focus:outline-none transition-all duration-300"
+              className="w-full bg-hud-elevated text-hud-main px-4 py-3 rounded-xl border border-hud focus:border-oBlue focus:outline-none transition-all duration-300 disabled:opacity-60"
               placeholder="Ex: 25.5"
-              disabled={loading}
+              disabled={loading || (lastRefillEngineHours !== null && formData.hoursSinceLastRefill !== '')}
             />
             {lastRefillEngineHours !== null && (
               <p className="text-hud-dim text-xs mt-2 font-medium">

@@ -445,6 +445,7 @@
   "logbook": {
     "logbookEntries": "Logbook Entries",
     "aiEntry": "AI entry",
+    "aiEntryGenerating": "AI generating...",
     "add": "Add",
     "cruiseTimeline": "Cruise Timeline",
     "aiAuto": "AI Auto",
@@ -548,6 +549,8 @@
     "liters": "Liters",
     "refillCost": "Refill cost",
     "hmr": "Hmr",
+    "avgConsumption": "Avg. Cons.",
+    "fuelAutonomy": "Autonomy",
     "additive": "Add.",
     "warningsSummary": "Warnings Summary",
     "allSystemsNominal": "All systems nominal",
@@ -557,8 +560,10 @@
   "fuelLog": {
     "logFuelRefill": "Log Fuel Refill",
     "litersAdded": "Liters Added *",
-    "cost": "Cost (€) *",
+    "cost": "Cost (€)",
+    "optional": "optional",
     "currentEngineHours": "Current Engine Hours *",
+    "noSignalkHours": "Engine hours not available from SignalK",
     "hoursSinceLastRefill": "Hours Since Last Refill",
     "signalkValue": "SignalK value:",
     "lastRefillAt": "Last refill at",
@@ -568,7 +573,8 @@
     "save": "Save",
     "errorLiters": "Please enter a valid number of liters",
     "errorCost": "Please enter a valid cost",
-    "errorEngineHours": "Please enter engine hours"
+    "errorEngineHours": "Please enter engine hours",
+    "autoCalculated": "Auto-calculated"
   },
   "errors": {
     "errorGeneratingUrl": "Error generating application URL",

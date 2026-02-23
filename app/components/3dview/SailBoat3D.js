@@ -43,8 +43,14 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
     const rudderRef = useRef();
     const config = configService.getAll();
 
+    const preferredWindSpeed = config.preferredWindSpeedPath || 'speedTrue';
+    const preferredWindDir = config.preferredWindDirectionPath || 'angleTrueWater';
+    const preferredHeading = config.preferredHeadingPath || 'courseOverGroundTrue';
+
     // Use subscription for info panel data to ensure reactivity without full context re-renders
     const infoPaths = useMemo(() => [
+        `environment.wind.${preferredWindDir}`,
+        `environment.wind.${preferredWindSpeed}`,
         'environment.wind.angleTrueWater',
         'environment.wind.speedTrue',
         'environment.wind.angleApparent',
@@ -54,10 +60,11 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
         'performance.polarSpeedRatio',
         'performance.velocityMadeGood',
         'navigation.speedThroughWater',
+        `navigation.${preferredHeading}`,
         'navigation.headingTrue',
         'navigation.courseOverGroundTrue',
         'navigation.position'
-    ], []);
+    ], [preferredWindDir, preferredWindSpeed, preferredHeading]);
 
     const skValues = useSignalKPaths(infoPaths);
 
@@ -260,9 +267,11 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
             name: selectedBoat.name || 'Sailboat',
             type: 'sailboat',
             
-            // Wind data
-            trueWindAngle: skValues['environment.wind.angleTrueWater'] || 0,
-            trueWindSpeed: skValues['environment.wind.speedTrue'] || 0,
+            // Wind data — use preferred paths with fallback
+            trueWindAngle: skValues[`environment.wind.${preferredWindDir}`]
+                ?? skValues['environment.wind.angleTrueWater'] ?? 0,
+            trueWindSpeed: skValues[`environment.wind.${preferredWindSpeed}`]
+                ?? skValues['environment.wind.speedTrue'] ?? 0,
             appWindAngle: skValues['environment.wind.angleApparent'] || 0,
             appWindSpeed: skValues['environment.wind.speedApparent'] || 0,
             
@@ -273,8 +282,9 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
             velocityMadeGood: skValues['performance.velocityMadeGood'] || 0,
             speedThroughWater: skValues['navigation.speedThroughWater'] || 0,
             
-            // Heading and course
-            headingTrue: skValues['navigation.headingTrue'] || 0,
+            // Heading and course — use preferred path with fallback
+            headingTrue: skValues[`navigation.${preferredHeading}`]
+                ?? skValues['navigation.headingTrue'] ?? 0,
             courseOverGroundTrue: skValues['navigation.courseOverGroundTrue'] || 0,
            
             position: skValues['navigation.position'] || { latitude: 0, longitude: 0 }

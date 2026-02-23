@@ -512,6 +512,8 @@
     "liters": "Litros",
     "refillCost": "Coste del repostaje",
     "hmr": "Hrs.",
+    "avgConsumption": "Cons. med.",
+    "fuelAutonomy": "Autonomía",
     "additive": "Adit.",
     "warningsSummary": "Resumen de alertas",
     "allSystemsNominal": "Todos los sistemas nominales",
@@ -521,8 +523,10 @@
   "fuelLog": {
     "logFuelRefill": "Registrar repostaje",
     "litersAdded": "Litros añadidos *",
-    "cost": "Coste (€) *",
+    "cost": "Coste (€)",
+    "optional": "opcional",
     "currentEngineHours": "Horas de motor actuales *",
+    "noSignalkHours": "Horas de motor no disponibles en SignalK",
     "hoursSinceLastRefill": "Horas desde el último repostaje",
     "signalkValue": "Valor SignalK:",
     "lastRefillAt": "Último repostaje a",
@@ -532,7 +536,8 @@
     "save": "Guardar",
     "errorLiters": "Introduzca un número válido de litros",
     "errorCost": "Introduzca un coste válido",
-    "errorEngineHours": "Introduzca las horas de motor"
+    "errorEngineHours": "Introduzca las horas de motor",
+    "autoCalculated": "Calculado automáticamente"
   },
   "errors": {
     "errorGeneratingUrl": "Error al generar la URL de la aplicación",

@@ -512,6 +512,8 @@
     "liters": "Liter",
     "refillCost": "Tankningsomkostning",
     "hmr": "Tim.",
+    "avgConsumption": "Gns. forbrug",
+    "fuelAutonomy": "Rækkevidde",
     "additive": "Tils.",
     "warningsSummary": "Advarselsoversigt",
     "allSystemsNominal": "Alle systemer nominelle",
@@ -521,8 +523,10 @@
   "fuelLog": {
     "logFuelRefill": "Registrer tankning",
     "litersAdded": "Tankede liter *",
-    "cost": "Omkostning (€) *",
+    "cost": "Omkostning (€)",
+    "optional": "valgfrit",
     "currentEngineHours": "Aktuelle motortimer *",
+    "noSignalkHours": "Motortimer ikke tilgængelige via SignalK",
     "hoursSinceLastRefill": "Timer siden sidste tankning",
     "signalkValue": "SignalK-værdi:",
     "lastRefillAt": "Sidste tankning ved",
@@ -532,7 +536,8 @@
     "save": "Gem",
     "errorLiters": "Indtast et gyldigt antal liter",
     "errorCost": "Indtast en gyldig omkostning",
-    "errorEngineHours": "Indtast motortimerne"
+    "errorEngineHours": "Indtast motortimerne",
+    "autoCalculated": "Automatisk beregnet"
   },
   "errors": {
     "errorGeneratingUrl": "Fejl ved generering af applikations-URL",

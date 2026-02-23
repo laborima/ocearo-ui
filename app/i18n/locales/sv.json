@@ -512,6 +512,8 @@
     "liters": "Liter",
     "refillCost": "Tankningskostnad",
     "hmr": "Tim.",
+    "avgConsumption": "Medelförb.",
+    "fuelAutonomy": "Räckvidd",
     "additive": "Till.",
     "warningsSummary": "Varningsöversikt",
     "allSystemsNominal": "Alla system nominella",
@@ -521,8 +523,10 @@
   "fuelLog": {
     "logFuelRefill": "Registrera tankning",
     "litersAdded": "Tankade liter *",
-    "cost": "Kostnad (€) *",
+    "cost": "Kostnad (€)",
+    "optional": "valfritt",
     "currentEngineHours": "Aktuella motortimmar *",
+    "noSignalkHours": "Motortimmar inte tillgängliga via SignalK",
     "hoursSinceLastRefill": "Timmar sedan senaste tankning",
     "signalkValue": "SignalK-värde:",
     "lastRefillAt": "Senaste tankning vid",
@@ -532,7 +536,8 @@
     "save": "Spara",
     "errorLiters": "Ange ett giltigt antal liter",
     "errorCost": "Ange en giltig kostnad",
-    "errorEngineHours": "Ange motortimmarna"
+    "errorEngineHours": "Ange motortimmarna",
+    "autoCalculated": "Automatiskt beräknat"
   },
   "errors": {
     "errorGeneratingUrl": "Fel vid generering av applikations-URL",
