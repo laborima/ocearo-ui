@@ -1,3 +1,11 @@
+## [0.1.18] - 2026-02-25
+
+### Fixed
+
+- Fixed dashboard dashlets on mobile to show 3 visible with vertical scroll while preserving original height (200px) to prevent truncation.
+- Fixed Next.js development error overlay appearing when OcearoCore server is unreachable by replacing console.error with console.warn.
+- Fixed settings page save indicator causing layout shift and scroll jumps on small screens by using absolute positioning.
+
 ## [0.1.17] - 2026-02-23
 
 ### Added
