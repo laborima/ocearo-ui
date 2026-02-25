@@ -53,7 +53,11 @@
     "seaState": "Κατάσταση θάλασσας",
     "polarView": "Πολική προβολή",
     "laylines3D": "Laylines 3D",
-    "aisRadar": "Ραντάρ AIS"
+    "aisRadar": "Ραντάρ AIS",
+    "oceanBlack": "Μαύρο (χωρίς ωκεανό)",
+    "oceanWater": "Ωκεανός (3D νερό)",
+    "oceanChart": "Χάρτης (freeboard-sk)",
+    "oceanMeteo": "Μετεωρολογία (Windy)"
   },
   "indicators": {
     "depth": "Βάθος",

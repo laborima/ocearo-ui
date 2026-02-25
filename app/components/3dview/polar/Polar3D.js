@@ -212,6 +212,8 @@ function PolarProjection() {
         'environment.wind.angleTrueGround',
         'environment.wind.speedTrue',
         'environment.wind.speedOverGround',
+        'environment.wind.angleApparent',
+        'environment.wind.speedApparent',
         'navigation.speedOverGround',
         'navigation.headingTrue',
         'navigation.courseOverGroundTrue'
@@ -219,13 +221,16 @@ function PolarProjection() {
 
     const skValues = useSignalKPaths(polarPaths);
 
-    // True wind angle (relative to vessel) for rotating the polar diagram.
-    // The polar is defined vs. true wind, so we must use a true-wind angle path.
-    // If the preferred path is absolute (directionTrue), derive the relative angle
-    // by subtracting the vessel heading — same fallback chain as WindSector3D.
-    const trueWindAngle = useMemo(() => {
-        const isAbsolute = preferredWindDir === 'directionTrue';
+    // Alignment angle for rotating the polar diagram.
+    // Priority: apparent wind if available, otherwise true wind.
+    const alignmentAngle = useMemo(() => {
+        const appAngle = skValues['environment.wind.angleApparent'];
+        const appSpeed = skValues['environment.wind.speedApparent'];
+        if (appAngle != null && appSpeed != null && appSpeed > 0) {
+            return -appAngle;
+        }
 
+        const isAbsolute = preferredWindDir === 'directionTrue';
         if (isAbsolute) {
             const dirTrue = skValues['environment.wind.directionTrue'];
             if (dirTrue != null) {
@@ -304,7 +309,7 @@ function PolarProjection() {
                 const prevAngle = previousAngles.current[index];
                 const interpolatedAngle = MathUtils.lerp(
                     prevAngle,
-                    trueWindAngle,
+                    alignmentAngle,
                     CONSTANTS.ROTATION_INTERPOLATION_FACTOR
                 );
 

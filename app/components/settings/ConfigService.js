@@ -15,6 +15,8 @@ class ConfigService {
       metallicEffect: false,
       aisLengthScalingFactor: 0.7, // Default value for AIS boat scaling
       compassNorthUp: false, // Default: North at bottom (standard marine compass)
+      hide3DCompass: false,
+      hideTrueWind: false,
       showCustomUrls: false, // Toggle for custom external URLs section
       customExternalUrls: {}, 
       currentView: 'default',

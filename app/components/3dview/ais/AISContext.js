@@ -353,7 +353,7 @@ export const AISProvider = ({ children }) => {
                 await fetchStaticVesselInfo(client);
                 client.on('delta', fetchAISBoatData);
             } catch (error) {
-                console.error('Error connecting to SignalK:', error);
+                console.warn('Error connecting to SignalK:', error);
             }
         };
 

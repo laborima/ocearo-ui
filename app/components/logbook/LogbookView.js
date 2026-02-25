@@ -95,7 +95,7 @@ const LogbookView = () => {
       setEntries(transformedEntries);
     } catch (err) {
       if (err.name !== 'NetworkError' && err.name !== 'TimeoutError') {
-        console.error('Error fetching logbook entries:', err);
+        console.warn('Error fetching logbook entries:', err);
       }
       const errorMessage = handleOcearoCoreError(err, 'Logbook fetch');
       setError(errorMessage);
@@ -204,7 +204,7 @@ const LogbookView = () => {
       setShowEntryModal(false);
       fetchLogbookEntriesData();
     } catch (err) {
-      console.error('Error adding entry:', err);
+      console.warn('Error adding entry:', err);
       const errorMessage = handleOcearoCoreError(err, 'Add logbook entry');
       setError(errorMessage);
     }
@@ -771,7 +771,7 @@ const LogbookView = () => {
       onClick={() => setShowEntryModal(false)}
     >
       <div 
-        className="bg-hud-bg backdrop-blur-xl rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-hud"
+        className="bg-hud-bg backdrop-blur-xl rounded-3xl p-6 sm:p-8 max-w-md w-full mx-4 shadow-2xl border border-hud max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-8">

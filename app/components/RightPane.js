@@ -179,7 +179,7 @@ const RightPane = ({ view }) => {
     const isFullHeight = FULL_HEIGHT_VIEWS.includes(view);
 
     return (
-        <div className="flex flex-col w-full h-full overflow-hidden bg-hud-bg backdrop-blur-sm">
+        <div className="flex flex-col w-full h-full overflow-hidden bg-hud-bg backdrop-blur-sm relative z-0">
             <AnimatePresence mode="wait">
                 <motion.div
                     key={view}
@@ -191,7 +191,7 @@ const RightPane = ({ view }) => {
                         ease: [0.16, 1, 0.3, 1] // Custom ease-out cubic for "gliding" feel
                     }}
                     style={{ flex: '1 1 0%', minHeight: 0 }}
-                    className={`flex flex-col w-full ${isFullHeight ? 'overflow-hidden' : 'overflow-auto'}`}
+                    className={`flex flex-col w-full absolute inset-0 ${isFullHeight ? 'overflow-hidden' : 'overflow-auto'}`}
                 >
                     {renderContent()}
                 </motion.div>

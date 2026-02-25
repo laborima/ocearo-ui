@@ -28,6 +28,7 @@ const AppMenu = ({
     currentViewMode,
     toggleViewMode,
     handleSetRightView,
+    toggleSettings,
     toggleFullscreen,
     setShowAppMenu,
 }) => {
@@ -41,12 +42,12 @@ const AppMenu = ({
                 onClick();
                 setShowAppMenu(false);
             }}
-            className="flex items-center text-hud-main px-4 py-3 rounded-xl tesla-hover transition-all duration-200 group bg-hud-bg shadow-soft border border-hud"
+            className="flex items-center text-hud-main px-2 py-2 sm:px-4 sm:py-3 rounded-xl tesla-hover transition-all duration-200 group bg-hud-bg shadow-soft border border-hud"
         >
-            <div className="w-8 h-8 flex items-center justify-center bg-hud-elevated rounded-lg mr-3 group-hover:scale-110 transition-transform">
-                <FontAwesomeIcon icon={icon} className="text-hud-muted group-hover:text-hud-main transition-colors" />
+            <div className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-hud-elevated rounded-lg mr-2 sm:mr-3 group-hover:scale-110 transition-transform shrink-0">
+                <FontAwesomeIcon icon={icon} className="text-sm sm:text-base text-hud-muted group-hover:text-hud-main transition-colors" />
             </div>
-            <span className="text-sm font-bold uppercase tracking-widest">{label}</span>
+            <span className="hidden sm:block text-xs sm:text-sm font-bold uppercase tracking-widest truncate">{label}</span>
         </button>
     );
 
@@ -57,9 +58,9 @@ const AppMenu = ({
                 animate={{ y: 0, x: '-50%', opacity: 1, scale: 1 }}
                 exit={{ y: 20, x: '-50%', opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                className="fixed bottom-28 left-1/2 bg-hud-bg backdrop-blur-xl p-6 rounded-3xl shadow-2xl z-50 w-full max-w-lg border border-hud"
+                className="fixed bottom-20 left-1/2 bg-hud-bg backdrop-blur-xl p-3 sm:p-6 rounded-3xl shadow-2xl z-50 w-[95vw] sm:w-full max-w-lg border border-hud ocearo-appmenu-scroll"
             >
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4">
                 {currentViewMode !== VIEW_MODES.SPLIT && (
                     <MenuButton icon={faExpand} label={t('menu.splitView')} onClick={() => toggleViewMode(VIEW_MODES.SPLIT)} />
                 )}
@@ -115,7 +116,7 @@ const AppMenu = ({
                 <MenuButton
                     icon={faCogs}
                     label={t('menu.settings')}
-                    onClick={() => handleSetRightView('settings')}
+                    onClick={toggleSettings}
                 />
 
                 <MenuButton

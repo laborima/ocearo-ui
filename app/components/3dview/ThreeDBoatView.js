@@ -3,6 +3,7 @@ import { OrbitControls, PerspectiveCamera, Html, Environment } from '@react-thre
 import SailBoat3D from './SailBoat3D';
 import { Trail } from './ocean/Trail3D';
 import Ocean3D from './ocean/Ocean3D';
+import MapPlane3D from './ocean/MapPlane3D';
 import AISView from './ais/AISView';
 import ThreeDCompassView from './ThreeDCompassView';
 import LayLines3D from './compass/LayLines3D';
@@ -17,7 +18,7 @@ import SailTrimSliders from './sail/SailTrimSliders';
 
 const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
     const { states } = useOcearoContext(); // Application state from context
-    const isCompassLayerVisible = false; // Compass visibility
+    const isCompassLayerVisible = true; // Compass visibility
     const sailBoatRef = useRef();
     const showAxes = configService.get('debugShowAxes');
 
@@ -79,15 +80,17 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                     sailTrimData={sailTrimData}
                 />
 
-                {/* Ocean */}
-                {states.showOcean && <Ocean3D />}
+                {/* Ocean / Map plane */}
+                {states.oceanMode === 'water' && <Ocean3D />}
+                {states.oceanMode === 'chart' && <MapPlane3D mode="chart" />}
+                {states.oceanMode === 'meteo' && <MapPlane3D mode="meteo" />}
 
                 <Trail />
 
                 {/* Laylines */}
                 {states.showLaylines3D && <LayLines3D outerRadius={5.6} />}
 
-                {states.showPolar && !states.showOcean && <PolarProjection /> }
+                {states.showPolar && states.oceanMode === 'black' && <PolarProjection /> }
 
                 {/* AIS Boats */}
                 {states.ais && <AISProvider>

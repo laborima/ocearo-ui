@@ -183,7 +183,7 @@ class SignalKService {
             if (error.message && (error.message.includes('(400)') || error.message.includes('(404)'))) {
                 console.warn(`SignalKService: API call returned error for ${path}:`, error.message);
             } else {
-                console.error(`SignalKService: API call failed for ${path}:`, error);
+                console.warn(`SignalKService: API call failed for ${path}:`, error);
             }
             throw error;
         }

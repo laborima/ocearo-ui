@@ -53,6 +53,7 @@ export default function Home() {
     const [rightView, setRightView] = useState(() => configService.getCurrentView() || 'navigation');
     const [showAppMenu, setShowAppMenu] = useState(false);
     const [isSettingsView, setIsSettingsView] = useState(false);
+    const isSettingsViewRef = useRef(false);
 
     // Set initial view mode based on screen size
     useEffect(() => {
@@ -65,7 +66,9 @@ export default function Home() {
         const handleResize = () => {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
-                setCurrentViewMode(isLargeScreen() ? VIEW_MODES.SPLIT : VIEW_MODES.BOAT);
+                if (!isSettingsViewRef.current) {
+                    setCurrentViewMode(isLargeScreen() ? VIEW_MODES.SPLIT : VIEW_MODES.BOAT);
+                }
             }, 250); // Debounce resize events by 250ms
         };
         
@@ -118,18 +121,41 @@ export default function Home() {
     }, [currentViewMode, toggleViewMode]);
 
     const previousViewModeRef = useRef(null);
+    const previousRightViewRef = useRef(null);
 
     const toggleSettings = useCallback(() => {
         if (rightView === 'settings') {
-            toggleViewMode(previousViewModeRef.current || VIEW_MODES.BOAT);
+            isSettingsViewRef.current = false;
             setIsSettingsView(false);
+
+            const previousRightView = previousRightViewRef.current || 'navigation';
+            setRightView(previousRightView);
+            configService.setCurrentView(previousRightView);
+            toggleViewMode(previousViewModeRef.current || VIEW_MODES.BOAT);
         } else {
             previousViewModeRef.current = currentViewMode;
+            previousRightViewRef.current = rightView;
+            isSettingsViewRef.current = true;
+            setIsSettingsView(true);
             handleSetRightView('settings');
             toggleViewMode(VIEW_MODES.APP);
-            setIsSettingsView(true);
         }
     }, [rightView, currentViewMode, toggleViewMode, handleSetRightView]);
+
+    useEffect(() => {
+        if (rightView === 'settings') {
+            if (!isSettingsViewRef.current) {
+                isSettingsViewRef.current = true;
+                setIsSettingsView(true);
+            }
+            return;
+        }
+
+        if (isSettingsViewRef.current) {
+            isSettingsViewRef.current = false;
+            setIsSettingsView(false);
+        }
+    }, [rightView]);
 
     // Memoize layout classes to prevent unnecessary recalculations
     const layoutClasses = useMemo(() => {
@@ -157,7 +183,7 @@ export default function Home() {
     if (!initialRenderComplete.current) {
         // Return a skeleton layout that matches your app's structure
         return (
-            <div className="h-screen bg-hud-bg flex items-center justify-center">
+            <div className="h-[100dvh] bg-hud-bg flex items-center justify-center">
                 <div className="animate-pulse text-hud-main">Loading...</div>
             </div>
         );
@@ -169,7 +195,7 @@ export default function Home() {
             <OcearoContextProvider>
                 <WeatherContextProvider>
                 <TideContextProvider>
-                    <div className="h-screen flex flex-col bg-hud-bg relative overflow-hidden">
+                    <div className="h-[100dvh] flex flex-col bg-hud-bg relative overflow-hidden">
                         <div className="flex flex-1 min-h-0">
                             <div className={layoutClasses.leftPane}>
                                 <ThreeDMainView  />
@@ -201,6 +227,7 @@ export default function Home() {
                                 currentViewMode={currentViewMode}
                                 toggleViewMode={toggleViewMode}
                                 handleSetRightView={handleSetRightView}
+                                toggleSettings={toggleSettings}
                                 toggleFullscreen={toggleFullscreen}
                                 setShowAppMenu={setShowAppMenu}
                             />

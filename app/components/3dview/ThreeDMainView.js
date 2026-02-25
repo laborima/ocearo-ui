@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import { useOcearoContext } from '../context/OcearoContext';
 import * as THREE from 'three';
 import { useEffect, useState } from 'react';
+import configService from '../settings/ConfigService';
 
 // Basic UI components loaded synchronously
 import ThreeDBoatToolbar from './ThreeDBoatToolbar';
@@ -54,11 +55,9 @@ const ThreeDMainView = () => {
     const { states, nightMode } = useOcearoContext(); // Access global context
     const [infoPanelContent, setInfoPanelContent] = useState(null);
     const [showAttitudeIndicator, setShowAttitudeIndicator] = useState(true);
-    
+
     // Get configuration directly using the configService
     useEffect(() => {
-        // Import here to avoid circular dependencies
-        const configService = require('../settings/ConfigService').default;
         const config = configService.getAll();
         setShowAttitudeIndicator(config.showAttitudeIndicator !== false);
     }, []);
@@ -111,7 +110,7 @@ const ThreeDMainView = () => {
                 </div>
             )}
 
-            {/* 3D Wind Component */}
+            {/* 3D Canvas — always visible; chart/meteo rendered as 3D planes inside the scene */}
             <div className="absolute left-1/2 transform -translate-x-1/2 w-full h-full">
                 <Canvas
                 style={{ width: '100%', height: '100%' }}

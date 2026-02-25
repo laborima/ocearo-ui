@@ -119,7 +119,7 @@ const FuelLogModal = ({
       onClick={onClose}
     >
       <div 
-        className="bg-hud-bg backdrop-blur-xl rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-hud"
+        className="bg-hud-bg backdrop-blur-xl rounded-3xl p-6 sm:p-8 max-w-md w-full mx-4 shadow-2xl border border-hud max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-8">

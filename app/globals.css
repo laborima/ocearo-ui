@@ -118,6 +118,28 @@
   .animate-soft-pulse {
     animation: soft-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
+
+  .ocearo-large-label {
+    display: none;
+  }
+
+  @media (min-width: 1366px) {
+    .ocearo-large-label {
+      display: block;
+    }
+  }
+
+  .ocearo-appmenu-scroll {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  @media (min-width: 1366px) {
+    .ocearo-appmenu-scroll {
+      max-height: none;
+      overflow-y: visible;
+    }
+  }
 }
 
 :root {

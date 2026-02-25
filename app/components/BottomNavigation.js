@@ -18,16 +18,16 @@ import configService from './settings/ConfigService';
 const NavButton = ({ icon, onClick, label, textColor, badgeColor }) => (
   <button
     onClick={onClick}
-    className={`${textColor} flex flex-col items-center justify-center p-2 rounded-xl tesla-hover transition-all duration-300 group relative`}
+    className={`${textColor} flex-shrink-0 flex flex-col items-center justify-center p-1 sm:p-2 rounded-xl tesla-hover transition-all duration-300 group relative`}
     aria-label={label}
   >
-    <div className="w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-hud-elevated transition-colors relative">
-      <FontAwesomeIcon icon={icon} className="text-xl group-hover:scale-110 transition-transform" />
+    <div className="w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg group-hover:bg-hud-elevated transition-colors relative">
+      <FontAwesomeIcon icon={icon} className="text-base sm:text-xl group-hover:scale-110 transition-transform" />
       {badgeColor && (
         <span className={`absolute top-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-leftPaneBg ${badgeColor} animate-pulse`} />
       )}
     </div>
-    <span className="text-xs font-black uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100 transition-opacity">
+    <span className="ocearo-large-label text-xs font-black uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100 transition-opacity">
       {label}
     </span>
   </button>
@@ -106,21 +106,21 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
   };
 
   return (
-    <div className="flex items-center w-full h-full bg-leftPaneBg px-6">
+    <div className="flex items-center justify-between w-full h-full bg-leftPaneBg px-1 sm:px-6 overflow-x-auto overflow-y-hidden scrollbar-hide">
       {/* Left Section */}
-      <div className="flex-1 flex items-center space-x-6">
+      <div className="flex items-center space-x-0.5 sm:space-x-6 flex-shrink-0 sm:flex-1 min-w-0">
         {renderSection('left')}
-        <div className="h-8 w-[1px] bg-hud-muted opacity-20 mx-2" />
+        <div className="hidden sm:block h-8 w-[1px] bg-hud-muted opacity-20 mx-1 sm:mx-2" />
         <BottomTemperatureWidget />
       </div>
 
       {/* Center Section */}
-      <div className="flex-1 flex items-center justify-center space-x-8">
+      <div className="flex flex-shrink-0 items-center justify-center space-x-0.5 sm:space-x-8 px-1 sm:px-0">
         {renderSection('center')}
       </div>
 
       {/* Right Section */}
-      <div className="flex-1 flex items-center justify-end space-x-6">
+      <div className="flex items-center justify-end space-x-0.5 sm:space-x-6 flex-shrink-0 sm:flex-1 min-w-0">
         <BottomEnvironmentalWidget />
       </div>
     </div>

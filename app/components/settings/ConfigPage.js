@@ -159,8 +159,8 @@ const ConfigPage = ({ onSave }) => {
     };
 
     return (
-        <div className="p-8 text-hud-main w-full">
-            <header className="mb-10 flex justify-between items-center">
+        <div className="p-8 text-hud-main w-full relative">
+            <header className="mb-10 flex justify-between items-start sm:items-center relative min-h-[4rem]">
                 <div>
                     <h1 className="text-3xl font-black uppercase tracking-tighter mb-1">
                         {t('settings.title')}
@@ -171,7 +171,7 @@ const ConfigPage = ({ onSave }) => {
                     <motion.span 
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="text-xs font-black bg-oGreen/20 text-oGreen border border-oGreen/30 px-4 py-2 rounded-full uppercase tracking-widest"
+                        className="absolute right-0 top-0 sm:relative text-xs font-black bg-oGreen/20 text-oGreen border border-oGreen/30 px-4 py-2 rounded-full uppercase tracking-widest whitespace-nowrap"
                     >
                         {saveIndicator.message}
                     </motion.span>
@@ -502,6 +502,41 @@ const ConfigPage = ({ onSave }) => {
                                             className="sr-only peer"
                                             checked={config.compassNorthUp || false}
                                             onChange={(e) => updateConfig({ compassNorthUp: e.target.checked })}
+                                        />
+                                        <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oBlue"></div>
+                                    </label>
+                                </div>
+                                <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
+                                    <label className="flex items-center justify-between cursor-pointer">
+                                        <div className="space-y-1">
+                                            <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.hide3DCompass')}</span>
+                                            <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
+                                                {config.hide3DCompass ? t('settings.hidden') : t('settings.visible')}
+                                            </p>
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={config.hide3DCompass || false}
+                                            onChange={(e) => updateConfig({ hide3DCompass: e.target.checked })}
+                                        />
+                                        <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oBlue"></div>
+                                    </label>
+                                </div>
+
+                                <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
+                                    <label className="flex items-center justify-between cursor-pointer">
+                                        <div className="space-y-1">
+                                            <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.hideTrueWind')}</span>
+                                            <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
+                                                {config.hideTrueWind ? t('settings.hidden') : t('settings.visible')}
+                                            </p>
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={config.hideTrueWind || false}
+                                            onChange={(e) => updateConfig({ hideTrueWind: e.target.checked })}
                                         />
                                         <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oBlue"></div>
                                     </label>

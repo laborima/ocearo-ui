@@ -127,7 +127,7 @@ export const getOcearoCoreStatus = async () => {
   try {
     return await makeOcearoCoreApiCall('/status');
   } catch (error) {
-    console.error('Failed to get OcearoCore status:', error);
+    console.warn('Failed to get OcearoCore status:', error);
     return {
       error: error.message,
       available: false
@@ -644,7 +644,7 @@ export const handleOcearoCoreError = (error, context = 'OcearoCore operation') =
     return 'OcearoCore service is not responding (timeout)';
   }
 
-  console.error(`${context} failed:`, error);
+    console.warn(`${context} failed:`, error.message);
   
   // Return user-friendly error messages
   if (error.message.includes('not enabled')) {

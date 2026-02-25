@@ -34,7 +34,7 @@ const INITIAL_STATES = {
     anchorWatch: false,
     parkingMode: false,
     mob: false,
-    showOcean: false,
+    oceanMode: 'black',
     ais: false,
     showPolar: true,
     showLaylines3D: false
@@ -226,6 +226,16 @@ export const OcearoContextProvider = ({ children }) => {
         return navigationState !== 'motoring';
     }, []);
    
+    const OCEAN_MODES = ['black', 'water', 'chart', 'meteo'];
+
+    const cycleOceanMode = () => {
+        setStates((prevState) => {
+            const currentIndex = OCEAN_MODES.indexOf(prevState.oceanMode);
+            const nextIndex = (currentIndex + 1) % OCEAN_MODES.length;
+            return { ...prevState, oceanMode: OCEAN_MODES[nextIndex] };
+        });
+    };
+
     // Method to toggle any state (e.g., autopilot, anchorWatch)
     const toggleState = async (key, value = undefined) => {
         const newValue = value !== undefined ? value : !states[key];
@@ -257,7 +267,7 @@ export const OcearoContextProvider = ({ children }) => {
                 if (error.name === 'NetworkError') {
                     console.warn('OcearoCore unreachable for anchorWatch update');
                 } else {
-                    console.error('Failed to update OcearoCore mode for anchorWatch:', handleOcearoCoreError(error));
+                    console.warn('Failed to update OcearoCore mode for anchorWatch:', handleOcearoCoreError(error));
                 }
             }
         }
@@ -275,7 +285,7 @@ export const OcearoContextProvider = ({ children }) => {
                 if (error.name === 'NetworkError') {
                     console.warn('OcearoCore unreachable for parkingMode update');
                 } else {
-                    console.error('Failed to update OcearoCore mode for parkingMode:', handleOcearoCoreError(error));
+                    console.warn('Failed to update OcearoCore mode for parkingMode:', handleOcearoCoreError(error));
                 }
             }
         }
@@ -342,7 +352,7 @@ export const OcearoContextProvider = ({ children }) => {
                 if (error.name === 'NetworkError') {
                     console.warn(`OcearoCore unreachable for exclusive mode update: ${key}`);
                 } else {
-                    console.error(`Failed to update OcearoCore mode for ${key}:`, handleOcearoCoreError(error));
+                    console.warn(`Failed to update OcearoCore mode for ${key}:`, handleOcearoCoreError(error));
                 }
             }
         } else {
@@ -422,6 +432,13 @@ export const OcearoContextProvider = ({ children }) => {
                     updateSignalKData(updates);
                 }, SAMPLE_DATA_INTERVAL);
             };
+
+            if (!signalkUrl || signalkUrl.trim().length === 0) {
+                if (debugMode) {
+                    setupDebugDataInterval();
+                }
+                return;
+            }
             
             try {
                 // Use SignalKService to create client with proper authentication
@@ -470,7 +487,19 @@ export const OcearoContextProvider = ({ children }) => {
                     setupDebugDataInterval();
                 }
             } catch (error) {
-                console.error('Failed to connect to SignalK:', error);
+                let errorMessage;
+                if (error instanceof Error) {
+                    errorMessage = error.message;
+                } else if (error && typeof error === 'object' && 'isTrusted' in error) {
+                    errorMessage = 'Network error (Event). Check SignalK URL, server availability, and CORS settings.';
+                } else {
+                    try {
+                        errorMessage = JSON.stringify(error);
+                    } catch (stringifyError) {
+                        errorMessage = String(error);
+                    }
+                }
+                console.warn(`Failed to connect to SignalK (${signalkUrl}): ${errorMessage}`);
                 
                 // Only enable debug data if debugMode is configured
                 if (debugMode) {
@@ -515,6 +544,7 @@ export const OcearoContextProvider = ({ children }) => {
                     states,
                     toggleState,
                     toggleExclusiveMode,
+                    cycleOceanMode,
                 }}
             >
                 {children}

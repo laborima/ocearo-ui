@@ -108,6 +108,7 @@ WindArrow.propTypes = {
  * @param {number} outerRadius - Outer radius of the compass dial
  */
 const WindSector3D = ({ outerRadius }) => {
+    const ocearoContext = useOcearoContext();
     // Read preferred paths from settings
     const preferredWindSpeed = configService.get('preferredWindSpeedPath') || 'speedTrue';
     const preferredWindDir = configService.get('preferredWindDirectionPath') || 'directionTrue';
@@ -200,8 +201,8 @@ const WindSector3D = ({ outerRadius }) => {
 
     return (
         <group>
-            {/* True wind indicator - only shown when speed > 0 */}
-            {trueWindSpeed > 0 && (
+            {/* True wind indicator - only shown when speed > 0 and not hidden by config */}
+            {trueWindSpeed > 0 && configService.get('hideTrueWind') !== true && (
                 <WindArrow
                     position={trueWindPosition}
                     rotation={[-Math.PI / 2, 0, -(Math.PI / 2 - trueWindAngle)]}

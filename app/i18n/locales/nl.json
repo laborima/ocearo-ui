@@ -53,7 +53,11 @@
     "seaState": "Zeegang",
     "polarView": "Polaire weergave",
     "laylines3D": "Laylines 3D",
-    "aisRadar": "AIS-radar"
+    "aisRadar": "AIS-radar",
+    "oceanBlack": "Zwart (geen oceaan)",
+    "oceanWater": "Oceaan (3D water)",
+    "oceanChart": "Kaart (freeboard-sk)",
+    "oceanMeteo": "Weer (Windy)"
   },
   "indicators": {
     "depth": "Diepte",

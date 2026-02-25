@@ -41,13 +41,13 @@ const EnvironmentalDisplay = ({ mode, value, icon, nightMode }) => {
   }
 
   return (
-    <div className={`flex items-center space-x-3 px-3 py-1.5 transition-all duration-300 ${textColor}`}>
-      <FontAwesomeIcon icon={icon} className="text-lg opacity-80" />
-      <div className="flex flex-col">
-        <span className="text-xs font-black uppercase tracking-widest text-hud-muted leading-none mb-1">
+    <div className={`flex items-center flex-shrink-0 space-x-2 sm:space-x-3 px-2 sm:px-3 py-1.5 transition-all duration-300 ${textColor}`}>
+      <FontAwesomeIcon icon={icon} className="text-base sm:text-lg opacity-80" />
+      <div className="flex flex-col flex-shrink-0">
+        <span className="ocearo-large-label text-xs font-black uppercase tracking-widest text-hud-muted leading-none mb-1">
           {t(ENVIRONMENTAL_MODES[mode].labelKey)}
         </span>
-        <span className="text-xl font-bold tracking-tight leading-none">
+        <span className="text-base sm:text-xl font-bold tracking-tight leading-none whitespace-nowrap">
           {ENVIRONMENTAL_MODES[mode].format(value)}
         </span>
       </div>

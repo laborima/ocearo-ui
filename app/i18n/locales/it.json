@@ -53,7 +53,11 @@
     "seaState": "Stato del mare",
     "polarView": "Vista polare",
     "laylines3D": "Laylines 3D",
-    "aisRadar": "Radar AIS"
+    "aisRadar": "Radar AIS",
+    "oceanBlack": "Nero (senza oceano)",
+    "oceanWater": "Oceano (acqua 3D)",
+    "oceanChart": "Carta (freeboard-sk)",
+    "oceanMeteo": "Meteo (Windy)"
   },
   "indicators": {
     "depth": "Profondità",

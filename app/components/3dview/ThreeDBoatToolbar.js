@@ -1,25 +1,33 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAnchor, faShip, faPersonFalling, faMoon, faWater, faParking, faSatellite, faCompass, faRulerCombined } from '@fortawesome/free-solid-svg-icons';
+import { faAnchor, faShip, faMoon, faWater, faParking, faSatellite, faCompass, faRulerCombined, faMap, faCloudSunRain } from '@fortawesome/free-solid-svg-icons';
 import { useOcearoContext } from '../context/OcearoContext';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const ThreeDBoatToolbar = () => {
     const { t } = useTranslation();
-    const { nightMode, setNightMode, states, toggleState, toggleExclusiveMode } = useOcearoContext();
+    const { nightMode, setNightMode, states, toggleState, toggleExclusiveMode, cycleOceanMode } = useOcearoContext();
     const prevAutopilotRef = useRef(states.autopilot);
 
-    // Dynamic text color based on night mode
     const activeColor = {
         autopilot: 'text-oBlue',
         anchorWatch: 'text-oYellow',
         parkingMode: 'text-oGreen',
         nightMode: 'text-oNight',
-        ocean: 'text-oBlue',
         polar: 'text-oBlue',
         laylines: 'text-oGreen',
         ais: 'text-oGreen'
     };
+
+    const OCEAN_MODE_CONFIG = {
+        black: { icon: faWater,        color: 'text-hud-muted',  label: t('toolbar.oceanBlack') },
+        water: { icon: faWater,        color: 'text-oBlue',      label: t('toolbar.oceanWater') },
+        chart: { icon: faMap,          color: 'text-oGreen',     label: t('toolbar.oceanChart') },
+        meteo: { icon: faCloudSunRain, color: 'text-oYellow',    label: t('toolbar.oceanMeteo') },
+    };
+
+    const currentOceanMode = states.oceanMode || 'black';
+    const oceanConfig = OCEAN_MODE_CONFIG[currentOceanMode];
 
     const ToolbarButton = ({ onClick, icon, isActive, activeClass, label }) => (
         <button
@@ -74,14 +82,14 @@ const ThreeDBoatToolbar = () => {
             />
 
             <ToolbarButton
-                onClick={() => toggleState('showOcean')}
-                icon={faWater}
-                isActive={states.showOcean}
-                activeClass={activeColor.ocean}
-                label={t('toolbar.seaState')}
+                onClick={cycleOceanMode}
+                icon={oceanConfig.icon}
+                isActive={currentOceanMode !== 'black'}
+                activeClass={oceanConfig.color}
+                label={oceanConfig.label}
             />
 
-            {states.autopilot && !states.showOcean && (
+            {states.autopilot && currentOceanMode === 'black' && (
                 <ToolbarButton
                     onClick={() => toggleState('showPolar')}
                     icon={faCompass}

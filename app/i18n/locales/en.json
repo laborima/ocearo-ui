@@ -54,7 +54,11 @@
     "seaState": "Sea State",
     "polarView": "Polar View",
     "laylines3D": "Laylines 3D",
-    "aisRadar": "AIS Radar"
+    "aisRadar": "AIS Radar",
+    "oceanBlack": "Black (no ocean)",
+    "oceanWater": "Ocean (3D water)",
+    "oceanChart": "Chart (freeboard-sk)",
+    "oceanMeteo": "Meteo (Windy)"
   },
   "indicators": {
     "depth": "Depth",
@@ -104,6 +108,8 @@
     "metallic": "Metallic",
     "navigationHud": "Navigation & HUD",
     "compassOrientation": "Compass Orientation",
+    "hide3DCompass": "Hide 3D Compass",
+    "hideTrueWind": "Hide True Wind",
     "northAtTop": "North at Top",
     "northAtBottom": "North at Bottom",
     "attitudeIndicator": "Attitude Indicator",

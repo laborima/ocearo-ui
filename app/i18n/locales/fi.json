@@ -53,7 +53,11 @@
     "seaState": "Merenkäynti",
     "polarView": "Polaarinäkymä",
     "laylines3D": "Laylines 3D",
-    "aisRadar": "AIS-tutka"
+    "aisRadar": "AIS-tutka",
+    "oceanBlack": "Musta (ei merta)",
+    "oceanWater": "Meri (3D vesi)",
+    "oceanChart": "Kartta (freeboard-sk)",
+    "oceanMeteo": "Sää (Windy)"
   },
   "indicators": {
     "depth": "Syvyys",
