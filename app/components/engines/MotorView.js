@@ -237,13 +237,13 @@ const MotorView = () => {
   // Get last refill engine hours for the modal
   const lastRefillEngineHours = fuelStats?.lastRefill?.engineHours || null;
 
-  // Calculate tank estimation based on fuel logs
-  const tankEstimation = estimateTankLevel(
+  // Calculate tank estimation based on fuel logs (memoized — avoids recomputing every render)
+  const tankEstimation = useMemo(() => estimateTankLevel(
     fuelLogEntries,
     currentEngineHours,
     engineData.fuelCapacity,
     engineData.fuelLevel !== null ? engineData.fuelLevel / 100 : null
-  );
+  ), [fuelLogEntries, currentEngineHours, engineData.fuelCapacity, engineData.fuelLevel]);
 
   return (
     <div className="flex flex-col h-full bg-rightPaneBg overflow-hidden">
@@ -297,7 +297,7 @@ const MotorView = () => {
                 className="bg-hud-elevated px-4 py-1.5 rounded-sm text-hud-main text-xs font-black uppercase border border-hud focus:outline-none tesla-hover transition-all duration-500 shadow-soft"
               >
                 {availableEngines.map((engine) => (
-                  <option key={engine.id} value={engine.id} className="bg-oNight">
+                  <option key={engine.id} value={engine.id} className="bg-leftPaneBg text-hud-main">
                     {engine.name}
                   </option>
                 ))}
@@ -347,7 +347,7 @@ const MotorView = () => {
             {/* Temperature Monitoring - Circular Gauges */}
             <div>
               <h3 className="text-xs font-black text-hud-main mb-1 uppercase tracking-widest flex items-center">
-                <FontAwesomeIcon icon={faTemperatureHalf} className="mr-2 text-orange-500 text-xs" />
+                <FontAwesomeIcon icon={faTemperatureHalf} className="mr-2 text-oYellow text-xs" />
                 {t('motor.temperatureSection')}
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -414,6 +414,7 @@ const MotorView = () => {
                   icon={faOilCan}
                   warningThreshold={2.5}
                   criticalThreshold={2}
+                  reversed={true}
                   showMinMax={true}
                 />
                 <BarGauge
@@ -443,6 +444,7 @@ const MotorView = () => {
                   icon={faGasPump}
                   warningThreshold={2.5}
                   criticalThreshold={2}
+                  reversed={true}
                   showMinMax={true}
                 />
               </div>
@@ -493,6 +495,7 @@ const MotorView = () => {
                 icon={faOilCan}
                 warningThreshold={2.5}
                 criticalThreshold={2}
+                reversed={true}
                 size={120}
               />
               
@@ -519,6 +522,7 @@ const MotorView = () => {
                 icon={faOilCan}
                 warningThreshold={2.5}
                 criticalThreshold={2}
+                reversed={true}
                 showMinMax={true}
               />
               <BarGauge
@@ -556,6 +560,7 @@ const MotorView = () => {
                     icon={faBatteryFull}
                     warningThreshold={11.8}
                     criticalThreshold={11.5}
+                    reversed={true}
                     showMinMax={true}
                   />
                   <BarGauge
@@ -580,6 +585,7 @@ const MotorView = () => {
                     icon={faBatteryFull}
                     warningThreshold={11.8}
                     criticalThreshold={11.5}
+                    reversed={true}
                     showMinMax={true}
                   />
                   <BarGauge
@@ -637,7 +643,7 @@ const MotorView = () => {
               </h3>
               <button
                 onClick={() => setShowFuelLogModal(true)}
-                className="bg-oBlue hover:bg-blue-600 text-hud-main px-4 py-1.5 rounded-sm text-xs font-black uppercase tracking-widest transition-all duration-500 flex items-center shadow-lg shadow-oBlue/20"
+                className="bg-oBlue hover:bg-oBlue/80 text-hud-main px-4 py-1.5 rounded-sm text-xs font-black uppercase tracking-widest transition-all duration-500 flex items-center shadow-lg shadow-oBlue/20"
                 disabled={fuelLogLoading}
               >
                 <FontAwesomeIcon icon={faPlus} className="mr-2 text-xs" />
@@ -672,6 +678,7 @@ const MotorView = () => {
                 icon={faGaugeHigh}
                 warningThreshold={2.5}
                 criticalThreshold={2}
+                reversed={true}
                 size={100}
               />
               <CircularGauge
@@ -683,6 +690,7 @@ const MotorView = () => {
                 icon={faFlask}
                 warningThreshold={30}
                 criticalThreshold={15}
+                reversed={true}
                 size={100}
               />
             </div>
@@ -703,6 +711,7 @@ const MotorView = () => {
                   icon={faFlask}
                   warningThreshold={30}
                   criticalThreshold={15}
+                  reversed={true}
                   showMinMax={true}
                 />
                 <CompactDataField
@@ -826,7 +835,7 @@ const MotorView = () => {
                             </td>
                             <td className="p-4 text-center">
                               {fuel.additive ? (
-                                <span className="text-purple-400 animate-soft-pulse">
+                                <span className="text-oBlue animate-soft-pulse">
                                   <FontAwesomeIcon icon={faFlask} className="text-xs" />
                                 </span>
                               ) : (
@@ -856,7 +865,7 @@ const MotorView = () => {
                   onClick={() => setShowAllNotifications(!showAllNotifications)}
                   className="px-4 py-1.5 text-xs bg-hud-elevated text-hud-secondary rounded-sm font-black uppercase tracking-widest tesla-hover border border-hud transition-all duration-500 shadow-soft"
                 >
-                  {showAllNotifications ? t('motor.notificationLog') : t('motor.notificationLog')}
+                  {showAllNotifications ? t('motor.showLess') : t('motor.showAll')}
                 </button>
               </div>
               
@@ -904,7 +913,7 @@ const MotorView = () => {
                         <div className="tesla-card p-4 bg-oGreen/5 border border-oGreen/10 shadow-soft">
                           <h4 className="text-xs font-black text-oGreen mb-3 uppercase tracking-[0.2em] flex items-center">
                             <div className="w-1.5 h-1.5 rounded-full bg-oGreen mr-3" />
-                            HEALTHY TELEMETRY NODES ({notifications.length})
+                            {t('motor.healthyTelemetryNodes')} ({notifications.length})
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs font-black uppercase tracking-tight">
                             {notifications.map((n, idx) => (
@@ -926,14 +935,14 @@ const MotorView = () => {
                       <div className="bg-oRed/5 border border-oRed/20 p-6 rounded-sm shadow-soft animate-soft-pulse">
                         <h4 className="text-xs font-black text-oRed mb-6 uppercase tracking-[0.2em] flex items-center">
                           <div className="w-1.5 h-1.5 rounded-full bg-oRed mr-3" />
-                          CRITICAL NODE ALARMS
+                          {t('motor.criticalNodeAlarms')}
                         </h4>
                         <div className="space-y-4">
                           {notifications.filter(n => n.state === 'alarm' || n.state === 'emergency').map((n, idx) => (
                             <div key={idx} className="text-hud-main text-xs font-black uppercase tracking-widest bg-oRed/10 p-4 rounded-sm tesla-hover border border-oRed/20">
                               <div className="flex justify-between items-center">
                                 <span className="text-xs">{n.type.replace(/([A-Z])/g, ' $1').trim()}</span>
-                                <span className="text-oRed text-xs font-black tracking-tighter">ALERT LEVEL 3</span>
+                                <span className="text-oRed text-xs font-black tracking-tighter">{t('motor.alertLevel3')}</span>
                               </div>
                               <div className="text-hud-secondary text-xs mt-3 normal-case font-black tracking-normal opacity-80">{n.message}</div>
                             </div>
@@ -946,14 +955,14 @@ const MotorView = () => {
                       <div className="bg-oYellow/5 border border-oYellow/20 p-6 rounded-sm shadow-soft">
                         <h4 className="text-xs font-black text-oYellow mb-6 uppercase tracking-[0.2em] flex items-center">
                           <div className="w-1.5 h-1.5 rounded-full bg-oYellow mr-3" />
-                          SYSTEM ANOMALIES
+                          {t('motor.systemAnomalies')}
                         </h4>
                         <div className="space-y-4">
                           {notifications.filter(n => n.state === 'alert' || n.state === 'warn').map((n, idx) => (
                             <div key={idx} className="text-hud-main text-xs font-black uppercase tracking-widest bg-oYellow/10 p-4 rounded-sm tesla-hover border border-oYellow/20">
                               <div className="flex justify-between items-center">
                                 <span className="text-xs">{n.type.replace(/([A-Z])/g, ' $1').trim()}</span>
-                                <span className="text-oYellow text-xs font-black tracking-tighter">WARN LEVEL 2</span>
+                                <span className="text-oYellow text-xs font-black tracking-tighter">{t('motor.warnLevel2')}</span>
                               </div>
                               <div className="text-hud-secondary text-xs mt-3 normal-case font-black tracking-normal opacity-80">{n.message}</div>
                             </div>
@@ -970,7 +979,7 @@ const MotorView = () => {
               <div className="tesla-card p-8 bg-hud-bg border border-hud">
                 <h3 className="text-xs font-black text-oBlue mb-6 uppercase tracking-[0.3em] flex items-center">
                   <div className="w-1.5 h-1.5 rounded-full bg-oBlue mr-3" />
-                  Internal Debug Telemetry
+                  {t('motor.internalDebugTelemetry')}
                 </h3>
                 <div className="space-y-4 text-xs font-black font-mono text-hud-secondary uppercase tracking-widest">
                   <div className="grid grid-cols-2 gap-x-8 gap-y-2">

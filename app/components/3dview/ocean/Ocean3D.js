@@ -12,6 +12,16 @@ import configService from "../../settings/ConfigService";
 // Extend the Water and Sky components for use in JSX
 extend({ Water, Sky });
 
+// Module-level constants reused across frames to avoid per-frame allocations
+const DAY_WATER_COLOR = new THREE.Color(0x004466);
+const NIGHT_WATER_COLOR = new THREE.Color(0x000205);
+const _scratchWaterColor = new THREE.Color();
+
+// The astronomical sun position and sky atmosphere barely change over a second.
+// Recompute them at a low frequency (RPi5-friendly) while keeping the wave
+// animation running every frame for smoothness.
+const SKY_UPDATE_INTERVAL = 1.0; // seconds
+
 function Ocean3D() {
   const { nightMode, setNightMode } = useOcearoContext();
   const { getWindData, getCurrentWeather } = useWeather();
@@ -32,6 +42,8 @@ function Ocean3D() {
 
   // Refs for smoothing values
   const smoothedWindSpeedRef = useRef(0);
+  // Accumulator that throttles the heavy sky/sun recomputation
+  const skyAccumRef = useRef(SKY_UPDATE_INTERVAL);
   
   const gl = useThree((state) => state.gl);
   const scene = useThree((state) => state.scene);
@@ -51,8 +63,10 @@ function Ocean3D() {
 
   // Initial water configuration
   const config = useMemo(() => ({
-    textureWidth: 512, // Increased for better quality
-    textureHeight: 512,
+    // 256² reflection target: the Water mirror pass renders the whole scene again
+    // each frame, so this is the single biggest GPU cost. 256 keeps it smooth on a RPi5.
+    textureWidth: 256,
+    textureHeight: 256,
     waterNormals,
     sunDirection: new THREE.Vector3(),
     sunColor: 0xffffff,
@@ -64,6 +78,17 @@ function Ocean3D() {
   
   // Main simulation loop
   useFrame((state, delta) => {
+    // --- Cheap per-frame work: keep the waves animating smoothly ---
+    if (ref.current) {
+      ref.current.material.uniforms.time.value += delta * 0.5;
+    }
+
+    // --- Throttle the expensive astronomical / sky / color computation ---
+    skyAccumRef.current += delta;
+    if (skyAccumRef.current < SKY_UPDATE_INTERVAL) return;
+    const elapsed = skyAccumRef.current;
+    skyAccumRef.current = 0;
+
     // 1. Get Time and Position from refs for maximum performance
     const currentPosition = positionRef.current;
 
@@ -157,29 +182,24 @@ function Ocean3D() {
     if (ref.current) {
       // Get wind speed in m/s (default to 5 m/s if unavailable)
       const windSpeed = getWindData()?.speed ?? 5;
-      
-      // Smooth the wind speed change
-      smoothedWindSpeedRef.current += (windSpeed - smoothedWindSpeedRef.current) * delta * 0.5;
-      
+
+      // Smooth the wind speed change (elapsed = time since last sky update)
+      smoothedWindSpeedRef.current += (windSpeed - smoothedWindSpeedRef.current) * Math.min(elapsed * 0.5, 1);
+
       // Calculate dynamic parameters
       // Distortion: 0 (calm) to ~8 (storm). Cap at 8.
       const targetDistortion = Math.min(Math.max(smoothedWindSpeedRef.current * 0.5, 0), 8);
-      
+
       // Update Uniforms
       const waterUniforms = ref.current.material.uniforms;
       waterUniforms.distortionScale.value = targetDistortion;
       waterUniforms.sunDirection.value.copy(sun).normalize();
-      
-      // Adjust water color based on night factor
+
+      // Adjust water color based on night factor (reuse module-level colors, no per-frame alloc)
       // Day: Technical Deep Teal, Night: Ultra Dark Blue/Black
-      const dayColor = new THREE.Color(0x004466);
-      const nightColor = new THREE.Color(0x000205);
-      const currentColor = dayColor.clone().lerp(nightColor, nightFactor);
+      _scratchWaterColor.copy(DAY_WATER_COLOR).lerp(NIGHT_WATER_COLOR, nightFactor);
       waterUniforms.sunColor.value.setHex(isNightSky ? 0x4488ff : 0xffffff); // More blueish moonlight
-      waterUniforms.waterColor.value.copy(currentColor);
-      
-      // Animate waves
-      waterUniforms.time.value += delta * 0.5;
+      waterUniforms.waterColor.value.copy(_scratchWaterColor);
     }
 
     // 5. Update Sky - Dynamic Atmosphere
@@ -242,7 +262,7 @@ function Ocean3D() {
   return (
     <>
       {nightMode && (
-        <Stars radius={5000} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+        <Stars radius={5000} depth={50} count={1500} factor={4} saturation={0} fade speed={1} />
       )}
 
       <sky ref={skyRef} scale={450000} />

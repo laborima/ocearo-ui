@@ -1,15 +1,16 @@
 import React, { useMemo } from 'react';
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   ReferenceLine
 } from 'recharts';
 import { oBlue, oGreen, useOcearoContext } from '../../context/OcearoContext';
+import { useTide } from '../../context/TideContext';
 import BaseWidget from './BaseWidget';
 import configService from '../../settings/ConfigService';
 import { useSignalKPaths } from '../../hooks/useSignalK';
@@ -128,8 +129,9 @@ const parseTideTime = (timeValue) => {
 
 export default function TideWidget() {
   const { t } = useTranslation();
+  const { nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
-  
+
   const tidePaths = useMemo(() => [
     'environment.tide.heightNow',
     'environment.tide.heightHigh',
@@ -138,15 +140,17 @@ export default function TideWidget() {
     'environment.tide.timeHigh',
     'environment.tide.coeffNow'
   ], []);
-  
+
   const skValues = useSignalKPaths(tidePaths);
-  
-  const level = skValues['environment.tide.heightNow'];
-  const high = skValues['environment.tide.heightHigh'];
-  const low = skValues['environment.tide.heightLow'];
-  const timeLow = skValues['environment.tide.timeLow'];
-  const timeHigh = skValues['environment.tide.timeHigh'];
-  const coefficient = skValues['environment.tide.coeffNow'];
+  const { tideData } = useTide();
+
+  // Use SignalK WebSocket data if available, fallback to TideContext (which uses REST API)
+  const level = skValues['environment.tide.heightNow'] ?? tideData?.level ?? null;
+  const high = skValues['environment.tide.heightHigh'] ?? tideData?.high ?? null;
+  const low = skValues['environment.tide.heightLow'] ?? tideData?.low ?? null;
+  const timeLow = skValues['environment.tide.timeLow'] ?? tideData?.timeLow ?? null;
+  const timeHigh = skValues['environment.tide.timeHigh'] ?? tideData?.timeHigh ?? null;
+  const coefficient = skValues['environment.tide.coeffNow'] ?? tideData?.coefficient ?? null;
 
   const hasData = level !== null || high !== null || low !== null || debugMode;
 
@@ -217,8 +221,8 @@ export default function TideWidget() {
             <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorTide" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={isRising ? oGreen : oBlue} stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor={isRising ? oGreen : oBlue} stopOpacity={0}/>
+                  <stop offset="5%" stopColor={isRising ? (nightMode ? '#ef4444' : oGreen) : (nightMode ? '#ef4444' : oBlue)} stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor={isRising ? (nightMode ? '#ef4444' : oGreen) : (nightMode ? '#ef4444' : oBlue)} stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--hud-border)" vertical={false} />
@@ -237,12 +241,12 @@ export default function TideWidget() {
               />
               <Tooltip 
                 contentStyle={{ backgroundColor: 'var(--hud-bg)', border: '1px solid var(--hud-border)', borderRadius: '4px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase' }}
-                itemStyle={{ color: isRising ? oGreen : oBlue }}
+                itemStyle={{ color: isRising ? (nightMode ? '#ef4444' : oGreen) : (nightMode ? '#ef4444' : oBlue) }}
               />
               <Area 
                 type="monotone" 
                 dataKey="height" 
-                stroke={isRising ? oGreen : oBlue} 
+                stroke={isRising ? (nightMode ? '#ef4444' : oGreen) : (nightMode ? '#ef4444' : oBlue)} 
                 strokeWidth={2}
                 fillOpacity={1} 
                 fill="url(#colorTide)" 

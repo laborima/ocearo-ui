@@ -1,7 +1,6 @@
 'use client';
 import React, { useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useOcearoContext } from '../../context/OcearoContext';
 import { convertDepthUnit, getDepthUnitLabel } from '../../utils/UnitConversions';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
@@ -11,7 +10,6 @@ import { useTranslation } from 'react-i18next';
 
 export default function DepthWidget() {
   const { t } = useTranslation();
-  const { nightMode } = useOcearoContext();
   const debugMode = configService.get('debugMode');
   
   const depthKeel = useSignalKPath('environment.depth.belowKeel');
@@ -48,8 +46,6 @@ export default function DepthWidget() {
     if (depth < 10) return t('widgets.safe');
     return t('widgets.deep');
   };
-
-  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-hud-secondary';
 
   return (
     <BaseWidget
@@ -93,7 +89,7 @@ export default function DepthWidget() {
             <FontAwesomeIcon icon={faAnchor} className="text-hud-muted text-xs opacity-50" />
             <div className="flex-1 bg-hud-elevated rounded-full h-1 overflow-hidden shadow-inner">
               <div 
-                className={`h-full transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${
+                className={`h-full transition-all duration-1000 ${
                   depthData.belowKeel !== null ? getDepthColor(depthData.belowKeel).replace('text-', 'bg-') : 'bg-hud-bg'
                 }`}
                 style={{ width: `${depthData.belowKeel !== null ? Math.min(100, (depthData.belowKeel / 50) * 100) : 0}%` }}

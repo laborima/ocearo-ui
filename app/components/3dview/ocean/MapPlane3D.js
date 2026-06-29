@@ -54,8 +54,8 @@ function loadTile(url) {
 
 // ── Canvas tile renderer ──────────────────────────────────────────────────────
 
-async function renderTilesToCanvas(canvas, position, zoom, tileTemplate) {
-    const ctx = canvas.getContext('2d');
+// Draw a single tile layer (template) onto the context, without clearing.
+async function drawTileLayer(ctx, position, zoom, tileTemplate) {
     const { latitude: lat, longitude: lon } = position;
 
     const ftx = lonToTileF(lon, zoom);
@@ -88,12 +88,26 @@ async function renderTilesToCanvas(canvas, position, zoom, tileTemplate) {
 
     const images = await Promise.all(tilesToDraw.map((t) => loadTile(t.url)));
 
-    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     for (let i = 0; i < tilesToDraw.length; i++) {
         const img = images[i];
         if (!img) continue;
         const { screenLeft, screenTop } = tilesToDraw[i];
         ctx.drawImage(img, screenLeft, screenTop, TILE_SIZE, TILE_SIZE);
+    }
+}
+
+// Render an ordered list of tile layers (base map first, overlays on top).
+// Windy wind tiles are semi-transparent overlays, so the meteo mode draws an
+// OSM base underneath them — otherwise the plane renders mostly black.
+async function renderTilesToCanvas(canvas, position, zoom, tileTemplates) {
+    const ctx = canvas.getContext('2d');
+    const layers = Array.isArray(tileTemplates) ? tileTemplates : [tileTemplates];
+
+    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    // Draw layers sequentially so overlays composite on top of the base map.
+    for (const template of layers) {
+        if (!template) continue;
+        await drawTileLayer(ctx, position, zoom, template);
     }
 }
 
@@ -105,7 +119,9 @@ export default function MapPlane3D({ mode = 'chart' }) {
     const textureRef = useRef(null);
     const renderPendingRef = useRef(false);
     const lastPositionRef = useRef(null);
-    const tileTemplateRef = useRef(mode === 'meteo' ? WINDY_TEMPLATE : OSM_TEMPLATE);
+    // Holds either a single tile template (chart) or an ordered list of layers
+    // (meteo = OSM base + windy wind overlay).
+    const tileTemplateRef = useRef(mode === 'meteo' ? [OSM_TEMPLATE, WINDY_TEMPLATE] : OSM_TEMPLATE);
     const { gl } = useThree();
 
     // The size of the geometry will dynamically match the actual canvas spatial coverage
@@ -177,7 +193,8 @@ export default function MapPlane3D({ mode = 'chart' }) {
 
     useEffect(() => {
         if (mode === 'meteo') {
-            tileTemplateRef.current = WINDY_TEMPLATE;
+            // OSM base + windy wind overlay (overlay alone is mostly transparent)
+            tileTemplateRef.current = [OSM_TEMPLATE, WINDY_TEMPLATE];
             scheduleRedraw();
             return;
         }

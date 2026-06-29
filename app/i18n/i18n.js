@@ -74,6 +74,7 @@ i18n
         resources,
         lng: getStoredLanguage() || undefined,
         fallbackLng: 'en',
+        showSupportNotice: false,
         interpolation: {
             escapeValue: false
         },

@@ -89,7 +89,7 @@ const ThreeDBoatSeaLevelIndicator = () => {
       aria-label={`${t('indicators.waterDepth')}: ${formattedDepth(depth)}`}
     >
       <div
-        className={`absolute bottom-0 left-0 w-full transition-all duration-1000 ease-in-out ${progressBarColor} ${depth < DEPTH_THRESHOLDS.DANGER ? 'animate-pulse' : ''}`}
+        className={`absolute bottom-0 left-0 w-full transition-all duration-1000 ease-in-out ${progressBarColor} ${depth != null && depth < DEPTH_THRESHOLDS.DANGER ? 'animate-pulse' : ''}`}
         style={{ height: `${depthPercentage}%` }}
       />
     </div>
@@ -107,7 +107,7 @@ const ThreeDBoatSeaLevelIndicator = () => {
 
       {/* Depth Value */}
       <div
-        className={`text-xs font-black tracking-widest mt-2 ${textColor} ${depth < DEPTH_THRESHOLDS.DANGER ? 'text-oRed animate-soft-pulse' : ''}`}
+        className={`text-xs font-black tracking-widest mt-2 ${textColor} ${depth != null && depth < DEPTH_THRESHOLDS.DANGER ? 'text-oRed animate-soft-pulse' : ''}`}
       >
         {formattedDepth(depth)}
       </div>

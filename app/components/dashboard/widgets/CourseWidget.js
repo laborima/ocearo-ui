@@ -171,7 +171,7 @@ export default function CourseWidget() {
         <BaseWidget
             title={t('widgets.course')}
             icon={faRoute}
-            iconColorClass="text-green-500"
+            iconColorClass="text-oGreen"
             hasData={courseData.hasData || hasDestination || waypointsList.length > 0 || routesList.length > 0}
             noDataMessage={t('widgets.noCourseData')}
         >
@@ -272,7 +272,7 @@ export default function CourseWidget() {
                                 </button>
                                 <button
                                     onClick={goToNextWaypoint}
-                                    className="bg-oBlue hover:bg-blue-600 text-hud-main px-4 py-1.5 rounded text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-oBlue/20"
+                                    className="bg-oBlue hover:bg-oBlue/80 text-hud-main px-4 py-1.5 rounded text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-oBlue/20"
                                 >
                                     {t('widgets.proceed')}
                                     <FontAwesomeIcon icon={faArrowRight} className="ml-2" />

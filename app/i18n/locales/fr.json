@@ -492,7 +492,11 @@
     "noteCol": "Note",
     "speed": "Vitesse",
     "coord": "Coord",
-    "ocearoCoreNotEnabled": "OcearoCore n'est pas activé"
+    "ocearoCoreNotEnabled": "OcearoCore n'est pas activé",
+    "racingMode": "Mode Régate",
+    "racingModeActive": "Mode Régate Actif",
+    "racingModeAISInfo": "AIS silencieux",
+    "racingAdvice": "RÉGATE"
   },
   "motor": {
     "engine": "Moteur",
@@ -561,7 +565,15 @@
     "warningsSummary": "Résumé des alertes",
     "allSystemsNominal": "Tous les systèmes nominaux",
     "noActiveWarnings": "Aucune alerte active détectée",
-    "notificationLog": "Journal des notifications"
+    "notificationLog": "Journal des notifications",
+    "showAll": "Tout afficher",
+    "showLess": "Réduire",
+    "healthyTelemetryNodes": "Nœuds de télémétrie sains",
+    "criticalNodeAlarms": "Alarmes critiques",
+    "alertLevel3": "Alerte niveau 3",
+    "systemAnomalies": "Anomalies système",
+    "warnLevel2": "Avertissement niveau 2",
+    "internalDebugTelemetry": "Télémétrie de débogage interne"
   },
   "fuelLog": {
     "logFuelRefill": "Enregistrer un plein",
@@ -581,6 +593,14 @@
     "errorCost": "Veuillez entrer un coût valide",
     "errorEngineHours": "Veuillez entrer les heures moteur",
     "autoCalculated": "Calculé automatiquement"
+  },
+  "mediaPlayer": {
+    "entertainmentNodes": "Nœuds de divertissement",
+    "externalNode": "Nœud externe",
+    "redirecting": "Redirection vers le nœud externe",
+    "launch": "Lancer",
+    "connectionRefused": "Connexion refusée par {{name}}",
+    "openExternalNode": "Ouvrir le nœud externe"
   },
   "errors": {
     "errorGeneratingUrl": "Erreur de génération de l'URL de l'application",

@@ -162,19 +162,19 @@ export default function SunriseSunsetWidget() {
       <div className="flex-1 flex flex-col justify-center py-4">
         {/* Visual representation */}
         <div className="relative mb-8 group">
-          <div className="w-full h-16 relative overflow-hidden rounded-sm bg-gradient-to-r from-orange-950 via-orange-600/20 to-yellow-900/40 shadow-inner border border-hud transition-all duration-700 group-hover:scale-[1.02]">
+          <div className="w-full h-16 relative overflow-hidden rounded-sm bg-gradient-to-r from-oYellow/20 via-oYellow/10 to-oYellow/5 shadow-inner border border-hud transition-all duration-700 group-hover:scale-[1.02]">
             {/* Horizon line */}
-            <div className="absolute bottom-4 w-full h-px bg-hud-muted opacity-20 shadow-[0_-4px_10px_var(--hud-text-main)] shadow-opacity-10"></div>
+            <div className="absolute bottom-4 w-full h-px bg-hud-muted opacity-20 shadow-[0_-4px_10px_var(--hud-text-main)]"></div>
             
             {/* Sun position indicator */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div className="w-10 h-10 bg-oYellow rounded-full shadow-[0_0_25px_var(--color-oYellow)] shadow-opacity-40 flex items-center justify-center border border-hud animate-soft-pulse">
-                <FontAwesomeIcon icon={faSun} className="text-orange-900 text-sm" />
+              <div className="w-10 h-10 bg-oYellow rounded-full shadow-[0_0_25px_var(--color-oYellow)] flex items-center justify-center border border-hud animate-soft-pulse">
+                <FontAwesomeIcon icon={faSun} className="text-oYellow text-sm" />
               </div>
             </div>
 
             {/* Atmosphere glow */}
-            <div className="absolute inset-0 bg-gradient-to-t from-transparent to-orange-500/5 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-transparent to-oYellow/5 pointer-events-none"></div>
           </div>
         </div>
 
@@ -190,7 +190,7 @@ export default function SunriseSunsetWidget() {
           
           <div className="text-center tesla-card bg-hud-bg p-4 tesla-hover border border-hud">
             <div className="text-hud-muted text-xs uppercase mb-3 font-black tracking-widest">{t('widgets.solarEgress')}</div>
-            <div className="text-3xl font-black text-orange-500 leading-none gliding-value tracking-tighter">
+            <div className="text-3xl font-black text-oYellow leading-none gliding-value tracking-tighter">
               {sunset !== null ? sunset : t('common.na')}
             </div>
             <div className="text-hud-muted text-xs uppercase mt-3 font-black tracking-widest opacity-60">{t('widgets.localMeridian')}</div>

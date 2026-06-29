@@ -66,11 +66,16 @@ const DEFAULT_POSITION = {
 
 // External URLs configuration
 const EXTERNAL_URLS = {
-    navigation: (signalkUrl) => `${signalkUrl}/@signalk/freeboard-sk/`,
+    navigation: (signalkUrl) => {
+        if (!signalkUrl || signalkUrl.includes('localhost:3000')) {
+            return null;
+        }
+        return `${signalkUrl}/@signalk/freeboard-sk/`;
+    },
     instrument: (signalkUrl) => `${signalkUrl}/@mxtommy/kip/`,
     dashboard: (signalkUrl) => signalkUrl.replace(':3000', ':3001') + '/grafana',
     webcam1: () => 'https://pv.viewsurf.com/2080/Chatelaillon-Port?i=NzU4Mjp1bmRlZmluZWQ',
-    webcam2: () => 'https://pv.viewsurf.com/1478/Chatelaillon-Plage&lt?i=NTkyMDp1bmRlZmluZWQ',
+    webcam2: () => 'https://pv.viewsurf.com/1478/Chatelaillon-Plage?i=NTkyMDp1bmRlZmluZWQ',
     weather: (_, position) => position && `https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=kt&zoom=10&overlay=wind&product=ecmwf&level=surface&lat=${position.latitude}&lon=${position.longitude}&message=true`
 };
 
@@ -84,6 +89,12 @@ const RightPane = ({ view }) => {
 
     // Use subscription model for position updates
     const skPosition = useSignalKPath('navigation.position');
+
+    // Clear any stale error when switching views — otherwise an error from one
+    // external view would persist and hide every subsequent (internal) view.
+    useEffect(() => {
+        setError(null);
+    }, [view]);
 
     // Update internal position state only when significant change occurs
     useEffect(() => {
@@ -130,8 +141,8 @@ const RightPane = ({ view }) => {
         try {
             return urlGenerator(signalkUrl, myPosition);
         } catch (err) {
+            // Don't call setState during render — fall back to the "failed to load" UI below.
             console.error('Error generating URL:', err);
-            setError(t('errors.errorGeneratingUrl'));
             return null;
         }
     }, [view, myPosition, signalkUrl]);
@@ -165,7 +176,14 @@ const RightPane = ({ view }) => {
             case 'debug':
                 return <DebugView />;
             default:
-                return iframeSrc && (
+                if (!iframeSrc) {
+                    return (
+                        <div className="text-hud-muted p-4 text-sm">
+                            {t('errors.failedToLoadExternal')}
+                        </div>
+                    );
+                }
+                return (
                     <iframe
                         className="flex-grow border-none"
                         src={iframeSrc}

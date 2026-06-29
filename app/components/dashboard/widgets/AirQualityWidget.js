@@ -45,7 +45,7 @@ export default function AirQualityWidget() {
   const getAirQualityInfo = (co2Level) => {
     if (co2Level <= 800) return { level: t('widgets.aqGood'), color: 'text-oGreen', bg: 'bg-oGreen/10 border-oGreen/20' };
     if (co2Level <= 1000) return { level: t('widgets.aqModerate'), color: 'text-oYellow', bg: 'bg-oYellow/10 border-oYellow/20' };
-    if (co2Level <= 1500) return { level: t('widgets.aqPoor'), color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/20' };
+    if (co2Level <= 1500) return { level: t('widgets.aqPoor'), color: 'text-oYellow', bg: 'bg-oYellow/10 border-oYellow/20' };
     if (co2Level <= 2000) return { level: t('widgets.aqUnhealthy'), color: 'text-oRed', bg: 'bg-oRed/10 border-oRed/20' };
     return { level: t('widgets.aqHazardous'), color: 'text-oRed', bg: 'bg-oRed/20 border-oRed/30' };
   };
@@ -71,7 +71,7 @@ export default function AirQualityWidget() {
           {/* CO2 Progress bar */}
           <div className="w-full bg-hud-elevated rounded-full h-1 mt-4 overflow-hidden shadow-inner">
             <div 
-              className={`h-full transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${
+              className={`h-full transition-all duration-1000 ${
                 co2 <= 800 ? 'bg-oGreen' : co2 <= 1000 ? 'bg-oYellow' : 'bg-oRed'
               }`}
               style={{ width: `${co2 !== null ? Math.min((co2 / 2000) * 100, 100) : 0}%` }}

@@ -55,7 +55,10 @@ export default function RootLayout({ children }) {
     return (
         <html lang="en">
             <head>
-                
+                <meta
+                    name="description"
+                    content="Sailing made smarter with Ocearo: touchscreen-first sailing dashboard with navigation, weather, and instrumentation."
+                />
             </head>
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}

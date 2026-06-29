@@ -98,8 +98,8 @@ const TemperatureWidget = React.memo(() => {
               </div>
               <div className="h-1 bg-hud-elevated rounded-full overflow-hidden shadow-inner">
                 <div 
-                  className={`h-full transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${
-                    item.value !== null && item.value < 10 ? 'bg-oBlue' : 
+                  className={`h-full transition-all duration-1000 ${
+                    item.value !== null && item.value < 10 ? 'bg-oBlue' :
                     item.value !== null && item.value > 25 ? 'bg-oRed' : 'bg-oGreen'
                   }`}
                   style={{ width: `${item.value !== null ? Math.min(100, Math.max(0, (item.value + 10) * 2)) : 0}%` }}

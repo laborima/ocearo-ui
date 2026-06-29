@@ -120,8 +120,8 @@ const ThreeDBoatTankIndicator = () => {
     const batteries = useMemo(() => {
         const battery1SoC = skValues['electrical.batteries.1.capacity.stateOfCharge'];
         const battery1Voltage = skValues['electrical.batteries.1.voltage'];
-        const battery1EstimatedSoC = battery1SoC === null 
-            ? estimateStateOfCharge(battery1Voltage) 
+        const battery1EstimatedSoC = battery1SoC == null
+            ? estimateStateOfCharge(battery1Voltage)
             : battery1SoC;
 
         return [
@@ -130,7 +130,7 @@ const ThreeDBoatTankIndicator = () => {
                 number: 1,
                 voltage: battery1Voltage
             }
-        ].filter(battery => battery.level !== null);
+        ].filter(battery => battery.level != null && !Number.isNaN(battery.level));
     }, [skValues]);
 
     // Fetch tank data from subscribed values
@@ -140,9 +140,9 @@ const ThreeDBoatTankIndicator = () => {
         const blackWaterLevel = skValues['tanks.blackWater.0.currentLevel'];
         
         return {
-            FRESH_WATER: freshWaterLevel !== null ? freshWaterLevel * 100 : 0,
-            FUEL: fuelLevel !== null ? fuelLevel * 100 : 0,
-            BLACK_WATER: blackWaterLevel !== null ? blackWaterLevel * 100 : 0
+            FRESH_WATER: freshWaterLevel != null ? freshWaterLevel * 100 : 0,
+            FUEL: fuelLevel != null ? fuelLevel * 100 : 0,
+            BLACK_WATER: blackWaterLevel != null ? blackWaterLevel * 100 : 0
         };
     }, [skValues]);
 

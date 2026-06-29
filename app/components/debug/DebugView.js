@@ -81,7 +81,7 @@ const DebugView = () => {
         'navigation.courseOverGroundTrue',
         'navigation.courseGreatCircle.nextPoint.bearingTrue',
         'performance.laylineAngle',
-        'navigation.racing.lailine',
+        'navigation.racing.layline',
         'navigation.racing.layline.distance',
         'navigation.racing.layline.time',
         'navigation.racing.oppositeLayline',

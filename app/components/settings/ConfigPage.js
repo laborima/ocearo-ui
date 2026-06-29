@@ -146,6 +146,13 @@ const ConfigPage = ({ onSave }) => {
         // Reset custom URLs settings
         defaultConfig.showCustomUrls = false;
         defaultConfig.customExternalUrls = {}; // Reset to empty object to use default URLs
+        // Sync live theme + language so the UI reflects the reset immediately
+        if (defaultConfig.theme) {
+            setTheme(defaultConfig.theme);
+        }
+        if (defaultConfig.language) {
+            i18n.changeLanguage(defaultConfig.language);
+        }
         // Save the reset configuration
         configService.saveConfig(defaultConfig);
         setHasUnsavedChanges(false);
@@ -184,7 +191,7 @@ const ConfigPage = ({ onSave }) => {
                     onClick={() => setActiveTab('system')}
                     className={`flex-1 py-3 px-6 text-xs font-black uppercase tracking-widest transition-all rounded-lg ${
                         activeTab === 'system'
-                            ? 'bg-oBlue text-hud-main shadow-lg shadow-oBlue/20'
+                            ? 'bg-oBlue/15 text-oBlue border border-oBlue/40 shadow-lg shadow-oBlue/10'
                             : 'text-hud-secondary hover:text-hud-main'
                     }`}
                 >
@@ -194,7 +201,7 @@ const ConfigPage = ({ onSave }) => {
                     onClick={() => setActiveTab('interface')}
                     className={`flex-1 py-3 px-6 text-xs font-black uppercase tracking-widest transition-all rounded-lg ${
                         activeTab === 'interface'
-                            ? 'bg-oBlue text-hud-main shadow-lg shadow-oBlue/20'
+                            ? 'bg-oBlue/15 text-oBlue border border-oBlue/40 shadow-lg shadow-oBlue/10'
                             : 'text-hud-secondary hover:text-hud-main'
                     }`}
                 >
@@ -348,7 +355,7 @@ const ConfigPage = ({ onSave }) => {
                                     <div className="space-y-1">
                                         <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary flex items-center">
                                             {t('settings.debugMode')}
-                                            {config.debugMode && <SettingsBadge color="bg-yellow-400" />}
+                                            {config.debugMode && <SettingsBadge color="bg-oYellow" />}
                                         </span>
                                         <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
                                             {t('settings.debugModeDesc')}
@@ -411,7 +418,7 @@ const ConfigPage = ({ onSave }) => {
                                                 onClick={() => updateConfig({ theme: themeOption })}
                                                 className={`flex-1 py-3 px-4 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
                                                     config.theme === themeOption
-                                                        ? 'bg-oBlue text-hud-main shadow-lg shadow-oBlue/20'
+                                                        ? 'bg-oBlue/15 text-oBlue border border-oBlue/40 shadow-lg shadow-oBlue/10'
                                                         : 'text-hud-secondary hover:text-hud-main'
                                                 }`}
                                             >
@@ -469,7 +476,7 @@ const ConfigPage = ({ onSave }) => {
                                             }}
                                             className={`py-3 px-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center space-x-2 ${
                                                 (config.language || 'en') === lang.code
-                                                    ? 'bg-oBlue text-hud-main shadow-lg shadow-oBlue/20'
+                                                    ? 'bg-oBlue/15 text-oBlue border border-oBlue/40 shadow-lg shadow-oBlue/10'
                                                     : 'text-hud-secondary hover:text-hud-main'
                                             }`}
                                         >

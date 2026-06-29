@@ -37,7 +37,8 @@ const INITIAL_STATES = {
     oceanMode: 'black',
     ais: false,
     showPolar: true,
-    showLaylines3D: false
+    showLaylines3D: false,
+    racing: false
 };
 
 
@@ -60,19 +61,6 @@ export const OcearoContextProvider = ({ children }) => {
         }
     }, [nightMode]);
 
-    // Listen for config changes from other components (like ConfigPage)
-    useEffect(() => {
-        const handleConfigChange = (newConfig) => {
-            if (newConfig.theme && newConfig.theme !== theme) {
-                setTheme(newConfig.theme);
-            }
-        };
-        
-        // We might need a way to listen to config changes if ConfigService doesn't emit events
-        // For now, since ConfigPage calls onSave, we can assume it works if we wrap the app correctly
-        // Or we can just use the theme from config directly if we use it in a hook
-    }, [theme]);
-    
     // Store subscribers for each path
     const subscribersRef = useRef({});
     // Store current data in a ref for immediate access without triggering re-renders of the context itself

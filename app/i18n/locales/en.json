@@ -492,7 +492,11 @@
     "noteCol": "Note",
     "speed": "Speed",
     "coord": "Coord",
-    "ocearoCoreNotEnabled": "OcearoCore is not enabled"
+    "ocearoCoreNotEnabled": "OcearoCore is not enabled",
+    "racingMode": "Racing Mode",
+    "racingModeActive": "Racing Mode Active",
+    "racingModeAISInfo": "AIS silent",
+    "racingAdvice": "RACING"
   },
   "motor": {
     "engine": "Engine",
@@ -561,7 +565,15 @@
     "warningsSummary": "Warnings Summary",
     "allSystemsNominal": "All systems nominal",
     "noActiveWarnings": "No active warnings detected",
-    "notificationLog": "Notification log"
+    "notificationLog": "Notification log",
+    "showAll": "Show all",
+    "showLess": "Show less",
+    "healthyTelemetryNodes": "Healthy telemetry nodes",
+    "criticalNodeAlarms": "Critical node alarms",
+    "alertLevel3": "Alert level 3",
+    "systemAnomalies": "System anomalies",
+    "warnLevel2": "Warn level 2",
+    "internalDebugTelemetry": "Internal debug telemetry"
   },
   "fuelLog": {
     "logFuelRefill": "Log Fuel Refill",
@@ -581,6 +593,14 @@
     "errorCost": "Please enter a valid cost",
     "errorEngineHours": "Please enter engine hours",
     "autoCalculated": "Auto-calculated"
+  },
+  "mediaPlayer": {
+    "entertainmentNodes": "Entertainment Nodes",
+    "externalNode": "External Node",
+    "redirecting": "Redirecting to external node",
+    "launch": "Launch mission",
+    "connectionRefused": "Connection refused by {{name}}",
+    "openExternalNode": "Open External Node"
   },
   "errors": {
     "errorGeneratingUrl": "Error generating application URL",

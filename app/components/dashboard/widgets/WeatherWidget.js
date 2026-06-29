@@ -111,7 +111,7 @@ export default function WeatherWidget() {
       case 'partly-cloudy': return 'text-oBlue';
       case 'cloudy': return 'text-hud-muted';
       case 'rainy': return 'text-oBlue';
-      case 'heavy-rain': return 'text-blue-600';
+      case 'heavy-rain': return 'text-oBlue';
       case 'snow': return 'text-hud-main';
       default: return 'text-oBlue';
     }

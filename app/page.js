@@ -198,7 +198,9 @@ export default function Home() {
                     <div className="h-[100dvh] flex flex-col bg-hud-bg relative overflow-hidden">
                         <div className="flex flex-1 min-h-0">
                             <div className={layoutClasses.leftPane}>
-                                <ThreeDMainView  />
+                                {/* Pause the 3D render loop when the boat view is hidden (APP mode)
+                                    so it doesn't keep burning GPU on low-power devices. */}
+                                <ThreeDMainView active={currentViewMode !== VIEW_MODES.APP} />
                             </div>
 
                             <div 

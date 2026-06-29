@@ -40,7 +40,7 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
 
   const config = configService.getAll();
   const settingsBadgeColor = config.debugMode
-    ? 'bg-yellow-400'
+    ? 'bg-oYellow'
     : !config.signalKUrlSet
       ? 'bg-oBlue'
       : null;

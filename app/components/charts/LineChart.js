@@ -15,7 +15,7 @@ import { useOcearoContext } from '../context/OcearoContext';
 const LineChart = ({ data, dataKey, color, scale, label, unit, showPoints = false, lineWidth = 2, fillGradient = false }) => {
   const { nightMode } = useOcearoContext();
 
-  const validValues = data.filter(item => item[dataKey] !== null && item[dataKey] !== undefined);
+  const validValues = (data || []).filter(item => item[dataKey] !== null && item[dataKey] !== undefined);
 
   if (validValues.length === 0) {
     return (

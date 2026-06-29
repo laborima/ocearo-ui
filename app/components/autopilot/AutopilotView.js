@@ -61,7 +61,7 @@ export default function AutopilotView() {
 
     const skValues = useSignalKPaths(autopilotPaths);
     
-    const currentHeading = skValues['navigation.headingTrue'] || skValues['navigation.headingMagnetic'];
+    const currentHeading = skValues['navigation.headingTrue'] ?? skValues['navigation.headingMagnetic'];
     const apparentWindAngle = skValues['environment.wind.angleApparent'];
     const rudderAngle = skValues['steering.rudderAngle'];
 
@@ -155,9 +155,12 @@ export default function AutopilotView() {
         fetchAutopilotData();
         fetchControllerConfig();
         
+        // Live heading/wind/rudder come from the SignalK subscription; this REST poll
+        // only refreshes device list + autopilot state/mode/target, so 5s is plenty
+        // (and far lighter on a RPi5 than 2s).
         const interval = setInterval(() => {
             fetchAutopilotData();
-        }, 2000);
+        }, 5000);
         
         return () => clearInterval(interval);
     }, [fetchAutopilotData, fetchControllerConfig]);
@@ -368,7 +371,7 @@ export default function AutopilotView() {
                     className={`py-3 rounded font-black text-base uppercase transition-all ${
                         autopilotData?.state === 'enabled' 
                             ? 'bg-hud-bg text-hud-dim cursor-not-allowed border border-hud'
-                            : 'bg-oGreen hover:bg-green-600 text-hud-main shadow-lg shadow-oGreen/20'
+                            : 'bg-oGreen hover:bg-oGreen/80 text-hud-main shadow-lg shadow-oGreen/20'
                     }`}
                 >
                     <FontAwesomeIcon icon={faPlay} className="mr-2" />
@@ -380,7 +383,7 @@ export default function AutopilotView() {
                     className={`py-3 rounded font-black text-base uppercase transition-all ${
                         autopilotData?.state !== 'enabled'
                             ? 'bg-hud-bg text-hud-dim cursor-not-allowed border border-hud'
-                            : 'bg-oRed hover:bg-red-600 text-hud-main shadow-lg shadow-oRed/20'
+                            : 'bg-oRed hover:bg-oRed/80 text-hud-main shadow-lg shadow-oRed/20'
                     }`}
                 >
                     <FontAwesomeIcon icon={faStop} className="mr-2" />
@@ -441,8 +444,8 @@ export default function AutopilotView() {
                 
                 {/* Set current heading button */}
                 <button
-                    onClick={() => currentHeading && handleSetHeading(toDegrees(currentHeading))}
-                    disabled={!currentHeading}
+                    onClick={() => currentHeading != null && handleSetHeading(toDegrees(currentHeading))}
+                    disabled={currentHeading == null}
                     className="w-full mt-3 py-2.5 bg-hud-bg hover:bg-hud-elevated text-hud-main rounded border border-hud font-bold text-xs uppercase"
                 >
                     <FontAwesomeIcon icon={faCompass} className="mr-2" />
