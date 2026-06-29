@@ -51,41 +51,10 @@ const RendererExposer = () => {
   return null;
 };
 
-// Drives the render loop manually at a capped frame rate to save GPU/power on
-// low-end devices (RPi5). The Canvas runs with frameloop="never" and this
-// component calls advance() at most `fps` times per second (only while active).
-const AdaptiveFrameLoop = ({ active, fps }) => {
-  const advance = useThree((state) => state.advance);
-
-  useEffect(() => {
-    if (!active) return undefined;
-
-    const minDelta = 1000 / fps;
-    let rafId;
-    let last = performance.now();
-
-    const loop = (now) => {
-      rafId = requestAnimationFrame(loop);
-      const elapsed = now - last;
-      if (elapsed >= minDelta) {
-        // Keep the cadence steady without drifting past the target interval
-        last = now - (elapsed % minDelta);
-        advance(now);
-      }
-    };
-
-    rafId = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(rafId);
-  }, [active, fps, advance]);
-
-  return null;
-};
-
 const ThreeDMainView = ({ active = true }) => {
     const { states, nightMode } = useOcearoContext(); // Access global context
     const [infoPanelContent, setInfoPanelContent] = useState(null);
     const [showAttitudeIndicator, setShowAttitudeIndicator] = useState(true);
-    const [maxFps, setMaxFps] = useState(30);
     const [clock, setClock] = useState(() => new Date());
 
     // Tick the header clock every 30s (it would otherwise only refresh on unrelated re-renders)
@@ -98,8 +67,6 @@ const ThreeDMainView = ({ active = true }) => {
     useEffect(() => {
         const config = configService.getAll();
         setShowAttitudeIndicator(config.showAttitudeIndicator !== false);
-        const fps = Number(config.maxFps);
-        setMaxFps(Number.isFinite(fps) && fps > 0 ? fps : 30);
     }, []);
 
     return (
@@ -155,7 +122,7 @@ const ThreeDMainView = ({ active = true }) => {
                 <Canvas
                 style={{ width: '100%', height: '100%' }}
                 shadows={false}
-                frameloop="never"
+                frameloop={active ? 'always' : 'never'}
                 dpr={Math.min(window.devicePixelRatio, 1.5)}
                 performance={{ min: 0.5 }}
                 gl={{
@@ -168,7 +135,6 @@ const ThreeDMainView = ({ active = true }) => {
                     precision: 'lowp'
                 }}>
                     <RendererExposer />
-                    <AdaptiveFrameLoop active={active} fps={maxFps} />
                     {states.parkingMode ? (
                         <ThreeDParkAssistBoat onUpdateInfoPanel={setInfoPanelContent} />
                     ) : states.anchorWatch ? (

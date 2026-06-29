@@ -26,9 +26,6 @@ const determineAisModelCode = (shipType) => {
     return 70;                          // 0-29 (incl. WIG) & 90-99 -> generic
 };
 
-// Codes that ship a model file. WIG (20) has no model and falls back to 70.
-const FLEET_CODES = ['30', '31', '35', '36', '37', '40', '50', '60', '70', '80'];
-
 // Per-code yaw correction (radians) if a model's bow points the wrong way after
 // auto-orientation. Tune visually in the running AIS view; 0 = as imported.
 const AIS_YAW = {
@@ -126,6 +123,3 @@ const AISBoat = ({ position, visible, boatData, onClick, ref }) => {
 };
 
 export default AISBoat;
-
-// Warm the GLTF cache for the whole fleet
-FLEET_CODES.forEach((c) => useGLTF.preload(modelUrl(c), dracoPath));

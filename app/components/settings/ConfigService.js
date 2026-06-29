@@ -10,7 +10,6 @@ class ConfigService {
       useAuthentication: false,
       signalKUrlSet: false,
       debugMode: false,
-      maxFps: 30, // Cap the 3D render loop to save GPU/power (RPi5-friendly); raise to 60 on a strong GPU
       selectedBoat: 'Default',
       primaryColor: null,
       metallicEffect: false,
