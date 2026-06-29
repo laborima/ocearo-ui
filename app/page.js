@@ -55,6 +55,17 @@ export default function Home() {
     const [isSettingsView, setIsSettingsView] = useState(false);
     const isSettingsViewRef = useRef(false);
 
+    // In development, unregister any stray service worker (e.g. one left over from a
+    // previous PWA/SignalK deployment on the same origin). Such a SW intercepts Next's
+    // HMR chunk requests, causing ChunkLoadError and an endless reload loop.
+    useEffect(() => {
+        if (process.env.NODE_ENV !== 'production' && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations?.()
+                .then((regs) => regs.forEach((r) => r.unregister()))
+                .catch(() => {});
+        }
+    }, []);
+
     // Set initial view mode based on screen size
     useEffect(() => {
         // Set view mode only on client-side to avoid hydration issues
