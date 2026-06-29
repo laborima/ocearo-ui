@@ -56,33 +56,27 @@ function AISModel({ code, scaleFactor }) {
             }
         });
 
-        // 1) Reorient robustly for any source authoring (Y-up, Z-up, lying down…):
-        //    shortest extent -> up (Y), longest -> length (Z), middle -> beam (X).
-        const size0 = new THREE.Vector3();
-        new THREE.Box3().setFromObject(obj).getSize(size0);
-        const unit = { x: new THREE.Vector3(1, 0, 0), y: new THREE.Vector3(0, 1, 0), z: new THREE.Vector3(0, 0, 1) };
-        const sorted = [['x', size0.x], ['y', size0.y], ['z', size0.z]].sort((a, b) => a[1] - b[1]);
-        const upAxis = sorted[0][0];      // shortest
-        const lengthAxis = sorted[2][0];  // longest
-        const zc = unit[lengthAxis].clone();
-        const yc = unit[upAxis].clone();
-        const xc = new THREE.Vector3().crossVectors(yc, zc); // right-handed (no mirror)
-        const basis = new THREE.Matrix4().makeBasis(xc, yc, zc).transpose();
-        obj.applyMatrix4(basis); // now length->Z, up->Y
-
-        // 2) Centre on X/Z, drop the hull bottom onto y=0, scale so length == BASE_MODEL_LENGTH
+        // These models are all glTF Y-up. Keep Y as up (a mast/superstructure can make
+        // the height the *largest* extent, so an auto "shortest axis = up" guess would
+        // wrongly lay the boat down). We only align the longest HORIZONTAL axis to Z.
         const box = new THREE.Box3().setFromObject(obj);
         const size = new THREE.Vector3();
         const center = new THREE.Vector3();
         box.getSize(size);
         box.getCenter(center);
+
+        const lengthAlongX = size.x >= size.z;
+        const len = Math.max(size.x, size.z) || 1;
+        const s = BASE_MODEL_LENGTH / len;
+
+        // Centre on X/Z, drop the hull bottom onto y=0
         obj.position.set(-center.x, -box.min.y, -center.z);
-        const s = BASE_MODEL_LENGTH / (size.z || 1);
 
         const oriented = new THREE.Group();
         oriented.add(obj);
         oriented.scale.setScalar(s);
-        oriented.rotation.y = AIS_YAW[code] || 0;
+        // Rotate length to Z if it was along X; per-code yaw lets you flip bow direction.
+        oriented.rotation.y = (lengthAlongX ? Math.PI / 2 : 0) + (AIS_YAW[code] || 0);
         return oriented;
     }, [scene, code]);
 
