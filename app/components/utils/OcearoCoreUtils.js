@@ -170,6 +170,35 @@ export const updateOcearoCoreMode = async (mode) => {
 };
 
 /**
+ * Get OcearoCore do-not-disturb status ({ mode: 'off'|'safety'|'all', until })
+ */
+export const getOcearoCoreDnd = async () => {
+  return await makeOcearoCoreApiCall('/dnd');
+};
+
+/**
+ * Set OcearoCore do-not-disturb mode.
+ * 'safety' keeps safety announcements only, 'all' silences everything.
+ */
+export const setOcearoCoreDnd = async (mode, durationMinutes) => {
+  const validModes = ['off', 'safety', 'all'];
+
+  if (!validModes.includes(mode)) {
+    throw new Error(`Invalid DND mode. Valid modes: ${validModes.join(', ')}`);
+  }
+
+  const body = { mode };
+  if (typeof durationMinutes === 'number' && durationMinutes > 0) {
+    body.durationMinutes = durationMinutes;
+  }
+
+  return await makeOcearoCoreApiCall('/dnd', {
+    method: 'POST',
+    body: JSON.stringify(body)
+  });
+};
+
+/**
  * Make OcearoCore speak text
  */
 export const OcearoCoreSpeak = async (text, priority = 'normal') => {

@@ -24,7 +24,12 @@
     "weather": "Météo",
     "apps": "Apps",
     "gauges": "Jauges",
-    "help": "Aide"
+    "help": "Aide",
+    "dnd": {
+      "off": "Voix",
+      "safety": "Sécurité",
+      "all": "Silence"
+    }
   },
   "menu": {
     "splitView": "Vue partagée",

@@ -24,7 +24,12 @@
     "weather": "Weather",
     "apps": "Apps",
     "gauges": "Gauges",
-    "help": "Help"
+    "help": "Help",
+    "dnd": {
+      "off": "Voice",
+      "safety": "Safety",
+      "all": "Muted"
+    }
   },
   "menu": {
     "splitView": "Split View",

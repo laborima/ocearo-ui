@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faVideo,
@@ -7,13 +7,25 @@ import {
   faTh,
   faHandsHelping,
   faTachometerAlt,
-  faCloudSun
+  faCloudSun,
+  faVolumeHigh,
+  faVolumeXmark,
+  faShieldHalved
 } from '@fortawesome/free-solid-svg-icons';
 import BottomTemperatureWidget from './widgets/BottomTemperatureWidget';
 import BottomEnvironmentalWidget from './widgets/BottomEnvironmentalWidget';
 import { useOcearoContext } from './context/OcearoContext';
 import { useTranslation } from 'react-i18next';
 import configService from './settings/ConfigService';
+import { getOcearoCoreDnd, setOcearoCoreDnd, isOcearoCoreEnabled } from './utils/OcearoCoreUtils';
+
+// Do-not-disturb cycle: normal -> safety announcements only -> full silence
+const DND_MODES = ['off', 'safety', 'all'];
+const DND_APPEARANCE = {
+  off: { icon: faVolumeHigh, badgeColor: null },
+  safety: { icon: faShieldHalved, badgeColor: 'bg-oYellow' },
+  all: { icon: faVolumeXmark, badgeColor: 'bg-oRed' }
+};
 
 const NavButton = ({ icon, onClick, label, textColor, badgeColor }) => (
   <button
@@ -38,6 +50,39 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
   const { nightMode } = useOcearoContext();
   const textColor = nightMode ? 'text-hud-main/90' : 'text-hud-main';
 
+  const [dndMode, setDndMode] = useState('off');
+
+  // Sync DND state with ocearo-core (it can also be toggled via API, e.g. auto cinema mode)
+  useEffect(() => {
+    if (!isOcearoCoreEnabled()) return undefined;
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const status = await getOcearoCoreDnd();
+        if (!cancelled && status?.mode) setDndMode(status.mode);
+      } catch (_) {
+        // ocearo-core unreachable: keep last known state
+      }
+    };
+    refresh();
+    const timer = setInterval(refresh, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
+
+  const cycleDnd = async () => {
+    const next = DND_MODES[(DND_MODES.indexOf(dndMode) + 1) % DND_MODES.length];
+    setDndMode(next);
+    try {
+      await setOcearoCoreDnd(next);
+    } catch (error) {
+      console.warn('Failed to set DND mode:', error);
+      setDndMode(dndMode);
+    }
+  };
+
   const config = configService.getAll();
   const settingsBadgeColor = config.debugMode
     ? 'bg-oYellow'
@@ -54,7 +99,13 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
           onClick: () => toggleSettings(),
           label: t('nav.system'),
           badgeColor: settingsBadgeColor
-        }
+        },
+        ...(isOcearoCoreEnabled() ? [{
+          icon: DND_APPEARANCE[dndMode].icon,
+          onClick: cycleDnd,
+          label: t(`nav.dnd.${dndMode}`),
+          badgeColor: DND_APPEARANCE[dndMode].badgeColor
+        }] : [])
       ]
     },
     {
