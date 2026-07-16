@@ -32,6 +32,18 @@ const AIS_YAW = {
     // e.g. 31: Math.PI,
 };
 
+// Visual draft as a fraction of hull LENGTH (like real boats: a 10 m sailboat
+// draws ~1.5 m with its keel). Sinks the model below the waterline (y=0) so
+// hulls sit IN the water instead of resting keel-tip on it. The ocean plane
+// itself sits slightly below y=0, which these values also absorb.
+// Tune visually in the running AIS view.
+const AIS_SINK = {
+    30: 0.10, // fishing
+    36: 0.15, // sailing: deep keel
+    37: 0.10, // pleasure
+};
+const DEFAULT_SINK = 0.06;
+
 const modelUrl = (code) => `${ASSET_PREFIX}/boats/ais/ais-${code}.glb`;
 const dracoPath = `${ASSET_PREFIX}/draco/`;
 
@@ -69,8 +81,11 @@ function AISModel({ code, scaleFactor }) {
         const len = Math.max(size.x, size.z) || 1;
         const s = BASE_MODEL_LENGTH / len;
 
-        // Centre on X/Z, drop the hull bottom onto y=0
-        obj.position.set(-center.x, -box.min.y, -center.z);
+        // Centre on X/Z, drop the hull bottom onto y=0 then sink by the visual
+        // draft so the waterline crosses the hull instead of the keel tip.
+        // Draft is a fraction of hull length (len is in pre-scale model units).
+        const sink = len * (AIS_SINK[code] ?? DEFAULT_SINK);
+        obj.position.set(-center.x, -box.min.y - sink, -center.z);
 
         const oriented = new THREE.Group();
         oriented.add(obj);
