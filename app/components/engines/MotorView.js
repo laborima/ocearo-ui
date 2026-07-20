@@ -180,11 +180,31 @@ const MotorView = () => {
     ? Math.round(houseBatteryCurrentRaw * 10) / 10
     : houseBatteryCurrentRaw;
 
-  // Get current engine hours in hours (runTime is in seconds)
+  // Get current engine hours in hours (runTime is in seconds).
+  // The engine only reports runTime while running, so persist the last known
+  // value and fall back to it when the engine is off (fuel estimation, modal prefill).
   const currentEngineHoursRaw = getEngineValue('runTime');
-  const currentEngineHours = currentEngineHoursRaw !== null 
-    ? currentEngineHoursRaw / 3600 
+  const liveEngineHours = currentEngineHoursRaw !== null
+    ? currentEngineHoursRaw / 3600
     : null;
+
+  useEffect(() => {
+    if (liveEngineHours !== null) {
+      try {
+        localStorage.setItem('ocearo_lastEngineHours', String(liveEngineHours));
+      } catch (_) { /* storage unavailable */ }
+    }
+  }, [liveEngineHours]);
+
+  const currentEngineHours = useMemo(() => {
+    if (liveEngineHours !== null) return liveEngineHours;
+    try {
+      const stored = parseFloat(localStorage.getItem('ocearo_lastEngineHours'));
+      return Number.isFinite(stored) ? stored : null;
+    } catch (_) {
+      return null;
+    }
+  }, [liveEngineHours]);
 
   // Fuel log state
   const [showFuelLogModal, setShowFuelLogModal] = useState(false);
