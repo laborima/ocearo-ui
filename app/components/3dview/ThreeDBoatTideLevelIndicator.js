@@ -191,7 +191,7 @@ const ThreeDBoatTideLevelIndicator = () => {
         {/* Labels positioned to the right of the bar */}
         <div className="ml-4 h-full relative">
           <span className={`absolute ${textColor} text-xs font-black uppercase tracking-tighter opacity-30`} style={{ top: '0%' }}>
-            {high}m
+            {Number(high).toFixed(1)}m
           </span>
           
           {shouldShowTideLevel && (
@@ -207,7 +207,7 @@ const ThreeDBoatTideLevelIndicator = () => {
           )}
           
           <span className={`absolute ${textColor} text-xs font-black uppercase tracking-tighter opacity-30`} style={{ bottom: '0%' }}>
-            {low}m
+            {Number(low).toFixed(1)}m
           </span>
         </div>
       </div>

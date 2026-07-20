@@ -212,7 +212,7 @@ export default function TideWidget() {
               {isRising ? t('widgets.rising') : t('widgets.ebb')}
             </span>
           </div>
-          {coefficient && <span className="text-hud-muted text-xs font-black">C{coefficient}</span>}
+          {coefficient && <span className="text-hud-muted text-xs font-black">C{Math.round(coefficient)}</span>}
         </div>
 
         {/* Chart fills remaining space */}
@@ -233,11 +233,12 @@ export default function TideWidget() {
                 tickLine={false}
                 interval={6}
               />
-              <YAxis 
+              <YAxis
                 tick={{ fill: 'var(--hud-text-muted)', fontSize: 10, fontWeight: 900 }}
                 axisLine={false}
                 tickLine={false}
                 domain={['dataMin - 0.5', 'dataMax + 0.5']}
+                tickFormatter={(v) => Number(v).toFixed(1)}
               />
               <Tooltip 
                 contentStyle={{ backgroundColor: 'var(--hud-bg)', border: '1px solid var(--hud-border)', borderRadius: '4px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase' }}
