@@ -779,7 +779,9 @@ const MotorView = () => {
                   {tankEstimation.estimatedLiters !== null && (
                     <CompactDataField
                       label={t('motor.estimatedVolume')}
-                      value={tankEstimation.estimatedLiters}
+                      value={tankEstimation.estimatedLitersWorst !== null && tankEstimation.estimatedLitersWorst !== tankEstimation.estimatedLiters
+                        ? `${tankEstimation.estimatedLitersWorst.toFixed(0)}–${tankEstimation.estimatedLiters.toFixed(0)}`
+                        : tankEstimation.estimatedLiters}
                       unit="L"
                       icon={faGasPump}
                     />
@@ -787,7 +789,7 @@ const MotorView = () => {
                   {tankEstimation.estimatedPercent !== null && (
                     <BarGauge
                       label={t('motor.computedLevel')}
-                      value={tankEstimation.estimatedPercent}
+                      value={tankEstimation.estimatedPercentWorst ?? tankEstimation.estimatedPercent}
                       unit="%"
                       min={0}
                       max={100}
@@ -800,7 +802,9 @@ const MotorView = () => {
                   {tankEstimation.hoursRemaining !== null && (
                     <CompactDataField
                       label={t('motor.timeToExhaustion')}
-                      value={tankEstimation.hoursRemaining}
+                      value={tankEstimation.hoursRemainingWorst !== null && tankEstimation.hoursRemainingWorst !== tankEstimation.hoursRemaining
+                        ? `${tankEstimation.hoursRemainingWorst.toFixed(0)}–${tankEstimation.hoursRemaining.toFixed(0)}`
+                        : tankEstimation.hoursRemaining}
                       unit="h"
                       icon={faClock}
                       warningThreshold={10}

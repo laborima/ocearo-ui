@@ -453,11 +453,16 @@ export const calculateFuelStats = (fuelEntries, tankCapacity = null) => {
     ? consumptionReadings.reduce((a, b) => a + b, 0) / consumptionReadings.length
     : null;
 
+  const worstConsumption = consumptionReadings.length > 0
+    ? Math.max(...consumptionReadings)
+    : null;
+
   const lastEntry = sortedEntries[sortedEntries.length - 1];
   const lastFuel = lastEntry?.fuel || {};
 
   return {
     averageConsumption: averageConsumption ? Math.round(averageConsumption * 10) / 10 : null,
+    worstConsumption: worstConsumption ? Math.round(worstConsumption * 10) / 10 : null,
     totalLiters: Math.round(totalLiters * 10) / 10,
     totalCost: Math.round(totalCost * 100) / 100,
     refillCount: sortedEntries.length,
@@ -492,35 +497,47 @@ export const estimateTankLevel = (fuelEntries, currentEngineHours, tankCapacity,
   }
 
   const hoursSinceLastRefill = currentEngineHours - stats.lastRefill.engineHours;
+  // Range: average consumption (optimistic bound) vs worst observed (pessimistic bound)
+  const worstConsumption = stats.worstConsumption || stats.averageConsumption;
   const estimatedUsed = hoursSinceLastRefill * stats.averageConsumption;
-  
-  let estimatedRemaining;
-  if (currentTankLevel !== null && tankCapacity) {
-    estimatedRemaining = (currentTankLevel * tankCapacity) - estimatedUsed;
-  } else if (tankCapacity) {
-    // A refill means a fill-up: the tank starts full, then drains with usage
-    estimatedRemaining = tankCapacity - estimatedUsed;
-  } else if (stats.lastRefill.liters) {
-    estimatedRemaining = stats.lastRefill.liters - estimatedUsed;
-  } else {
-    estimatedRemaining = null;
-  }
-  if (estimatedRemaining !== null) {
-    estimatedRemaining = Math.max(0, estimatedRemaining);
-  }
+  const estimatedUsedWorst = hoursSinceLastRefill * worstConsumption;
 
-  const estimatedPercent = estimatedRemaining !== null && tankCapacity
-    ? Math.max(0, Math.min(100, (estimatedRemaining / tankCapacity) * 100))
+  const remainingFrom = (used) => {
+    let remaining;
+    if (currentTankLevel !== null && tankCapacity) {
+      remaining = (currentTankLevel * tankCapacity) - used;
+    } else if (tankCapacity) {
+      // A refill means a fill-up: the tank starts full, then drains with usage
+      remaining = tankCapacity - used;
+    } else if (stats.lastRefill.liters) {
+      remaining = stats.lastRefill.liters - used;
+    } else {
+      return null;
+    }
+    return Math.max(0, remaining);
+  };
+
+  const estimatedRemaining = remainingFrom(estimatedUsed);
+  const estimatedRemainingWorst = remainingFrom(estimatedUsedWorst);
+
+  const percentFrom = (remaining) => remaining !== null && tankCapacity
+    ? Math.round(Math.max(0, Math.min(100, (remaining / tankCapacity) * 100)))
     : null;
 
   const hoursRemaining = estimatedRemaining !== null && stats.averageConsumption > 0
     ? Math.max(0, estimatedRemaining / stats.averageConsumption)
     : null;
+  const hoursRemainingWorst = estimatedRemainingWorst !== null && worstConsumption > 0
+    ? Math.max(0, estimatedRemainingWorst / worstConsumption)
+    : null;
 
   return {
     estimatedLiters: estimatedRemaining !== null ? Math.round(estimatedRemaining * 10) / 10 : null,
-    estimatedPercent: estimatedPercent !== null ? Math.round(estimatedPercent) : null,
+    estimatedLitersWorst: estimatedRemainingWorst !== null ? Math.round(estimatedRemainingWorst * 10) / 10 : null,
+    estimatedPercent: percentFrom(estimatedRemaining),
+    estimatedPercentWorst: percentFrom(estimatedRemainingWorst),
     hoursRemaining: hoursRemaining !== null ? Math.round(hoursRemaining * 10) / 10 : null,
+    hoursRemainingWorst: hoursRemainingWorst !== null ? Math.round(hoursRemainingWorst * 10) / 10 : null,
     hoursSinceLastRefill: Math.round(hoursSinceLastRefill * 10) / 10,
     estimatedUsed: Math.round(estimatedUsed * 10) / 10,
     basedOnSensor: currentTankLevel !== null,
