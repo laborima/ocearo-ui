@@ -196,22 +196,22 @@ const MotorView = () => {
     }
   }, [liveEngineHours]);
 
-  const currentEngineHours = useMemo(() => {
-    if (liveEngineHours !== null) return liveEngineHours;
-    try {
-      const stored = parseFloat(localStorage.getItem('ocearo_lastEngineHours'));
-      return Number.isFinite(stored) ? stored : null;
-    } catch (_) {
-      return null;
-    }
-  }, [liveEngineHours]);
-
   // Fuel log state
   const [showFuelLogModal, setShowFuelLogModal] = useState(false);
   const [fuelLogEntries, setFuelLogEntries] = useState([]);
   const [fuelStats, setFuelStats] = useState(null);
   const [fuelLogLoading, setFuelLogLoading] = useState(false);
   const [fuelLogError, setFuelLogError] = useState(null);
+
+  // Live value, else last value seen (survives reboots), else last refill entry
+  const currentEngineHours = useMemo(() => {
+    if (liveEngineHours !== null) return liveEngineHours;
+    try {
+      const stored = parseFloat(localStorage.getItem('ocearo_lastEngineHours'));
+      if (Number.isFinite(stored)) return stored;
+    } catch (_) { /* storage unavailable */ }
+    return fuelStats?.lastRefill?.engineHours ?? null;
+  }, [liveEngineHours, fuelStats]);
 
   // Fetch fuel log entries on mount and when tab changes to fuel
   const loadFuelLogEntries = useCallback(async () => {
@@ -740,6 +740,12 @@ const MotorView = () => {
                   unit="L"
                   icon={faFlask}
                 />
+                <CompactDataField
+                  label={t('motor.currentEngineHours')}
+                  value={currentEngineHours?.toFixed(1)}
+                  unit="h"
+                  icon={faClock}
+                />
               </div>
               
               {engineData.fuelLevel !== null && engineData.fuelCapacity !== null && (
@@ -770,18 +776,18 @@ const MotorView = () => {
                   {t('motor.predictiveAnalysis')}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {tankEstimation.litersRemaining !== null && (
+                  {tankEstimation.estimatedLiters !== null && (
                     <CompactDataField
                       label={t('motor.estimatedVolume')}
-                      value={tankEstimation.litersRemaining}
+                      value={tankEstimation.estimatedLiters}
                       unit="L"
                       icon={faGasPump}
                     />
                   )}
-                  {tankEstimation.levelPercentage !== null && (
+                  {tankEstimation.estimatedPercent !== null && (
                     <BarGauge
                       label={t('motor.computedLevel')}
-                      value={tankEstimation.levelPercentage}
+                      value={tankEstimation.estimatedPercent}
                       unit="%"
                       min={0}
                       max={100}
@@ -822,7 +828,7 @@ const MotorView = () => {
                         <th className="text-hud-muted p-4 text-left font-black">{t('motor.refillCost')}</th>
                         <th className="text-hud-muted p-4 text-left font-black">{t('motor.hmr')}</th>
                         <th className="text-hud-muted p-4 text-left font-black">{t('motor.avgConsumption')}</th>
-                        <th className="text-hud-muted p-4 text-left font-black">{t('motor.fuelAutonomy')}</th>
+                        <th className="text-hud-muted p-4 text-left font-black">{t('motor.hoursSinceRefill')}</th>
                         <th className="text-hud-muted p-4 text-center font-black">{t('motor.additive')}</th>
                       </tr>
                     </thead>
@@ -832,8 +838,8 @@ const MotorView = () => {
                         const entryConsumption = (fuel.liters && fuel.hoursSinceLastRefill && fuel.hoursSinceLastRefill > 0)
                           ? Math.round((fuel.liters / fuel.hoursSinceLastRefill) * 10) / 10
                           : null;
-                        const entryAutonomy = (entryConsumption && engineData.fuelCapacity && fuel.liters)
-                          ? Math.round((fuel.liters / entryConsumption) * 10) / 10
+                        const entryHoursSinceRefill = (fuel.hoursSinceLastRefill && fuel.hoursSinceLastRefill > 0)
+                          ? Math.round(fuel.hoursSinceLastRefill * 10) / 10
                           : null;
                         return (
                           <tr key={entry.datetime || index} className="text-hud-main tesla-hover group">
@@ -851,7 +857,7 @@ const MotorView = () => {
                               {entryConsumption != null ? `${entryConsumption} L/h` : '—'}
                             </td>
                             <td className="p-4 gliding-value text-oGreen">
-                              {entryAutonomy != null ? `${entryAutonomy} h` : '—'}
+                              {entryHoursSinceRefill != null ? `${entryHoursSinceRefill} h` : '—'}
                             </td>
                             <td className="p-4 text-center">
                               {fuel.additive ? (

@@ -497,10 +497,16 @@ export const estimateTankLevel = (fuelEntries, currentEngineHours, tankCapacity,
   let estimatedRemaining;
   if (currentTankLevel !== null && tankCapacity) {
     estimatedRemaining = (currentTankLevel * tankCapacity) - estimatedUsed;
-  } else if (tankCapacity && stats.lastRefill.liters) {
+  } else if (tankCapacity) {
+    // A refill means a fill-up: the tank starts full, then drains with usage
+    estimatedRemaining = tankCapacity - estimatedUsed;
+  } else if (stats.lastRefill.liters) {
     estimatedRemaining = stats.lastRefill.liters - estimatedUsed;
   } else {
     estimatedRemaining = null;
+  }
+  if (estimatedRemaining !== null) {
+    estimatedRemaining = Math.max(0, estimatedRemaining);
   }
 
   const estimatedPercent = estimatedRemaining !== null && tankCapacity

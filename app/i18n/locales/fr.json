@@ -553,6 +553,8 @@
     "telemetryDetails": "Détails télémétrie",
     "levelPercentage": "Niveau en pourcentage",
     "totalCapacity": "Capacité totale",
+    "currentEngineHours": "Heures moteur",
+    "hoursSinceRefill": "Heures entre pleins",
     "currentVolume": "Volume actuel",
     "enduranceEst": "Autonomie (est.)",
     "predictiveAnalysis": "Analyse prédictive",

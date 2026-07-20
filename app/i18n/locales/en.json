@@ -553,6 +553,8 @@
     "telemetryDetails": "Telemetry details",
     "levelPercentage": "Level percentage",
     "totalCapacity": "Total capacity",
+    "currentEngineHours": "Engine hours",
+    "hoursSinceRefill": "Hours between refills",
     "currentVolume": "Current volume",
     "enduranceEst": "Endurance (est.)",
     "predictiveAnalysis": "Predictive analysis",
