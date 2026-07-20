@@ -164,7 +164,8 @@ export const CompactDataField = ({
   criticalThreshold,
   reversed = false
 }) => {
-  const displayValue = (value === null || value === undefined || isNaN(value)) ? 'N/A' : value;
+  // Strings (e.g. "74–78" ranges) are shown as-is; only reject missing/NaN numbers
+  const displayValue = (value === null || value === undefined || (typeof value === 'number' && Number.isNaN(value))) ? 'N/A' : value;
   const hasValue = displayValue !== 'N/A';
   
   const getColor = () => {

@@ -837,7 +837,7 @@ const MotorView = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-hud">
-                      {fuelLogEntries.slice(-5).reverse().map((entry, index) => {
+                      {[...fuelLogEntries].reverse().map((entry, index) => {
                         const fuel = entry.fuel || {};
                         const entryConsumption = (fuel.liters && fuel.hoursSinceLastRefill && fuel.hoursSinceLastRefill > 0)
                           ? Math.round((fuel.liters / fuel.hoursSinceLastRefill) * 10) / 10
