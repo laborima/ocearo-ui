@@ -24,6 +24,7 @@
     "weather": "Weather",
     "apps": "Apps",
     "gauges": "Gauges",
+    "dashboard": "Dashboard",
     "help": "Help",
     "dnd": {
       "off": "Voice",

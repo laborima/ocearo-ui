@@ -128,8 +128,8 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
         },
         {
           icon: faTachometerAlt,
-          onClick: () => setRightView('instrument'),
-          label: t('nav.gauges')
+          onClick: () => setRightView('dashboard'),
+          label: t('nav.dashboard')
         },
         {
           icon: faHandsHelping,

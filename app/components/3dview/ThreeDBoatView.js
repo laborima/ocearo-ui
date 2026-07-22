@@ -80,8 +80,9 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                     sailTrimData={sailTrimData}
                 />
 
-                {/* Ocean / Map plane */}
-                {states.oceanMode === 'water' && <Ocean3D />}
+                {/* Ocean / Map plane — chart & meteo keep the ocean sky/water,
+                    the map plane floats just above the water surface */}
+                {states.oceanMode !== 'black' && <Ocean3D lite={states.oceanMode !== 'water'} />}
                 {states.oceanMode === 'chart' && <MapPlane3D mode="chart" />}
                 {states.oceanMode === 'meteo' && <MapPlane3D mode="meteo" />}
 

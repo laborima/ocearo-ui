@@ -10,11 +10,25 @@ const CANVAS_SIZE = 1024; // texture resolution
 const TILE_SIZE = 256;    // OSM tile pixel size
 
 const OSM_TEMPLATE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const SEAMARK_TEMPLATE = 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png';
 const WINDY_TEMPLATE = 'https://tiles.windy.com/tiles/v10.0/wind/{z}/{x}/{y}.png';
+const RAINVIEWER_INDEX = 'https://api.rainviewer.com/public/weather-maps.json';
 
 const OSM_MAX_ZOOM = 19;     // OSM serves up to z19 — pontoons/piers appear from z17
 const CUSTOM_MAX_ZOOM = 18;  // safe cap for SignalK-provided charts (unknown max)
+const SEAMARK_MAX_ZOOM = 18; // OpenSeaMap seamark overlay (buoys, lights, marks)
 const WINDY_MAX_ZOOM = 11;   // windy wind tiles are low-zoom only
+const RAIN_MAX_ZOOM = 12;    // rainviewer radar tiles
+
+// Meteo is a weather map, not a harbor chart: keep a wide fixed coverage so the
+// low-zoom wind/rain overlays actually show gradients.
+const METEO_MAX_ZOOM = 11;
+const METEO_MIN_COVERAGE = 40000; // meters
+const CHART_MIN_COVERAGE = 500;   // meters — z18, pontoons still visible
+const WINDY_FILTER = 'saturate(1.8) contrast(1.35)';
+
+// Tone down the bright OSM palette so the plane fits the dark HUD
+const BASE_MAP_FILTER = 'brightness(0.72) saturate(1.15) contrast(1.05)';
 
 // The scene is linear "meters × aisLengthScalingFactor" (see AISContext), the
 // camera far plane is 500 units, so only ~700 m around the boat is ever visible.
@@ -92,9 +106,10 @@ async function loadTileWithFallback(template, z, x, y) {
  * is then drawn scaled up (pixelScale = 2^(baseZoom - layerZoom)) so that every
  * layer covers the same geographic area on the canvas.
  */
-async function drawTileLayer(ctx, position, layerZoom, tileTemplate, pixelScale = 1) {
+async function drawTileLayer(ctx, position, layerZoom, tileTemplate, pixelScale = 1, filter = 'none') {
     const { latitude: lat, longitude: lon } = position;
     const effTile = TILE_SIZE * pixelScale;
+    ctx.filter = filter;
 
     const ftx = lonToTileF(lon, layerZoom);
     const fty = latToTileF(lat, layerZoom);
@@ -133,6 +148,7 @@ async function drawTileLayer(ctx, position, layerZoom, tileTemplate, pixelScale 
         const { screenLeft, screenTop } = tilesToDraw[i];
         ctx.drawImage(src.img, src.sx, src.sy, src.sSize, src.sSize, screenLeft, screenTop, effTile, effTile);
     }
+    ctx.filter = 'none';
 }
 
 // Render an ordered list of tile layers (base map first, overlays on top).
@@ -145,7 +161,7 @@ async function renderTilesToCanvas(canvas, position, zoom, layers) {
         if (!layer?.template) continue;
         const layerZoom = Math.min(zoom, layer.maxZoom ?? zoom);
         const pixelScale = Math.pow(2, zoom - layerZoom);
-        await drawTileLayer(ctx, position, layerZoom, layer.template, pixelScale);
+        await drawTileLayer(ctx, position, layerZoom, layer.template, pixelScale, layer.filter || 'none');
     }
 }
 
@@ -161,8 +177,14 @@ export default function MapPlane3D({ mode = 'chart' }) {
     // Ordered tile layers: base map first, optional overlays on top
     const layersRef = useRef(
         mode === 'meteo'
-            ? [{ template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM }, { template: WINDY_TEMPLATE, maxZoom: WINDY_MAX_ZOOM }]
-            : [{ template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM }]
+            ? [
+                { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: BASE_MAP_FILTER },
+                { template: WINDY_TEMPLATE, maxZoom: WINDY_MAX_ZOOM, filter: WINDY_FILTER },
+              ]
+            : [
+                { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: BASE_MAP_FILTER },
+                { template: SEAMARK_TEMPLATE, maxZoom: SEAMARK_MAX_ZOOM },
+              ]
     );
     const { gl } = useThree();
 
@@ -188,9 +210,13 @@ export default function MapPlane3D({ mode = 'chart' }) {
         if (position?.latitude == null) return;
 
         const camDistMeters = camera.position.length() / sceneScale;
-        // Canvas covers ~4× the camera distance: sharp under the camera, with margin
-        const coverage = Math.min(Math.max(camDistMeters * 4, 250), 12000);
-        const baseMax = layersRef.current[0]?.template === OSM_TEMPLATE ? OSM_MAX_ZOOM : CUSTOM_MAX_ZOOM;
+        // Canvas covers ~4× the camera distance: sharp under the camera, with margin.
+        // Meteo keeps a wide fixed minimum so low-zoom wind/rain overlays are visible.
+        const minCoverage = mode === 'meteo' ? METEO_MIN_COVERAGE : CHART_MIN_COVERAGE;
+        const coverage = Math.min(Math.max(camDistMeters * 4, minCoverage), 60000);
+        const baseMax = mode === 'meteo'
+            ? METEO_MAX_ZOOM
+            : (layersRef.current[0]?.template === OSM_TEMPLATE ? OSM_MAX_ZOOM : CUSTOM_MAX_ZOOM);
         const z = zoomForCoverage(coverage, position.latitude, baseMax);
         if (z !== zoomLevel) setZoomLevel(z);
     });
@@ -254,10 +280,24 @@ export default function MapPlane3D({ mode = 'chart' }) {
     useEffect(() => {
         if (mode === 'meteo') {
             layersRef.current = [
-                { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM },
-                { template: WINDY_TEMPLATE, maxZoom: WINDY_MAX_ZOOM },
+                { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: BASE_MAP_FILTER },
+                { template: WINDY_TEMPLATE, maxZoom: WINDY_MAX_ZOOM, filter: WINDY_FILTER },
             ];
             scheduleRedraw(true);
+            // Add the latest rain radar frame (free, no API key)
+            fetch(RAINVIEWER_INDEX)
+                .then((r) => r.json())
+                .then((data) => {
+                    const frames = data?.radar?.past;
+                    const path = frames?.[frames.length - 1]?.path;
+                    if (!path) return;
+                    layersRef.current = [
+                        ...layersRef.current,
+                        { template: `https://tilecache.rainviewer.com${path}/256/{z}/{x}/{y}/2/1_1.png`, maxZoom: RAIN_MAX_ZOOM },
+                    ];
+                    scheduleRedraw(true);
+                })
+                .catch(() => { /* no radar overlay */ });
             return;
         }
 
@@ -280,7 +320,10 @@ export default function MapPlane3D({ mode = 'chart' }) {
                 scheduleRedraw(true);
             })
             .catch(() => {
-                layersRef.current = [{ template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM }];
+                layersRef.current = [
+                    { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: BASE_MAP_FILTER },
+                    { template: SEAMARK_TEMPLATE, maxZoom: SEAMARK_MAX_ZOOM },
+                ];
                 scheduleRedraw(true);
             });
     }, [mode, scheduleRedraw]);
