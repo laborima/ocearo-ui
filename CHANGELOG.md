@@ -1,3 +1,37 @@
+## [0.1.19] - 2026-07-22
+
+### Added
+
+- **Maintenance tab** replacing the transmission tab: manufacturer service schedules (Volvo Penta D1-20 default, D1/D2 series, Yanmar YM, generic diesel), per-item intervals in engine hours and months, last-done tracking with overdue/due-soon statuses, engine model selector (state persisted in localStorage; transmission fields moved into the engine tab).
+- **Engine alarms finally visible**: subscription to the 24 NMEA2000 discrete engine notifications (PGN 127489 via engine gateways such as YDEG-04) plus zone notifications; warnings tab now actually receives them, with a persistent clickable alarm banner across all tabs and a red/yellow badge on the tab header.
+- **Engine room temperature gauge** (1-Wire bilge probe on `environment.inside.engineRoom.temperature`) with early-warning thresholds — best early signal of raw-water/cooling failure.
+- **Adaptive 3D chart plane**: map zoom follows camera distance (OSM z19 harbor detail with pontoons up close, wide area zoomed out), true-to-scale with the AIS layer, parent-tile fallback for missing tiles, OpenSeaMap seamark overlay (buoys, lights, marks), darkened palette to match the dark HUD.
+- **Real weather map in meteo mode**: fixed wide coverage (~40 km) where the Windy wind overlay (contrast-boosted) and the live RainViewer precipitation radar are actually readable.
+- **Wind-driven swell** on the 3D ocean: GPU vertex displacement with amplitude derived from estimated significant wave height (Hs ≈ 0.21·U²/g, capped at 6 m), three superimposed wave trains.
+- **Weather sky**: procedural cloud sprites (offline-generated texture) and rain particles driven by forecast cloud cover and precipitation; sky haze follows overcast; ocean sky now also rendered in chart and meteo modes.
+- **VOC-based air quality tile**: BME680 gas resistance displayed in kΩ with a qualitative scale (higher = cleaner) and humidity as secondary metric when no CO₂/PM2.5 sensors exist; falls back to CO₂ automatically when such a sensor is present.
+- **Fuel analytics**: estimation shown as a range between worst and average consumption, full-tank assumption after a refill, engine hours persisted across reboots (estimation works with engine off), current engine hours field, hours-between-refills column and full refill history.
+- **DND toggle** in the bottom bar cycling voice/safety-only/muted via the ocearo-core `/dnd` API.
+- **Dashboard button** in the bottom navigation (replaces the embedded KIP gauges shortcut).
+- White low-poly AIS fleet with size/orientation normalization, model preview page and 30 fps render cap for RPi5.
+
+### Fixed
+
+- Chart/meteo modes were unusably blurry: the map texture covered a fixed 10 km for a camera that only sees ~700 m.
+- Engine warnings tab always showed "all systems nominal" because notification paths were never subscribed.
+- Gauge ranges now match a Volvo D1-20: max 3600 rpm, coolant warn 95 °C / alarm 100 °C, engine room 55/70 °C, realistic oil pressure thresholds.
+- Bilge and aft-locker 1-Wire probes remapped to their true SignalK paths (`engineRoom`, `lazarette`); air temperature widgets fall back to the sheltered aft-locker probe; weather card falls back to forecast.
+- VOC showed raw ohms with a wrong "ppm" unit in the bottom widget.
+- Black gap between the chart plane and the sky horizon (camera far plane raised to 2500, lite water tone matched to the reflective ocean).
+- Tide heights, coefficient and chart ticks rounded to sensible decimals.
+- Fuel tab: estimation key mismatch, N/A on range values, truncated history.
+- AIS: sailboats floating above the waterline (per-type visual draft), boats lying on their side (glTF Y-up), static data (name/type/dimensions) not updating after initial load.
+- Stray service worker unregistered in dev to prevent HMR reload loops.
+
+### Changed
+
+- RPi5 performance: chart and meteo modes use a lite ocean (sky, clouds and rain kept, no mirror-reflection pass — the scene is no longer rendered twice); swell mesh resolution tuned; library updates and removal of 93 MB of unused source models.
+
 ## [0.1.18] - 2026-02-25
 
 ### Fixed

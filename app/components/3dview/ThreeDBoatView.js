@@ -44,7 +44,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 makeDefault
                 fov={60}
                 near={5}
-                far={500}
+                far={2500}
                 position={[0, 5, 20]}
             />
             {/* Orbit controls */}

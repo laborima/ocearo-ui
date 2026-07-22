@@ -14,19 +14,17 @@ Inspiré par l'interface de l'autopilote Tesla, ce système offre une expérienc
 
 ---
 
-## **Dernières mises à jour (v0.1.16)**
+## **Dernières mises à jour (v0.1.19)**
 
-- **Physique 3D avancée et Voiles** : Foc/génois et grand-voile en 3D complète avec cambrure dynamique, vrillage et visualisation de l'étai.
-- **Gréement dynamique et tensions** : Visualisation en temps réel des lignes de gréement (pataras, hale-bas, cunningham, bordure) avec des dégradés de couleurs basés sur la tension.
-- **HUD de réglage des voiles** : Indicateurs en arc pour le chariot de GV et les chariots de foc (FP/FS) intégrés au compas 3D.
-- **Autopilote et Navigation** : Vue Autopilote dédiée, widget de Route avec les routes/waypoints Signal K, et laylines 3D haute précision.
-- **Tableau de bord intégré** : Panneau droit avec radar AIS, marées, météo et niveaux de réservoirs pour une vision consolidée.
-- **Surveillance complète** : Nouvelles jauges moteur (temp, pression, carburant), gestion du journal de carburant et vue journal de bord.
-- **Météo et Prévisions** : Contexte météo avec support de l'API de prévisions Signal K et repli sur données hors ligne.
-- **Unités et Chemins configurables** : Support des unités personnalisées (kn, m/s, °C, etc.) et des chemins de données Signal K préférés pour le vent et le cap.
-- **UI/UX améliorée** : Panneau AIS repensé, barres de jauge style Tesla, barres d'outils transparentes et ciel dynamique jour/nuit.
-- **Outils de débogage** : Panneau de débogage dédié avec contrôles de forçage du vent et bascule des axes 3D.
-- **Stack technique moderne** : Migration complète vers Next.js 16, React 19 et Tailwind CSS v4.
+- **Plan de maintenance moteur** : Nouvel onglet maintenance avec les échéances constructeur (Volvo Penta D1/D2, Yanmar YM, diesel générique), suivi des dernières interventions et statuts en retard/à prévoir.
+- **Alarmes moteur** : Les 24 notifications moteur NMEA2000 (surchauffe, pression d'huile, niveau de liquide de refroidissement…) remontent désormais avec un bandeau d'alarme permanent et un badge d'onglet, plus des zones de température configurables levant des alertes sonores SignalK.
+- **Carte 3D à l'échelle du port** : Plan de carte à niveau de détail adaptatif — pontons visibles au ponton (OSM z19 + balisage OpenSeaMap), zone large en dézoomant, à l'échelle des cibles AIS.
+- **Vraie carte météo** : Le mode météo combine le fond de carte avec l'overlay vent Windy et le radar de pluie RainViewer en direct sur ~40 km.
+- **Océan et ciel vivants** : Houle géométrique fonction du vent (hauteur significative estimée), nuages et pluie pilotés par les prévisions, ciel océan partagé par tous les modes carte.
+- **Qualité de l'air via COV** : Tuile du tableau de bord pilotée par la résistance de gaz du BME680 (kΩ) avec échelle qualitative en l'absence de capteurs CO₂/PM2.5.
+- **Analyse carburant** : Estimation en plage (pire–moyenne conso), hypothèse plein complet après ravitaillement, heures moteur conservées moteur coupé, historique complet des pleins.
+- **Performances RPi5** : Les modes carte/météo utilisent un océan allégé sans passe de réflexion — la scène n'est plus rendue deux fois par image.
+- **Points forts précédents (v0.1.16)** : voiles 3D avec réglage physique, tensions de gréement, HUD de réglage, vue autopilote, tableau de bord, unités configurables, stack Next.js 16 / React 19 / Tailwind v4.
 
 ---
 

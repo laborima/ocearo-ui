@@ -328,8 +328,9 @@ function Ocean3D({ lite = false }) {
     }
 
     if (lite) {
+      // Same tone as the reflective ocean so the sea reads continuously to the horizon
       _scratchWaterColor.copy(DAY_WATER_COLOR).lerp(NIGHT_WATER_COLOR, nightFactor);
-      liteWaterMaterial.color.copy(_scratchWaterColor).multiplyScalar(0.5);
+      liteWaterMaterial.color.copy(_scratchWaterColor).multiplyScalar(1.6);
     }
 
     // Weather snapshot (forecast fallback handled by WeatherContext)
