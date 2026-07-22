@@ -159,6 +159,8 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
     // Memoize transformation matrix for better performance
     const rudderMatrix = useMemo(() => new THREE.Matrix4(), []);
     const luffAxis = useMemo(() => new THREE.Vector3(1, 0, 0), []);
+    // Constant base orientation for the rudder — hoisted to avoid a per-frame allocation
+    const rudderBaseEuler = useMemo(() => new THREE.Euler(-Math.PI / 2, Math.PI / 2, 0), []);
 
     // Optimize frame updates using RAF
     useFrame(() => {
@@ -179,9 +181,7 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
 
         // Update rudder rotation
         if (rudderRef.current) {
-            rudderMatrix.makeRotationFromEuler(
-                new THREE.Euler(-Math.PI / 2, Math.PI / 2, 0)
-            );
+            rudderMatrix.makeRotationFromEuler(rudderBaseEuler);
             rudderRef.current.setRotationFromMatrix(rudderMatrix);
             rudderRef.current.rotateOnAxis(
                 luffAxis,

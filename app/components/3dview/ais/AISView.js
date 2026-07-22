@@ -7,6 +7,17 @@ import { useSignalKPaths } from '../../hooks/useSignalK';
 import { useAIS } from './AISContext';
 import AISBoat from './AISBoat'; // Assuming AISBoat accepts onClick prop now
 
+// Hard cap on simultaneously rendered AIS vessels. Each vessel is a full GLTF
+// model, so on a RPi5 we only ever draw the closest N to keep the GPU happy.
+const MAX_RENDERED_VESSELS = 50;
+
+// Scratch objects reused every frame to avoid per-boat allocations (GC pressure
+// is a major source of jank on low-power devices).
+const _scratchVec = new THREE.Vector3();
+const _scratchQuatCurrent = new THREE.Quaternion();
+const _scratchQuatTarget = new THREE.Quaternion();
+const _scratchEuler = new THREE.Euler();
+
 /**
  * Recursively searches for a mesh with material in a 3D object hierarchy
  * @param {THREE.Object3D} obj - The 3D object to search
@@ -33,14 +44,16 @@ const updateBoatTransform = (boat, boatData, interpolate = true) => {
     const targetRotationY = -boatData.rotationAngleY;
 
     if (interpolate) {
-        // Simple linear interpolation (lerp)
-        boat.position.lerp(new THREE.Vector3(boatData.sceneX, boat.position.y, boatData.sceneZ), 0.1);
+        // Simple linear interpolation (lerp) — reuse scratch vector
+        _scratchVec.set(boatData.sceneX, boat.position.y, boatData.sceneZ);
+        boat.position.lerp(_scratchVec, 0.1);
 
-        // Shortest angle interpolation for rotation
-        const currentQuaternion = new THREE.Quaternion().setFromEuler(boat.rotation);
-        const targetQuaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, targetRotationY, 0));
-        currentQuaternion.slerp(targetQuaternion, 0.1);
-        boat.rotation.setFromQuaternion(currentQuaternion);
+        // Shortest angle interpolation for rotation — reuse scratch quaternions/euler
+        _scratchQuatCurrent.setFromEuler(boat.rotation);
+        _scratchEuler.set(0, targetRotationY, 0);
+        _scratchQuatTarget.setFromEuler(_scratchEuler);
+        _scratchQuatCurrent.slerp(_scratchQuatTarget, 0.1);
+        boat.rotation.setFromQuaternion(_scratchQuatCurrent);
 
     } else {
         boat.position.set(boatData.sceneX, 0, boatData.sceneZ); // Assuming Y is always 0 initially
@@ -53,6 +66,7 @@ const AISView = ({ onUpdateInfoPanel }) => {
     const { aisData, vesselIds } = useAIS();
     const boatRefs = useRef({}); // Refs to all boat 3D objects for direct manipulation
     const materialsCache = useRef({}); // Cache materials per boat { mmsi: { white: mat, red: mat } }
+    const meshCache = useRef({}); // Cache the resolved material mesh per boat to avoid traversing every frame
 
     // State for the selected boat MMSI
     const [selectedBoat, setSelectedBoat] = useState(null);
@@ -109,10 +123,15 @@ const AISView = ({ onUpdateInfoPanel }) => {
 
             // Only handle color logic if the boat is visible
             if (boat.visible) {
-                const mesh = findMaterialMesh(boat);
+                // Resolve the material mesh once and cache it — traversing the
+                // GLTF hierarchy every frame for every boat is wasteful.
+                let mesh = meshCache.current[mmsi];
                 if (!mesh) {
-                    // console.warn(`Material mesh not found for boat ${mmsi}`);
-                    return; // Cannot update color if no material mesh found
+                    mesh = findMaterialMesh(boat);
+                    if (!mesh) {
+                        return; // Cannot update color if no material mesh found yet
+                    }
+                    meshCache.current[mmsi] = mesh;
                 }
 
                 // Initialize materials cache for this boat if needed
@@ -153,51 +172,47 @@ const AISView = ({ onUpdateInfoPanel }) => {
 
             }
         });
-    }, [aisData]);
+    });
+
+    // Stable click handler (toggles selection) so the boat list doesn't have to
+    // re-render whenever the selection changes.
+    const handleBoatClick = useCallback((boat) => {
+        if (!boat) return;
+        setSelectedBoat(prev => (prev && prev.mmsi === boat.mmsi) ? null : boat);
+    }, []);
 
     // --- Render Boat Components ---
     const boats = useMemo(() => {
-        console.log("Re-rendering boat list"); // Debug log
+        // Render only the closest N vessels to bound GPU/CPU cost on low-power devices.
+        const sorted = vesselIds
+            .filter(Boolean)
+            .slice()
+            .sort((a, b) => (a.distanceMeters ?? Infinity) - (b.distanceMeters ?? Infinity))
+            .slice(0, MAX_RENDERED_VESSELS);
 
-        return vesselIds
-            .map(vessel => {
-                //console.log(vessel);
-
-                // Skip rendering if data is not yet available for this ID
-                if (!vessel) {
-                    return null;
-                }
-
-                return (
-                    <AISBoat
-                        key={vessel.mmsi}
-                        ref={(el) => {
-                            // Cleanup ref when component unmounts
-                            if (el) {
-                                el.userData = { ...el.userData, mmsi: vessel.mmsi }; // Store mmsi in userData
-                                boatRefs.current[vessel.mmsi] = el;
-                            } else {
-                                // Remove ref and material cache when boat is removed
-                                delete boatRefs.current[vessel.mmsi];
-                                delete materialsCache.current[vessel.mmsi];
-                            }
-                        }}
-                        rotation={[0, -vessel.rotationAngleY, 0]}
-                        position={[vessel.sceneX, 0, vessel.sceneZ]}
-                        visible={vessel.visible}
-                        boatData={vessel}
-                        onClick={(boat) => {
-                            if (selectedBoat && boat && selectedBoat.mmsi === boat.mmsi) {
-                                setSelectedBoat(null);
-                            } else {
-                                setSelectedBoat(boat);
-                            }
-                        }}
-                    />
-                );
-            })
-            .filter(Boolean); // Filter out any nulls from missing data
-    }, [vesselIds, selectedBoat]); // Depend only on vesselIds and the stable callback
+        return sorted.map(vessel => (
+            <AISBoat
+                key={vessel.mmsi}
+                ref={(el) => {
+                    // Cleanup ref when component unmounts
+                    if (el) {
+                        el.userData = { ...el.userData, mmsi: vessel.mmsi }; // Store mmsi in userData
+                        boatRefs.current[vessel.mmsi] = el;
+                    } else {
+                        // Remove ref and caches when boat is removed
+                        delete boatRefs.current[vessel.mmsi];
+                        delete materialsCache.current[vessel.mmsi];
+                        delete meshCache.current[vessel.mmsi];
+                    }
+                }}
+                rotation={[0, -vessel.rotationAngleY, 0]}
+                position={[vessel.sceneX, 0, vessel.sceneZ]}
+                visible={vessel.visible}
+                boatData={vessel}
+                onClick={handleBoatClick}
+            />
+        ));
+    }, [vesselIds, handleBoatClick]); // Stable handler → no re-render on selection change
 
 
     // --- Data Formatting Utilities ---

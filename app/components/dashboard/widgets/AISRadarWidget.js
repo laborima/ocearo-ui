@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { oBlue, oGreen, oRed, oYellow, useOcearoContext } from '../../context/OcearoContext';
 import { useAIS } from '../../3dview/ais/AISContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
@@ -15,7 +15,6 @@ const AISRadarWidget = React.memo(() => {
   const { t } = useTranslation();
   const { aisData: aisDataRaw, vesselIds } = useAIS();
   const [radarRange, setRadarRange] = useState(5); // nautical miles
-  const [sweepAngle, setSweepAngle] = useState(0);
   const debugMode = configService.get('debugMode');
 
   const handleRadarWheel = useCallback((e) => {
@@ -35,23 +34,8 @@ const AISRadarWidget = React.memo(() => {
   const headingMagnetic = useSignalKPath('navigation.headingMagnetic');
   const myHeading = headingTrue || headingMagnetic || 0;
   
-  // Simulate radar sweep animation
-  useEffect(() => {
-    let animationId;
-
-    const animate = () => {
-      setSweepAngle(prev => (prev + 2) % 360);
-      animationId = requestAnimationFrame(animate);
-    };
-
-    animationId = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
-    };
-  }, []); // Empty dependency array is correct - animation should run continuously
+  // The radar sweep is animated purely via SVG <animateTransform> (compositor-driven)
+  // instead of React state, so it no longer re-renders the whole widget every frame.
 
   const aisData = useMemo(() => {
     if (!aisDataRaw || Object.keys(aisDataRaw).length === 0 || !myPosition) {
@@ -147,16 +131,26 @@ const AISRadarWidget = React.memo(() => {
           <line x1="100" y1="20" x2="100" y2="180" stroke="var(--color-oBlue)" strokeOpacity="0.05" strokeWidth="0.5" />
           <line x1="20" y1="100" x2="180" y2="100" stroke="var(--color-oBlue)" strokeOpacity="0.05" strokeWidth="0.5" />
           
-          {/* Radar sweep */}
-          <line
-            x1="100"
-            y1="100"
-            x2={100 + 80 * Math.cos((sweepAngle - 90) * Math.PI / 180)}
-            y2={100 + 80 * Math.sin((sweepAngle - 90) * Math.PI / 180)}
-            stroke="var(--color-oGreen)"
-            strokeWidth="1"
-            strokeOpacity="0.4"
-          />
+          {/* Radar sweep — rotated by the compositor (no React re-render per frame) */}
+          <g>
+            <line
+              x1="100"
+              y1="100"
+              x2="100"
+              y2="20"
+              stroke="var(--color-oGreen)"
+              strokeWidth="1"
+              strokeOpacity="0.4"
+            />
+            <animateTransform
+              attributeName="transform"
+              type="rotate"
+              from="0 100 100"
+              to="360 100 100"
+              dur="3s"
+              repeatCount="indefinite"
+            />
+          </g>
           
           {/* AIS Targets */}
           {aisData.map(target => {

@@ -38,7 +38,7 @@ export default function TankLevelsWidget() {
       fuel: getTankInfo('fuel', t('widgets.tankFuel'), faGasPump, 'text-oYellow', 'bg-oYellow'),
       freshWater: getTankInfo('freshWater', t('widgets.tankFreshWater'), faTint, 'text-oBlue', 'bg-oBlue'),
       wasteWater: getTankInfo('wasteWater', t('widgets.tankWasteWater'), faToilet, 'text-hud-secondary', 'bg-hud-elevated'),
-      oil: getTankInfo('oil', t('widgets.tankEngineOil'), faOilCan, 'text-orange-400', 'bg-orange-400')
+      oil: getTankInfo('oil', t('widgets.tankEngineOil'), faOilCan, 'text-oYellow', 'bg-oYellow')
     };
 
     const hasData = Object.values(data).some(tank => tank.level !== null);
@@ -97,7 +97,7 @@ export default function TankLevelsWidget() {
               </div>
               <div className="bg-hud-elevated rounded-full h-1.5 overflow-hidden shadow-inner">
                 <div 
-                  className={`h-full transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${
+                  className={`h-full transition-all duration-1000 ${
                     isWaste ? 
                       (tank.level > 0.8 ? 'bg-oRed' : tank.level > 0.6 ? 'bg-oYellow' : 'bg-oGreen') :
                       (tank.level < 0.1 ? 'bg-oRed' : tank.level < 0.25 ? 'bg-oYellow' : 'bg-oGreen')

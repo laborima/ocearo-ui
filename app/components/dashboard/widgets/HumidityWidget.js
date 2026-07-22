@@ -80,8 +80,8 @@ export default function HumidityWidget() {
         <div className="px-2">
           <div className="w-full bg-hud-elevated rounded-full h-1 overflow-hidden shadow-inner">
             <div 
-              className={`h-full transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${
-                parseInt(humidity) < 30 || parseInt(humidity) > 70 ? 'bg-oYellow' : 'bg-oBlue shadow-[0_0_8px_var(--color-oBlue)] shadow-opacity-40'
+              className={`h-full transition-all duration-1000 ${
+                parseInt(humidity) < 30 || parseInt(humidity) > 70 ? 'bg-oYellow' : 'bg-oBlue shadow-[0_0_8px_var(--color-oBlue)]'
               }`}
               style={{ width: `${humidityPercentage !== null ? humidityPercentage : 0}%` }}
             />

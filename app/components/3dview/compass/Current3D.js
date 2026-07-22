@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Vector3 } from 'three';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { oBlue, oGreen, useOcearoContext } from '../../context/OcearoContext';
+import { oGreen, oNight, useOcearoContext } from '../../context/OcearoContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
 
 // Constants for configuration

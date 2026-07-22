@@ -295,6 +295,18 @@ export const AISProvider = ({ children }) => {
                                 target.headingMagnetic = data.value;
                                 hasOrientationUpdate = true;
                                 break;
+                            case 'design.aisShipType':
+                                target.shipType = data.value?.id ?? data.value;
+                                break;
+                            case 'design.length':
+                                target.length = data.value?.overall ?? data.value;
+                                break;
+                            case 'design.beam':
+                                target.beam = data.value;
+                                break;
+                            case 'communication.callsignVhf':
+                                target.callsign = data.value;
+                                break;
                             default:
                                 break;
                         }
@@ -339,7 +351,15 @@ export const AISProvider = ({ children }) => {
                                 { path: 'navigation.courseOverGroundTrue' },
                                 { path: 'navigation.courseOverGroundMagnetic' },
                                 { path: 'navigation.headingTrue' },
-                                { path: 'navigation.headingMagnetic' }
+                                { path: 'navigation.headingMagnetic' },
+                                // AIS static data (message types 5/24) arrives minutes after
+                                // position reports: keep name/type/dimensions in sync so
+                                // targets don't stay on the default model forever.
+                                { path: 'name' },
+                                { path: 'design.aisShipType' },
+                                { path: 'design.length' },
+                                { path: 'design.beam' },
+                                { path: 'communication.callsignVhf' }
                             ],
                         },
                     ],

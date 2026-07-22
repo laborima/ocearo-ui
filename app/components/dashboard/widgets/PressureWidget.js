@@ -55,14 +55,14 @@ export default function PressureWidget() {
       <div className="flex-1 flex flex-col items-center justify-center min-h-0">
         {/* Circular gauge - flex to fill available space */}
         <div className="relative flex-1 flex items-center justify-center min-h-0 w-full">
-          <svg className="w-full h-full max-w-[12rem] max-h-[12rem] transform -rotate-90 filter drop-shadow-[0_0_15px_var(--color-oBlue)] shadow-opacity-10" viewBox="0 0 100 100">
+          <svg className="w-full h-full max-w-[12rem] max-h-[12rem] transform -rotate-90 filter drop-shadow-[0_0_15px_var(--color-oBlue)]" viewBox="0 0 100 100">
             <circle cx="50" cy="50" r="44" fill="none" stroke="var(--hud-border)" strokeWidth="4" opacity="0.2" />
             <circle
               cx="50" cy="50" r="44" fill="none"
               stroke="var(--color-oBlue)" strokeWidth="4" strokeLinecap="round"
               strokeDasharray={`${2 * Math.PI * 44}`}
               strokeDashoffset={`${pressureMbar !== null ? 2 * Math.PI * 44 * (1 - (Math.min(Math.max(pressureMbar, 950), 1050) - 950) / 100) : 2 * Math.PI * 44}`}
-              className="transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1)"
+              className="transition-all duration-1000"
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">

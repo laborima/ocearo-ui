@@ -129,7 +129,7 @@ export default function AttitudeWidget() {
         ].map((item, idx) => (
           <div key={idx} className="tesla-card p-2 tesla-hover bg-hud-bg border border-hud">
             <div className="flex items-center justify-center space-x-2 mb-1 opacity-60">
-              <FontAwesomeIcon icon={item.icon} className={`${nightMode ? 'text-oNight' : item.color} text-xs ${item.rotate ? `transform rotate-${item.rotate}` : ''}`} />
+              <FontAwesomeIcon icon={item.icon} className={`${nightMode ? 'text-oNight' : item.color} text-xs`} style={{ transform: `rotate(${item.rotate}deg)` }} />
               <span className={`${nightMode ? 'text-oNight/60' : 'text-hud-muted'} uppercase text-xs font-black tracking-widest`}>{item.label}</span>
             </div>
             <div className={`${nightMode ? 'text-oNight' : 'text-hud-main'} font-black text-lg gliding-value tracking-tighter`}>{Math.round(item.value)}°</div>

@@ -122,6 +122,12 @@ class SignalKService {
         return config.signalkUrl || configService.getComputedSignalKUrl();
     }
 
+    isDemoSignalK() {
+        const config = configService.getAll();
+        const baseUrl = config.signalkUrl || '';
+        return config.debugMode || baseUrl.includes('demo.signalk.org');
+    }
+
     /**
      * Get authentication headers for API calls
      * @returns {Object} Headers object with authentication
@@ -1163,6 +1169,9 @@ class SignalKService {
      * @returns {Promise<boolean>} True if tide data is available
      */
     async checkTideApiAvailability() {
+        if (this.isDemoSignalK()) {
+            return false;
+        }
         try {
             const response = await fetch(
                 `${this.getBaseUrl()}/signalk/v1/api/vessels/self/environment/tide`,
@@ -1189,6 +1198,9 @@ class SignalKService {
      * @returns {Promise<Object|null>} Tide data object or null
      */
     async getTideData() {
+        if (this.isDemoSignalK()) {
+            return null;
+        }
         try {
             const path = '/signalk/v1/api/vessels/self/environment/tide';
             const data = await this.apiCall(path);

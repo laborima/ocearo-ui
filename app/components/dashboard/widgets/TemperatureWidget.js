@@ -9,6 +9,8 @@ import { useTranslation } from 'react-i18next';
 
 const TEMPERATURE_CONFIG = {
   airPath: 'environment.outside.temperature',
+  // Sheltered probe used as ambient fallback when no true outside sensor exists
+  airFallbackPath: 'environment.inside.lazarette.temperature',
   seaPath: 'environment.water.temperature',
   transform: value => value != null ? convertTemperatureUnit(value) : null
 };
@@ -18,7 +20,9 @@ const TemperatureWidget = React.memo(() => {
   const debugMode = configService.get('debugMode');
   const prevRef = useRef({ airTemp: null, seaTemp: null });
   
-  const airValue = useSignalKPath(TEMPERATURE_CONFIG.airPath);
+  const airOutsideValue = useSignalKPath(TEMPERATURE_CONFIG.airPath);
+  const airFallbackValue = useSignalKPath(TEMPERATURE_CONFIG.airFallbackPath);
+  const airValue = airOutsideValue ?? airFallbackValue;
   const seaValue = useSignalKPath(TEMPERATURE_CONFIG.seaPath);
 
   const temperatureData = useMemo(() => {
@@ -98,8 +102,8 @@ const TemperatureWidget = React.memo(() => {
               </div>
               <div className="h-1 bg-hud-elevated rounded-full overflow-hidden shadow-inner">
                 <div 
-                  className={`h-full transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${
-                    item.value !== null && item.value < 10 ? 'bg-oBlue' : 
+                  className={`h-full transition-all duration-1000 ${
+                    item.value !== null && item.value < 10 ? 'bg-oBlue' :
                     item.value !== null && item.value > 25 ? 'bg-oRed' : 'bg-oGreen'
                   }`}
                   style={{ width: `${item.value !== null ? Math.min(100, Math.max(0, (item.value + 10) * 2)) : 0}%` }}

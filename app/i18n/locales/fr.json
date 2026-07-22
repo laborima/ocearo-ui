@@ -24,7 +24,13 @@
     "weather": "Météo",
     "apps": "Apps",
     "gauges": "Jauges",
-    "help": "Aide"
+    "dashboard": "Tableau",
+    "help": "Aide",
+    "dnd": {
+      "off": "Voix",
+      "safety": "Sécurité",
+      "all": "Silence"
+    }
   },
   "menu": {
     "splitView": "Vue partagée",
@@ -274,6 +280,8 @@
     "waterTemperature": "Température de l'eau",
     "airTemperature": "Température de l'air",
     "exhaustTemperature": "Température d'échappement",
+    "engineRoomTemperature": "Cale moteur",
+    "lazaretteTemperature": "Coffre arrière",
     "fridgeTemperature": "Température du frigo"
   },
   "environmental": {
@@ -315,6 +323,7 @@
     "airQualityMonitoring": "Qualité de l'air",
     "signalLossAir": "Perte de signal : capteurs air",
     "co2Concentration": "Concentration CO₂ (ppm)",
+    "vocGasResistance": "COV — résistance gaz",
     "atmosphere": "atmosphère",
     "pm25Particulate": "Particules PM2.5",
     "nominal": "Nom. :",
@@ -492,10 +501,47 @@
     "noteCol": "Note",
     "speed": "Vitesse",
     "coord": "Coord",
-    "ocearoCoreNotEnabled": "OcearoCore n'est pas activé"
+    "ocearoCoreNotEnabled": "OcearoCore n'est pas activé",
+    "racingMode": "Mode Régate",
+    "racingModeActive": "Mode Régate Actif",
+    "racingModeAISInfo": "AIS silencieux",
+    "racingAdvice": "RÉGATE"
+  },
+  "maintenance": {
+    "title": "Plan de maintenance",
+    "overdue": "En retard",
+    "dueSoon": "À prévoir",
+    "neverDone": "Non renseigné",
+    "overdueLabel": "Échéance dépassée",
+    "everyMonths": "{{count}} mois",
+    "inDays": "{{count}} j",
+    "doneAtHours": "Heures moteur",
+    "doneOnDate": "Date",
+    "markDone": "Valider",
+    "lastDone": "Dernière fois",
+    "disclaimer": "Intervalles constructeur indicatifs — se référer au manuel du moteur",
+    "items": {
+      "oilChange": "Vidange huile moteur",
+      "oilFilter": "Filtre à huile",
+      "fuelFilter": "Filtre à gasoil (fin)",
+      "fuelPreFilter": "Préfiltre gasoil / décanteur",
+      "impeller": "Turbine pompe eau de mer",
+      "driveBelt": "Courroie d'alternateur",
+      "airFilter": "Filtre à air",
+      "valveClearance": "Jeu aux soupapes",
+      "coolant": "Liquide de refroidissement",
+      "anodes": "Anodes (moteur/saildrive)",
+      "saildriveOil": "Huile saildrive/inverseur",
+      "saildriveDiaphragm": "Membrane saildrive",
+      "engineMounts": "Silentblocs moteur"
+    }
   },
   "motor": {
     "engine": "Moteur",
+    "maintenance": "Maintenance",
+    "transOilPressure": "Huile inverseur",
+    "transOilTemp": "Temp. inverseur",
+    "engineRoom": "Cale moteur",
     "transmission": "Transmission",
     "electrical": "Électrique",
     "fuel": "Carburant",
@@ -544,6 +590,8 @@
     "telemetryDetails": "Détails télémétrie",
     "levelPercentage": "Niveau en pourcentage",
     "totalCapacity": "Capacité totale",
+    "currentEngineHours": "Heures moteur",
+    "hoursSinceRefill": "Heures entre pleins",
     "currentVolume": "Volume actuel",
     "enduranceEst": "Autonomie (est.)",
     "predictiveAnalysis": "Analyse prédictive",
@@ -561,7 +609,15 @@
     "warningsSummary": "Résumé des alertes",
     "allSystemsNominal": "Tous les systèmes nominaux",
     "noActiveWarnings": "Aucune alerte active détectée",
-    "notificationLog": "Journal des notifications"
+    "notificationLog": "Journal des notifications",
+    "showAll": "Tout afficher",
+    "showLess": "Réduire",
+    "healthyTelemetryNodes": "Nœuds de télémétrie sains",
+    "criticalNodeAlarms": "Alarmes critiques",
+    "alertLevel3": "Alerte niveau 3",
+    "systemAnomalies": "Anomalies système",
+    "warnLevel2": "Avertissement niveau 2",
+    "internalDebugTelemetry": "Télémétrie de débogage interne"
   },
   "fuelLog": {
     "logFuelRefill": "Enregistrer un plein",
@@ -581,6 +637,14 @@
     "errorCost": "Veuillez entrer un coût valide",
     "errorEngineHours": "Veuillez entrer les heures moteur",
     "autoCalculated": "Calculé automatiquement"
+  },
+  "mediaPlayer": {
+    "entertainmentNodes": "Nœuds de divertissement",
+    "externalNode": "Nœud externe",
+    "redirecting": "Redirection vers le nœud externe",
+    "launch": "Lancer",
+    "connectionRefused": "Connexion refusée par {{name}}",
+    "openExternalNode": "Ouvrir le nœud externe"
   },
   "errors": {
     "errorGeneratingUrl": "Erreur de génération de l'URL de l'application",

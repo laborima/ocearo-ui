@@ -1,7 +1,7 @@
 'use client';
 import React, { useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { toDegrees, MS_TO_KNOTS, convertSpeedUnit, getSpeedUnitLabel, useOcearoContext } from '../../context/OcearoContext';
+import { toDegrees, MS_TO_KNOTS, convertSpeedUnit, getSpeedUnitLabel } from '../../context/OcearoContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
 import { faTachometerAlt, faCompass, faWater, faWind } from '@fortawesome/free-solid-svg-icons';
@@ -18,7 +18,6 @@ const SpeedWidget = React.memo(() => {
   const cogValue = useSignalKPath('navigation.courseOverGroundTrue');
   const windSpeedValue = useSignalKPath('environment.wind.speedApparent');
 
-  const { nightMode } = useOcearoContext();
   const speedData = useMemo(() => {
     const hasData = sogValue !== null || stwValue !== null || debugMode;
 
@@ -58,8 +57,6 @@ const SpeedWidget = React.memo(() => {
     if (speed < 10) return t('widgets.fast');
     return t('widgets.veryFast');
   };
-
-  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-hud-secondary';
 
   return (
     <BaseWidget
@@ -112,8 +109,8 @@ const SpeedWidget = React.memo(() => {
             <div className="text-hud-muted text-xs font-black tracking-tighter">0</div>
             <div className="flex-1 bg-hud-elevated rounded-full h-1 overflow-hidden shadow-inner">
               <div 
-                className={`h-full transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${
-                  speedData.sog < 2 ? 'bg-hud-bg' : 
+                className={`h-full transition-all duration-1000 ${
+                  speedData.sog < 2 ? 'bg-hud-bg' :
                   speedData.sog < 5 ? 'bg-oBlue' : 
                   speedData.sog < 8 ? 'bg-oGreen' : 'bg-oYellow'
                 }`}

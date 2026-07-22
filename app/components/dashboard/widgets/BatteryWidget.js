@@ -137,8 +137,8 @@ export default function BatteryWidget() {
               </div>
               <div className="h-1 bg-hud-elevated rounded-full overflow-hidden shadow-inner">
                 <div 
-                  className={`h-full transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${
-                    item.percentage !== null && item.percentage < 20 ? 'bg-oRed shadow-[0_0_8px_var(--color-oRed)] shadow-opacity-40' : 
+                  className={`h-full transition-all duration-1000 ${
+                    item.percentage !== null && item.percentage < 20 ? 'bg-oRed shadow-[0_0_8px_var(--color-oRed)]' :
                     item.percentage !== null && item.percentage < 50 ? 'bg-oYellow' : 
                     'bg-oGreen'
                   }`}

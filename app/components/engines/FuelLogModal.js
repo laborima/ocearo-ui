@@ -149,13 +149,13 @@ const FuelLogModal = ({
               value={formData.liters}
               onChange={(e) => handleInputChange('liters', e.target.value)}
               className={`w-full bg-hud-elevated text-hud-main px-4 py-3 rounded-xl border ${
-                errors.liters ? 'border-red-500' : 'border-hud'
+                errors.liters ? 'border-oRed' : 'border-hud'
               } focus:border-oBlue focus:outline-none transition-all duration-300`}
               placeholder="Ex: 50"
               disabled={loading}
             />
             {errors.liters && (
-              <p className="text-red-400 text-xs mt-2 font-medium">{errors.liters}</p>
+              <p className="text-oRed text-xs mt-2 font-medium">{errors.liters}</p>
             )}
           </div>
 
@@ -171,13 +171,13 @@ const FuelLogModal = ({
               value={formData.cost}
               onChange={(e) => handleInputChange('cost', e.target.value)}
               className={`w-full bg-hud-elevated text-hud-main px-4 py-3 rounded-xl border ${
-                errors.cost ? 'border-red-500' : 'border-hud'
+                errors.cost ? 'border-oRed' : 'border-hud'
               } focus:border-oBlue focus:outline-none transition-all duration-300`}
               placeholder="Ex: 85.50"
               disabled={loading}
             />
             {errors.cost && (
-              <p className="text-red-400 text-xs mt-2 font-medium">{errors.cost}</p>
+              <p className="text-oRed text-xs mt-2 font-medium">{errors.cost}</p>
             )}
           </div>
 
@@ -193,13 +193,13 @@ const FuelLogModal = ({
               value={formData.engineHours}
               onChange={(e) => handleEngineHoursChange(e.target.value)}
               className={`w-full bg-hud-elevated text-hud-main px-4 py-3 rounded-xl border ${
-                errors.engineHours ? 'border-red-500' : 'border-hud'
+                errors.engineHours ? 'border-oRed' : 'border-hud'
               } focus:border-oBlue focus:outline-none transition-all duration-300`}
               placeholder="Ex: 245.5"
               disabled={loading}
             />
             {errors.engineHours && (
-              <p className="text-red-400 text-xs mt-2 font-medium">{errors.engineHours}</p>
+              <p className="text-oRed text-xs mt-2 font-medium">{errors.engineHours}</p>
             )}
             {currentEngineHours !== null && (
               <p className="text-hud-dim text-xs mt-2 font-medium">
@@ -245,7 +245,7 @@ const FuelLogModal = ({
               disabled={loading}
             />
             <label htmlFor="additive" className="ml-3 text-sm font-bold text-hud-secondary flex items-center cursor-pointer hover:text-hud-main transition-colors duration-300">
-              <FontAwesomeIcon icon={faFlask} className="mr-2 text-purple-400 opacity-70" />
+              <FontAwesomeIcon icon={faFlask} className="mr-2 text-oBlue opacity-70" />
               {t('fuelLog.additiveAdded')}
             </label>
           </div>
@@ -261,7 +261,7 @@ const FuelLogModal = ({
             </button>
             <button
               type="submit"
-              className="px-8 py-3 bg-oBlue hover:bg-blue-600 text-hud-main font-bold rounded-xl transition-all duration-300 flex items-center disabled:opacity-50 shadow-lg shadow-oBlue/20"
+              className="px-8 py-3 bg-oBlue hover:bg-oBlue/80 text-hud-main font-bold rounded-xl transition-all duration-300 flex items-center disabled:opacity-50 shadow-lg shadow-oBlue/20"
               disabled={loading}
             >
               {loading ? (

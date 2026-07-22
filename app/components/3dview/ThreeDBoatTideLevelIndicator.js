@@ -1,4 +1,5 @@
 import { useOcearoContext } from '../context/OcearoContext';
+import { useTide } from '../context/TideContext';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSignalKPaths } from '../hooks/useSignalK';
 import { useTranslation } from 'react-i18next';
@@ -29,7 +30,7 @@ const ThreeDBoatTideLevelIndicator = () => {
   const { t } = useTranslation();
   const { nightMode } = useOcearoContext();
   const [maxHeight, setMaxHeight] = useState(240); // Default height (equivalent to h-60)
-  
+
   const tidePaths = useMemo(() => [
     'environment.tide.heightNow',
     'environment.tide.heightHigh',
@@ -40,6 +41,7 @@ const ThreeDBoatTideLevelIndicator = () => {
   ], []);
 
   const skValues = useSignalKPaths(tidePaths);
+  const { tideData: tideContextData } = useTide();
 
   /**
    * Parse a tide time value (ISO timestamp or HH:MM) to a Date object
@@ -109,14 +111,15 @@ const ThreeDBoatTideLevelIndicator = () => {
   }, []);
 
   const tideData = useMemo(() => {
-    const level = skValues['environment.tide.heightNow'];
-    const high = skValues['environment.tide.heightHigh'];
-    const low = skValues['environment.tide.heightLow'];
-    const timeLow = skValues['environment.tide.timeLow'];
-    const timeHigh = skValues['environment.tide.timeHigh'];
-    const coefficient = skValues['environment.tide.coeffNow'];
+    // Use SignalK WebSocket data if available, fallback to TideContext (which uses REST API)
+    const level = skValues['environment.tide.heightNow'] ?? tideContextData?.level ?? null;
+    const high = skValues['environment.tide.heightHigh'] ?? tideContextData?.high ?? null;
+    const low = skValues['environment.tide.heightLow'] ?? tideContextData?.low ?? null;
+    const timeLow = skValues['environment.tide.timeLow'] ?? tideContextData?.timeLow ?? null;
+    const timeHigh = skValues['environment.tide.timeHigh'] ?? tideContextData?.timeHigh ?? null;
+    const coefficient = skValues['environment.tide.coeffNow'] ?? tideContextData?.coefficient ?? null;
 
-    const isDataComplete = [level, high, low, timeLow, timeHigh].every(value => 
+    const isDataComplete = [level, high, low, timeLow, timeHigh].every(value =>
       value !== null && value !== undefined
     );
 
@@ -129,7 +132,7 @@ const ThreeDBoatTideLevelIndicator = () => {
     return {
       level: null, high: null, low: null, timeLow: null, timeHigh: null, coefficient: null, isRising: null
     };
-  }, [skValues, computeIsRising]);
+  }, [skValues, tideContextData, computeIsRising]);
 
   const {
     level,
@@ -149,7 +152,9 @@ const ThreeDBoatTideLevelIndicator = () => {
     [level, low, high, computeTidePercentage]
   );
 
-  if (Object.values(tideData).some(value => value === null)) {
+  // Only the core tide fields are required to render; coefficient/isRising are optional
+  // (e.g. SignalK may not provide coeffNow) and must not hide the whole indicator.
+  if (level === null || high === null || low === null) {
     return null;
   }
 
@@ -166,7 +171,7 @@ const ThreeDBoatTideLevelIndicator = () => {
         <span className={`inline-block transform ${!isRising && 'rotate-180'} ${tideColors.TEXT} text-xs`}>
           ▲
         </span>
-        <span className="text-hud-muted">C{coefficient}</span>
+        {coefficient != null && <span className="text-hud-muted">C{coefficient}</span>}
       </div>
 
       <div className="relative flex flex-col w-12" style={{ height: maxHeight }}>
@@ -186,7 +191,7 @@ const ThreeDBoatTideLevelIndicator = () => {
         {/* Labels positioned to the right of the bar */}
         <div className="ml-4 h-full relative">
           <span className={`absolute ${textColor} text-xs font-black uppercase tracking-tighter opacity-30`} style={{ top: '0%' }}>
-            {high}m
+            {Number(high).toFixed(1)}m
           </span>
           
           {shouldShowTideLevel && (
@@ -202,7 +207,7 @@ const ThreeDBoatTideLevelIndicator = () => {
           )}
           
           <span className={`absolute ${textColor} text-xs font-black uppercase tracking-tighter opacity-30`} style={{ bottom: '0%' }}>
-            {low}m
+            {Number(low).toFixed(1)}m
           </span>
         </div>
       </div>

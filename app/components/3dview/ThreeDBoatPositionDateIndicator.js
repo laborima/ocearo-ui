@@ -56,8 +56,8 @@ const ThreeDBoatPositionDateIndicator = () => {
     return (
       <div className="mt-6 ml-2 p-3 transition-all duration-300">
         <div className={`text-2xl font-black flex gap-4 ${positionTextColor} opacity-10 tracking-tighter mb-2`}>
-          <span>--°--'--</span>
-          <span>--°--'--</span>
+          <span>--°--&apos;--</span>
+          <span>--°--&apos;--</span>
         </div>
         <div className={`text-xs font-black uppercase tracking-[0.2em] opacity-40 ${nightMode ? 'text-oNight' : 'text-hud-main'}`}>
           {getCurrentDateTime()}

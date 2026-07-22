@@ -217,11 +217,8 @@ export const TideContextProvider = ({ children }) => {
     updateSignalKDataRef.current = updateSignalKData;
 
     /**
-     * Fetch tide data: try SignalK plugin first, then fall back to local JSON.
-     * When the SignalK tides plugin is active the delta stream already pushes
-     * environment.tide.* values, so we only need to confirm availability.
-     * When it is not available we load local JSON and inject the values into
-     * the SignalK data store via updateSignalKData.
+     * Fetch tide data from SignalK REST API and inject into data store.
+     * This ensures tide data is available immediately, not just via WebSocket.
      */
     const fetchTideData = useCallback(async () => {
         setIsLoading(true);
@@ -233,6 +230,32 @@ export const TideContextProvider = ({ children }) => {
 
             if (isAvailable) {
                 setSource('signalk');
+                // Fetch tide data via REST API and inject into SignalK data store
+                const tideApiData = await signalKService.getTideData();
+                if (tideApiData) {
+                    const updates = {};
+                    if (tideApiData.heightNow?.value !== undefined) {
+                        updates['environment.tide.heightNow'] = tideApiData.heightNow.value;
+                    }
+                    if (tideApiData.heightHigh?.value !== undefined) {
+                        updates['environment.tide.heightHigh'] = tideApiData.heightHigh.value;
+                    }
+                    if (tideApiData.heightLow?.value !== undefined) {
+                        updates['environment.tide.heightLow'] = tideApiData.heightLow.value;
+                    }
+                    if (tideApiData.timeLow?.value !== undefined) {
+                        updates['environment.tide.timeLow'] = tideApiData.timeLow.value;
+                    }
+                    if (tideApiData.timeHigh?.value !== undefined) {
+                        updates['environment.tide.timeHigh'] = tideApiData.timeHigh.value;
+                    }
+                    if (tideApiData.coeffNow?.value !== undefined) {
+                        updates['environment.tide.coeffNow'] = tideApiData.coeffNow.value;
+                    }
+                    if (Object.keys(updates).length > 0) {
+                        updateSignalKDataRef.current(updates);
+                    }
+                }
                 setLastFetchTime(new Date());
             } else {
                 setSource('local');

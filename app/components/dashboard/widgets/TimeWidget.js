@@ -10,7 +10,13 @@ import { faClock, faGlobe, faSun, faMoon } from '@fortawesome/free-solid-svg-ico
 const TimeWidget = React.memo(() => {
   const { t } = useTranslation();
   const [currentTime, setCurrentTime] = useState(new Date());
-  
+
+  // Tick the clock every second (without an interval the display stays frozen at mount time)
+  useEffect(() => {
+    const id = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
   const { nightMode } = useOcearoContext();
   
   const latitude = useSignalKPath('navigation.position.latitude', 0.7854); // ~45°N

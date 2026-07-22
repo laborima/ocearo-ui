@@ -28,11 +28,19 @@ const TEMPERATURE_MODES = {
     format: (value) => `${value}${getTemperatureUnitLabel()}`,
     transform: convertTemperatureUnit
   },
-  exhaustTemp: {
-    key: 'exhaustTemp',
-    path: 'propulsion.main.exhaustTemperature',
+  engineRoomTemp: {
+    key: 'engineRoomTemp',
+    path: 'environment.inside.engineRoom.temperature',
     icon: faFire,
-    labelKey: 'temperature.exhaustTemperature',
+    labelKey: 'temperature.engineRoomTemperature',
+    format: (value) => `${value}${getTemperatureUnitLabel()}`,
+    transform: convertTemperatureUnit
+  },
+  lazaretteTemp: {
+    key: 'lazaretteTemp',
+    path: 'environment.inside.lazarette.temperature',
+    icon: faThermometerHalf,
+    labelKey: 'temperature.lazaretteTemperature',
     format: (value) => `${value}${getTemperatureUnitLabel()}`,
     transform: convertTemperatureUnit
   },

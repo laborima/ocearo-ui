@@ -38,9 +38,9 @@ export default function UVIndexWidget() {
     const index = parseFloat(uv);
     if (index <= 2) return { level: t('widgets.uvLow'), color: 'text-oGreen', bg: 'bg-oGreen/10 border-oGreen/20' };
     if (index <= 5) return { level: t('widgets.uvModerate'), color: 'text-oYellow', bg: 'bg-oYellow/10 border-oYellow/20' };
-    if (index <= 7) return { level: t('widgets.uvHigh'), color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/20' };
+    if (index <= 7) return { level: t('widgets.uvHigh'), color: 'text-oYellow', bg: 'bg-oYellow/10 border-oYellow/20' };
     if (index <= 10) return { level: t('widgets.uvVeryHigh'), color: 'text-oRed', bg: 'bg-oRed/10 border-oRed/20' };
-    return { level: t('widgets.uvExtreme'), color: 'text-purple-400', bg: 'bg-purple-400/10 border-purple-400/20' };
+    return { level: t('widgets.uvExtreme'), color: 'text-oRed', bg: 'bg-oRed/10 border-oRed/20' };
   };
 
   const uvInfo = hasData ? getUVInfo(uvIndex) : null;
@@ -77,9 +77,9 @@ export default function UVIndexWidget() {
           <div className="flex h-1 rounded-full overflow-hidden shadow-inner bg-hud-elevated">
             <div className="flex-1 bg-oGreen/40"></div>
             <div className="flex-1 bg-oYellow/40"></div>
-            <div className="flex-1 bg-orange-500/40"></div>
+            <div className="flex-1 bg-oYellow/40"></div>
             <div className="flex-1 bg-oRed/40"></div>
-            <div className="flex-1 bg-purple-500/40"></div>
+            <div className="flex-1 bg-oRed/40"></div>
           </div>
           {/* Current position indicator on scale */}
           {uvIndex !== null && uvInfo && (
@@ -88,7 +88,7 @@ export default function UVIndexWidget() {
               style={{ top: '-4px' }}
             >
               <div 
-                className={`absolute w-2 h-2 rounded-full border border-hud-main shadow-soft transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${uvInfo.color.replace('text-', 'bg-')} shadow-[0_0_8px_currentColor]`}
+                className={`absolute w-2 h-2 rounded-full border border-hud-main shadow-soft transition-all duration-1000 ${uvInfo.color.replace('text-', 'bg-')} shadow-[0_0_8px_currentColor]`}
                 style={{ left: `${Math.min(100, (parseFloat(uvIndex) / 11) * 100)}%`, transform: 'translateX(-50%)' }}
               />
             </div>

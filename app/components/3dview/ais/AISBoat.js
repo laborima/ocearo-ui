@@ -1,101 +1,134 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, Suspense } from 'react';
+import * as THREE from 'three';
+import { useGLTF } from '@react-three/drei';
 
+const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
 
-/**
- * Dynamically imports a 3D boat model component based on the boat type
- * @param {string} boatType - The type of boat to load (e.g., 'windsurf', 'sailboat')
- * @returns {Promise<Component>} - The loaded React component for the boat model
- */
-const loadBoatComponent = async (boatType) => {
-    try {
-        // Load the appropriate 3D model from the public directory
-        const boatModule = await import(`@/public/boats/${boatType}/Scene.jsx`);
-        // Handle different export styles in 3D model files
-        return boatModule.default ? boatModule.default : boatModule.Model;
-    } catch (error) {
-        console.error(`Error loading ${boatType} component:`, error);
-        throw error;
-    }
-};
-
-/**
- * Maps AIS ship type codes to specific boat model types
- * @param {number} shipType - AIS ship type code
- * @returns {string} - Boat model type to be loaded
- */
-const determineBoatType = (shipType) => {
-    if (shipType === 0) return 'windsurf';
-    if (shipType === 30) return 'optimist';
-    if (shipType === 36) return 'sailboat';
-    return 'ship'; // Default boat type
-};
-
-// Base length of the boat model in units (for scaling calculations)
+// Models are normalized so their length == BASE_MODEL_LENGTH; AISView/AISBoat then
+// scales by the vessel's real length (metres).
 const BASE_MODEL_LENGTH = 10;
+const MIN_BOAT_LENGTH = 4; // floor so tiny craft stay visible
+
+// AIS ship type (ITU-R M.1371 tens digit) -> fleet model code in /boats/ais/ais-<code>.glb
+const determineAisModelCode = (shipType) => {
+    const t = Number(shipType);
+    if (!Number.isFinite(t)) return 70;
+    if (t === 30) return 30;            // fishing
+    if (t >= 31 && t <= 32) return 31;  // towing -> tug
+    if (t >= 33 && t <= 35) return 35;  // dredging/diving/military -> military
+    if (t === 36) return 36;            // sailing
+    if (t === 37) return 37;            // pleasure
+    if (t >= 40 && t <= 49) return 40;  // high-speed craft
+    if (t >= 50 && t <= 59) return 50;  // pilot / special craft
+    if (t >= 60 && t <= 69) return 60;  // passenger
+    if (t >= 70 && t <= 79) return 70;  // cargo
+    if (t >= 80 && t <= 89) return 80;  // tanker
+    return 70;                          // 0-29 (incl. WIG) & 90-99 -> generic
+};
+
+// Per-code yaw correction (radians) if a model's bow points the wrong way after
+// auto-orientation. Tune visually in the running AIS view; 0 = as imported.
+const AIS_YAW = {
+    // e.g. 31: Math.PI,
+};
+
+// Visual draft as a fraction of hull LENGTH (like real boats: a 10 m sailboat
+// draws ~1.5 m with its keel). Sinks the model below the waterline (y=0) so
+// hulls sit IN the water instead of resting keel-tip on it. The ocean plane
+// itself sits slightly below y=0, which these values also absorb.
+// Tune visually in the running AIS view.
+const AIS_SINK = {
+    30: 0.10, // fishing
+    36: 0.15, // sailing: deep keel
+    37: 0.10, // pleasure
+};
+const DEFAULT_SINK = 0.06;
+
+const modelUrl = (code) => `${ASSET_PREFIX}/boats/ais/ais-${code}.glb`;
+const dracoPath = `${ASSET_PREFIX}/draco/`;
 
 /**
- * AISBoat component - Renders a 3D boat model with information display
- * Optimized for touchscreen interaction using click events instead of hover
+ * Loads a fleet GLB and returns a normalized THREE.Group:
+ *  - uniform white material (matches the app "ship" style),
+ *  - upright, centred on X/Z with the hull bottom on y=0,
+ *  - longest horizontal axis aligned to Z and scaled so length == BASE_MODEL_LENGTH.
+ * One clone per instance (geometry is shared via clone()).
+ */
+function AISModel({ code, scaleFactor }) {
+    const { scene } = useGLTF(modelUrl(code), dracoPath);
+
+    const model = useMemo(() => {
+        const obj = scene.clone(true);
+        obj.traverse((o) => {
+            if (o.isMesh) {
+                // Fresh material per clone — AISView clones this again for the proximity red/white swap.
+                o.material = new THREE.MeshStandardMaterial({ color: 0xeef2f5, roughness: 0.7, metalness: 0.1 });
+                o.castShadow = false;
+                o.receiveShadow = false;
+            }
+        });
+
+        // These models are all glTF Y-up. Keep Y as up (a mast/superstructure can make
+        // the height the *largest* extent, so an auto "shortest axis = up" guess would
+        // wrongly lay the boat down). We only align the longest HORIZONTAL axis to Z.
+        const box = new THREE.Box3().setFromObject(obj);
+        const size = new THREE.Vector3();
+        const center = new THREE.Vector3();
+        box.getSize(size);
+        box.getCenter(center);
+
+        const lengthAlongX = size.x >= size.z;
+        const len = Math.max(size.x, size.z) || 1;
+        const s = BASE_MODEL_LENGTH / len;
+
+        // Centre on X/Z, drop the hull bottom onto y=0 then sink by the visual
+        // draft so the waterline crosses the hull instead of the keel tip.
+        // Draft is a fraction of hull length (len is in pre-scale model units).
+        const sink = len * (AIS_SINK[code] ?? DEFAULT_SINK);
+        obj.position.set(-center.x, -box.min.y - sink, -center.z);
+
+        const oriented = new THREE.Group();
+        oriented.add(obj);
+        oriented.scale.setScalar(s);
+        // Rotate length to Z if it was along X; per-code yaw lets you flip bow direction.
+        oriented.rotation.y = (lengthAlongX ? Math.PI / 2 : 0) + (AIS_YAW[code] || 0);
+        return oriented;
+    }, [scene, code]);
+
+    return (
+        <group scale={scaleFactor}>
+            <primitive object={model} />
+        </group>
+    );
+}
+
+/**
+ * AISBoat — renders one AIS vessel as a normalized white low-poly model.
+ * The outer group is the ref the parent manipulates each frame (position/rotation/colour).
  */
 const AISBoat = ({ position, visible, boatData, onClick, ref }) => {
-    // State to hold the dynamically loaded boat component
-    const [BoatComponent, setBoatComponent] = useState(null);
-    // Determine which boat model to use based on AIS data
-    const boatType = determineBoatType(boatData.shipType);
+    const code = determineAisModelCode(boatData.shipType);
 
-    // Load the appropriate boat model when component mounts or boat type changes
-    useEffect(() => {
-        let isMounted = true;
-
-        loadBoatComponent(boatType)
-            .then((Component) => {
-                // Only update state if component is still mounted
-                if (isMounted) setBoatComponent(() => Component);
-            })
-            .catch((error) => console.error(`Failed to load ${boatType}:`, error));
-
-        // Clean up function to prevent memory leaks
-        return () => { isMounted = false; };
-    }, [boatType]);
-
-    // Don't render anything until the boat model is loaded
-    if (!BoatComponent) {
-        return null;
-    }
-
-
-    // Calculate the scale factor for the boat model based on actual boat length
-    // Set minimum boat length for better visibility on the map
-    const MIN_BOAT_LENGTH = 4; // Minimum boat length in meters
     const providedLength = boatData.length || BASE_MODEL_LENGTH;
     const desiredLength = Math.max(providedLength, MIN_BOAT_LENGTH);
     const scaleFactor = desiredLength / BASE_MODEL_LENGTH;
 
     return (
-        <group 
-            ref={ref} 
-            position={position} 
+        <group
+            ref={ref}
+            position={position}
             visible={visible}
-    
-                onClick={(e) => {
-                    e.stopPropagation();
-                    // Toggle the info panel for this boat on click (touchscreen optimized)
-                    if (BoatComponent) {
-                        // Call the onHover callback (which actually handles click events)
-                        // despite the name, this toggles the info panel
-                        onClick && onClick(boatData);
-                    }
-                }}
-            >
-                {/* Render the actual boat model with proper scaling */}
-                <BoatComponent 
-                    scale={[scaleFactor, scaleFactor, scaleFactor]}
-                />
-            </group>
-
+            onClick={(e) => {
+                e.stopPropagation();
+                onClick && onClick(boatData);
+            }}
+        >
+            {/* Per-boat Suspense so a not-yet-loaded model never blanks the whole scene */}
+            <Suspense fallback={null}>
+                <AISModel code={code} scaleFactor={scaleFactor} />
+            </Suspense>
+        </group>
     );
 };
-
-
 
 export default AISBoat;

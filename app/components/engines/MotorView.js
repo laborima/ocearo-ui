@@ -18,6 +18,7 @@ import * as MotorUtils from '../utils/MotorUtils';
 import { CircularGauge, BarGauge, CompactDataField, PrimaryGauge } from './GaugeComponents';
 // Import fuel log modal and utilities
 import FuelLogModal from './FuelLogModal';
+import MaintenanceView from './MaintenanceView';
 import { useTranslation } from 'react-i18next';
 import { 
   addFuelLogEntry, 
@@ -26,6 +27,27 @@ import {
   estimateTankLevel,
   handleOcearoCoreError 
 } from '../utils/OcearoCoreUtils';
+
+// Engine discrete-status notifications (NMEA2000 PGN 127489 via engine gateway)
+const ENGINE_NOTIFICATION_TYPES = [
+  'chargeIndicator', 'checkEngine', 'commError', 'eGRSystem', 'emergencyStopMode',
+  'highBoostPressure', 'lowCoolantLevel', 'lowFuelPressure', 'lowOilLevel',
+  'lowOilPressure', 'lowSystemVoltage', 'maintenanceNeeded', 'neutralStartProtect',
+  'overTemperature', 'powerReduction', 'preheatIndicator', 'revLimitExceeded',
+  'shuttingDown', 'subOrSecondaryThrottle', 'throttlePositionSensor', 'warningLevel1',
+  'warningLevel2', 'waterFlow', 'waterInFuel',
+  'transmission.overTemperature', 'transmission.lowOilPressure',
+  // Zone notifications raised by the SignalK zones plugin on measured values
+  'temperature', 'exhaustTemperature'
+];
+
+// Zone notifications on non-propulsion paths that still concern the engine
+const EXTRA_NOTIFICATION_PATHS = [
+  'notifications.environment.inside.engineRoom.temperature'
+];
+
+const ALARM_STATES = ['alarm', 'emergency'];
+const WARNING_STATES = ['alert', 'warn', 'warning', 'caution'];
 
 // Helper component for displaying individual data points
 const DataField = ({ label, value, unit, icon, statusClass = 'text-hud-main' }) => {
@@ -68,8 +90,14 @@ const MotorView = () => {
       fields.forEach(field => {
         paths.push(`propulsion.${inst}.${field}`);
       });
+      ENGINE_NOTIFICATION_TYPES.forEach(type => {
+        paths.push(`notifications.propulsion.${inst}.${type}`);
+      });
     });
     
+    // Engine room temperature (bilge probe) + its zone notification
+    paths.push('environment.inside.engineRoom.temperature', ...EXTRA_NOTIFICATION_PATHS);
+
     // Add electrical and tank paths
     paths.push(
       'electrical.batteries.0.voltage', 'electrical.batteries.0.current',
@@ -154,6 +182,7 @@ const MotorView = () => {
       load: MotorUtils.ratioToPercent(getEngineValue('load')),
       torque: MotorUtils.ratioToPercent(getEngineValue('torque')),
       exhaustTemp: MotorUtils.kelvinToCelsius(exhaustTemperatureKelvin),
+      engineRoomTemp: MotorUtils.kelvinToCelsius(getSKValue('environment.inside.engineRoom.temperature')),
       intakeTemp: MotorUtils.kelvinToCelsius(getEngineValue('intakeManifoldTemperature')),
       tilt: MotorUtils.radiansToDegrees(getEngineValue('tilt')),
       state: getEngineValue('state'),
@@ -175,16 +204,60 @@ const MotorView = () => {
     };
   }, [selectedEngine, getEngineValue, getSKValue]);
   
+  // Engine notifications (used by the warnings tab, the tab badge and the alarm banner)
+  const engineNotifications = useMemo(() => {
+    const instance = selectedEngine;
+    const list = [];
+    ENGINE_NOTIFICATION_TYPES.forEach(type => {
+      let notification = getSKValue(`notifications.propulsion.${instance}.${type}`);
+
+      if (!notification && instance === '0') {
+        notification = getSKValue(`notifications.propulsion.port.${type}`)
+                   ?? getSKValue(`notifications.propulsion.main.${type}`);
+      } else if (!notification && instance === '1') {
+        notification = getSKValue(`notifications.propulsion.starboard.${type}`);
+      }
+
+      if (notification && typeof notification === 'object') {
+        list.push({ type, ...notification });
+      }
+    });
+    EXTRA_NOTIFICATION_PATHS.forEach(path => {
+      const notification = getSKValue(path);
+      if (notification && typeof notification === 'object') {
+        list.push({ type: 'engineRoomTemperature', ...notification });
+      }
+    });
+    return list;
+  }, [selectedEngine, getSKValue]);
+
+  const activeIssues = useMemo(
+    () => engineNotifications.filter(n => n.state && n.state !== 'normal' && n.state !== 'nominal'),
+    [engineNotifications]
+  );
+  const hasAlarms = activeIssues.some(n => ALARM_STATES.includes(n.state));
+  const hasWarnings = activeIssues.some(n => WARNING_STATES.includes(n.state));
+
   const houseBatteryCurrentRaw = getSKValue('electrical.batteries.1.current');
   const houseBatteryCurrent = typeof houseBatteryCurrentRaw === 'number'
     ? Math.round(houseBatteryCurrentRaw * 10) / 10
     : houseBatteryCurrentRaw;
 
-  // Get current engine hours in hours (runTime is in seconds)
+  // Get current engine hours in hours (runTime is in seconds).
+  // The engine only reports runTime while running, so persist the last known
+  // value and fall back to it when the engine is off (fuel estimation, modal prefill).
   const currentEngineHoursRaw = getEngineValue('runTime');
-  const currentEngineHours = currentEngineHoursRaw !== null 
-    ? currentEngineHoursRaw / 3600 
+  const liveEngineHours = currentEngineHoursRaw !== null
+    ? currentEngineHoursRaw / 3600
     : null;
+
+  useEffect(() => {
+    if (liveEngineHours !== null) {
+      try {
+        localStorage.setItem('ocearo_lastEngineHours', String(liveEngineHours));
+      } catch (_) { /* storage unavailable */ }
+    }
+  }, [liveEngineHours]);
 
   // Fuel log state
   const [showFuelLogModal, setShowFuelLogModal] = useState(false);
@@ -192,6 +265,16 @@ const MotorView = () => {
   const [fuelStats, setFuelStats] = useState(null);
   const [fuelLogLoading, setFuelLogLoading] = useState(false);
   const [fuelLogError, setFuelLogError] = useState(null);
+
+  // Live value, else last value seen (survives reboots), else last refill entry
+  const currentEngineHours = useMemo(() => {
+    if (liveEngineHours !== null) return liveEngineHours;
+    try {
+      const stored = parseFloat(localStorage.getItem('ocearo_lastEngineHours'));
+      if (Number.isFinite(stored)) return stored;
+    } catch (_) { /* storage unavailable */ }
+    return fuelStats?.lastRefill?.engineHours ?? null;
+  }, [liveEngineHours, fuelStats]);
 
   // Fetch fuel log entries on mount and when tab changes to fuel
   const loadFuelLogEntries = useCallback(async () => {
@@ -237,13 +320,13 @@ const MotorView = () => {
   // Get last refill engine hours for the modal
   const lastRefillEngineHours = fuelStats?.lastRefill?.engineHours || null;
 
-  // Calculate tank estimation based on fuel logs
-  const tankEstimation = estimateTankLevel(
+  // Calculate tank estimation based on fuel logs (memoized — avoids recomputing every render)
+  const tankEstimation = useMemo(() => estimateTankLevel(
     fuelLogEntries,
     currentEngineHours,
     engineData.fuelCapacity,
     engineData.fuelLevel !== null ? engineData.fuelLevel / 100 : null
-  );
+  ), [fuelLogEntries, currentEngineHours, engineData.fuelCapacity, engineData.fuelLevel]);
 
   return (
     <div className="flex flex-col h-full bg-rightPaneBg overflow-hidden">
@@ -251,7 +334,7 @@ const MotorView = () => {
       <div className="flex border-b border-hud bg-hud-bg">
         {[
           { id: 'engine', label: t('motor.engine'), icon: faCar },
-          { id: 'transmission', label: t('motor.transmission'), icon: faCogs },
+          { id: 'maintenance', label: t('motor.maintenance'), icon: faWrench },
           { id: 'electrical', label: t('motor.electrical'), icon: faBolt },
           { id: 'fuel', label: t('motor.fuel'), icon: faGasPump },
           { id: 'warnings', label: t('motor.warnings'), icon: faExclamationTriangle }
@@ -267,9 +350,29 @@ const MotorView = () => {
           >
             <FontAwesomeIcon icon={tab.icon} className="mr-2" />
             {tab.label}
+            {tab.id === 'warnings' && (hasAlarms || hasWarnings) && (
+              <span className={`ml-2 w-2 h-2 rounded-full animate-soft-pulse ${hasAlarms ? 'bg-oRed' : 'bg-oYellow'}`} />
+            )}
           </button>
         ))}
       </div>
+
+      {/* Persistent alarm banner — visible whatever the active tab */}
+      {activeIssues.length > 0 && activeTab !== 'warnings' && (
+        <button
+          onClick={() => setActiveTab('warnings')}
+          className={`w-full text-left px-4 py-2 text-xs font-black uppercase tracking-widest flex items-center border-b ${
+            hasAlarms
+              ? 'bg-oRed/15 border-oRed/30 text-oRed animate-soft-pulse'
+              : 'bg-oYellow/15 border-oYellow/30 text-oYellow'
+          }`}
+        >
+          <FontAwesomeIcon icon={faExclamationTriangle} className="mr-3" />
+          <span className="truncate">
+            {activeIssues.map(n => n.message || n.type.replace(/([A-Z])/g, ' $1').trim()).join(' — ')}
+          </span>
+        </button>
+      )}
 
       {/* Tab Content */}
       <div className="flex-1 min-h-0 overflow-auto scrollbar-hide">
@@ -297,7 +400,7 @@ const MotorView = () => {
                 className="bg-hud-elevated px-4 py-1.5 rounded-sm text-hud-main text-xs font-black uppercase border border-hud focus:outline-none tesla-hover transition-all duration-500 shadow-soft"
               >
                 {availableEngines.map((engine) => (
-                  <option key={engine.id} value={engine.id} className="bg-oNight">
+                  <option key={engine.id} value={engine.id} className="bg-leftPaneBg text-hud-main">
                     {engine.name}
                   </option>
                 ))}
@@ -310,8 +413,8 @@ const MotorView = () => {
                 unit="RPM"
                 icon={faTachometerAlt}
                 max={4000}
-                warningThreshold={3000}
-                criticalThreshold={3500}
+                warningThreshold={3200}
+                criticalThreshold={3600}
               />
               <div className="tesla-card p-4 text-center tesla-hover flex flex-col justify-center bg-hud-bg border border-hud">
                 <FontAwesomeIcon icon={faClock} className="text-lg text-hud-dim mb-2 opacity-50" />
@@ -347,7 +450,7 @@ const MotorView = () => {
             {/* Temperature Monitoring - Circular Gauges */}
             <div>
               <h3 className="text-xs font-black text-hud-main mb-1 uppercase tracking-widest flex items-center">
-                <FontAwesomeIcon icon={faTemperatureHalf} className="mr-2 text-orange-500 text-xs" />
+                <FontAwesomeIcon icon={faTemperatureHalf} className="mr-2 text-oYellow text-xs" />
                 {t('motor.temperatureSection')}
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -358,8 +461,8 @@ const MotorView = () => {
                   min={0}
                   max={120}
                   icon={faSnowflake}
-                  warningThreshold={85}
-                  criticalThreshold={95}
+                  warningThreshold={95}
+                  criticalThreshold={100}
                   size={90}
                 />
                 <CircularGauge
@@ -373,15 +476,16 @@ const MotorView = () => {
                   criticalThreshold={130}
                   size={90}
                 />
+                {/* Engine room 1-Wire probe: >55°C means cooling or exhaust trouble */}
                 <CircularGauge
-                  label={t('motor.exhaust')}
-                  value={engineData.exhaustTemp}
+                  label={t('motor.engineRoom')}
+                  value={engineData.engineRoomTemp}
                   unit="°C"
                   min={0}
-                  max={600}
+                  max={120}
                   icon={faFire}
-                  warningThreshold={450}
-                  criticalThreshold={550}
+                  warningThreshold={55}
+                  criticalThreshold={70}
                   size={90}
                 />
                 <CircularGauge
@@ -412,8 +516,9 @@ const MotorView = () => {
                   min={0}
                   max={6}
                   icon={faOilCan}
-                  warningThreshold={2.5}
-                  criticalThreshold={2}
+                  warningThreshold={1.5}
+                  criticalThreshold={1}
+                  reversed={true}
                   showMinMax={true}
                 />
                 <BarGauge
@@ -443,17 +548,24 @@ const MotorView = () => {
                   icon={faGasPump}
                   warningThreshold={2.5}
                   criticalThreshold={2}
+                  reversed={true}
                   showMinMax={true}
                 />
               </div>
             </div>
 
             {/* Additional Engine Info */}
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <CompactDataField
                 label={t('motor.state')}
                 value={engineData.state || t('motor.unknown')}
                 icon={faCar}
+              />
+              <CompactDataField
+                label={t('motor.alternatorOutput')}
+                value={engineData.alternatorVoltage?.toFixed?.(1) ?? engineData.alternatorVoltage}
+                unit="V"
+                icon={faBolt}
               />
               <CompactDataField
                 label={t('motor.tilt')}
@@ -467,73 +579,31 @@ const MotorView = () => {
                 unit="L/h"
                 icon={faGasPump}
               />
+              <CompactDataField
+                label={t('motor.transmissionGear')}
+                value={engineData.gear === -1 ? t('motor.reverse') :
+                       engineData.gear === 0 ? t('motor.neutral') :
+                       engineData.gear ? `${t('motor.forward')} ${engineData.gear}` : null}
+                icon={faCogs}
+              />
+              <CompactDataField
+                label={t('motor.transOilPressure')}
+                value={engineData.transOilPressure}
+                unit="bar"
+                icon={faOilCan}
+              />
+              <CompactDataField
+                label={t('motor.transOilTemp')}
+                value={engineData.transOilTemp}
+                unit="°C"
+                icon={faTemperatureHalf}
+              />
             </div>
           </div>
         )}
 
-        {activeTab === 'transmission' && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="tesla-card p-4 text-center tesla-hover flex flex-col justify-center bg-hud-bg border border-hud">
-                <FontAwesomeIcon icon={faCogs} className="text-xl text-hud-dim mb-2 opacity-50" />
-                <div className="text-hud-secondary text-xs font-black uppercase mb-2 tracking-[0.2em]">{t('motor.transmissionGear')}</div>
-                <div className="text-3xl font-black text-hud-main uppercase gliding-value tracking-tighter">
-                  {engineData.gear === -1 ? t('motor.reverse') : 
-                   engineData.gear === 0 ? t('motor.neutral') : 
-                   engineData.gear ? `${t('motor.forward')} ${engineData.gear}` : t('common.na')}
-                </div>
-              </div>
-              
-              <CircularGauge
-                label={t('motor.oilPressure')}
-                value={engineData.transOilPressure}
-                unit="bar"
-                min={0}
-                max={6}
-                icon={faOilCan}
-                warningThreshold={2.5}
-                criticalThreshold={2}
-                size={120}
-              />
-              
-              <CircularGauge
-                label={t('motor.oilTemperature')}
-                value={engineData.transOilTemp}
-                unit="°C"
-                min={0}
-                max={120}
-                icon={faTemperatureHalf}
-                warningThreshold={85}
-                criticalThreshold={95}
-                size={120}
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <BarGauge
-                label={t('motor.hydraulicPressure')}
-                value={engineData.transOilPressure}
-                unit="bar"
-                min={0}
-                max={6}
-                icon={faOilCan}
-                warningThreshold={2.5}
-                criticalThreshold={2}
-                showMinMax={true}
-              />
-              <BarGauge
-                label={t('motor.thermalAnalysis')}
-                value={engineData.transOilTemp}
-                unit="°C"
-                min={0}
-                max={120}
-                icon={faTemperatureHalf}
-                warningThreshold={85}
-                criticalThreshold={95}
-                showMinMax={true}
-              />
-            </div>
-          </div>
+        {activeTab === 'maintenance' && (
+          <MaintenanceView currentEngineHours={currentEngineHours} />
         )}
 
         {activeTab === 'electrical' && (
@@ -556,6 +626,7 @@ const MotorView = () => {
                     icon={faBatteryFull}
                     warningThreshold={11.8}
                     criticalThreshold={11.5}
+                    reversed={true}
                     showMinMax={true}
                   />
                   <BarGauge
@@ -580,6 +651,7 @@ const MotorView = () => {
                     icon={faBatteryFull}
                     warningThreshold={11.8}
                     criticalThreshold={11.5}
+                    reversed={true}
                     showMinMax={true}
                   />
                   <BarGauge
@@ -637,7 +709,7 @@ const MotorView = () => {
               </h3>
               <button
                 onClick={() => setShowFuelLogModal(true)}
-                className="bg-oBlue hover:bg-blue-600 text-hud-main px-4 py-1.5 rounded-sm text-xs font-black uppercase tracking-widest transition-all duration-500 flex items-center shadow-lg shadow-oBlue/20"
+                className="bg-oBlue hover:bg-oBlue/80 text-hud-main px-4 py-1.5 rounded-sm text-xs font-black uppercase tracking-widest transition-all duration-500 flex items-center shadow-lg shadow-oBlue/20"
                 disabled={fuelLogLoading}
               >
                 <FontAwesomeIcon icon={faPlus} className="mr-2 text-xs" />
@@ -672,6 +744,7 @@ const MotorView = () => {
                 icon={faGaugeHigh}
                 warningThreshold={2.5}
                 criticalThreshold={2}
+                reversed={true}
                 size={100}
               />
               <CircularGauge
@@ -683,6 +756,7 @@ const MotorView = () => {
                 icon={faFlask}
                 warningThreshold={30}
                 criticalThreshold={15}
+                reversed={true}
                 size={100}
               />
             </div>
@@ -703,6 +777,7 @@ const MotorView = () => {
                   icon={faFlask}
                   warningThreshold={30}
                   criticalThreshold={15}
+                  reversed={true}
                   showMinMax={true}
                 />
                 <CompactDataField
@@ -710,6 +785,12 @@ const MotorView = () => {
                   value={engineData.fuelCapacity?.toFixed(0)}
                   unit="L"
                   icon={faFlask}
+                />
+                <CompactDataField
+                  label={t('motor.currentEngineHours')}
+                  value={currentEngineHours?.toFixed(1)}
+                  unit="h"
+                  icon={faClock}
                 />
               </div>
               
@@ -741,18 +822,20 @@ const MotorView = () => {
                   {t('motor.predictiveAnalysis')}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {tankEstimation.litersRemaining !== null && (
+                  {tankEstimation.estimatedLiters !== null && (
                     <CompactDataField
                       label={t('motor.estimatedVolume')}
-                      value={tankEstimation.litersRemaining}
+                      value={tankEstimation.estimatedLitersWorst !== null && tankEstimation.estimatedLitersWorst !== tankEstimation.estimatedLiters
+                        ? `${tankEstimation.estimatedLitersWorst.toFixed(0)}–${tankEstimation.estimatedLiters.toFixed(0)}`
+                        : tankEstimation.estimatedLiters}
                       unit="L"
                       icon={faGasPump}
                     />
                   )}
-                  {tankEstimation.levelPercentage !== null && (
+                  {tankEstimation.estimatedPercent !== null && (
                     <BarGauge
                       label={t('motor.computedLevel')}
-                      value={tankEstimation.levelPercentage}
+                      value={tankEstimation.estimatedPercentWorst ?? tankEstimation.estimatedPercent}
                       unit="%"
                       min={0}
                       max={100}
@@ -765,7 +848,9 @@ const MotorView = () => {
                   {tankEstimation.hoursRemaining !== null && (
                     <CompactDataField
                       label={t('motor.timeToExhaustion')}
-                      value={tankEstimation.hoursRemaining}
+                      value={tankEstimation.hoursRemainingWorst !== null && tankEstimation.hoursRemainingWorst !== tankEstimation.hoursRemaining
+                        ? `${tankEstimation.hoursRemainingWorst.toFixed(0)}–${tankEstimation.hoursRemaining.toFixed(0)}`
+                        : tankEstimation.hoursRemaining}
                       unit="h"
                       icon={faClock}
                       warningThreshold={10}
@@ -793,18 +878,18 @@ const MotorView = () => {
                         <th className="text-hud-muted p-4 text-left font-black">{t('motor.refillCost')}</th>
                         <th className="text-hud-muted p-4 text-left font-black">{t('motor.hmr')}</th>
                         <th className="text-hud-muted p-4 text-left font-black">{t('motor.avgConsumption')}</th>
-                        <th className="text-hud-muted p-4 text-left font-black">{t('motor.fuelAutonomy')}</th>
+                        <th className="text-hud-muted p-4 text-left font-black">{t('motor.hoursSinceRefill')}</th>
                         <th className="text-hud-muted p-4 text-center font-black">{t('motor.additive')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-hud">
-                      {fuelLogEntries.slice(-5).reverse().map((entry, index) => {
+                      {[...fuelLogEntries].reverse().map((entry, index) => {
                         const fuel = entry.fuel || {};
                         const entryConsumption = (fuel.liters && fuel.hoursSinceLastRefill && fuel.hoursSinceLastRefill > 0)
                           ? Math.round((fuel.liters / fuel.hoursSinceLastRefill) * 10) / 10
                           : null;
-                        const entryAutonomy = (entryConsumption && engineData.fuelCapacity && fuel.liters)
-                          ? Math.round((fuel.liters / entryConsumption) * 10) / 10
+                        const entryHoursSinceRefill = (fuel.hoursSinceLastRefill && fuel.hoursSinceLastRefill > 0)
+                          ? Math.round(fuel.hoursSinceLastRefill * 10) / 10
                           : null;
                         return (
                           <tr key={entry.datetime || index} className="text-hud-main tesla-hover group">
@@ -822,11 +907,11 @@ const MotorView = () => {
                               {entryConsumption != null ? `${entryConsumption} L/h` : '—'}
                             </td>
                             <td className="p-4 gliding-value text-oGreen">
-                              {entryAutonomy != null ? `${entryAutonomy} h` : '—'}
+                              {entryHoursSinceRefill != null ? `${entryHoursSinceRefill} h` : '—'}
                             </td>
                             <td className="p-4 text-center">
                               {fuel.additive ? (
-                                <span className="text-purple-400 animate-soft-pulse">
+                                <span className="text-oBlue animate-soft-pulse">
                                   <FontAwesomeIcon icon={faFlask} className="text-xs" />
                                 </span>
                               ) : (
@@ -856,41 +941,13 @@ const MotorView = () => {
                   onClick={() => setShowAllNotifications(!showAllNotifications)}
                   className="px-4 py-1.5 text-xs bg-hud-elevated text-hud-secondary rounded-sm font-black uppercase tracking-widest tesla-hover border border-hud transition-all duration-500 shadow-soft"
                 >
-                  {showAllNotifications ? t('motor.notificationLog') : t('motor.notificationLog')}
+                  {showAllNotifications ? t('motor.showLess') : t('motor.showAll')}
                 </button>
               </div>
               
               {(() => {
-                const instance = selectedEngine;
-                const notificationTypes = [
-                  'chargeIndicator', 'checkEngine', 'commError', 'eGRSystem', 'emergencyStopMode',
-                  'highBoostPressure', 'lowCoolantLevel', 'lowFuelPressure', 'lowOilLevel', 
-                  'lowOilPressure', 'lowSystemVoltage', 'maintenanceNeeded', 'neutralStartProtect',
-                  'overTemperature', 'powerReduction', 'preheatIndicator', 'revLimitExceeded',
-                  'shuttingDown', 'subOrSecondaryThrottle', 'throttlePositionSensor', 'warningLevel1',
-                  'warningLevel2', 'waterFlow', 'waterInFuel'
-                ];
-                
-                const notifications = [];
-                notificationTypes.forEach(type => {
-                  let notification = getSKValue(`notifications.propulsion.${instance}.${type}`);
-                  
-                  if (!notification && instance === '0') {
-                    notification = getSKValue(`notifications.propulsion.port.${type}`) 
-                               ?? getSKValue(`notifications.propulsion.main.${type}`);
-                  } else if (!notification && instance === '1') {
-                    notification = getSKValue(`notifications.propulsion.starboard.${type}`);
-                  }
-                  
-                  if (notification && typeof notification === 'object') {
-                    notifications.push({ type, ...notification });
-                  }
-                });
-                
-                const hasWarnings = notifications.some(n => n.state === 'alert' || n.state === 'warn');
-                const hasAlarms = notifications.some(n => n.state === 'alarm' || n.state === 'emergency');
-                const activeIssues = notifications.filter(n => n.state !== 'normal');
-                
+                const notifications = engineNotifications;
+
                 if (activeIssues.length === 0) {
                   return (
                     <div className="space-y-4">
@@ -904,7 +961,7 @@ const MotorView = () => {
                         <div className="tesla-card p-4 bg-oGreen/5 border border-oGreen/10 shadow-soft">
                           <h4 className="text-xs font-black text-oGreen mb-3 uppercase tracking-[0.2em] flex items-center">
                             <div className="w-1.5 h-1.5 rounded-full bg-oGreen mr-3" />
-                            HEALTHY TELEMETRY NODES ({notifications.length})
+                            {t('motor.healthyTelemetryNodes')} ({notifications.length})
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs font-black uppercase tracking-tight">
                             {notifications.map((n, idx) => (
@@ -926,14 +983,14 @@ const MotorView = () => {
                       <div className="bg-oRed/5 border border-oRed/20 p-6 rounded-sm shadow-soft animate-soft-pulse">
                         <h4 className="text-xs font-black text-oRed mb-6 uppercase tracking-[0.2em] flex items-center">
                           <div className="w-1.5 h-1.5 rounded-full bg-oRed mr-3" />
-                          CRITICAL NODE ALARMS
+                          {t('motor.criticalNodeAlarms')}
                         </h4>
                         <div className="space-y-4">
-                          {notifications.filter(n => n.state === 'alarm' || n.state === 'emergency').map((n, idx) => (
+                          {notifications.filter(n => ALARM_STATES.includes(n.state)).map((n, idx) => (
                             <div key={idx} className="text-hud-main text-xs font-black uppercase tracking-widest bg-oRed/10 p-4 rounded-sm tesla-hover border border-oRed/20">
                               <div className="flex justify-between items-center">
                                 <span className="text-xs">{n.type.replace(/([A-Z])/g, ' $1').trim()}</span>
-                                <span className="text-oRed text-xs font-black tracking-tighter">ALERT LEVEL 3</span>
+                                <span className="text-oRed text-xs font-black tracking-tighter">{t('motor.alertLevel3')}</span>
                               </div>
                               <div className="text-hud-secondary text-xs mt-3 normal-case font-black tracking-normal opacity-80">{n.message}</div>
                             </div>
@@ -946,14 +1003,14 @@ const MotorView = () => {
                       <div className="bg-oYellow/5 border border-oYellow/20 p-6 rounded-sm shadow-soft">
                         <h4 className="text-xs font-black text-oYellow mb-6 uppercase tracking-[0.2em] flex items-center">
                           <div className="w-1.5 h-1.5 rounded-full bg-oYellow mr-3" />
-                          SYSTEM ANOMALIES
+                          {t('motor.systemAnomalies')}
                         </h4>
                         <div className="space-y-4">
-                          {notifications.filter(n => n.state === 'alert' || n.state === 'warn').map((n, idx) => (
+                          {notifications.filter(n => WARNING_STATES.includes(n.state)).map((n, idx) => (
                             <div key={idx} className="text-hud-main text-xs font-black uppercase tracking-widest bg-oYellow/10 p-4 rounded-sm tesla-hover border border-oYellow/20">
                               <div className="flex justify-between items-center">
                                 <span className="text-xs">{n.type.replace(/([A-Z])/g, ' $1').trim()}</span>
-                                <span className="text-oYellow text-xs font-black tracking-tighter">WARN LEVEL 2</span>
+                                <span className="text-oYellow text-xs font-black tracking-tighter">{t('motor.warnLevel2')}</span>
                               </div>
                               <div className="text-hud-secondary text-xs mt-3 normal-case font-black tracking-normal opacity-80">{n.message}</div>
                             </div>
@@ -970,7 +1027,7 @@ const MotorView = () => {
               <div className="tesla-card p-8 bg-hud-bg border border-hud">
                 <h3 className="text-xs font-black text-oBlue mb-6 uppercase tracking-[0.3em] flex items-center">
                   <div className="w-1.5 h-1.5 rounded-full bg-oBlue mr-3" />
-                  Internal Debug Telemetry
+                  {t('motor.internalDebugTelemetry')}
                 </h3>
                 <div className="space-y-4 text-xs font-black font-mono text-hud-secondary uppercase tracking-widest">
                   <div className="grid grid-cols-2 gap-x-8 gap-y-2">

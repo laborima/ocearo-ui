@@ -6,7 +6,7 @@ import {
   faBook, faTimeline, faChartLine, faRobot, faPlus, faEdit, faTrash,
   faClock, faCompass, faTachometerAlt, faCloudSun, faThermometerHalf,
   faMapMarkerAlt, faLocationDot, faRuler, faCar, faUser, faStickyNote,
-  faTimes, faSave
+  faTimes, faSave, faTrophy, faFlag
 } from '@fortawesome/free-solid-svg-icons';
 import configService from '../settings/ConfigService';
 import { 
@@ -28,7 +28,8 @@ import { useTranslation } from 'react-i18next';
  */
 const LogbookView = () => {
   const { t } = useTranslation();
-  const { nightMode } = useOcearoContext();
+  const { nightMode, states, toggleState } = useOcearoContext();
+  const racingMode = states?.racing ?? false;
   const [activeTab, setActiveTab] = useState('logbook');
   
   // Define paths for capturing vessel state during entry creation
@@ -160,6 +161,7 @@ const LogbookView = () => {
    * Show add entry modal
    */
   const showAddEntryModal = useCallback(() => {
+    setSelectedEntry(null); // ensure "Add" mode (otherwise the modal keeps the last edited entry's title)
     setEntryForm({
       text: '',
       author: 'manual'
@@ -172,43 +174,60 @@ const LogbookView = () => {
    */
   const addEntry = useCallback(async () => {
     try {
-      const position = skValues['navigation.position'] || {};
-      const newEntry = {
-        datetime: new Date().toISOString(),
-        position: {
-          latitude: position.latitude || 46.1591,
-          longitude: position.longitude || -1.1522,
-          source: 'GPS'
-        },
-        course: skValues['navigation.courseOverGroundTrue'] || skValues['navigation.headingTrue'],
-        speed: {
-          sog: skValues['navigation.speedOverGround'] || 0
-        },
-        wind: {
-          speed: skValues['environment.wind.speedTrue'] || 0,
-          direction: skValues['environment.wind.angleTrueWater'] || 0
-        },
-        barometer: skValues['environment.outside.pressure'] ? skValues['environment.outside.pressure'] / 100 : 1013,
-        log: skValues['navigation.log'] || 0,
-        engine: {
-          hours: skValues['propulsion.main.runTime'] ? skValues['propulsion.main.runTime'] / 3600 : 0
-        },
-        author: entryForm.author || 'manual',
-        text: entryForm.text || 'Manual entry'
-      };
+      let payload;
+      if (selectedEntry) {
+        // Editing an existing entry: preserve its original timestamp/position/telemetry
+        // and only override the user-editable fields. NB: the OcearoCore proxy only
+        // exposes /logbook/add-entry, so this updates in place only if the backend
+        // upserts by datetime.
+        payload = {
+          ...selectedEntry,
+          author: entryForm.author || selectedEntry.author || 'manual',
+          text: entryForm.text || selectedEntry.text || 'Manual entry'
+        };
+        // Drop client-only fields added during transform
+        delete payload.date;
+        delete payload.point;
+      } else {
+        const position = skValues['navigation.position'] || {};
+        payload = {
+          datetime: new Date().toISOString(),
+          position: {
+            latitude: position.latitude || 46.1591,
+            longitude: position.longitude || -1.1522,
+            source: 'GPS'
+          },
+          course: skValues['navigation.courseOverGroundTrue'] || skValues['navigation.headingTrue'],
+          speed: {
+            sog: skValues['navigation.speedOverGround'] || 0
+          },
+          wind: {
+            speed: skValues['environment.wind.speedTrue'] || 0,
+            direction: skValues['environment.wind.angleTrueWater'] || 0
+          },
+          barometer: skValues['environment.outside.pressure'] ? skValues['environment.outside.pressure'] / 100 : 1013,
+          log: skValues['navigation.log'] || 0,
+          engine: {
+            hours: skValues['propulsion.main.runTime'] ? skValues['propulsion.main.runTime'] / 3600 : 0
+          },
+          author: entryForm.author || 'manual',
+          text: entryForm.text || 'Manual entry'
+        };
+      }
 
-      // Use OcearoCore proxy to add the entry
-      await addLogbookEntry(newEntry);
-      
+      // Use OcearoCore proxy to persist the entry
+      await addLogbookEntry(payload);
+
       // Close modal and refresh entries
       setShowEntryModal(false);
+      setSelectedEntry(null);
       fetchLogbookEntriesData();
     } catch (err) {
-      console.warn('Error adding entry:', err);
-      const errorMessage = handleOcearoCoreError(err, 'Add logbook entry');
+      console.warn('Error saving entry:', err);
+      const errorMessage = handleOcearoCoreError(err, 'Save logbook entry');
       setError(errorMessage);
     }
-  }, [skValues, fetchLogbookEntriesData, entryForm]);
+  }, [skValues, fetchLogbookEntriesData, entryForm, selectedEntry]);
 
   /**
    * Add entry using OcearoCore AI
@@ -329,6 +348,12 @@ const LogbookView = () => {
    */
   const editEntry = useCallback((entry) => {
     setSelectedEntry(entry);
+    // Prefill the form with the entry's editable fields (otherwise the edit modal
+    // opens blank and any save would lose the author/text).
+    setEntryForm({
+      text: entry.text || '',
+      author: entry.author || 'manual'
+    });
     setShowEntryModal(true);
   }, []);
 
@@ -400,7 +425,7 @@ const LogbookView = () => {
             </button>
           )}
           <button 
-            className="bg-oBlue hover:bg-blue-600 text-hud-main px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft"
+            className="bg-oBlue hover:bg-oBlue/80 text-hud-main px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft"
             onClick={showAddEntryModal}
             disabled={loading}
           >
@@ -490,7 +515,7 @@ const LogbookView = () => {
               </button>
             )}
             <button 
-              className="bg-oBlue hover:bg-blue-600 text-hud-main px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft"
+              className="bg-oBlue hover:bg-oBlue/80 text-hud-main px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft"
               onClick={showAddEntryModal}
               disabled={loading}
             >
@@ -583,13 +608,14 @@ const LogbookView = () => {
       {ocearoCoreEnabled && (
         <div className="tesla-card p-4 mb-6 bg-hud-bg">
           <h4 className="text-xs font-black text-hud-secondary mb-4 uppercase tracking-widest">{t('logbook.selectOperation')}</h4>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {[
-              { id: 'logbook', label: 'LOGBOOK', icon: faBook, color: 'bg-purple-600', action: getLogbookAnalysis },
-              { id: 'weather', label: 'WEATHER', icon: faCloudSun, color: 'bg-blue-600', action: () => getOcearoCoreAnalysis('weather') },
+              { id: 'logbook', label: 'LOGBOOK', icon: faBook, color: 'bg-oBlue', action: getLogbookAnalysis },
+              { id: 'weather', label: 'WEATHER', icon: faCloudSun, color: 'bg-oBlue', action: () => getOcearoCoreAnalysis('weather') },
               { id: 'sail', label: 'SAIL', icon: faCompass, color: 'bg-oGreen', action: () => getOcearoCoreAnalysis('sail') },
               { id: 'alerts', label: 'ALERTS', icon: faRobot, color: 'bg-oRed', action: () => getOcearoCoreAnalysis('alerts') },
-              { id: 'status', label: 'STATUS', icon: faTachometerAlt, color: 'bg-oYellow', action: () => getOcearoCoreAnalysis('status') }
+              { id: 'status', label: 'STATUS', icon: faTachometerAlt, color: 'bg-hud-muted', action: () => getOcearoCoreAnalysis('status') },
+              { id: 'racing', label: t('logbook.racingAdvice'), icon: faTrophy, color: racingMode ? 'bg-oYellow' : 'bg-oYellow/40', action: () => getOcearoCoreAnalysis('racing') }
             ].map((opt) => (
               <button
                 key={opt.id}
@@ -682,17 +708,24 @@ const LogbookView = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {insights && (
                     <div className="tesla-card bg-hud-bg p-4 shadow-subtle">
-                      <h5 className="text-xs font-black text-cyan-400 mb-3 uppercase tracking-widest flex items-center">
+                      <h5 className="text-xs font-black text-oBlue mb-3 uppercase tracking-widest flex items-center">
                         <FontAwesomeIcon icon={faRobot} className="mr-2 text-xs" />
                         {t('logbook.strategicInsights')}
                       </h5>
                       <ul className="space-y-2">
-                        {insights.map((item, i) => (
-                          <li key={i} className="text-xs font-bold text-hud-secondary normal-case flex items-start">
-                            <span className="text-oBlue mr-2 opacity-50">›</span>
-                            {item}
-                          </li>
-                        ))}
+                        {insights.map((item, i) => {
+                          // Ensure item is a string for display
+                          const displayText = typeof item === 'string' ? item
+                            : (item && typeof item === 'object')
+                              ? (item.text || item.message || item.insight || JSON.stringify(item))
+                              : String(item);
+                          return (
+                            <li key={i} className="text-xs font-bold text-hud-secondary normal-case flex items-start">
+                              <span className="text-oBlue mr-2 opacity-50">›</span>
+                              {displayText}
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   )}
@@ -703,12 +736,31 @@ const LogbookView = () => {
                         {t('logbook.operationalAdvice')}
                       </h5>
                       <ul className="space-y-2">
-                        {recommendations.map((item, i) => (
-                          <li key={i} className="text-xs font-bold text-hud-secondary normal-case flex items-start">
-                            <span className="text-oGreen mr-2 opacity-50">✓</span>
-                            {typeof item === 'string' ? item : item.message || JSON.stringify(item)}
-                          </li>
-                        ))}
+                        {recommendations.map((item, i) => {
+                          // Handle various recommendation formats
+                          let displayText;
+                          if (typeof item === 'string') {
+                            displayText = item;
+                          } else if (item && typeof item === 'object') {
+                            // item.message might be an object (e.g., alert with type/priority)
+                            if (typeof item.message === 'string') {
+                              displayText = item.message;
+                            } else if (item.message && typeof item.message === 'object') {
+                              // Extract text from alert object
+                              displayText = item.message.message || item.text || item.action || JSON.stringify(item.message);
+                            } else {
+                              displayText = item.text || item.action || JSON.stringify(item);
+                            }
+                          } else {
+                            displayText = String(item);
+                          }
+                          return (
+                            <li key={i} className="text-xs font-bold text-hud-secondary normal-case flex items-start">
+                              <span className="text-oGreen mr-2 opacity-50">✓</span>
+                              {displayText}
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   )}
@@ -739,7 +791,7 @@ const LogbookView = () => {
               {/* Timestamp */}
               {analysisResult.timestamp && (
                 <div className="text-hud-dim text-xs font-black text-right uppercase tracking-tighter">
-                  {t('logbook.generated')} {new Date(analysisResult.timestamp).toLocaleString()} // OCEAROCORE V2.4
+                  {t('logbook.generated')} {new Date(analysisResult.timestamp).toLocaleString()} {'// OCEAROCORE V2.4'}
                 </div>
               )}
             </div>
@@ -767,7 +819,7 @@ const LogbookView = () => {
    */
   const renderEntryModal = () => (
     <div 
-      className="fixed inset-0 bg-hud-bg/60 backdrop-blur-sm flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
       onClick={() => setShowEntryModal(false)}
     >
       <div 
@@ -824,7 +876,7 @@ const LogbookView = () => {
             </button>
             <button
               onClick={addEntry}
-              className="px-8 py-3 bg-oBlue hover:bg-blue-600 text-hud-main font-bold rounded-xl transition-all duration-300 flex items-center shadow-lg shadow-oBlue/20"
+              className="px-8 py-3 bg-oBlue hover:bg-oBlue/80 text-hud-main font-bold rounded-xl transition-all duration-300 flex items-center shadow-lg shadow-oBlue/20"
             >
               <FontAwesomeIcon icon={faPlus} className="mr-2" />
               {t('logbook.saveEntry')}
@@ -837,6 +889,45 @@ const LogbookView = () => {
 
   return (
     <div className="flex flex-col h-full bg-rightPaneBg overflow-hidden">
+      {/* Racing Mode Toggle Banner */}
+      {ocearoCoreEnabled && (
+        <div className={`flex items-center justify-between px-4 py-2 border-b transition-all duration-500 ${
+          racingMode
+            ? 'bg-oYellow/10 border-oYellow/30'
+            : 'bg-hud-bg border-hud'
+        }`}>
+          <div className="flex items-center space-x-2">
+            <FontAwesomeIcon
+              icon={faTrophy}
+              className={`text-xs transition-colors duration-300 ${
+                racingMode ? 'text-oYellow animate-soft-pulse' : 'text-hud-muted'
+              }`}
+            />
+            <span className="text-xs font-black uppercase tracking-widest text-hud-main">
+              {racingMode ? t('logbook.racingModeActive') : t('logbook.racingMode')}
+            </span>
+            {racingMode && (
+              <span className="text-xs font-black uppercase tracking-widest text-oYellow opacity-70">
+                — {t('logbook.racingModeAISInfo')}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => toggleState('racing')}
+            className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors duration-300 focus:outline-none ${
+              racingMode ? 'bg-oYellow' : 'bg-hud-elevated border border-hud'
+            }`}
+            aria-label={t('logbook.racingMode')}
+          >
+            <span
+              className={`inline-block h-3.5 w-3.5 transform rounded-full bg-hud-main shadow transition-transform duration-300 ${
+                racingMode ? 'translate-x-5' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </div>
+      )}
+
       {/* Tab Navigation - Tesla style */}
       <div className="flex border-b border-hud bg-hud-bg">
         {[

@@ -44,7 +44,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 makeDefault
                 fov={60}
                 near={5}
-                far={500}
+                far={2500}
                 position={[0, 5, 20]}
             />
             {/* Orbit controls */}
@@ -80,8 +80,9 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                     sailTrimData={sailTrimData}
                 />
 
-                {/* Ocean / Map plane */}
-                {states.oceanMode === 'water' && <Ocean3D />}
+                {/* Ocean / Map plane — chart & meteo keep the ocean sky/water,
+                    the map plane floats just above the water surface */}
+                {states.oceanMode !== 'black' && <Ocean3D lite={states.oceanMode !== 'water'} />}
                 {states.oceanMode === 'chart' && <MapPlane3D mode="chart" />}
                 {states.oceanMode === 'meteo' && <MapPlane3D mode="meteo" />}
 

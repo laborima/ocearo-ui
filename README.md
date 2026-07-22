@@ -14,19 +14,17 @@ Inspired by Tesla's autopilot UI, this system delivers a futuristic and streamli
 
 ---
 
-## **Latest Updates (v0.1.16)**
+## **Latest Updates (v0.1.19)**
 
-- **Advanced 3D Physics & Sails**: Full 3D jib/genoa and mainsail with dynamic camber, twist, and forestay visualization.
-- **Dynamic Rigging & Tensions**: Real-time visualization of rigging lines (backstay, vang, cunningham, outhaul) with tension-based color gradients.
-- **Sail Trim HUD**: Compass-style arc indicators for sail car positions (GV/Mainsail and Jib) integrated into the 3D compass.
-- **Autopilot & Navigation**: Dedicated Autopilot view, Course widget with Signal K routes/waypoints, and high-precision 3D laylines.
-- **Integrated Dashboard**: Right-pane dashboard featuring AIS radar, tide, weather, and tank levels for consolidated awareness.
-- **Comprehensive Monitoring**: New engine monitoring gauges (temp, pressure, fuel), fuel log utilities, and logbook view.
-- **Weather & Forecasts**: Weather context with Signal K forecast API support and offline data fallbacks.
-- **Configurable Units & Paths**: Support for custom units (kn, m/s, °C, etc.) and preferred Signal K data paths for wind and heading.
-- **Enhanced UI/UX**: Redesigned AIS panel, Tesla-style gauge bars, transparent toolbars, and dynamic day/night skybox.
-- **Debug Tools**: Dedicated debug panel with wind override controls and 3D axes toggle.
-- **Modern Tech Stack**: Fully migrated to Next.js 16, React 19, and Tailwind CSS v4.
+- **Engine Maintenance Schedule**: New maintenance tab with manufacturer service intervals (Volvo Penta D1/D2, Yanmar YM, generic diesel), last-done tracking and overdue/due-soon statuses.
+- **Engine Alarms**: The 24 NMEA2000 discrete engine notifications (overheat, oil pressure, coolant level…) are now surfaced with a persistent alarm banner and tab badge, plus configurable temperature zones raising audible SignalK alerts.
+- **Harbor-detail 3D Chart**: Adaptive level-of-detail map plane — pontoons visible at berth (OSM z19 + OpenSeaMap seamarks), wide area when zoomed out, true-to-scale with AIS targets.
+- **Real Weather Map**: Meteo mode combines the base map with the Windy wind overlay and live RainViewer precipitation radar over a ~40 km area.
+- **Living Ocean & Sky**: Wind-driven geometric swell (significant wave height from wind speed), forecast-driven clouds and rain particles, ocean sky shared by all map modes.
+- **Air Quality from VOC**: Dashboard tile driven by the BME680 gas resistance (kΩ) with qualitative scale when no CO₂/PM2.5 sensors are fitted.
+- **Fuel Analytics**: Consumption-range estimation (worst–average), full-tank assumption after refills, engine hours persisted with engine off, complete refill history.
+- **RPi5 Performance**: Chart/meteo modes render a lite ocean without the mirror-reflection pass — the scene is no longer drawn twice per frame.
+- **Previous highlights (v0.1.16)**: full 3D sails with physically-based trim, rigging tensions, sail trim HUD, autopilot view, dashboard, configurable units, Next.js 16 / React 19 / Tailwind v4 stack.
 
 ---
 

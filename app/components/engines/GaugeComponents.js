@@ -19,24 +19,30 @@ export const CircularGauge = ({
   min = 0, 
   max = 100, 
   icon, 
-  warningThreshold, 
+  warningThreshold,
   criticalThreshold,
   size = 120,
-  showValue = true
+  showValue = true,
+  reversed = false
 }) => {
   const displayValue = (value === null || value === undefined || isNaN(value)) ? 'N/A' : value;
   const hasValue = displayValue !== 'N/A';
 
   const percentage = hasValue ? Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100)) : 0;
 
+  // `reversed` = lower-is-worse metrics (oil/fuel pressure, battery voltage, fuel level)
+  const isCritical = hasValue && criticalThreshold !== undefined && (reversed ? value <= criticalThreshold : value >= criticalThreshold);
+  const isWarning = hasValue && warningThreshold !== undefined && (reversed ? value <= warningThreshold : value >= warningThreshold);
+
   const getColor = () => {
     if (!hasValue) return CSS_COLORS.oGray;
-    if (criticalThreshold !== undefined && value >= criticalThreshold) return CSS_COLORS.oRed;
-    if (warningThreshold !== undefined && value >= warningThreshold) return CSS_COLORS.oYellow;
+    if (isCritical) return CSS_COLORS.oRed;
+    if (isWarning) return CSS_COLORS.oYellow;
     return CSS_COLORS.oGreen;
   };
 
   const color = getColor();
+  const pulse = isCritical || (!reversed && percentage >= 90);
 
   return (
     <div className="tesla-card p-2 tesla-hover flex flex-col items-center justify-center">
@@ -62,14 +68,14 @@ export const CircularGauge = ({
             strokeLinecap="round"
             strokeDasharray={`${2 * Math.PI * 40}`}
             strokeDashoffset={`${hasValue ? 2 * Math.PI * 40 * (1 - percentage / 100) : 2 * Math.PI * 40}`}
-            className="transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1)"
+            className="transition-all duration-1000"
           />
         </svg>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           {icon && <FontAwesomeIcon icon={icon} className="text-hud-muted text-sm mb-1" />}
           {showValue && (
-            <div className={`text-2xl font-black tracking-tighter gliding-value ${hasValue ? 'text-hud-main' : 'text-hud-muted'} ${percentage >= 90 || (criticalThreshold && value >= criticalThreshold) ? 'animate-soft-pulse' : ''}`}>
+            <div className={`text-2xl font-black tracking-tighter gliding-value ${hasValue ? 'text-hud-main' : 'text-hud-muted'} ${pulse ? 'animate-soft-pulse' : ''}`}>
               {displayValue}
             </div>
           )}
@@ -96,20 +102,27 @@ export const BarGauge = ({
   icon,
   warningThreshold,
   criticalThreshold,
-  showMinMax = false
+  showMinMax = false,
+  reversed = false
 }) => {
   const displayValue = (value === null || value === undefined || isNaN(value)) ? 'N/A' : `${value}${unit ? ` ${unit}` : ''}`;
   const hasValue = displayValue !== 'N/A';
-  
+
   const percentage = hasValue ? Math.min(100, Math.max(0, ((value - min) / (max - min)) * 100)) : 0;
-  
+
+  // `reversed` = lower-is-worse metrics
+  const isCritical = hasValue && criticalThreshold !== undefined && (reversed ? value <= criticalThreshold : value >= criticalThreshold);
+  const isWarning = hasValue && warningThreshold !== undefined && (reversed ? value <= warningThreshold : value >= warningThreshold);
+
   const getColor = () => {
     if (!hasValue) return 'bg-hud-elevated';
-    if (criticalThreshold !== undefined && value >= criticalThreshold) return 'bg-oRed';
-    if (warningThreshold !== undefined && value >= warningThreshold) return 'bg-oYellow';
+    if (isCritical) return 'bg-oRed';
+    if (isWarning) return 'bg-oYellow';
     return 'bg-oGreen';
   };
-  
+
+  const pulse = isCritical || (!reversed && percentage >= 90);
+
   return (
     <div className="tesla-card p-3 tesla-hover">
       <div className="flex items-center justify-between mb-2">
@@ -117,14 +130,14 @@ export const BarGauge = ({
           {icon && <FontAwesomeIcon icon={icon} className="mr-2 fa-fw opacity-50" />}
           {label}
         </div>
-        <div className={`font-black text-lg gliding-value ${hasValue ? 'text-hud-main' : 'text-hud-dim'} ${percentage >= 90 || (criticalThreshold && value >= criticalThreshold) ? 'animate-soft-pulse' : ''}`}>
+        <div className={`font-black text-lg gliding-value ${hasValue ? 'text-hud-main' : 'text-hud-dim'} ${pulse ? 'animate-soft-pulse' : ''}`}>
           {displayValue}
         </div>
       </div>
-      
+
       <div className="relative w-full bg-hud-elevated rounded-full h-1.5 overflow-hidden">
-        <div 
-          className={`h-full rounded-full transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${getColor()}`}
+        <div
+          className={`h-full rounded-full transition-all duration-1000 ${getColor()}`}
           style={{ width: `${percentage}%` }}
         />
       </div>
@@ -151,7 +164,8 @@ export const CompactDataField = ({
   criticalThreshold,
   reversed = false
 }) => {
-  const displayValue = (value === null || value === undefined || isNaN(value)) ? 'N/A' : value;
+  // Strings (e.g. "74–78" ranges) are shown as-is; only reject missing/NaN numbers
+  const displayValue = (value === null || value === undefined || (typeof value === 'number' && Number.isNaN(value))) ? 'N/A' : value;
   const hasValue = displayValue !== 'N/A';
   
   const getColor = () => {
@@ -205,7 +219,7 @@ export const MiniSparkline = ({
   const range = max - min || 1;
   
   const points = data.map((value, index) => {
-    const x = (index / (data.length - 1)) * width;
+    const x = data.length === 1 ? width / 2 : (index / (data.length - 1)) * width;
     const y = height - ((value - min) / range) * height;
     return { x, y };
   });
@@ -247,26 +261,32 @@ export const PrimaryGauge = ({
   icon, 
   max = 100,
   warningThreshold,
-  criticalThreshold
+  criticalThreshold,
+  reversed = false
 }) => {
   const displayValue = (value === null || value === undefined || isNaN(value)) ? 'N/A' : Math.round(value);
   const hasValue = displayValue !== 'N/A';
-  
+
+  // `reversed` = lower-is-worse metrics
+  const isCritical = hasValue && criticalThreshold !== undefined && (reversed ? value <= criticalThreshold : value >= criticalThreshold);
+  const isWarning = hasValue && warningThreshold !== undefined && (reversed ? value <= warningThreshold : value >= warningThreshold);
+
   const getColor = () => {
     if (!hasValue) return 'text-hud-muted';
-    if (criticalThreshold !== undefined && value >= criticalThreshold) return 'text-oRed';
-    if (warningThreshold !== undefined && value >= warningThreshold) return 'text-oYellow';
+    if (isCritical) return 'text-oRed';
+    if (isWarning) return 'text-oYellow';
     return 'text-oGreen';
   };
-  
+
   const percentage = hasValue ? Math.min(100, (value / max) * 100) : 0;
-  
+  const pulse = isCritical || (!reversed && percentage >= 90);
+
   return (
     <div className="tesla-card p-4 text-center tesla-hover">
       {icon && (
         <FontAwesomeIcon icon={icon} className="text-lg text-hud-muted mb-2 opacity-50" />
       )}
-      <div className={`text-4xl font-black mb-1 tracking-tighter gliding-value ${getColor()} ${percentage >= 90 || (criticalThreshold && value >= criticalThreshold) ? 'animate-soft-pulse' : ''}`}>
+      <div className={`text-4xl font-black mb-1 tracking-tighter gliding-value ${getColor()} ${pulse ? 'animate-soft-pulse' : ''}`}>
         {displayValue}
       </div>
       {hasValue && unit && (
@@ -275,12 +295,12 @@ export const PrimaryGauge = ({
       <div className="text-hud-muted text-xs font-black uppercase tracking-widest mb-3">{label}</div>
       
       <div className="w-full bg-hud-elevated rounded-full h-1 overflow-hidden shadow-inner">
-        <div 
-          className={`h-full rounded-full transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${
-            hasValue ? 
-              (criticalThreshold && value >= criticalThreshold ? 'bg-oRed' :
-               warningThreshold && value >= warningThreshold ? 'bg-oYellow' : 
-               'bg-oGreen') 
+        <div
+          className={`h-full rounded-full transition-all duration-1000 ${
+            hasValue ?
+              (isCritical ? 'bg-oRed' :
+               isWarning ? 'bg-oYellow' :
+               'bg-oGreen')
             : 'bg-hud-elevated'
           }`}
           style={{ width: `${percentage}%` }}

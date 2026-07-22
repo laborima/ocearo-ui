@@ -96,6 +96,8 @@ const BatteryMonitor = () => {
   const prevTimeRef = useRef(performance.now());
   const framesRef = useRef(0);
   const rendererRef = useRef(null);
+  // Latest battery data kept in a ref so the stats loop doesn't restart on every SignalK tick
+  const batteryDataRef = useRef(null);
 
   // Graph history state
   const [batteryHistory, setBatteryHistory] = useState(() => 
@@ -129,51 +131,58 @@ const BatteryMonitor = () => {
     }
   }, []);
 
-  // Update performance stats and battery history every second
+  // Keep the latest battery snapshot available to the stats loop without restarting it
+  batteryDataRef.current = currentBatteryData;
+
+  // Update performance stats and battery history every second.
+  // Frames are counted via requestAnimationFrame (real FPS); the 1s interval samples them.
   useEffect(() => {
-    let intervalId;
-    
-    const updateStats = () => {
+    let rafId, intervalId;
+
+    const countFrame = () => {
       framesRef.current++;
-      const time = performance.now();
-      
-      if (time >= prevTimeRef.current + 1000) {
-        const fps = (framesRef.current * 1000) / (time - prevTimeRef.current);
-        const avgFrameTime = fps > 0 ? 1000 / fps : 0;
-        const timeStr = new Date().toLocaleTimeString();
-        
-        let drawCalls = 0, triangles = 0, geometries = 0, textures = 0, memory = 0;
-        
-        if (window.performance && window.performance.memory) {
-          memory = Math.round(window.performance.memory.usedJSHeapSize / (1024 * 1024));
-        }
-        
-        const info = rendererRef.current?.info || window.__OCEARO_RENDER_INFO;
-        if (info) {
-          drawCalls = info.render?.calls || 0;
-          triangles = info.render?.triangles || 0;
-          geometries = info.memory?.geometries || 0;
-          textures = info.memory?.textures || 0;
-        }
-
-        setPerformanceHistory(prev => [...prev.slice(1), {
-          time: timeStr, fps, ms: avgFrameTime, drawCalls, triangles, geometries, textures, memory
-        }]);
-
-        setBatteryHistory(prev => [...prev.slice(1), {
-          ...currentBatteryData, time: timeStr
-        }]);
-
-        prevTimeRef.current = time;
-        framesRef.current = 0;
-      }
-      
-      intervalId = setTimeout(updateStats, 1000);
+      rafId = requestAnimationFrame(countFrame);
     };
+    rafId = requestAnimationFrame(countFrame);
 
-    updateStats();
-    return () => clearTimeout(intervalId);
-  }, [currentBatteryData]);
+    intervalId = setInterval(() => {
+      const time = performance.now();
+      const elapsed = time - prevTimeRef.current;
+      const fps = elapsed > 0 ? (framesRef.current * 1000) / elapsed : 0;
+      const avgFrameTime = fps > 0 ? 1000 / fps : 0;
+      const timeStr = new Date().toLocaleTimeString();
+
+      let drawCalls = 0, triangles = 0, geometries = 0, textures = 0, memory = 0;
+
+      if (window.performance && window.performance.memory) {
+        memory = Math.round(window.performance.memory.usedJSHeapSize / (1024 * 1024));
+      }
+
+      const info = rendererRef.current?.info || window.__OCEARO_RENDER_INFO;
+      if (info) {
+        drawCalls = info.render?.calls || 0;
+        triangles = info.render?.triangles || 0;
+        geometries = info.memory?.geometries || 0;
+        textures = info.memory?.textures || 0;
+      }
+
+      setPerformanceHistory(prev => [...prev.slice(1), {
+        time: timeStr, fps, ms: avgFrameTime, drawCalls, triangles, geometries, textures, memory
+      }]);
+
+      setBatteryHistory(prev => [...prev.slice(1), {
+        ...batteryDataRef.current, time: timeStr
+      }]);
+
+      prevTimeRef.current = time;
+      framesRef.current = 0;
+    }, 1000);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearInterval(intervalId);
+    };
+  }, []);
 
   const [availableBatteries] = useState([{ id: '1', nameKey: 'battery.houseBattery' }, { id: '0', nameKey: 'battery.starterBattery' }]);
 
@@ -250,7 +259,7 @@ const BatteryMonitor = () => {
                   onChange={(e) => setSelectedBattery(e.target.value)}
                 >
                   {availableBatteries.map((battery) => (
-                    <option key={battery.id} value={battery.id} className="bg-oNight">
+                    <option key={battery.id} value={battery.id} className="bg-leftPaneBg text-hud-main">
                       {t(battery.nameKey)}
                     </option>
                   ))}
@@ -325,13 +334,13 @@ const BatteryMonitor = () => {
                       <div className="absolute inset-0 bg-gradient-to-r from-oRed/10 via-oYellow/10 to-oGreen/10 opacity-30"></div>
                       
                       <div 
-                        className={`h-full transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${isCharging ? 'bg-gradient-to-r from-oGreen/60 to-oGreen shadow-[0_0_12px_var(--color-oGreen)]' : 'bg-gradient-to-r from-oRed/60 via-oYellow/60 to-oGreen/60 shadow-[0_0_12px_var(--color-oGreen)] shadow-opacity-30'}`}
+                        className={`h-full transition-all duration-1000 ${isCharging ? 'bg-gradient-to-r from-oGreen/60 to-oGreen shadow-[0_0_12px_var(--color-oGreen)]' : 'bg-gradient-to-r from-oRed/60 via-oYellow/60 to-oGreen/60 shadow-[0_0_12px_var(--color-oGreen)]'}`}
                         style={{width: `${currentBatteryData.stateOfCharge}%`}}
                       />
                     </div>
                     {/* Floating indicator */}
                     <div 
-                      className="absolute top-0 flex flex-col items-center transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1)" 
+                      className="absolute top-0 flex flex-col items-center transition-all duration-1000" 
                       style={{left: `clamp(10%, ${currentBatteryData.stateOfCharge}%, 90%)`, transform: 'translateX(-50%)', top: '-12px'}}
                     >
                       <div className="w-1 h-6 bg-hud-main shadow-[0_0_15px_var(--hud-text-main)] shadow-opacity-80 rounded-full"></div>
@@ -365,15 +374,15 @@ const BatteryMonitor = () => {
                   
                   <div className="space-y-6">
                     {[
-                      { icon: faMicrochip, label: t('battery.autopilotNode'), color: 'bg-oBlue', value: currentBatteryData.autopilotState ? (Math.abs(currentBatteryData.current) * 0.4) : 0, state: currentBatteryData.autopilotState },
-                      { icon: faGaugeHigh, label: t('battery.telemetryArray'), color: 'bg-oGreen', value: (Math.abs(currentBatteryData.current) * 0.3), state: true }
+                      { id: 'autopilot', icon: faMicrochip, label: t('battery.autopilotNode'), color: 'bg-oBlue', value: currentBatteryData.autopilotState ? (Math.abs(currentBatteryData.current) * 0.4) : 0, state: currentBatteryData.autopilotState },
+                      { id: 'telemetry', icon: faGaugeHigh, label: t('battery.telemetryArray'), color: 'bg-oGreen', value: (Math.abs(currentBatteryData.current) * 0.3), state: true }
                     ].map((load, idx) => (
                       <div key={idx} className="tesla-hover p-2 rounded-sm transition-all group">
                         <div className="flex justify-between items-center mb-3">
                           <div className="flex items-center">
                             <FontAwesomeIcon icon={load.icon} className="text-hud-muted mr-3 text-xs opacity-50 group-hover:opacity-100 transition-opacity" />
                             <span className="text-hud-main text-xs font-black uppercase tracking-widest">{load.label}</span>
-                            {load.state === 'auto' || load.state === true && load.label === 'Autopilot node' && (
+                            {load.id === 'autopilot' && load.state && (
                               <span className="ml-3 px-2 py-0.5 bg-oGreen/10 text-oGreen text-xs font-black uppercase rounded-sm animate-soft-pulse border border-oGreen/20">Sync</span>
                             )}
                           </div>

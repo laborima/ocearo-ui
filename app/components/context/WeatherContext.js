@@ -137,6 +137,10 @@ export const WeatherContextProvider = ({ children }) => {
         const hasAny = temperature !== null || humidity !== null || pressure !== null || windSpeed !== null;
         const hasSensor = Object.values(sensorValues).some(v => v !== null);
 
+        // Cloud cover normalized to 0-1 (sources report either ratio or percent)
+        const rawClouds = currentForecast?.clouds;
+        const cloudCover = rawClouds != null ? (rawClouds > 1 ? rawClouds / 100 : rawClouds) : null;
+
         return {
             source: hasAny ? (hasSensor ? 'sensors' : 'forecast') : null,
             temperature,
@@ -144,6 +148,8 @@ export const WeatherContextProvider = ({ children }) => {
             pressure,
             windSpeed,
             windDirection,
+            cloudCover,
+            rain: currentForecast?.rain ?? null, // mm
             description: currentForecast?.description || null
         };
     }, [sensorValues, forecasts]);

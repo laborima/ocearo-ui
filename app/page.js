@@ -55,6 +55,17 @@ export default function Home() {
     const [isSettingsView, setIsSettingsView] = useState(false);
     const isSettingsViewRef = useRef(false);
 
+    // In development, unregister any stray service worker (e.g. one left over from a
+    // previous PWA/SignalK deployment on the same origin). Such a SW intercepts Next's
+    // HMR chunk requests, causing ChunkLoadError and an endless reload loop.
+    useEffect(() => {
+        if (process.env.NODE_ENV !== 'production' && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations?.()
+                .then((regs) => regs.forEach((r) => r.unregister()))
+                .catch(() => {});
+        }
+    }, []);
+
     // Set initial view mode based on screen size
     useEffect(() => {
         // Set view mode only on client-side to avoid hydration issues
@@ -198,7 +209,9 @@ export default function Home() {
                     <div className="h-[100dvh] flex flex-col bg-hud-bg relative overflow-hidden">
                         <div className="flex flex-1 min-h-0">
                             <div className={layoutClasses.leftPane}>
-                                <ThreeDMainView  />
+                                {/* Pause the 3D render loop when the boat view is hidden (APP mode)
+                                    so it doesn't keep burning GPU on low-power devices. */}
+                                <ThreeDMainView active={currentViewMode !== VIEW_MODES.APP} />
                             </div>
 
                             <div 

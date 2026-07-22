@@ -1,12 +1,12 @@
 {
-  "endpoint": "https://api.meshy.ai/v1/text-to-3d",
+  "endpoint": "https://api.meshy.ai/openapi/v2/text-to-3d",
   "common": {
-    "mode": "text_to_3d",
-    "style": "low_poly",
+    "mode": "preview",
+    "art_style": "realistic",
     "negative_prompt": "high poly, photorealistic, interior, crew, text labels, sea surface",
-    "format": "glb",
-    "scale": 1.0,
-    "lod": "game"
+    "should_remesh": true,
+    "topology": "triangle",
+    "target_polycount": 3000
   },
   "jobs": [
 
@@ -41,7 +41,7 @@
     { "id": "ais-70", "prompt": "Low poly white general cargo ship, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, boxy hull, flat deck, raised bridge near stern, cargo holds with hatch covers" },
 
     { "id": "ais-80", "prompt": "Low poly white tanker, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, rounded hull, stern superstructure, cylindrical deck tanks, central pipeline" },
-    /* ---------- Other 90–99 ---------- */
+
     { "id": "ais-90", "prompt": "Low poly white generic ship, waterline length exactly 10 meters, positioned at origin, oriented along the Y-axis, simple hull, no specific equipment" }
 
   ]

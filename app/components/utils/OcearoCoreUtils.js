@@ -61,6 +61,8 @@ export const makeOcearoCoreApiCall = async (endpoint, options = {}) => {
       ...options.headers
     };
 
+    // Always include credentials to support SignalK session cookies
+    // This is required for authenticated plugin endpoints
     let credentialsOption = 'include';
 
     // Add Basic Auth header if authentication is enabled and username is provided
@@ -71,9 +73,6 @@ export const makeOcearoCoreApiCall = async (endpoint, options = {}) => {
           ? btoa(`${config.username}:${config.password || ''}`)
           : Buffer.from(`${config.username}:${config.password || ''}`).toString('base64');
         headers['Authorization'] = `Basic ${token}`;
-        
-        // If we have explicit credentials, prefer them over cookies to avoid "old cookie" issues
-        credentialsOption = 'omit';
       } catch (_) {
         // If encoding fails, skip adding the header
       }
@@ -171,15 +170,44 @@ export const updateOcearoCoreMode = async (mode) => {
 };
 
 /**
+ * Get OcearoCore do-not-disturb status ({ mode: 'off'|'safety'|'all', until })
+ */
+export const getOcearoCoreDnd = async () => {
+  return await makeOcearoCoreApiCall('/dnd');
+};
+
+/**
+ * Set OcearoCore do-not-disturb mode.
+ * 'safety' keeps safety announcements only, 'all' silences everything.
+ */
+export const setOcearoCoreDnd = async (mode, durationMinutes) => {
+  const validModes = ['off', 'safety', 'all'];
+
+  if (!validModes.includes(mode)) {
+    throw new Error(`Invalid DND mode. Valid modes: ${validModes.join(', ')}`);
+  }
+
+  const body = { mode };
+  if (typeof durationMinutes === 'number' && durationMinutes > 0) {
+    body.durationMinutes = durationMinutes;
+  }
+
+  return await makeOcearoCoreApiCall('/dnd', {
+    method: 'POST',
+    body: JSON.stringify(body)
+  });
+};
+
+/**
  * Make OcearoCore speak text
  */
 export const OcearoCoreSpeak = async (text, priority = 'normal') => {
   const validPriorities = ['low', 'normal', 'high'];
-  
+
   if (!text || typeof text !== 'string') {
     throw new Error('Text is required and must be a string');
   }
-  
+
   if (text.length > 1000) {
     throw new Error('Text too long (max 1000 characters)');
   }
@@ -188,9 +216,13 @@ export const OcearoCoreSpeak = async (text, priority = 'normal') => {
     throw new Error(`Invalid priority. Valid priorities: ${validPriorities.join(', ')}`);
   }
 
+  const processedText = text
+    .replace(/(^|[^a-zA-Z])NM($|[^a-zA-Z])/gi, '$1miles$2')
+    .replace(/(^|[^a-zA-Z])min($|[^a-zA-Z])/gi, '$1minutes$2');
+
   return await makeOcearoCoreApiCall('/speak', {
     method: 'POST',
-    body: JSON.stringify({ text, priority })
+    body: JSON.stringify({ text: processedText, priority })
   });
 };
 
@@ -421,11 +453,16 @@ export const calculateFuelStats = (fuelEntries, tankCapacity = null) => {
     ? consumptionReadings.reduce((a, b) => a + b, 0) / consumptionReadings.length
     : null;
 
+  const worstConsumption = consumptionReadings.length > 0
+    ? Math.max(...consumptionReadings)
+    : null;
+
   const lastEntry = sortedEntries[sortedEntries.length - 1];
   const lastFuel = lastEntry?.fuel || {};
 
   return {
     averageConsumption: averageConsumption ? Math.round(averageConsumption * 10) / 10 : null,
+    worstConsumption: worstConsumption ? Math.round(worstConsumption * 10) / 10 : null,
     totalLiters: Math.round(totalLiters * 10) / 10,
     totalCost: Math.round(totalCost * 100) / 100,
     refillCount: sortedEntries.length,
@@ -460,29 +497,47 @@ export const estimateTankLevel = (fuelEntries, currentEngineHours, tankCapacity,
   }
 
   const hoursSinceLastRefill = currentEngineHours - stats.lastRefill.engineHours;
+  // Range: average consumption (optimistic bound) vs worst observed (pessimistic bound)
+  const worstConsumption = stats.worstConsumption || stats.averageConsumption;
   const estimatedUsed = hoursSinceLastRefill * stats.averageConsumption;
-  
-  let estimatedRemaining;
-  if (currentTankLevel !== null && tankCapacity) {
-    estimatedRemaining = (currentTankLevel * tankCapacity) - estimatedUsed;
-  } else if (tankCapacity && stats.lastRefill.liters) {
-    estimatedRemaining = stats.lastRefill.liters - estimatedUsed;
-  } else {
-    estimatedRemaining = null;
-  }
+  const estimatedUsedWorst = hoursSinceLastRefill * worstConsumption;
 
-  const estimatedPercent = estimatedRemaining !== null && tankCapacity
-    ? Math.max(0, Math.min(100, (estimatedRemaining / tankCapacity) * 100))
+  const remainingFrom = (used) => {
+    let remaining;
+    if (currentTankLevel !== null && tankCapacity) {
+      remaining = (currentTankLevel * tankCapacity) - used;
+    } else if (tankCapacity) {
+      // A refill means a fill-up: the tank starts full, then drains with usage
+      remaining = tankCapacity - used;
+    } else if (stats.lastRefill.liters) {
+      remaining = stats.lastRefill.liters - used;
+    } else {
+      return null;
+    }
+    return Math.max(0, remaining);
+  };
+
+  const estimatedRemaining = remainingFrom(estimatedUsed);
+  const estimatedRemainingWorst = remainingFrom(estimatedUsedWorst);
+
+  const percentFrom = (remaining) => remaining !== null && tankCapacity
+    ? Math.round(Math.max(0, Math.min(100, (remaining / tankCapacity) * 100)))
     : null;
 
   const hoursRemaining = estimatedRemaining !== null && stats.averageConsumption > 0
     ? Math.max(0, estimatedRemaining / stats.averageConsumption)
     : null;
+  const hoursRemainingWorst = estimatedRemainingWorst !== null && worstConsumption > 0
+    ? Math.max(0, estimatedRemainingWorst / worstConsumption)
+    : null;
 
   return {
     estimatedLiters: estimatedRemaining !== null ? Math.round(estimatedRemaining * 10) / 10 : null,
-    estimatedPercent: estimatedPercent !== null ? Math.round(estimatedPercent) : null,
+    estimatedLitersWorst: estimatedRemainingWorst !== null ? Math.round(estimatedRemainingWorst * 10) / 10 : null,
+    estimatedPercent: percentFrom(estimatedRemaining),
+    estimatedPercentWorst: percentFrom(estimatedRemainingWorst),
     hoursRemaining: hoursRemaining !== null ? Math.round(hoursRemaining * 10) / 10 : null,
+    hoursRemainingWorst: hoursRemainingWorst !== null ? Math.round(hoursRemainingWorst * 10) / 10 : null,
     hoursSinceLastRefill: Math.round(hoursSinceLastRefill * 10) / 10,
     estimatedUsed: Math.round(estimatedUsed * 10) / 10,
     basedOnSensor: currentTankLevel !== null,

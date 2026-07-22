@@ -51,10 +51,17 @@ const RendererExposer = () => {
   return null;
 };
 
-const ThreeDMainView = () => {
+const ThreeDMainView = ({ active = true }) => {
     const { states, nightMode } = useOcearoContext(); // Access global context
     const [infoPanelContent, setInfoPanelContent] = useState(null);
     const [showAttitudeIndicator, setShowAttitudeIndicator] = useState(true);
+    const [clock, setClock] = useState(() => new Date());
+
+    // Tick the header clock every 30s (it would otherwise only refresh on unrelated re-renders)
+    useEffect(() => {
+        const id = setInterval(() => setClock(new Date()), 30000);
+        return () => clearInterval(id);
+    }, []);
 
     // Get configuration directly using the configService
     useEffect(() => {
@@ -69,7 +76,7 @@ const ThreeDMainView = () => {
                 <ThreeDBoatToolbar />
                 <div className="flex items-center space-x-4">
                     <span className={`text-lg font-black uppercase tracking-[0.2em] ${nightMode ? 'text-oNight' : 'text-hud-muted'}`}>
-                        {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        {clock.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     </span>
                     <ThreeDBoatThanksIndicator />
                 </div>
@@ -115,6 +122,7 @@ const ThreeDMainView = () => {
                 <Canvas
                 style={{ width: '100%', height: '100%' }}
                 shadows={false}
+                frameloop={active ? 'always' : 'never'}
                 dpr={Math.min(window.devicePixelRatio, 1.5)}
                 performance={{ min: 0.5 }}
                 gl={{

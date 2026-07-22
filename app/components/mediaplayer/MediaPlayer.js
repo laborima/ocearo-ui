@@ -4,8 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTimes, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
+import { useTranslation } from 'react-i18next';
 
 const MediaPlayer = () => {
+  const { t } = useTranslation();
   const { nightMode } = useOcearoContext();
   const [selectedService, setSelectedService] = useState(null);
   const [iframeError, setIframeError] = useState(false);
@@ -81,13 +83,13 @@ const MediaPlayer = () => {
           {service.name}
         </p>
         <p className={`text-xs font-black uppercase tracking-widest ${nightMode ? 'text-oNight' : 'text-hud-secondary'} opacity-80 mb-8 text-center`}>
-          Redirecting to external node
+          {t('mediaPlayer.redirecting')}
         </p>
         <button
           onClick={() => handleOpenExternal(service.url)}
-          className={`px-6 py-2.5 rounded text-xs font-black uppercase tracking-widest flex items-center transition-all duration-500 shadow-soft ${nightMode ? 'bg-oNight/20 text-oNight hover:bg-oNight/30 border border-oNight/30' : 'bg-oBlue text-hud-main hover:bg-blue-600 shadow-lg shadow-oBlue/20'}`}
+          className={`px-6 py-2.5 rounded text-xs font-black uppercase tracking-widest flex items-center transition-all duration-500 shadow-soft ${nightMode ? 'bg-oNight/20 text-oNight hover:bg-oNight/30 border border-oNight/30' : 'bg-oBlue text-hud-main hover:bg-oBlue/80 shadow-lg shadow-oBlue/20'}`}
         >
-          <span>Launch mission</span>
+          <span>{t('mediaPlayer.launch')}</span>
           <FontAwesomeIcon icon={faExternalLinkAlt} className="ml-3 text-xs" />
         </button>
       </div>
@@ -115,7 +117,7 @@ const MediaPlayer = () => {
               <button
                 onClick={handleCloseViewer}
                 className="p-2 rounded-full text-hud-muted tesla-hover"
-                aria-label="Close"
+                aria-label={t('common.close')}
               >
                 <FontAwesomeIcon icon={faTimes} className={`text-sm ${nightMode ? 'text-oNight' : ''}`} />
               </button>
@@ -128,7 +130,7 @@ const MediaPlayer = () => {
               ) : iframeError ? (
                 <div className="w-full h-full flex flex-col items-center justify-center tesla-card p-10 bg-hud-bg">
                   <p className={`mb-6 text-sm font-black uppercase tracking-widest ${nightMode ? 'text-oNight' : 'text-hud-main'}`}>
-                    Connection refused by {selectedService.name}
+                    {t('mediaPlayer.connectionRefused', { name: selectedService.name })}
                   </p>
                   <a 
                     href={selectedService.url} 
@@ -136,7 +138,7 @@ const MediaPlayer = () => {
                     rel="noopener noreferrer" 
                     className={`flex items-center text-xs font-black uppercase tracking-widest px-4 py-2 rounded transition-all duration-300 ${nightMode ? 'text-oNight hover:bg-oNight/10 border border-oNight/20' : 'text-oBlue hover:bg-oBlue/10 border border-oBlue/20'}`}
                   >
-                    <span>Open External Node</span>
+                    <span>{t('mediaPlayer.openExternalNode')}</span>
                     <FontAwesomeIcon icon={faExternalLinkAlt} className="ml-2" />
                   </a>
                 </div>
@@ -163,7 +165,7 @@ const MediaPlayer = () => {
           >
             <h2 className={`text-sm font-black uppercase tracking-widest mb-6 flex items-center ${nightMode ? 'text-oNight' : 'text-hud-main'}`}>
               <FontAwesomeIcon icon={faExternalLinkAlt} className="mr-3 text-oBlue text-xs" />
-              Entertainment Nodes
+              {t('mediaPlayer.entertainmentNodes')}
             </h2>
             
             {/* Services Grid */}
@@ -188,7 +190,7 @@ const MediaPlayer = () => {
                   </span>
                   {service.external && (
                     <div className="mt-2 text-xs font-black text-oBlue opacity-0 group-hover:opacity-100 transition-opacity duration-500 uppercase tracking-tighter">
-                      External Node
+                      {t('mediaPlayer.externalNode')}
                     </div>
                   )}
                 </button>

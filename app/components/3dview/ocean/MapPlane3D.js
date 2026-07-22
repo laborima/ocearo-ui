@@ -1,18 +1,37 @@
 import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
-import { useThree } from '@react-three/fiber';
+import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const AIS_MAX_METERS = 5000;
-const AIS_SCALING_FACTOR = 0.7;
 const CANVAS_SIZE = 1024; // texture resolution
 const TILE_SIZE = 256;    // OSM tile pixel size
 
 const OSM_TEMPLATE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const SEAMARK_TEMPLATE = 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png';
 const WINDY_TEMPLATE = 'https://tiles.windy.com/tiles/v10.0/wind/{z}/{x}/{y}.png';
+const RAINVIEWER_INDEX = 'https://api.rainviewer.com/public/weather-maps.json';
+
+const OSM_MAX_ZOOM = 19;     // OSM serves up to z19 — pontoons/piers appear from z17
+const CUSTOM_MAX_ZOOM = 18;  // safe cap for SignalK-provided charts (unknown max)
+const SEAMARK_MAX_ZOOM = 18; // OpenSeaMap seamark overlay (buoys, lights, marks)
+const WINDY_MAX_ZOOM = 11;   // windy wind tiles are low-zoom only
+const RAIN_MAX_ZOOM = 12;    // rainviewer radar tiles
+
+// Meteo is a weather map, not a harbor chart: keep a wide fixed coverage so the
+// low-zoom wind/rain overlays actually show gradients.
+const METEO_MAX_ZOOM = 11;
+const METEO_MIN_COVERAGE = 40000; // meters
+const CHART_MIN_COVERAGE = 500;   // meters — z18, pontoons still visible
+const WINDY_FILTER = 'saturate(1.8) contrast(1.35)';
+
+// Tone down the bright OSM palette so the plane fits the dark HUD
+const BASE_MAP_FILTER = 'brightness(0.72) saturate(1.15) contrast(1.05)';
+
+// The scene is linear "meters × aisLengthScalingFactor" (see AISContext), the
+// camera far plane is 500 units, so only ~700 m around the boat is ever visible.
 
 // ── Tile math ─────────────────────────────────────────────────────────────────
 
@@ -29,10 +48,15 @@ function buildTileUrl(template, z, x, y) {
     return template.replace('{z}', z).replace('{x}', x).replace('{y}', y);
 }
 
-function computeZoom(radiusMeters, lat) {
-    const metersPerPixelTarget = (radiusMeters * 2) / CANVAS_SIZE;
-    const z = Math.log2((156543.03 * Math.cos((lat * Math.PI) / 180)) / metersPerPixelTarget);
-    return Math.max(1, Math.min(18, Math.round(z)));
+function metersPerPixel(lat, zoom) {
+    return (156543.03 * Math.cos((lat * Math.PI) / 180)) / Math.pow(2, zoom);
+}
+
+/** Zoom so that CANVAS_SIZE pixels cover `coverageMeters` around the boat. */
+function zoomForCoverage(coverageMeters, lat, maxZoom) {
+    const target = coverageMeters / CANVAS_SIZE;
+    const z = Math.log2((156543.03 * Math.cos((lat * Math.PI) / 180)) / target);
+    return Math.max(3, Math.min(maxZoom, Math.round(z)));
 }
 
 // ── Tile image cache (module-level, survives re-renders) ──────────────────────
@@ -52,25 +76,54 @@ function loadTile(url) {
     return promise;
 }
 
+/**
+ * Load a tile, falling back to an ancestor tile (up to 3 levels) when missing.
+ * Returns {img, sx, sy, sSize} describing the source region to draw.
+ */
+async function loadTileWithFallback(template, z, x, y) {
+    let img = await loadTile(buildTileUrl(template, z, x, y));
+    if (img) return { img, sx: 0, sy: 0, sSize: TILE_SIZE };
+
+    for (let up = 1; up <= 3 && z - up >= 1; up++) {
+        const pz = z - up;
+        const px = x >> up;
+        const py = y >> up;
+        img = await loadTile(buildTileUrl(template, pz, px, py));
+        if (img) {
+            const frac = TILE_SIZE / Math.pow(2, up);
+            const sx = (x - (px << up)) * frac;
+            const sy = (y - (py << up)) * frac;
+            return { img, sx, sy, sSize: frac };
+        }
+    }
+    return null;
+}
+
 // ── Canvas tile renderer ──────────────────────────────────────────────────────
 
-async function renderTilesToCanvas(canvas, position, zoom, tileTemplate) {
-    const ctx = canvas.getContext('2d');
+/**
+ * Draw one tile layer. `layerZoom` may be lower than the base zoom: the layer
+ * is then drawn scaled up (pixelScale = 2^(baseZoom - layerZoom)) so that every
+ * layer covers the same geographic area on the canvas.
+ */
+async function drawTileLayer(ctx, position, layerZoom, tileTemplate, pixelScale = 1, filter = 'none') {
     const { latitude: lat, longitude: lon } = position;
+    const effTile = TILE_SIZE * pixelScale;
+    ctx.filter = filter;
 
-    const ftx = lonToTileF(lon, zoom);
-    const fty = latToTileF(lat, zoom);
+    const ftx = lonToTileF(lon, layerZoom);
+    const fty = latToTileF(lat, layerZoom);
 
-    const centerPxX = ftx * TILE_SIZE;
-    const centerPxY = fty * TILE_SIZE;
+    const centerPxX = ftx * effTile;
+    const centerPxY = fty * effTile;
 
     const topLeftPxX = centerPxX - CANVAS_SIZE / 2;
     const topLeftPxY = centerPxY - CANVAS_SIZE / 2;
 
-    const firstTileX = Math.floor(topLeftPxX / TILE_SIZE);
-    const firstTileY = Math.floor(topLeftPxY / TILE_SIZE);
-    const tilesNeeded = Math.ceil(CANVAS_SIZE / TILE_SIZE) + 2;
-    const maxTile = Math.pow(2, zoom);
+    const firstTileX = Math.floor(topLeftPxX / effTile);
+    const firstTileY = Math.floor(topLeftPxY / effTile);
+    const tilesNeeded = Math.ceil(CANVAS_SIZE / effTile) + 2;
+    const maxTile = Math.pow(2, layerZoom);
 
     const tilesToDraw = [];
     for (let dy = 0; dy < tilesNeeded; dy++) {
@@ -79,21 +132,36 @@ async function renderTilesToCanvas(canvas, position, zoom, tileTemplate) {
             const tileY = firstTileY + dy;
             if (tileY < 0 || tileY >= maxTile) continue;
             const wrappedX = ((tileX % maxTile) + maxTile) % maxTile;
-            const screenLeft = Math.round(tileX * TILE_SIZE - topLeftPxX);
-            const screenTop  = Math.round(tileY * TILE_SIZE - topLeftPxY);
-            const url = buildTileUrl(tileTemplate, zoom, wrappedX, tileY);
-            tilesToDraw.push({ url, screenLeft, screenTop });
+            const screenLeft = Math.round(tileX * effTile - topLeftPxX);
+            const screenTop  = Math.round(tileY * effTile - topLeftPxY);
+            tilesToDraw.push({ z: layerZoom, x: wrappedX, y: tileY, screenLeft, screenTop });
         }
     }
 
-    const images = await Promise.all(tilesToDraw.map((t) => loadTile(t.url)));
+    const sources = await Promise.all(
+        tilesToDraw.map((t) => loadTileWithFallback(tileTemplate, t.z, t.x, t.y))
+    );
 
-    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     for (let i = 0; i < tilesToDraw.length; i++) {
-        const img = images[i];
-        if (!img) continue;
+        const src = sources[i];
+        if (!src) continue;
         const { screenLeft, screenTop } = tilesToDraw[i];
-        ctx.drawImage(img, screenLeft, screenTop, TILE_SIZE, TILE_SIZE);
+        ctx.drawImage(src.img, src.sx, src.sy, src.sSize, src.sSize, screenLeft, screenTop, effTile, effTile);
+    }
+    ctx.filter = 'none';
+}
+
+// Render an ordered list of tile layers (base map first, overlays on top).
+// Windy wind tiles are semi-transparent overlays, so the meteo mode draws an
+// OSM base underneath them — otherwise the plane renders mostly black.
+async function renderTilesToCanvas(canvas, position, zoom, layers) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    for (const layer of layers) {
+        if (!layer?.template) continue;
+        const layerZoom = Math.min(zoom, layer.maxZoom ?? zoom);
+        const pixelScale = Math.pow(2, zoom - layerZoom);
+        await drawTileLayer(ctx, position, layerZoom, layer.template, pixelScale, layer.filter || 'none');
     }
 }
 
@@ -104,53 +172,86 @@ export default function MapPlane3D({ mode = 'chart' }) {
     const canvasRef = useRef(null);
     const textureRef = useRef(null);
     const renderPendingRef = useRef(false);
-    const lastPositionRef = useRef(null);
-    const tileTemplateRef = useRef(mode === 'meteo' ? WINDY_TEMPLATE : OSM_TEMPLATE);
+    const lastRenderRef = useRef({ position: null, zoom: null });
+    const frameCountRef = useRef(0);
+    // Ordered tile layers: base map first, optional overlays on top
+    const layersRef = useRef(
+        mode === 'meteo'
+            ? [
+                { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: BASE_MAP_FILTER },
+                { template: WINDY_TEMPLATE, maxZoom: WINDY_MAX_ZOOM, filter: WINDY_FILTER },
+              ]
+            : [
+                { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: BASE_MAP_FILTER },
+                { template: SEAMARK_TEMPLATE, maxZoom: SEAMARK_MAX_ZOOM },
+              ]
+    );
     const { gl } = useThree();
 
-    // The size of the geometry will dynamically match the actual canvas spatial coverage
-    const [planeRadius, setPlaneRadius] = useState(AIS_MAX_METERS * AIS_SCALING_FACTOR);
+    // Same meters → scene-units factor as the AIS layer, so the map is to scale
+    const sceneScale = configService.get('aisLengthScalingFactor') || 0.7;
+
+    // Zoom level adapts to the camera distance (LOD): harbor detail when close,
+    // wide area when zoomed out.
+    const [zoomLevel, setZoomLevel] = useState(16);
+    const [planeRadius, setPlaneRadius] = useState(500);
 
     const skPosition = useSignalKPath('navigation.position');
+    const positionRef = useRef(null);
+    useEffect(() => { positionRef.current = skPosition; }, [skPosition]);
 
     const hasPosition = skPosition?.latitude != null && skPosition?.longitude != null;
 
-    const scheduleRedraw = useCallback(() => {
+    // ── Adaptive zoom from camera distance (checked ~4×/s) ───────────────────
+    useFrame(({ camera }) => {
+        frameCountRef.current++;
+        if (frameCountRef.current % 15 !== 0) return;
+        const position = positionRef.current;
+        if (position?.latitude == null) return;
+
+        const camDistMeters = camera.position.length() / sceneScale;
+        // Canvas covers ~4× the camera distance: sharp under the camera, with margin.
+        // Meteo keeps a wide fixed minimum so low-zoom wind/rain overlays are visible.
+        const minCoverage = mode === 'meteo' ? METEO_MIN_COVERAGE : CHART_MIN_COVERAGE;
+        const coverage = Math.min(Math.max(camDistMeters * 4, minCoverage), 60000);
+        const baseMax = mode === 'meteo'
+            ? METEO_MAX_ZOOM
+            : (layersRef.current[0]?.template === OSM_TEMPLATE ? OSM_MAX_ZOOM : CUSTOM_MAX_ZOOM);
+        const z = zoomForCoverage(coverage, position.latitude, baseMax);
+        if (z !== zoomLevel) setZoomLevel(z);
+    });
+
+    const scheduleRedraw = useCallback((force = false) => {
         if (renderPendingRef.current) return;
-        if (skPosition?.latitude == null || skPosition?.longitude == null) return;
-        const position = skPosition;
+        const position = positionRef.current;
+        if (position?.latitude == null || position?.longitude == null) return;
 
-        const last = lastPositionRef.current;
-        if (last) {
-            const dLat = Math.abs(position.latitude - last.latitude);
-            const dLon = Math.abs(position.longitude - last.longitude);
-            if (dLat < 0.0005 && dLon < 0.0005) return; // Only redraw if moved ~50m
+        const last = lastRenderRef.current;
+        if (!force && last.position && last.zoom === zoomLevel) {
+            // Redraw once the boat has moved ~48 canvas pixels at current zoom
+            const mpp = metersPerPixel(position.latitude, zoomLevel);
+            const thresholdDeg = (mpp * 48) / 111320;
+            const dLat = Math.abs(position.latitude - last.position.latitude);
+            const dLon = Math.abs(position.longitude - last.position.longitude);
+            if (dLat < thresholdDeg && dLon < thresholdDeg) return;
         }
-
-        renderPendingRef.current = true;
-        lastPositionRef.current = position;
 
         const canvas = canvasRef.current;
         const texture = textureRef.current;
-        if (!canvas || !texture) {
-            renderPendingRef.current = false;
-            return;
-        }
+        if (!canvas || !texture) return;
 
-        const zoom = computeZoom(AIS_MAX_METERS, position.latitude);
+        renderPendingRef.current = true;
+        lastRenderRef.current = { position, zoom: zoomLevel };
 
-        // Calculate EXACT physical size of the canvas at this zoom level to prevent stretching/deformation
-        const actualMetersPerPixel = (156543.03 * Math.cos((position.latitude * Math.PI) / 180)) / Math.pow(2, zoom);
-        const actualWidthMeters = CANVAS_SIZE * actualMetersPerPixel;
-        const newPlaneRadius = (actualWidthMeters / 2) * AIS_SCALING_FACTOR;
+        // Exact physical size of the canvas at this zoom → plane size in scene units
+        const widthMeters = CANVAS_SIZE * metersPerPixel(position.latitude, zoomLevel);
+        setPlaneRadius((widthMeters / 2) * sceneScale);
 
-        setPlaneRadius(newPlaneRadius);
-
-        renderTilesToCanvas(canvas, position, zoom, tileTemplateRef.current).then(() => {
+        renderTilesToCanvas(canvas, position, zoomLevel, layersRef.current).then(() => {
             texture.needsUpdate = true;
             renderPendingRef.current = false;
         });
-    }, [skPosition]);
+    }, [zoomLevel, sceneScale]);
 
     useEffect(() => {
         const canvas = document.createElement('canvas');
@@ -175,10 +276,28 @@ export default function MapPlane3D({ mode = 'chart' }) {
         };
     }, [gl]);
 
+    // ── Resolve tile layers (SignalK charts for chart mode, OSM fallback) ────
     useEffect(() => {
         if (mode === 'meteo') {
-            tileTemplateRef.current = WINDY_TEMPLATE;
-            scheduleRedraw();
+            layersRef.current = [
+                { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: BASE_MAP_FILTER },
+                { template: WINDY_TEMPLATE, maxZoom: WINDY_MAX_ZOOM, filter: WINDY_FILTER },
+            ];
+            scheduleRedraw(true);
+            // Add the latest rain radar frame (free, no API key)
+            fetch(RAINVIEWER_INDEX)
+                .then((r) => r.json())
+                .then((data) => {
+                    const frames = data?.radar?.past;
+                    const path = frames?.[frames.length - 1]?.path;
+                    if (!path) return;
+                    layersRef.current = [
+                        ...layersRef.current,
+                        { template: `https://tilecache.rainviewer.com${path}/256/{z}/{x}/{y}/2/1_1.png`, maxZoom: RAIN_MAX_ZOOM },
+                    ];
+                    scheduleRedraw(true);
+                })
+                .catch(() => { /* no radar overlay */ });
             return;
         }
 
@@ -196,20 +315,24 @@ export default function MapPlane3D({ mode = 'chart' }) {
                     const url = chart.tilemapUrl.includes('{z}')
                         ? chart.tilemapUrl
                         : `${chart.tilemapUrl}/{z}/{x}/{y}.png`;
-                    tileTemplateRef.current = url;
+                    layersRef.current = [{ template: url, maxZoom: CUSTOM_MAX_ZOOM }];
                 }
-                scheduleRedraw();
+                scheduleRedraw(true);
             })
             .catch(() => {
-                tileTemplateRef.current = OSM_TEMPLATE;
-                scheduleRedraw();
+                layersRef.current = [
+                    { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: BASE_MAP_FILTER },
+                    { template: SEAMARK_TEMPLATE, maxZoom: SEAMARK_MAX_ZOOM },
+                ];
+                scheduleRedraw(true);
             });
     }, [mode, scheduleRedraw]);
 
+    // Redraw when position moves past threshold or the LOD zoom changes
     useEffect(() => {
         scheduleRedraw();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [skPosition, mode]);
+    }, [skPosition, mode, zoomLevel]);
 
     useEffect(() => {
         if (meshRef.current && textureRef.current) {
@@ -220,7 +343,7 @@ export default function MapPlane3D({ mode = 'chart' }) {
 
     // Use PlaneGeometry to avoid 'arrondie' deformation, UVs map 1:1 to canvas
     const geometry = useMemo(() => new THREE.PlaneGeometry(planeRadius * 2, planeRadius * 2), [planeRadius]);
-    
+
     const material = useMemo(() => new THREE.MeshBasicMaterial({
         side: THREE.DoubleSide,
         transparent: false,

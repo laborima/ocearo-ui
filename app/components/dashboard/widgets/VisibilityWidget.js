@@ -40,7 +40,7 @@ export default function VisibilityWidget() {
 
   const getVisibilityColor = (distance) => {
     if (distance < 1) return 'text-oRed';
-    if (distance < 2) return 'text-orange-400';
+    if (distance < 2) return 'text-oYellow';
     if (distance < 5) return 'text-oYellow';
     if (distance < 10) return 'text-oBlue';
     return 'text-oGreen';
@@ -112,7 +112,7 @@ export default function VisibilityWidget() {
             <div className="text-hud-muted text-xs font-black tracking-tighter">0</div>
             <div className="flex-1 bg-hud-elevated rounded-full h-1 overflow-hidden shadow-inner">
               <div 
-                className={`h-full transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${
+                className={`h-full transition-all duration-1000 ${
                   visibilityData.distance < 1 ? 'bg-oRed' : 
                   visibilityData.distance < 5 ? 'bg-oYellow' : 
                   visibilityData.distance < 10 ? 'bg-oBlue' : 'bg-oGreen'
