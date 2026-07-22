@@ -18,6 +18,7 @@ import * as MotorUtils from '../utils/MotorUtils';
 import { CircularGauge, BarGauge, CompactDataField, PrimaryGauge } from './GaugeComponents';
 // Import fuel log modal and utilities
 import FuelLogModal from './FuelLogModal';
+import MaintenanceView from './MaintenanceView';
 import { useTranslation } from 'react-i18next';
 import { 
   addFuelLogEntry, 
@@ -26,6 +27,20 @@ import {
   estimateTankLevel,
   handleOcearoCoreError 
 } from '../utils/OcearoCoreUtils';
+
+// Engine discrete-status notifications (NMEA2000 PGN 127489 via engine gateway)
+const ENGINE_NOTIFICATION_TYPES = [
+  'chargeIndicator', 'checkEngine', 'commError', 'eGRSystem', 'emergencyStopMode',
+  'highBoostPressure', 'lowCoolantLevel', 'lowFuelPressure', 'lowOilLevel',
+  'lowOilPressure', 'lowSystemVoltage', 'maintenanceNeeded', 'neutralStartProtect',
+  'overTemperature', 'powerReduction', 'preheatIndicator', 'revLimitExceeded',
+  'shuttingDown', 'subOrSecondaryThrottle', 'throttlePositionSensor', 'warningLevel1',
+  'warningLevel2', 'waterFlow', 'waterInFuel',
+  'transmission.overTemperature', 'transmission.lowOilPressure'
+];
+
+const ALARM_STATES = ['alarm', 'emergency'];
+const WARNING_STATES = ['alert', 'warn', 'warning', 'caution'];
 
 // Helper component for displaying individual data points
 const DataField = ({ label, value, unit, icon, statusClass = 'text-hud-main' }) => {
@@ -67,6 +82,9 @@ const MotorView = () => {
     instances.forEach(inst => {
       fields.forEach(field => {
         paths.push(`propulsion.${inst}.${field}`);
+      });
+      ENGINE_NOTIFICATION_TYPES.forEach(type => {
+        paths.push(`notifications.propulsion.${inst}.${type}`);
       });
     });
     
@@ -175,6 +193,34 @@ const MotorView = () => {
     };
   }, [selectedEngine, getEngineValue, getSKValue]);
   
+  // Engine notifications (used by the warnings tab, the tab badge and the alarm banner)
+  const engineNotifications = useMemo(() => {
+    const instance = selectedEngine;
+    const list = [];
+    ENGINE_NOTIFICATION_TYPES.forEach(type => {
+      let notification = getSKValue(`notifications.propulsion.${instance}.${type}`);
+
+      if (!notification && instance === '0') {
+        notification = getSKValue(`notifications.propulsion.port.${type}`)
+                   ?? getSKValue(`notifications.propulsion.main.${type}`);
+      } else if (!notification && instance === '1') {
+        notification = getSKValue(`notifications.propulsion.starboard.${type}`);
+      }
+
+      if (notification && typeof notification === 'object') {
+        list.push({ type, ...notification });
+      }
+    });
+    return list;
+  }, [selectedEngine, getSKValue]);
+
+  const activeIssues = useMemo(
+    () => engineNotifications.filter(n => n.state && n.state !== 'normal' && n.state !== 'nominal'),
+    [engineNotifications]
+  );
+  const hasAlarms = activeIssues.some(n => ALARM_STATES.includes(n.state));
+  const hasWarnings = activeIssues.some(n => WARNING_STATES.includes(n.state));
+
   const houseBatteryCurrentRaw = getSKValue('electrical.batteries.1.current');
   const houseBatteryCurrent = typeof houseBatteryCurrentRaw === 'number'
     ? Math.round(houseBatteryCurrentRaw * 10) / 10
@@ -271,7 +317,7 @@ const MotorView = () => {
       <div className="flex border-b border-hud bg-hud-bg">
         {[
           { id: 'engine', label: t('motor.engine'), icon: faCar },
-          { id: 'transmission', label: t('motor.transmission'), icon: faCogs },
+          { id: 'maintenance', label: t('motor.maintenance'), icon: faWrench },
           { id: 'electrical', label: t('motor.electrical'), icon: faBolt },
           { id: 'fuel', label: t('motor.fuel'), icon: faGasPump },
           { id: 'warnings', label: t('motor.warnings'), icon: faExclamationTriangle }
@@ -287,9 +333,29 @@ const MotorView = () => {
           >
             <FontAwesomeIcon icon={tab.icon} className="mr-2" />
             {tab.label}
+            {tab.id === 'warnings' && (hasAlarms || hasWarnings) && (
+              <span className={`ml-2 w-2 h-2 rounded-full animate-soft-pulse ${hasAlarms ? 'bg-oRed' : 'bg-oYellow'}`} />
+            )}
           </button>
         ))}
       </div>
+
+      {/* Persistent alarm banner — visible whatever the active tab */}
+      {activeIssues.length > 0 && activeTab !== 'warnings' && (
+        <button
+          onClick={() => setActiveTab('warnings')}
+          className={`w-full text-left px-4 py-2 text-xs font-black uppercase tracking-widest flex items-center border-b ${
+            hasAlarms
+              ? 'bg-oRed/15 border-oRed/30 text-oRed animate-soft-pulse'
+              : 'bg-oYellow/15 border-oYellow/30 text-oYellow'
+          }`}
+        >
+          <FontAwesomeIcon icon={faExclamationTriangle} className="mr-3" />
+          <span className="truncate">
+            {activeIssues.map(n => n.message || n.type.replace(/([A-Z])/g, ' $1').trim()).join(' — ')}
+          </span>
+        </button>
+      )}
 
       {/* Tab Content */}
       <div className="flex-1 min-h-0 overflow-auto scrollbar-hide">
@@ -330,8 +396,8 @@ const MotorView = () => {
                 unit="RPM"
                 icon={faTachometerAlt}
                 max={4000}
-                warningThreshold={3000}
-                criticalThreshold={3500}
+                warningThreshold={3200}
+                criticalThreshold={3600}
               />
               <div className="tesla-card p-4 text-center tesla-hover flex flex-col justify-center bg-hud-bg border border-hud">
                 <FontAwesomeIcon icon={faClock} className="text-lg text-hud-dim mb-2 opacity-50" />
@@ -378,8 +444,8 @@ const MotorView = () => {
                   min={0}
                   max={120}
                   icon={faSnowflake}
-                  warningThreshold={85}
-                  criticalThreshold={95}
+                  warningThreshold={95}
+                  criticalThreshold={100}
                   size={90}
                 />
                 <CircularGauge
@@ -393,15 +459,16 @@ const MotorView = () => {
                   criticalThreshold={130}
                   size={90}
                 />
+                {/* Wet exhaust probe (1-Wire on the exhaust hose): >60°C means raw water flow loss */}
                 <CircularGauge
                   label={t('motor.exhaust')}
                   value={engineData.exhaustTemp}
                   unit="°C"
                   min={0}
-                  max={600}
+                  max={120}
                   icon={faFire}
-                  warningThreshold={450}
-                  criticalThreshold={550}
+                  warningThreshold={60}
+                  criticalThreshold={70}
                   size={90}
                 />
                 <CircularGauge
@@ -432,8 +499,8 @@ const MotorView = () => {
                   min={0}
                   max={6}
                   icon={faOilCan}
-                  warningThreshold={2.5}
-                  criticalThreshold={2}
+                  warningThreshold={1.5}
+                  criticalThreshold={1}
                   reversed={true}
                   showMinMax={true}
                 />
@@ -471,11 +538,17 @@ const MotorView = () => {
             </div>
 
             {/* Additional Engine Info */}
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               <CompactDataField
                 label={t('motor.state')}
                 value={engineData.state || t('motor.unknown')}
                 icon={faCar}
+              />
+              <CompactDataField
+                label={t('motor.alternatorOutput')}
+                value={engineData.alternatorVoltage?.toFixed?.(1) ?? engineData.alternatorVoltage}
+                unit="V"
+                icon={faBolt}
               />
               <CompactDataField
                 label={t('motor.tilt')}
@@ -489,75 +562,31 @@ const MotorView = () => {
                 unit="L/h"
                 icon={faGasPump}
               />
+              <CompactDataField
+                label={t('motor.transmissionGear')}
+                value={engineData.gear === -1 ? t('motor.reverse') :
+                       engineData.gear === 0 ? t('motor.neutral') :
+                       engineData.gear ? `${t('motor.forward')} ${engineData.gear}` : null}
+                icon={faCogs}
+              />
+              <CompactDataField
+                label={t('motor.transOilPressure')}
+                value={engineData.transOilPressure}
+                unit="bar"
+                icon={faOilCan}
+              />
+              <CompactDataField
+                label={t('motor.transOilTemp')}
+                value={engineData.transOilTemp}
+                unit="°C"
+                icon={faTemperatureHalf}
+              />
             </div>
           </div>
         )}
 
-        {activeTab === 'transmission' && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="tesla-card p-4 text-center tesla-hover flex flex-col justify-center bg-hud-bg border border-hud">
-                <FontAwesomeIcon icon={faCogs} className="text-xl text-hud-dim mb-2 opacity-50" />
-                <div className="text-hud-secondary text-xs font-black uppercase mb-2 tracking-[0.2em]">{t('motor.transmissionGear')}</div>
-                <div className="text-3xl font-black text-hud-main uppercase gliding-value tracking-tighter">
-                  {engineData.gear === -1 ? t('motor.reverse') : 
-                   engineData.gear === 0 ? t('motor.neutral') : 
-                   engineData.gear ? `${t('motor.forward')} ${engineData.gear}` : t('common.na')}
-                </div>
-              </div>
-              
-              <CircularGauge
-                label={t('motor.oilPressure')}
-                value={engineData.transOilPressure}
-                unit="bar"
-                min={0}
-                max={6}
-                icon={faOilCan}
-                warningThreshold={2.5}
-                criticalThreshold={2}
-                reversed={true}
-                size={120}
-              />
-              
-              <CircularGauge
-                label={t('motor.oilTemperature')}
-                value={engineData.transOilTemp}
-                unit="°C"
-                min={0}
-                max={120}
-                icon={faTemperatureHalf}
-                warningThreshold={85}
-                criticalThreshold={95}
-                size={120}
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <BarGauge
-                label={t('motor.hydraulicPressure')}
-                value={engineData.transOilPressure}
-                unit="bar"
-                min={0}
-                max={6}
-                icon={faOilCan}
-                warningThreshold={2.5}
-                criticalThreshold={2}
-                reversed={true}
-                showMinMax={true}
-              />
-              <BarGauge
-                label={t('motor.thermalAnalysis')}
-                value={engineData.transOilTemp}
-                unit="°C"
-                min={0}
-                max={120}
-                icon={faTemperatureHalf}
-                warningThreshold={85}
-                criticalThreshold={95}
-                showMinMax={true}
-              />
-            </div>
-          </div>
+        {activeTab === 'maintenance' && (
+          <MaintenanceView currentEngineHours={currentEngineHours} />
         )}
 
         {activeTab === 'electrical' && (
@@ -900,36 +929,8 @@ const MotorView = () => {
               </div>
               
               {(() => {
-                const instance = selectedEngine;
-                const notificationTypes = [
-                  'chargeIndicator', 'checkEngine', 'commError', 'eGRSystem', 'emergencyStopMode',
-                  'highBoostPressure', 'lowCoolantLevel', 'lowFuelPressure', 'lowOilLevel', 
-                  'lowOilPressure', 'lowSystemVoltage', 'maintenanceNeeded', 'neutralStartProtect',
-                  'overTemperature', 'powerReduction', 'preheatIndicator', 'revLimitExceeded',
-                  'shuttingDown', 'subOrSecondaryThrottle', 'throttlePositionSensor', 'warningLevel1',
-                  'warningLevel2', 'waterFlow', 'waterInFuel'
-                ];
-                
-                const notifications = [];
-                notificationTypes.forEach(type => {
-                  let notification = getSKValue(`notifications.propulsion.${instance}.${type}`);
-                  
-                  if (!notification && instance === '0') {
-                    notification = getSKValue(`notifications.propulsion.port.${type}`) 
-                               ?? getSKValue(`notifications.propulsion.main.${type}`);
-                  } else if (!notification && instance === '1') {
-                    notification = getSKValue(`notifications.propulsion.starboard.${type}`);
-                  }
-                  
-                  if (notification && typeof notification === 'object') {
-                    notifications.push({ type, ...notification });
-                  }
-                });
-                
-                const hasWarnings = notifications.some(n => n.state === 'alert' || n.state === 'warn');
-                const hasAlarms = notifications.some(n => n.state === 'alarm' || n.state === 'emergency');
-                const activeIssues = notifications.filter(n => n.state !== 'normal');
-                
+                const notifications = engineNotifications;
+
                 if (activeIssues.length === 0) {
                   return (
                     <div className="space-y-4">
@@ -968,7 +969,7 @@ const MotorView = () => {
                           {t('motor.criticalNodeAlarms')}
                         </h4>
                         <div className="space-y-4">
-                          {notifications.filter(n => n.state === 'alarm' || n.state === 'emergency').map((n, idx) => (
+                          {notifications.filter(n => ALARM_STATES.includes(n.state)).map((n, idx) => (
                             <div key={idx} className="text-hud-main text-xs font-black uppercase tracking-widest bg-oRed/10 p-4 rounded-sm tesla-hover border border-oRed/20">
                               <div className="flex justify-between items-center">
                                 <span className="text-xs">{n.type.replace(/([A-Z])/g, ' $1').trim()}</span>
@@ -988,7 +989,7 @@ const MotorView = () => {
                           {t('motor.systemAnomalies')}
                         </h4>
                         <div className="space-y-4">
-                          {notifications.filter(n => n.state === 'alert' || n.state === 'warn').map((n, idx) => (
+                          {notifications.filter(n => WARNING_STATES.includes(n.state)).map((n, idx) => (
                             <div key={idx} className="text-hud-main text-xs font-black uppercase tracking-widest bg-oYellow/10 p-4 rounded-sm tesla-hover border border-oYellow/20">
                               <div className="flex justify-between items-center">
                                 <span className="text-xs">{n.type.replace(/([A-Z])/g, ' $1').trim()}</span>
