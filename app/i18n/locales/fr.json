@@ -537,6 +537,7 @@
     "maintenance": "Maintenance",
     "transOilPressure": "Huile inverseur",
     "transOilTemp": "Temp. inverseur",
+    "engineRoom": "Cale moteur",
     "transmission": "Transmission",
     "electrical": "Électrique",
     "fuel": "Carburant",

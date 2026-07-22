@@ -537,6 +537,7 @@
     "maintenance": "Maintenance",
     "transOilPressure": "Gear oil pressure",
     "transOilTemp": "Gear oil temp",
+    "engineRoom": "Engine room",
     "transmission": "Transmission",
     "electrical": "Electrical",
     "fuel": "Fuel",

@@ -61,12 +61,24 @@ export const DEFAULT_ENGINE_PRESET = 'volvo-d1-20';
 
 const STORAGE_KEY = 'ocearo_maintenance';
 
+// Seed used when nothing is stored yet: last full yearly service of the boat.
+// Editable afterwards from the maintenance tab (stored in localStorage).
+const INITIAL_SEED_SERVICE = { hours: 525, date: '2026-06-15' };
+const INITIAL_SEED = {
+  engineModel: DEFAULT_ENGINE_PRESET,
+  lastDone: Object.fromEntries(
+    ['oilChange', 'oilFilter', 'fuelFilter', 'fuelPreFilter', 'impeller',
+     'driveBelt', 'airFilter', 'anodes', 'saildriveOil', 'engineMounts']
+      .map(id => [id, { ...INITIAL_SEED_SERVICE }])
+  ),
+};
+
 export const loadMaintenanceState = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch (_) { /* storage unavailable */ }
-  return { engineModel: DEFAULT_ENGINE_PRESET, lastDone: {} };
+  return INITIAL_SEED;
 };
 
 export const saveMaintenanceState = (state) => {

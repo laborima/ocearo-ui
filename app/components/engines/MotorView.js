@@ -36,7 +36,14 @@ const ENGINE_NOTIFICATION_TYPES = [
   'overTemperature', 'powerReduction', 'preheatIndicator', 'revLimitExceeded',
   'shuttingDown', 'subOrSecondaryThrottle', 'throttlePositionSensor', 'warningLevel1',
   'warningLevel2', 'waterFlow', 'waterInFuel',
-  'transmission.overTemperature', 'transmission.lowOilPressure'
+  'transmission.overTemperature', 'transmission.lowOilPressure',
+  // Zone notifications raised by the SignalK zones plugin on measured values
+  'temperature', 'exhaustTemperature'
+];
+
+// Zone notifications on non-propulsion paths that still concern the engine
+const EXTRA_NOTIFICATION_PATHS = [
+  'notifications.environment.inside.engineRoom.temperature'
 ];
 
 const ALARM_STATES = ['alarm', 'emergency'];
@@ -88,6 +95,9 @@ const MotorView = () => {
       });
     });
     
+    // Engine room temperature (bilge probe) + its zone notification
+    paths.push('environment.inside.engineRoom.temperature', ...EXTRA_NOTIFICATION_PATHS);
+
     // Add electrical and tank paths
     paths.push(
       'electrical.batteries.0.voltage', 'electrical.batteries.0.current',
@@ -172,6 +182,7 @@ const MotorView = () => {
       load: MotorUtils.ratioToPercent(getEngineValue('load')),
       torque: MotorUtils.ratioToPercent(getEngineValue('torque')),
       exhaustTemp: MotorUtils.kelvinToCelsius(exhaustTemperatureKelvin),
+      engineRoomTemp: MotorUtils.kelvinToCelsius(getSKValue('environment.inside.engineRoom.temperature')),
       intakeTemp: MotorUtils.kelvinToCelsius(getEngineValue('intakeManifoldTemperature')),
       tilt: MotorUtils.radiansToDegrees(getEngineValue('tilt')),
       state: getEngineValue('state'),
@@ -209,6 +220,12 @@ const MotorView = () => {
 
       if (notification && typeof notification === 'object') {
         list.push({ type, ...notification });
+      }
+    });
+    EXTRA_NOTIFICATION_PATHS.forEach(path => {
+      const notification = getSKValue(path);
+      if (notification && typeof notification === 'object') {
+        list.push({ type: 'engineRoomTemperature', ...notification });
       }
     });
     return list;
@@ -459,15 +476,15 @@ const MotorView = () => {
                   criticalThreshold={130}
                   size={90}
                 />
-                {/* Wet exhaust probe (1-Wire on the exhaust hose): >60°C means raw water flow loss */}
+                {/* Engine room 1-Wire probe: >55°C means cooling or exhaust trouble */}
                 <CircularGauge
-                  label={t('motor.exhaust')}
-                  value={engineData.exhaustTemp}
+                  label={t('motor.engineRoom')}
+                  value={engineData.engineRoomTemp}
                   unit="°C"
                   min={0}
                   max={120}
                   icon={faFire}
-                  warningThreshold={60}
+                  warningThreshold={55}
                   criticalThreshold={70}
                   size={90}
                 />
