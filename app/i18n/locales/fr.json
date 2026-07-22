@@ -279,6 +279,8 @@
     "waterTemperature": "Température de l'eau",
     "airTemperature": "Température de l'air",
     "exhaustTemperature": "Température d'échappement",
+    "engineRoomTemperature": "Cale moteur",
+    "lazaretteTemperature": "Coffre arrière",
     "fridgeTemperature": "Température du frigo"
   },
   "environmental": {

@@ -66,11 +66,14 @@ const STORAGE_KEY = 'ocearo_maintenance';
 const INITIAL_SEED_SERVICE = { hours: 525, date: '2026-06-15' };
 const INITIAL_SEED = {
   engineModel: DEFAULT_ENGINE_PRESET,
-  lastDone: Object.fromEntries(
-    ['oilChange', 'oilFilter', 'fuelFilter', 'fuelPreFilter', 'impeller',
-     'driveBelt', 'airFilter', 'anodes', 'saildriveOil', 'engineMounts']
-      .map(id => [id, { ...INITIAL_SEED_SERVICE }])
-  ),
+  lastDone: {
+    ...Object.fromEntries(
+      ['oilChange', 'oilFilter', 'fuelFilter', 'fuelPreFilter', 'impeller',
+       'driveBelt', 'airFilter', 'anodes', 'saildriveOil', 'engineMounts']
+        .map(id => [id, { ...INITIAL_SEED_SERVICE }])
+    ),
+    saildriveDiaphragm: { hours: null, date: '2023-07-03' },
+  },
 };
 
 export const loadMaintenanceState = () => {

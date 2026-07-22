@@ -279,6 +279,8 @@
     "waterTemperature": "Water Temperature",
     "airTemperature": "Air Temperature",
     "exhaustTemperature": "Exhaust Temperature",
+    "engineRoomTemperature": "Engine room",
+    "lazaretteTemperature": "Aft locker",
     "fridgeTemperature": "Fridge Temperature"
   },
   "environmental": {

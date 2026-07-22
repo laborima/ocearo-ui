@@ -9,6 +9,8 @@ import { useTranslation } from 'react-i18next';
 
 const TEMPERATURE_CONFIG = {
   airPath: 'environment.outside.temperature',
+  // Sheltered probe used as ambient fallback when no true outside sensor exists
+  airFallbackPath: 'environment.inside.lazarette.temperature',
   seaPath: 'environment.water.temperature',
   transform: value => value != null ? convertTemperatureUnit(value) : null
 };
@@ -18,7 +20,9 @@ const TemperatureWidget = React.memo(() => {
   const debugMode = configService.get('debugMode');
   const prevRef = useRef({ airTemp: null, seaTemp: null });
   
-  const airValue = useSignalKPath(TEMPERATURE_CONFIG.airPath);
+  const airOutsideValue = useSignalKPath(TEMPERATURE_CONFIG.airPath);
+  const airFallbackValue = useSignalKPath(TEMPERATURE_CONFIG.airFallbackPath);
+  const airValue = airOutsideValue ?? airFallbackValue;
   const seaValue = useSignalKPath(TEMPERATURE_CONFIG.seaPath);
 
   const temperatureData = useMemo(() => {
