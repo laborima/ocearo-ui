@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ocearo — Validation modèles AIS low-poly</title>
+<style>
+  :root { --bg:#0e0e0e; --panel:rgba(255,255,255,.03); --border:rgba(255,255,255,.08);
+          --text:#fff; --muted:rgba(255,255,255,.45); --blue:#09bfff; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--bg); color:var(--text);
+              font-family:Arial, Helvetica, sans-serif; }
+  /* The single WebGL canvas sits behind the table; each cell is rendered into via scissor */
+  #gl { position:fixed; inset:0; width:100vw; height:100vh; z-index:0; pointer-events:none; }
+  .wrap { position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:24px 16px 80px; }
+  h1 { font-size:18px; font-weight:900; letter-spacing:.18em; text-transform:uppercase; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:12px; font-weight:900; letter-spacing:.12em;
+         text-transform:uppercase; margin-bottom:18px; }
+  .note { background:var(--panel); border:1px solid var(--border); border-radius:10px;
+          padding:12px 16px; font-size:12px; line-height:1.7; color:var(--muted); margin-bottom:22px; }
+  .note b { color:var(--text); }
+  .note code { color:var(--blue); background:rgba(9,191,255,.08); padding:1px 6px; border-radius:4px; }
+  table { width:100%; border-collapse:separate; border-spacing:8px; }
+  thead th { font-size:11px; font-weight:900; letter-spacing:.2em; text-transform:uppercase;
+             color:var(--muted); padding:6px 4px 10px; text-align:center; }
+  thead th:first-child { text-align:left; }
+  td.type { width:150px; vertical-align:middle; }
+  td.type .lab { font-size:13px; font-weight:900; text-transform:uppercase; letter-spacing:.06em; }
+  td.type .code { font-size:11px; font-weight:900; color:var(--blue); margin-top:4px; }
+  td.cell { width:auto; height:230px; padding:0; }
+  .vp { position:relative; height:230px; border:1px solid var(--border); border-radius:10px;
+        overflow:hidden; background:var(--panel); }
+  .vp .badge { position:absolute; left:8px; bottom:8px; z-index:2; font-size:10px; font-weight:900;
+               letter-spacing:.12em; text-transform:uppercase; padding:3px 8px; border-radius:5px;
+               border:1px solid var(--border); background:rgba(0,0,0,.35); color:var(--muted); }
+  .vp .badge.ok    { color:#0fcd4f; border-color:rgba(15,205,79,.3); }
+  .vp .badge.proc  { color:var(--blue); border-color:rgba(9,191,255,.3); }
+  .vp .badge.miss  { color:#ffbe00; border-color:rgba(255,190,0,.3); }
+  .vp .badge.err   { color:#cc4444; border-color:rgba(204,68,68,.3); }
+  .legend { margin-top:20px; color:var(--muted); font-size:11px; letter-spacing:.08em; }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div class="wrap">
+  <h1>Validation des modèles AIS low-poly</h1>
+  <div class="sub">11 types de navire · 3 sources · tourne-disque automatique</div>
+
+  <div class="note">
+    <b>But :</b> comparer, par type AIS, le modèle <b>actuellement</b> affiché dans l'app,
+    celui <b>généré par Meshy</b>, et la version <b>procédurale</b> générée en code.<br>
+    <b>Meshy :</b> dépose les <code>.glb</code> générés dans <code>public/ais-preview/meshy/</code>
+    nommés <code>ais-20.glb</code>, <code>ais-30.glb</code>, … (voir le <code>README</code> du dossier).
+    Tant qu'absents, la colonne affiche « à générer ».<br>
+    <b>Pour servir la page :</b> depuis la racine du projet <code>npx serve public</code> puis ouvrir
+    <code>/ais-preview/</code> (ou après <code>npm run build</code>, via <code>out/</code>).
+  </div>
+
+  <table id="grid">
+    <thead>
+      <tr>
+        <th>Type AIS</th>
+        <th>Actuellement</th>
+        <th>Flotte blanche (web)</th>
+        <th>Généré par Meshy</th>
+        <th>Procédural (moi)</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <div class="legend">Astuce : chaque vignette tourne automatiquement pour inspecter la silhouette sous tous les angles.</div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.185.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.185.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { AIS_TYPES, createVessel } from './vessels.js';
+
+// ── Renderer (single context, scissored per cell) ────────────────────────────
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight, false);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+// ── GLTF loader with local DRACO decoders (../draco served from public/) ──────
+const draco = new DRACOLoader().setDecoderPath('../draco/');
+const gltfLoader = new GLTFLoader().setDRACOLoader(draco);
+
+const glbCache = new Map(); // url -> Promise<Object3D>
+function loadGLB(url) {
+  if (!glbCache.has(url)) {
+    glbCache.set(url, new Promise((resolve, reject) => {
+      gltfLoader.load(url, (g) => resolve(g.scene), undefined, reject);
+    }));
+  }
+  return glbCache.get(url).then((scene) => scene.clone(true));
+}
+
+// ── A "view" = one table cell with its own scene + camera ────────────────────
+const views = [];
+const FIT = 6;       // normalize each model so its largest dimension == FIT
+const CAM_DIST = 9.2;
+
+function makeScene() {
+  const scene = new THREE.Scene();
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x223044, 1.05);
+  scene.add(hemi);
+  const dir = new THREE.DirectionalLight(0xffffff, 1.5);
+  dir.position.set(5, 8, 6);
+  scene.add(dir);
+  const dir2 = new THREE.DirectionalLight(0x88bbff, 0.5);
+  dir2.position.set(-6, 3, -4);
+  scene.add(dir2);
+  return scene;
+}
+
+function normalize(obj) {
+  const bbox = new THREE.Box3().setFromObject(obj);
+  const size = new THREE.Vector3(); bbox.getSize(size);
+  const center = new THREE.Vector3(); bbox.getCenter(center);
+  const maxDim = Math.max(size.x, size.y, size.z) || 1;
+  obj.position.set(-center.x, -center.y, -center.z);
+  const wrap = new THREE.Group();
+  wrap.add(obj);
+  wrap.scale.setScalar(FIT / maxDim);
+  return wrap;
+}
+
+function setBadge(view, text, cls) {
+  view.badge.textContent = text;
+  view.badge.className = 'badge ' + cls;
+}
+
+function attach(view, object3d) {
+  const wrap = normalize(object3d);
+  view.obj = wrap;
+  view.scene.add(wrap);
+}
+
+// Force a uniform white material on every mesh so downloaded models (whatever
+// their original texture/colour) match the white low-poly style of the app "ship".
+const WHITE_MAT = new THREE.MeshStandardMaterial({ color: 0xeef2f5, roughness: 0.75, metalness: 0.1 });
+function whiteize(object3d) {
+  object3d.traverse((o) => { if (o.isMesh) o.material = WHITE_MAT; });
+  return object3d;
+}
+
+function makeCell(td) {
+  const vp = document.createElement('div');
+  vp.className = 'vp';
+  const badge = document.createElement('div');
+  badge.className = 'badge';
+  badge.textContent = '…';
+  vp.appendChild(badge);
+  td.appendChild(vp);
+
+  const scene = makeScene();
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+  camera.position.set(CAM_DIST * 0.58, CAM_DIST * 0.46, CAM_DIST * 0.75);
+  camera.lookAt(0, 0, 0);
+
+  const view = { el: vp, badge, scene, camera, obj: null };
+  views.push(view);
+  return view;
+}
+
+// License of each downloaded web model (Poly Pizza). Codes without an entry have no file.
+const WEB_LICENSE = { 30:'perso', 31:'CC-BY', 35:'CC-BY', 36:'perso', 37:'CC-BY', 40:'CC-BY', 50:'CC-BY', 60:'CC-BY', 70:'CC-BY', 80:'CC-BY' };
+
+// ── Build the table ──────────────────────────────────────────────────────────
+const rowsEl = document.getElementById('rows');
+
+for (const t of AIS_TYPES) {
+  const tr = document.createElement('tr');
+
+  const typeTd = document.createElement('td');
+  typeTd.className = 'type';
+  typeTd.innerHTML = `<div class="lab">${t.labelFr}</div><div class="code">AIS ${t.range}</div>`;
+  tr.appendChild(typeTd);
+
+  // 1) Current model used by the app today
+  const curTd = document.createElement('td'); curTd.className = 'cell';
+  const curView = makeCell(curTd);
+  tr.appendChild(curTd);
+  loadGLB(`../boats/${t.current}/assets/scene-transformed.glb`)
+    .then((obj) => { attach(curView, obj); setBadge(curView, t.current, 'ok'); })
+    .catch(() => setBadge(curView, 'indisponible', 'err'));
+
+  // 1b) Free downloaded model (Poly Pizza, CC0/CC-BY)
+  const webTd = document.createElement('td'); webTd.className = 'cell';
+  const webView = makeCell(webTd);
+  tr.appendChild(webTd);
+  loadGLB(`./web/ais-${t.code}.glb`)
+    .then((obj) => { attach(webView, whiteize(obj)); setBadge(webView, WEB_LICENSE[t.code] || 'web', 'ok'); })
+    .catch(() => setBadge(webView, 'indisponible', 'err'));
+
+  // 2) Meshy-generated model (may not exist yet)
+  const meshyTd = document.createElement('td'); meshyTd.className = 'cell';
+  const meshyView = makeCell(meshyTd);
+  tr.appendChild(meshyTd);
+  loadGLB(`./meshy/ais-${t.code}.glb`)
+    .then((obj) => { attach(meshyView, obj); setBadge(meshyView, 'meshy', 'ok'); })
+    .catch(() => setBadge(meshyView, 'à générer', 'miss'));
+
+  // 3) Procedural model (built in code)
+  const procTd = document.createElement('td'); procTd.className = 'cell';
+  const procView = makeCell(procTd);
+  tr.appendChild(procTd);
+  try { attach(procView, createVessel(t.key)); setBadge(procView, 'procédural', 'proc'); }
+  catch (e) { setBadge(procView, 'erreur', 'err'); console.error(e); }
+
+  rowsEl.appendChild(tr);
+}
+
+// ── Render loop (scissor each visible cell) ──────────────────────────────────
+let angle = 0;
+let last = performance.now();
+
+function resize() {
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
+}
+window.addEventListener('resize', resize);
+
+function render(now) {
+  requestAnimationFrame(render);
+  const dt = Math.min((now - last) / 1000, 0.1); last = now;
+  angle += dt * 0.6;
+
+  const H = renderer.domElement.clientHeight;
+  renderer.setScissorTest(false);
+  renderer.clear();
+  renderer.setScissorTest(true);
+
+  for (const v of views) {
+    const r = v.el.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > window.innerHeight || r.width === 0) continue;
+    const w = r.width, h = r.height;
+    const left = r.left;
+    const bottom = window.innerHeight - r.bottom;
+    renderer.setViewport(left, bottom, w, h);
+    renderer.setScissor(left, bottom, w, h);
+    v.camera.aspect = w / h;
+    v.camera.updateProjectionMatrix();
+    if (v.obj) v.obj.rotation.y = angle;
+    renderer.render(v.scene, v.camera);
+  }
+}
+requestAnimationFrame(render);
+</script>
+</body>
+</html>
