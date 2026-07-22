@@ -58,8 +58,11 @@ function Ocean3D() {
     waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping;
   }, [waterNormals]);
 
-  // Memoize plane geometry
-  const geom = useMemo(() => new THREE.PlaneGeometry(10000, 10000, 32, 32), []); 
+  // Dense enough for geometric swell near the boat (GPU vertex displacement)
+  const geom = useMemo(() => new THREE.PlaneGeometry(4000, 4000, 192, 192), []);
+
+  // Uniforms driving the swell displacement, shared with the patched shader
+  const waveUniformsRef = useRef({ waveAmp: { value: 0 }, waveTime: { value: 0 } });
 
   // Initial water configuration
   const config = useMemo(() => ({
@@ -75,13 +78,42 @@ function Ocean3D() {
     fog: scene.fog !== undefined,
     format: gl.outputColorSpace,
   }), [waterNormals, gl.outputColorSpace, scene.fog]);
-  
+
+  // Water mesh built imperatively so the shader can be patched before first
+  // compile: vertices are displaced by a wind-driven swell (GPU-side).
+  const water = useMemo(() => {
+    const w = new Water(geom, config);
+    const uniforms = waveUniformsRef.current;
+    w.material.onBeforeCompile = (shader) => {
+      shader.uniforms.waveAmp = uniforms.waveAmp;
+      shader.uniforms.waveTime = uniforms.waveTime;
+      shader.vertexShader = shader.vertexShader
+        .replace('void main() {', `
+          uniform float waveAmp;
+          uniform float waveTime;
+          vec3 swellDisplace(vec3 p) {
+            float fade = 1.0 - smoothstep(1500.0, 1900.0, max(abs(p.x), abs(p.y)));
+            float w1 = sin(p.x * 0.076 + p.y * 0.048 + waveTime * 1.15);
+            float w2 = sin(p.x * 0.041 - p.y * 0.052 + waveTime * 0.85);
+            float w3 = sin(-p.x * 0.022 + p.y * 0.030 + waveTime * 0.55);
+            p.z += waveAmp * fade * (0.55 * w1 + 0.30 * w2 + 0.15 * w3);
+            return p;
+          }
+          void main() {
+            vec3 wavePos = swellDisplace(position);
+        `)
+        .replace(/vec4\( position, 1.0 \)/g, 'vec4( wavePos, 1.0 )');
+    };
+    return w;
+  }, [geom, config]);
+
   // Main simulation loop
   useFrame((state, delta) => {
     // --- Cheap per-frame work: keep the waves animating smoothly ---
     if (ref.current) {
       ref.current.material.uniforms.time.value += delta * 0.5;
     }
+    waveUniformsRef.current.waveTime.value += delta;
 
     // --- Throttle the expensive astronomical / sky / color computation ---
     skyAccumRef.current += delta;
@@ -195,6 +227,12 @@ function Ocean3D() {
       waterUniforms.distortionScale.value = targetDistortion;
       waterUniforms.sunDirection.value.copy(sun).normalize();
 
+      // Geometric swell: significant wave height for a fully developed sea
+      // Hs ≈ 0.21·U²/g, capped at 6 m; amplitude = Hs/2 in scene units
+      const sceneScale = configService.get('aisLengthScalingFactor') || 0.7;
+      const hs = Math.min((0.21 * smoothedWindSpeedRef.current ** 2) / 9.81, 6);
+      waveUniformsRef.current.waveAmp.value = (hs / 2) * sceneScale;
+
       // Adjust water color based on night factor (reuse module-level colors, no per-frame alloc)
       // Day: Technical Deep Teal, Night: Ultra Dark Blue/Black
       _scratchWaterColor.copy(DAY_WATER_COLOR).lerp(NIGHT_WATER_COLOR, nightFactor);
@@ -279,9 +317,9 @@ function Ocean3D() {
         <meshBasicMaterial color={0xffffff} />
       </mesh>
       
-      <water
+      <primitive
         ref={ref}
-        args={[geom, config]}
+        object={water}
         rotation-x={-Math.PI / 2}
         position={[0, -0.3, 0]}
       />
