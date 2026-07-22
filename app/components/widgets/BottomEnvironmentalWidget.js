@@ -27,8 +27,9 @@ const ENVIRONMENTAL_MODES = {
     path: 'environment.inside.voc',
     icon: faWind,
     labelKey: 'environmental.voc',
-    format: (value) => `${value} ppm`,
-    transform: (value) => value
+    // BME680 reports gas resistance in ohms — higher means cleaner air
+    format: (value) => `${Math.round(value)} kΩ`,
+    transform: (value) => value / 1000
   }
 };
 

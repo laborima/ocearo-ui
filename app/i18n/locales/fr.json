@@ -322,6 +322,7 @@
     "airQualityMonitoring": "Qualité de l'air",
     "signalLossAir": "Perte de signal : capteurs air",
     "co2Concentration": "Concentration CO₂ (ppm)",
+    "vocGasResistance": "COV — résistance gaz",
     "atmosphere": "atmosphère",
     "pm25Particulate": "Particules PM2.5",
     "nominal": "Nom. :",
