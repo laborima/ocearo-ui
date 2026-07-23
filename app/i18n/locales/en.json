@@ -505,7 +505,25 @@
     "racingMode": "Racing Mode",
     "racingModeActive": "Racing Mode Active",
     "racingModeAISInfo": "AIS silent",
-    "racingAdvice": "RACING"
+    "racingAdvice": "RACING",
+    "types": {
+      "safety": "Safety",
+      "alert": "Alert",
+      "weather": "Weather",
+      "hourly_entry": "Hourly log",
+      "navigation": "Navigation",
+      "startup_analysis": "Briefing",
+      "briefing": "Briefing",
+      "mode_change": "Mode",
+      "maintenance": "Maintenance",
+      "racing": "Racing",
+      "logbook_review": "Logbook review",
+      "brain_memory": "Memory",
+      "startup": "Startup",
+      "shutdown": "Shutdown",
+      "test": "Test",
+      "performance": "Performance"
+    }
   },
   "maintenance": {
     "title": "Maintenance schedule",
