@@ -50,7 +50,9 @@ export const makeOcearoCoreApiCall = async (endpoint, options = {}) => {
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), config.timeout);
+  // Per-call timeout override (e.g. AI analyses take longer than plain reads)
+  const { timeout: timeoutOverride, ...fetchOptions } = options;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutOverride || config.timeout);
 
   try {
     const url = `${config.baseUrl}/plugins/ocearo-core${endpoint}`;
@@ -58,7 +60,7 @@ export const makeOcearoCoreApiCall = async (endpoint, options = {}) => {
     // Build headers with optional Basic Auth if username is provided
     const headers = {
       'Content-Type': 'application/json',
-      ...options.headers
+      ...fetchOptions.headers
     };
 
     // Always include credentials to support SignalK session cookies
@@ -83,7 +85,7 @@ export const makeOcearoCoreApiCall = async (endpoint, options = {}) => {
       headers,
       // Use omit if we have auth header, otherwise include to support session cookies
       credentials: credentialsOption,
-      ...options
+      ...fetchOptions
     });
 
     clearTimeout(timeoutId);
@@ -138,14 +140,18 @@ export const getOcearoCoreStatus = async () => {
  * Request manual analysis from OcearoCore
  */
 export const requestAnalysis = async (analysisType, data = {}) => {
-  const validTypes = ['weather', 'sail', 'alerts', 'ais', 'status', 'logbook'];
-  
+  // Keep in sync with the server-side list in ocearo-core /analyze
+  const validTypes = ['weather', 'sail', 'alerts', 'ais', 'status', 'logbook', 'route', 'racing', 'briefing'];
+
   if (!validTypes.includes(analysisType)) {
     throw new Error(`Invalid analysis type. Valid types: ${validTypes.join(', ')}`);
   }
 
   return await makeOcearoCoreApiCall('/analyze', {
     method: 'POST',
+    // AI analyses run through the on-board LLM: give them more headroom than
+    // the default 60 s before the client aborts.
+    timeout: 120000,
     body: JSON.stringify({
       type: analysisType,
       ...data
