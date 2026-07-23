@@ -66,18 +66,24 @@ export default function Home() {
         }
     }, []);
 
-    // Set initial view mode based on screen size
+    // Set initial view mode from the saved preference, falling back to screen size
     useEffect(() => {
         // Set view mode only on client-side to avoid hydration issues
-        setCurrentViewMode(isLargeScreen() ? VIEW_MODES.SPLIT : VIEW_MODES.BOAT);
+        const savedViewMode = configService.get('viewMode');
+        setCurrentViewMode(
+            Object.values(VIEW_MODES).includes(savedViewMode)
+                ? savedViewMode
+                : (isLargeScreen() ? VIEW_MODES.SPLIT : VIEW_MODES.BOAT)
+        );
         initialRenderComplete.current = true;
-        
+
         // Use debounced resize handler to improve performance
         let resizeTimer;
         const handleResize = () => {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
-                if (!isSettingsViewRef.current) {
+                // A user-saved layout wins over the automatic screen-size pick
+                if (!isSettingsViewRef.current && !configService.get('viewMode')) {
                     setCurrentViewMode(isLargeScreen() ? VIEW_MODES.SPLIT : VIEW_MODES.BOAT);
                 }
             }, 250); // Debounce resize events by 250ms
@@ -98,6 +104,7 @@ export default function Home() {
 
     const toggleViewMode = useCallback((view) => {
         setCurrentViewMode(view);
+        configService.set('viewMode', view);
     }, []);
 
     const bind = useDrag(({ movement: [x] }) => {
@@ -149,7 +156,8 @@ export default function Home() {
             isSettingsViewRef.current = true;
             setIsSettingsView(true);
             handleSetRightView('settings');
-            toggleViewMode(VIEW_MODES.APP);
+            // Settings is transient: switch layout without persisting it
+            setCurrentViewMode(VIEW_MODES.APP);
         }
     }, [rightView, currentViewMode, toggleViewMode, handleSetRightView]);
 

@@ -70,9 +70,11 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
             <BoatLighting />
 
             <group position={[0, -3, 0]} >
-                {/* Sailboat */}
-                <SailBoat3D 
-                    position={[0, 0, 0]} 
+                {/* Sailboat — the map plane (-0.1) sits 0.2 above the water
+                    plane (-0.3), so lift the hull by the same amount in map
+                    modes or it floats visibly below the chart surface */}
+                <SailBoat3D
+                    position={[0, (states.oceanMode === 'chart' || states.oceanMode === 'meteo') ? 0.2 : 0, 0]}
                     scale={[0.7, 0.7, 0.7]} 
                     ref={sailBoatRef} 
                     showSail={true} 

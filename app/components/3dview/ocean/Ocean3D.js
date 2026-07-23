@@ -361,9 +361,12 @@ function Ocean3D({ lite = false }) {
     if (skyRef.current) {
       const uniforms = skyRef.current.material.uniforms;
 
-      // Weather influence: humidity haze + cloud cover whiten/darken the sky
+      // Weather influence: humidity haze + cloud cover whiten/darken the sky.
+      // Lite (chart/meteo) caps the haze: those cameras look mostly at the
+      // horizon band, which full turbidity washes to plain white.
       const humidity = weather?.humidity ?? 0.6;
-      const baseTurbidity = 0.5 + (humidity * 0.5) + cloudCover * 9 + (isRaining ? 4 : 0);
+      const rawTurbidity = 0.5 + (humidity * 0.5) + cloudCover * 9 + (isRaining ? 4 : 0);
+      const baseTurbidity = lite ? Math.min(rawTurbidity, 2.5) : rawTurbidity;
 
       const dayParams = {
         turbidity: baseTurbidity,

@@ -41,12 +41,34 @@ const INITIAL_STATES = {
     racing: false
 };
 
+// Display preferences restored across restarts. Transient/safety modes
+// (autopilot, anchor watch, parking, MOB, racing) always start from defaults.
+const PERSISTED_STATE_KEYS = ['oceanMode', 'ais', 'showPolar', 'showLaylines3D'];
+
+const loadPersistedStates = () => {
+    const saved = configService.get('uiStates');
+    if (!saved || typeof saved !== 'object') return {};
+    return PERSISTED_STATE_KEYS.reduce((acc, key) => {
+        if (key in saved) acc[key] = saved[key];
+        return acc;
+    }, {});
+};
+
 
 
 export const OcearoContextProvider = ({ children }) => {
     const [theme, setTheme] = useState(() => configService.get('theme') || 'dark');
     const [nightMode, setNightMode] = useState(false); // Night mode state (separate from theme, for red HUD)
-    const [states, setStates] = useState(INITIAL_STATES);
+    const [states, setStates] = useState(() => ({ ...INITIAL_STATES, ...loadPersistedStates() }));
+
+    // Save display preferences whenever one of them changes
+    useEffect(() => {
+        configService.set('uiStates', PERSISTED_STATE_KEYS.reduce((acc, key) => {
+            acc[key] = states[key];
+            return acc;
+        }, {}));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, PERSISTED_STATE_KEYS.map((key) => states[key]));
     
     // Apply theme and night mode to document root
     useEffect(() => {
