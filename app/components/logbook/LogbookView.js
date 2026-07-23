@@ -493,9 +493,69 @@ const LogbookView = () => {
   /**
    * Render timeline view with cards
    */
+  const ENTRY_TYPE_STYLES = {
+    safety: { color: 'text-oRed', border: 'border-oRed/40', bg: 'bg-oRed/10' },
+    alert: { color: 'text-oRed', border: 'border-oRed/40', bg: 'bg-oRed/10' },
+    weather: { color: 'text-oYellow', border: 'border-oYellow/40', bg: 'bg-oYellow/10' },
+    startup_analysis: { color: 'text-oGreen', border: 'border-oGreen/40', bg: 'bg-oGreen/10' },
+    briefing: { color: 'text-oGreen', border: 'border-oGreen/40', bg: 'bg-oGreen/10' },
+    racing: { color: 'text-oYellow', border: 'border-oYellow/40', bg: 'bg-oYellow/10' },
+    maintenance: { color: 'text-oYellow', border: 'border-oYellow/40', bg: 'bg-oYellow/10' },
+    hourly_entry: { color: 'text-oBlue', border: 'border-oBlue/40', bg: 'bg-oBlue/10' },
+    navigation: { color: 'text-oBlue', border: 'border-oBlue/40', bg: 'bg-oBlue/10' },
+    default: { color: 'text-hud-secondary', border: 'border-hud', bg: 'bg-hud-elevated' },
+  };
+
+  /**
+   * Build the list of stat chips actually available on an entry — the old
+   * fixed 4-column grid rendered N/A for every missing field.
+   */
+  const getEntryStats = (entry) => {
+    const stats = [];
+    const course = getCourse(entry);
+    if (course) stats.push({ label: t('logbook.courseCol'), value: course });
+    if (entry.speed && !Number.isNaN(Number(entry.speed.sog)) && entry.speed.sog !== null) {
+      stats.push({ label: t('logbook.speed'), value: `${entry.speed.sog}kt` });
+    }
+    if (entry.wind && typeof entry.wind.speed === 'number') {
+      const dir = typeof entry.wind.direction === 'number' ? ` ${entry.wind.direction}°` : '';
+      stats.push({ label: t('logbook.weatherCol'), value: `${entry.wind.speed}kt${dir}` });
+    }
+    if (typeof entry.barometer === 'number') {
+      stats.push({ label: t('logbook.baro'), value: `${entry.barometer}` });
+    }
+    if (entry.log !== undefined && entry.log !== null && !Number.isNaN(Number(entry.log))) {
+      stats.push({ label: t('logbook.log'), value: `${entry.log}NM` });
+    }
+    if (entry.engine && !Number.isNaN(Number(entry.engine.hours)) && entry.engine.hours !== null) {
+      stats.push({ label: t('logbook.eng'), value: `${entry.engine.hours}h` });
+    }
+    if (entry.point && typeof entry.point.latitude === 'number') {
+      stats.push({ label: t('logbook.coord'), value: entry.point.toString(), mono: true });
+    }
+    return stats;
+  };
+
   const renderTimeline = () => {
     const timelineEntries = [...entries].reverse();
-    
+
+    // Group by calendar day for a readable cruise chronology
+    const groups = [];
+    for (const entry of timelineEntries) {
+      const dayKey = entry.date.toLocaleDateString('fr-FR', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+        timeZone: displayTimeZone,
+      });
+      const last = groups[groups.length - 1];
+      if (last && last.day === dayKey) {
+        last.items.push(entry);
+      } else {
+        groups.push({ day: dayKey, items: [entry] });
+      }
+    }
+    // Most recent day first, but keep each day's entries in chronological order
+    groups.reverse();
+
     return (
       <div className="p-4 space-y-6">
         <div className="flex justify-between items-center mb-6">
@@ -531,59 +591,65 @@ const LogbookView = () => {
           </div>
         )}
 
-        <div className="space-y-4">
-          {timelineEntries.map((entry, index) => (
-            <div 
-              key={entry.datetime || index} 
-              onClick={() => editEntry(entry)}
-              className="tesla-card tesla-hover cursor-pointer group"
-            >
-              <div className="bg-hud-elevated px-4 py-2 flex justify-between items-center border-b border-hud">
-                <div className="text-xs font-black text-oBlue uppercase tracking-widest group-hover:text-oBlue transition-colors">
-                  {entry.author || 'system'}
-                </div>
-                <div className="text-xs font-black text-hud-secondary uppercase tracking-tighter">
-                  {entry.date.toLocaleString('en-GB', {
-                    day: '2-digit',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    timeZone: displayTimeZone,
-                  })}
-                </div>
+        <div className="space-y-6">
+          {groups.map((group) => (
+            <div key={group.day}>
+              {/* Day header */}
+              <div className="flex items-center mb-3">
+                <div className="w-2 h-2 rounded-full bg-oBlue mr-3" />
+                <span className="text-xs font-black text-hud-main uppercase tracking-widest">{group.day}</span>
+                <div className="flex-1 h-px bg-hud-border ml-4 opacity-40" />
+                <span className="text-xs font-black text-hud-muted ml-3">{group.items.length}</span>
               </div>
-              <div className="p-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-black uppercase mb-4 tracking-tight text-hud-secondary">
-                  <div className="flex flex-col">
-                    <span className="text-xs text-hud-dim mb-1">{t('logbook.courseCol')}</span>
-                    <span className="text-hud-main gliding-value">{getCourse(entry)}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-hud-dim mb-1">{t('logbook.speed')}</span>
-                    <span className="text-hud-main gliding-value">{entry.speed && !Number.isNaN(Number(entry.speed.sog)) ? `${entry.speed.sog}kt` : 'N/A'}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-hud-dim mb-1">{t('logbook.log')}</span>
-                    <span className="text-hud-main gliding-value">{!Number.isNaN(Number(entry.log)) ? `${entry.log}NM` : 'N/A'}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-hud-dim mb-1">{t('logbook.coord')}</span>
-                    <span className="text-hud-main text-xs font-mono truncate">{entry.point ? entry.point.toString() : 'N/A'}</span>
-                  </div>
-                </div>
-                
-                {entry.text && (
-                  <div className="p-3 bg-hud-elevated rounded-sm border-l-2 border-oBlue/30 text-xs font-bold text-hud-secondary normal-case leading-relaxed italic">
-                    {entry.text}
-                  </div>
-                )}
-                
-                {getWeather(entry) && (
-                  <div className="mt-3 flex items-center text-xs font-black text-hud-secondary uppercase tracking-widest">
-                    <FontAwesomeIcon icon={faCloudSun} className="mr-2 text-oYellow opacity-50" />
-                    {getWeather(entry)}
-                  </div>
-                )}
+
+              <div className="space-y-2 ml-1 pl-4 border-l border-hud">
+                {group.items.map((entry, index) => {
+                  const type = entry.entryType || entry.analysis?.type || 'default';
+                  const style = ENTRY_TYPE_STYLES[type] || ENTRY_TYPE_STYLES.default;
+                  const stats = getEntryStats(entry);
+                  return (
+                    <div
+                      key={entry.datetime || index}
+                      onClick={() => editEntry(entry)}
+                      className="tesla-card tesla-hover cursor-pointer group"
+                    >
+                      <div className="px-4 py-2 flex justify-between items-center border-b border-hud">
+                        <div className="flex items-center min-w-0 gap-3">
+                          <span className="text-sm font-black text-hud-main tracking-tight">
+                            {entry.date.toLocaleTimeString('fr-FR', {
+                              hour: '2-digit', minute: '2-digit',
+                              timeZone: displayTimeZone,
+                            })}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded-sm text-xs font-black uppercase tracking-widest border ${style.color} ${style.border} ${style.bg}`}>
+                            {t(`logbook.types.${type}`, { defaultValue: type.replace(/_/g, ' ') })}
+                          </span>
+                        </div>
+                        <div className="text-xs font-black text-hud-muted uppercase tracking-tighter truncate ml-3">
+                          {entry.author || 'system'}
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        {entry.text && (
+                          <div className="text-xs font-bold text-hud-secondary normal-case leading-relaxed mb-3">
+                            {entry.text}
+                          </div>
+                        )}
+
+                        {stats.length > 0 && (
+                          <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-black uppercase tracking-tight text-hud-secondary">
+                            {stats.map((stat) => (
+                              <div key={stat.label} className="flex items-baseline gap-2">
+                                <span className="text-hud-dim">{stat.label}</span>
+                                <span className={`text-hud-main ${stat.mono ? 'font-mono text-xs' : 'gliding-value'}`}>{stat.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}

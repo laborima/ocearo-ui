@@ -505,7 +505,25 @@
     "racingMode": "Mode Régate",
     "racingModeActive": "Mode Régate Actif",
     "racingModeAISInfo": "AIS silencieux",
-    "racingAdvice": "RÉGATE"
+    "racingAdvice": "RÉGATE",
+    "types": {
+      "safety": "Sécurité",
+      "alert": "Alerte",
+      "weather": "Météo",
+      "hourly_entry": "Point horaire",
+      "navigation": "Navigation",
+      "startup_analysis": "Briefing",
+      "briefing": "Briefing",
+      "mode_change": "Mode",
+      "maintenance": "Maintenance",
+      "racing": "Régate",
+      "logbook_review": "Bilan journal",
+      "brain_memory": "Mémoire",
+      "startup": "Démarrage",
+      "shutdown": "Arrêt",
+      "test": "Test",
+      "performance": "Performance"
+    }
   },
   "maintenance": {
     "title": "Plan de maintenance",
