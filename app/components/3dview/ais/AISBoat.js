@@ -1,6 +1,7 @@
 import React, { useMemo, Suspense } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
+import configService from '../../settings/ConfigService';
 
 const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
 
@@ -32,15 +33,19 @@ const AIS_YAW = {
     // e.g. 31: Math.PI,
 };
 
-// Visual draft as a fraction of hull LENGTH (like real boats: a 10 m sailboat
-// draws ~1.5 m with its keel). Sinks the model below the waterline (y=0) so
-// hulls sit IN the water instead of resting keel-tip on it. The ocean plane
-// itself sits slightly below y=0, which these values also absorb.
-// Tune visually in the running AIS view.
+// Visual draft as a fraction of hull LENGTH. Sinks the model below the
+// waterline (y=0) so hulls sit IN the water instead of resting keel-tip on it.
+// Values are calibrated per model from the GLB geometry (where each author put
+// the waterline relative to the hull bottom); the ocean/map planes sitting
+// slightly below y=0 are also absorbed here.
 const AIS_SINK = {
-    30: 0.10, // fishing
-    36: 0.15, // sailing: deep keel
-    37: 0.10, // pleasure
+    30: 0.10, // fishing: waterline mid-hull
+    31: 0.14, // tug: sits deep
+    36: 0.23, // sailing: model authored with waterline at origin, keel -1.5
+    37: 0.07, // pleasure: origin at deck level, shallow draft
+    50: 0.03, // pilot: hull already cut at waterline
+    70: 0.10, // cargo: loaded waterline
+    80: 0.12, // tanker: origin mid-hull
 };
 const DEFAULT_SINK = 0.06;
 
@@ -111,7 +116,10 @@ const AISBoat = ({ position, visible, boatData, onClick, ref }) => {
 
     const providedLength = boatData.length || BASE_MODEL_LENGTH;
     const desiredLength = Math.max(providedLength, MIN_BOAT_LENGTH);
-    const scaleFactor = desiredLength / BASE_MODEL_LENGTH;
+    // Scene positions are metres * aisLengthScalingFactor, so boat sizes must
+    // apply the same factor or every vessel renders ~1/factor too large.
+    const sceneScale = configService.get('aisLengthScalingFactor') || 0.7;
+    const scaleFactor = (desiredLength * sceneScale) / BASE_MODEL_LENGTH;
 
     return (
         <group
