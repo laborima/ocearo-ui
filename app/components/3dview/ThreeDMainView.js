@@ -69,8 +69,12 @@ const ThreeDMainView = ({ active = true }) => {
         setShowAttitudeIndicator(config.showAttitudeIndicator !== false);
     }, []);
 
+    // Chart/meteo scenes have a light background: flip the HUD overlay text to
+    // the light-theme palette (night mode keeps its red HUD).
+    const isLightScene = !nightMode && (states.oceanMode === 'chart' || states.oceanMode === 'meteo');
+
     return (
-        <div className="w-full h-full relative ">
+        <div className="w-full h-full relative" data-scene={isLightScene ? 'light' : undefined}>
 
             <div className="absolute top-2 left-2 right-2 z-20 flex items-center justify-between">
                 <ThreeDBoatToolbar />

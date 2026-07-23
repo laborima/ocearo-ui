@@ -54,6 +54,20 @@
     --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.04);
   }
 
+  /* Light 3D scene (chart/meteo modes): the 3D pane sets data-scene="light" so
+     its HUD overlays flip to dark text over the pale map/sky. Scoped to the
+     pane only — the rest of the app keeps the active theme. */
+  [data-scene='light'] {
+    --hud-bg: rgba(255, 255, 255, 0.6);
+    --hud-bg-elevated: rgba(0, 0, 0, 0.03);
+    --hud-card-bg: rgba(255, 255, 255, 0.8);
+    --hud-border: rgba(0, 0, 0, 0.06);
+    --hud-text-main: #1a1a1a;
+    --hud-text-secondary: rgba(0, 0, 0, 0.55);
+    --hud-text-muted: rgba(0, 0, 0, 0.4);
+    --hud-text-dim: rgba(0, 0, 0, 0.25);
+  }
+
   :root[data-night='true'] {
     --background: #0a0000;
     --foreground: #ef4444;
@@ -100,6 +114,9 @@
   .text-hud-secondary { color: var(--hud-text-secondary); }
   .text-hud-muted { color: var(--hud-text-muted); }
   .text-hud-dim { color: var(--hud-text-dim); }
+
+  /* Light 3D scene: plain white text flips dark inside the pane */
+  [data-scene='light'] .text-white { color: #1a1a1a; }
   
   .bg-hud-bg { background-color: var(--hud-bg); }
   .bg-hud-elevated { background-color: var(--hud-bg-elevated); }
