@@ -15,6 +15,9 @@ extend({ Water, Sky });
 // Module-level constants reused across frames to avoid per-frame allocations
 const DAY_WATER_COLOR = new THREE.Color(0x004466);
 const NIGHT_WATER_COLOR = new THREE.Color(0x000205);
+// Lite (chart/meteo) water must match the dimmed OSM sea tone so the plane
+// beyond the map edge reads as a continuation of the chart, not a dark band.
+const LITE_DAY_WATER_COLOR = new THREE.Color(0xb4cbd1);
 const _scratchWaterColor = new THREE.Color();
 
 // The astronomical sun position and sky atmosphere barely change over a second.
@@ -69,7 +72,7 @@ function Ocean3D({ lite = false }) {
 
   // Lite mode (chart/meteo): flat tinted water, no mirror pass — the Water
   // reflection renders the whole scene twice and is the main RPi5 cost.
-  const liteWaterMaterial = useMemo(() => new THREE.MeshBasicMaterial({ color: 0x012030 }), []);
+  const liteWaterMaterial = useMemo(() => new THREE.MeshBasicMaterial({ color: 0xb4cbd1 }), []);
 
   // Uniforms driving the swell displacement, shared with the patched shader
   const waveUniformsRef = useRef({ waveAmp: { value: 0 }, waveTime: { value: 0 } });
@@ -328,9 +331,8 @@ function Ocean3D({ lite = false }) {
     }
 
     if (lite) {
-      // Same tone as the reflective ocean so the sea reads continuously to the horizon
-      _scratchWaterColor.copy(DAY_WATER_COLOR).lerp(NIGHT_WATER_COLOR, nightFactor);
-      liteWaterMaterial.color.copy(_scratchWaterColor).multiplyScalar(1.6);
+      _scratchWaterColor.copy(LITE_DAY_WATER_COLOR).lerp(NIGHT_WATER_COLOR, nightFactor);
+      liteWaterMaterial.color.copy(_scratchWaterColor);
     }
 
     // Weather snapshot (forecast fallback handled by WeatherContext)
