@@ -217,7 +217,21 @@
     "jsHeap": "Tas JS",
     "vramTextures": "Textures VRAM",
     "houseBattery": "Batterie servitude",
-    "starterBattery": "Batterie démarrage"
+    "starterBattery": "Batterie démarrage",
+    "rpi": "RPi",
+    "rpiTemperature": "Temp. SoC",
+    "rpiCpu": "CPU",
+    "rpiMemory": "Mémoire",
+    "rpiDisk": "Disque",
+    "rpiLoad": "Charge moy.",
+    "rpiRam": "RAM",
+    "rpiSwap": "Swap",
+    "rpiUptime": "Actif depuis",
+    "rpiTopProcesses": "Principaux processus",
+    "rpiUnavailable": "Métriques hôte indisponibles",
+    "rpiThrottlingHeat": "Bridage en cours — surchauffe du SoC",
+    "rpiThrottlingPower": "Bridage en cours — sous-tension, vérifiez l'alimentation",
+    "rpiThrottlingPast": "Bridage constaté depuis le démarrage — chaleur ou alimentation"
   },
   "autopilot": {
     "control": "Contrôle",
@@ -266,7 +280,10 @@
     "failedToSetHeading": "Échec du réglage du cap : {{message}}",
     "failedToTack": "Échec du virement : {{message}}",
     "failedToGybe": "Échec de l'empannage : {{message}}",
-    "failedToSaveConfig": "Échec de la sauvegarde de la configuration : {{message}}"
+    "failedToSaveConfig": "Échec de la sauvegarde de la configuration : {{message}}",
+    "providerMissing": "Aucun fournisseur d'autopilote installé sur le serveur Signal K — cette vue est en lecture seule.",
+    "providerMissingButDetected": "Pilote détecté sur le bus NMEA2000, mais aucun fournisseur d'autopilote n'est installé sur le serveur Signal K — les commandes sont désactivées.",
+    "noDeviceRegistered": "L'API autopilote répond mais aucun appareil n'est enregistré — vérifiez la configuration du plugin fournisseur."
   },
   "debug": {
     "systemDebug": "Débogage système",
