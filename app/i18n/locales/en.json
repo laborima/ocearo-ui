@@ -494,6 +494,7 @@
     "sog": "SOG",
     "weatherCol": "Weather",
     "baro": "Baro",
+    "depth": "Depth",
     "position": "Position",
     "log": "Log",
     "eng": "Eng.",

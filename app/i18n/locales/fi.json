@@ -446,6 +446,7 @@
     "sog": "SOG",
     "weatherCol": "Sää",
     "baro": "Baro",
+    "depth": "Syvyys",
     "position": "Sijainti",
     "log": "Loki",
     "eng": "Moot.",

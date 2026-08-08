@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import BaseWidget from './BaseWidget';
 import configService from '../../settings/ConfigService';
-import { convertSpeedUnit, getSpeedUnitLabel, convertTemperatureUnit, getTemperatureUnitLabel } from '../../utils/UnitConversions';
+import { convertSpeedUnit, getSpeedUnitLabel, convertTemperatureUnit, getTemperatureUnitLabel, convertPressure, toDegrees, finite } from '../../utils/UnitConversions';
 import { useWeather } from '../../context/WeatherContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -29,11 +29,12 @@ export default function WeatherWidget() {
     const currentForecast = forecasts.length > 0 ? forecasts[0] : null;
     
     // Convert from SignalK raw units to display units
-    const tempDisplay = weather.temperature != null ? convertTemperatureUnit(weather.temperature) : null;
-    const humidityDisplay = weather.humidity != null ? Math.round(weather.humidity * 100) : null;
-    const pressureDisplay = weather.pressure != null ? Math.round(weather.pressure / 100) : null;
-    const windSpeedDisplay = weather.windSpeed != null ? convertSpeedUnit(weather.windSpeed) : null;
-    const windDirDisplay = weather.windDirection != null ? Math.round(((weather.windDirection * 180 / Math.PI) % 360 + 360) % 360) : null;
+    // `!= null` used to let NaN through, which is how "NaN kn" reached the widget.
+    const tempDisplay = convertTemperatureUnit(weather.temperature);
+    const humidityDisplay = finite(weather.humidity) !== null ? Math.round(weather.humidity * 100) : null;
+    const pressureDisplay = convertPressure(weather.pressure) !== null ? Math.round(weather.pressure / 100) : null;
+    const windSpeedDisplay = convertSpeedUnit(weather.windSpeed);
+    const windDirDisplay = toDegrees(weather.windDirection);
     const description = weather.description;
     let dataSource = weather.source;
 
@@ -136,8 +137,9 @@ export default function WeatherWidget() {
   };
 
   const getWindDirection = (degrees) => {
+    if (finite(degrees) === null) return '';
     const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
-    return directions[Math.round(degrees / 22.5) % 16];
+    return directions[((Math.round(degrees / 22.5) % 16) + 16) % 16];
   };
 
   const pressureTrend = weatherData.hasData ? getPressureTrend(weatherData.pressure) : null;
@@ -217,8 +219,8 @@ export default function WeatherWidget() {
                 day.description.toLowerCase().includes('cloud') ? 'cloudy' :
                 day.description.toLowerCase().includes('snow') ? 'snow' : 'sunny'
               ) : 'partly-cloudy';
-              const dayWindSpeed = day.wind?.speed != null ? Math.round(day.wind.speed * 10) / 10 : null;
-              const dayWindDir = day.wind?.direction != null ? getWindDirection(Math.round(day.wind.direction)) : null;
+              const dayWindSpeed = finite(day.wind?.speed) !== null ? Math.round(day.wind.speed * 10) / 10 : null;
+              const dayWindDir = getWindDirection(day.wind?.direction) || null;
               return (
                 <div key={idx} className="flex items-center justify-between py-1.5 border-b border-hud/30 last:border-0">
                   <div className="flex items-center space-x-3">

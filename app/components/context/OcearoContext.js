@@ -8,6 +8,7 @@ import { MathUtils } from 'three';
 export {
     radToDeg, toDegrees, degToRad, toKnots, toKelvin,
     convertTemperature, convertWindSpeed, convertSpeed, convertPressure,
+    knotsToMs, finite, msToKnots, radiansToDegrees, kelvinToCelsius,
     MS_TO_KNOTS, KNOTS_TO_MPS, EARTH_RADIUS_METERS,
     convertSpeedUnit, getSpeedUnitLabel,
     convertDepthUnit, getDepthUnitLabel,

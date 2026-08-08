@@ -6,6 +6,23 @@
  */
 
 /**
+ * Coerce a SignalK value to a finite number, or null.
+ *
+ * The whole display pipeline used to guard with `x === null || x === undefined`,
+ * which lets NaN and Infinity straight through (`NaN !== null` is true) — that is
+ * how "NaN kn" reached the wind widgets. Numeric strings are still accepted so
+ * existing callers keep working; everything else collapses to null.
+ *
+ * @param {*} v - Raw value
+ * @returns {number|null} A finite number, or null
+ */
+const toFinite = (v) => {
+    if (v === null || v === undefined || v === '') return null;
+    const n = typeof v === 'number' ? v : Number(v);
+    return Number.isFinite(n) ? n : null;
+};
+
+/**
  * Conversion factor from m/s to knots (1 m/s = 1.94384 knots)
  * @constant {number}
  */
@@ -29,7 +46,8 @@ export const EARTH_RADIUS_METERS = 6371000;
  * @returns {number|null} Angle in degrees, or null if input is invalid
  */
 export const radToDeg = (rad) => {
-    if (rad === null || rad === undefined) return null;
+    rad = toFinite(rad);
+    if (rad === null) return null;
     return rad * (180 / Math.PI);
 };
 
@@ -39,7 +57,8 @@ export const radToDeg = (rad) => {
  * @returns {number|null} Angle in degrees (0-360), or null if input is invalid
  */
 export const toDegrees = (rad) => {
-    if (rad === null || rad === undefined) return null;
+    rad = toFinite(rad);
+    if (rad === null) return null;
     return Math.round((rad * 180 / Math.PI + 360) % 360);
 };
 
@@ -49,7 +68,8 @@ export const toDegrees = (rad) => {
  * @returns {number|null} Angle in degrees (1 decimal), or null if input is invalid
  */
 export const radiansToDegrees = (radians) => {
-    if (radians === null || radians === undefined) return null;
+    radians = toFinite(radians);
+    if (radians === null) return null;
     return Math.round((radians * 180 / Math.PI) * 10) / 10;
 };
 
@@ -59,7 +79,8 @@ export const radiansToDegrees = (radians) => {
  * @returns {number|null} Angle in radians, or null if input is invalid
  */
 export const degToRad = (deg) => {
-    if (deg === null || deg === undefined) return null;
+    deg = toFinite(deg);
+    if (deg === null) return null;
     return deg * (Math.PI / 180);
 };
 
@@ -69,7 +90,8 @@ export const degToRad = (deg) => {
  * @returns {string|null} Speed in knots as string, or null if input is invalid
  */
 export const toKnots = (mps) => {
-    if (mps === null || mps === undefined) return null;
+    mps = toFinite(mps);
+    if (mps === null) return null;
     return (mps * MS_TO_KNOTS).toFixed(1);
 };
 
@@ -79,7 +101,8 @@ export const toKnots = (mps) => {
  * @returns {number|null} Speed in knots, or null if input is invalid
  */
 export const msToKnots = (ms) => {
-    if (ms === null || ms === undefined) return null;
+    ms = toFinite(ms);
+    if (ms === null) return null;
     return Math.round(ms * MS_TO_KNOTS * 10) / 10;
 };
 
@@ -89,7 +112,8 @@ export const msToKnots = (ms) => {
  * @returns {number|null} Speed in knots, or null if input is invalid
  */
 export const convertWindSpeed = (mps) => {
-    if (mps === null || mps === undefined) return null;
+    mps = toFinite(mps);
+    if (mps === null) return null;
     return Math.round((mps * MS_TO_KNOTS) * 10) / 10;
 };
 
@@ -99,12 +123,34 @@ export const convertWindSpeed = (mps) => {
 export const convertSpeed = convertWindSpeed;
 
 /**
+ * Convert knots back to meters per second (SI).
+ * @param {number} knots - Speed in knots
+ * @returns {number|null} Speed in m/s, or null if input is invalid
+ */
+export const knotsToMs = (knots) => {
+    knots = toFinite(knots);
+    if (knots === null) return null;
+    return knots / MS_TO_KNOTS;
+};
+
+/**
+ * Narrow any value to a finite number, or null.
+ *
+ * Exported so consumers can guard values that never went through a conversion
+ * (raw SignalK deltas, forecast payloads) with the same semantics used here.
+ * @param {*} v - Raw value
+ * @returns {number|null} A finite number, or null
+ */
+export const finite = toFinite;
+
+/**
  * Convert Kelvin to Celsius, rounded to 1 decimal place
  * @param {number} kelvin - Temperature in Kelvin
  * @returns {number|null} Temperature in Celsius, or null if input is invalid
  */
 export const kelvinToCelsius = (kelvin) => {
-    if (kelvin === null || kelvin === undefined) return null;
+    kelvin = toFinite(kelvin);
+    if (kelvin === null) return null;
     return Math.round((kelvin - 273.15) * 10) / 10;
 };
 
@@ -118,7 +164,10 @@ export const convertTemperature = kelvinToCelsius;
  * @param {number} degrees - Temperature in Celsius
  * @returns {number} Temperature in Kelvin
  */
-export const toKelvin = (degrees) => degrees + 273.15;
+export const toKelvin = (degrees) => {
+    const d = toFinite(degrees);
+    return d === null ? null : d + 273.15;
+};
 
 /**
  * Convert Pascals to hectopascals (mbar), rounded to 1 decimal place
@@ -126,7 +175,8 @@ export const toKelvin = (degrees) => degrees + 273.15;
  * @returns {number|null} Pressure in hPa/mbar, or null if input is invalid
  */
 export const convertPressure = (pa) => {
-    if (pa === null || pa === undefined) return null;
+    pa = toFinite(pa);
+    if (pa === null) return null;
     return Math.round((pa / 100) * 10) / 10;
 };
 
@@ -153,7 +203,8 @@ const getConfigService = () => {
  * @returns {number|null} Converted speed, or null if input is invalid
  */
 export const convertSpeedUnit = (mps) => {
-    if (mps === null || mps === undefined) return null;
+    mps = toFinite(mps);
+    if (mps === null) return null;
     const unit = getConfigService().get('speedUnits') || 'kn';
     switch (unit) {
         case 'km/h': return Math.round(mps * 3.6 * 10) / 10;
@@ -177,7 +228,8 @@ export const getSpeedUnitLabel = () => {
  * @returns {number|null} Converted depth, or null if input is invalid
  */
 export const convertDepthUnit = (metres) => {
-    if (metres === null || metres === undefined) return null;
+    metres = toFinite(metres);
+    if (metres === null) return null;
     const unit = getConfigService().get('depthUnits') || 'm';
     switch (unit) {
         case 'ft': return Math.round(metres * 3.28084 * 10) / 10;
@@ -200,7 +252,8 @@ export const getDepthUnitLabel = () => {
  * @returns {number|null} Converted temperature, or null if input is invalid
  */
 export const convertTemperatureUnit = (kelvin) => {
-    if (kelvin === null || kelvin === undefined) return null;
+    kelvin = toFinite(kelvin);
+    if (kelvin === null) return null;
     const unit = getConfigService().get('temperatureUnits') || 'C';
     if (unit === 'F') {
         return Math.round(((kelvin - 273.15) * 9 / 5 + 32) * 10) / 10;
@@ -223,7 +276,8 @@ export const getTemperatureUnitLabel = () => {
  * @returns {number|null} Converted distance, or null if input is invalid
  */
 export const convertDistanceUnit = (metres) => {
-    if (metres === null || metres === undefined) return null;
+    metres = toFinite(metres);
+    if (metres === null) return null;
     const unit = getConfigService().get('distanceUnits') || 'nm';
     switch (unit) {
         case 'km': return Math.round(metres / 1000 * 100) / 100;

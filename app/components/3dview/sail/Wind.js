@@ -14,10 +14,13 @@ export function kts2ms(kts) {
 // returns wind speed at target height
 export function windSheer(windspeed, height, hellman) {
     // https://en.wikipedia.org/wiki/Wind_gradient
+    // Math.pow(negative, fractional) is NaN, and callers pass geometry heights that
+    // go below the waterline — clamp instead of poisoning the sail geometry.
+    if (!Number.isFinite(windspeed) || !Number.isFinite(height) || !Number.isFinite(hellman)) return 0;
     let v10m = kts2ms(windspeed);
     let height10m = 10;
-    let v = v10m * (Math.pow((height / height10m), hellman));
-    
+    let v = v10m * (Math.pow((Math.max(height, 0) / height10m), hellman));
+
 
     // location α ... hellman constant for wind condition
     // Unstable air above open water surface:   0.06

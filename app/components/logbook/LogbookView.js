@@ -9,6 +9,7 @@ import {
   faTimes, faSave, faTrophy, faFlag
 } from '@fortawesome/free-solid-svg-icons';
 import configService from '../settings/ConfigService';
+import { msToKnots, toDegrees, convertPressure } from '../utils/UnitConversions';
 import { 
   isOcearoCoreEnabled, 
   generateOcearoCoreLogbookEntry, 
@@ -40,8 +41,12 @@ const LogbookView = () => {
     'navigation.speedOverGround',
     'environment.wind.speedTrue',
     'environment.wind.angleTrueWater',
+    'environment.wind.speedApparent',
+    'environment.wind.angleApparent',
     'environment.outside.pressure',
     'environment.outside.temperature',
+    'environment.depth.belowKeel',
+    'environment.depth.belowTransducer',
     'navigation.log',
     'propulsion.main.runTime'
   ], []);
@@ -190,6 +195,35 @@ const LogbookView = () => {
         delete payload.point;
       } else {
         const position = skValues['navigation.position'] || {};
+
+        // Entries are stored in display units (knots / degrees / hPa / NM / hours /
+        // metres) — that is what the server writes in getVesselContext() and what the
+        // table renders. SignalK deltas are SI, so convert here; storing the raw SI
+        // value made manual entries read 1852x too far and wind angles in radians.
+        const heading = skValues['navigation.headingTrue'];
+        const windSpeedTrue = skValues['environment.wind.speedTrue'];
+        const windSpeedApp = skValues['environment.wind.speedApparent'];
+        const useApparent = windSpeedTrue === null || windSpeedTrue === undefined;
+        const windSpeedMs = useApparent ? windSpeedApp : windSpeedTrue;
+        const windAngleRad = useApparent
+          ? skValues['environment.wind.angleApparent']
+          : skValues['environment.wind.angleTrueWater'];
+
+        const wind = {};
+        const windSpeedKts = msToKnots(windSpeedMs);
+        if (windSpeedKts !== null) wind.speed = windSpeedKts;
+        // The stored `direction` is a compass bearing, not a relative angle.
+        if (heading !== null && heading !== undefined && windAngleRad !== null && windAngleRad !== undefined) {
+          const dir = toDegrees(heading + windAngleRad);
+          if (dir !== null) wind.direction = dir;
+        }
+        if (useApparent && Object.keys(wind).length) wind.apparent = true;
+
+        const depthMetres = skValues['environment.depth.belowKeel']
+          ?? skValues['environment.depth.belowTransducer'];
+        const logMetres = skValues['navigation.log'];
+        const runTimeSeconds = skValues['propulsion.main.runTime'];
+
         payload = {
           datetime: new Date().toISOString(),
           position: {
@@ -197,18 +231,16 @@ const LogbookView = () => {
             longitude: position.longitude || -1.1522,
             source: 'GPS'
           },
-          course: skValues['navigation.courseOverGroundTrue'] || skValues['navigation.headingTrue'],
+          course: toDegrees(skValues['navigation.courseOverGroundTrue'] ?? heading),
           speed: {
-            sog: skValues['navigation.speedOverGround'] || 0
+            sog: msToKnots(skValues['navigation.speedOverGround'])
           },
-          wind: {
-            speed: skValues['environment.wind.speedTrue'] || 0,
-            direction: skValues['environment.wind.angleTrueWater'] || 0
-          },
-          barometer: skValues['environment.outside.pressure'] ? skValues['environment.outside.pressure'] / 100 : 1013,
-          log: skValues['navigation.log'] || 0,
+          wind,
+          barometer: convertPressure(skValues['environment.outside.pressure']),
+          log: Number.isFinite(logMetres) ? parseFloat((logMetres / 1852).toFixed(1)) : null,
+          depth: Number.isFinite(depthMetres) ? parseFloat(depthMetres.toFixed(1)) : null,
           engine: {
-            hours: skValues['propulsion.main.runTime'] ? skValues['propulsion.main.runTime'] / 3600 : 0
+            hours: Number.isFinite(runTimeSeconds) ? parseFloat((runTimeSeconds / 3600).toFixed(1)) : null
           },
           author: entryForm.author || 'manual',
           text: entryForm.text || 'Manual entry'
@@ -360,28 +392,38 @@ const LogbookView = () => {
   /**
    * Helper functions for data formatting
    */
+  /**
+   * Render a numeric entry field with its unit, or nothing when absent.
+   *
+   * The previous `!Number.isNaN(Number(x))` guards passed `null` through
+   * (`Number(null) === 0`), which rendered literal "nullNM" / "nullkt" cells.
+   */
+  const fmt = (value, unit = '') => (
+    Number.isFinite(value) ? `${value}${unit}` : ''
+  );
+
   const getWeather = (entry) => {
     const weather = [];
     if (entry.wind) {
       const wind = [];
-      if (!Number.isNaN(Number(entry.wind.speed))) {
+      if (Number.isFinite(entry.wind.speed)) {
         wind.push(`${entry.wind.speed}kt`);
       }
-      if (!Number.isNaN(Number(entry.wind.direction))) {
+      if (Number.isFinite(entry.wind.direction)) {
         wind.push(`${entry.wind.direction}°`);
       }
       if (wind.length) {
-        weather.push(`Wind ${wind.join(' ')}`);
+        weather.push(`${entry.wind.apparent ? 'AWind' : 'Wind'} ${wind.join(' ')}`);
       }
     }
     if (entry.observations) {
-      if (!Number.isNaN(Number(entry.observations.seaState))) {
+      if (Number.isFinite(entry.observations.seaState)) {
         weather.push(`Sea state ${entry.observations.seaState}`);
       }
-      if (!Number.isNaN(Number(entry.observations.cloudCoverage))) {
+      if (Number.isFinite(entry.observations.cloudCoverage)) {
         weather.push(`Clouds ${entry.observations.cloudCoverage}/8`);
       }
-      if (!Number.isNaN(Number(entry.observations.visibility))) {
+      if (Number.isFinite(entry.observations.visibility)) {
         weather.push(`Visibility ${entry.observations.visibility + 1}`);
       }
     }
@@ -389,10 +431,10 @@ const LogbookView = () => {
   };
 
   const getCourse = (entry) => {
-    if (!Number.isNaN(Number(entry.course))) {
+    if (Number.isFinite(entry.course)) {
       return `${entry.course}°`;
     }
-    if (!Number.isNaN(Number(entry.heading))) {
+    if (Number.isFinite(entry.heading)) {
       return `HDT ${entry.heading}°`;
     }
     return '';
@@ -450,6 +492,7 @@ const LogbookView = () => {
               <th className="p-3 text-left">{t('logbook.sog')}</th>
               <th className="p-3 text-left">{t('logbook.weatherCol')}</th>
               <th className="p-3 text-left">{t('logbook.baro')}</th>
+              <th className="p-3 text-left">{t('logbook.depth')}</th>
               <th className="p-3 text-left">{t('logbook.position')}</th>
               <th className="p-3 text-left">{t('logbook.log')}</th>
               <th className="p-3 text-left">{t('logbook.eng')}</th>
@@ -474,12 +517,13 @@ const LogbookView = () => {
                   })}
                 </td>
                 <td className="p-3 gliding-value">{getCourse(entry)}</td>
-                <td className="p-3 gliding-value">{entry.speed && !Number.isNaN(Number(entry.speed.sog)) ? `${entry.speed.sog}kt` : ''}</td>
+                <td className="p-3 gliding-value">{fmt(entry.speed?.sog, 'kt')}</td>
                 <td className="p-3 text-hud-secondary font-bold lowercase normal-case">{getWeather(entry)}</td>
-                <td className="p-3 gliding-value opacity-60">{entry.barometer}</td>
+                <td className="p-3 gliding-value opacity-60">{fmt(entry.barometer)}</td>
+                <td className="p-3 gliding-value">{fmt(entry.depth, 'm')}</td>
                 <td className="p-3 text-xs text-hud-muted font-mono tracking-tighter">{entry.point ? entry.point.toString() : 'n/a'}</td>
-                <td className="p-3 gliding-value">{!Number.isNaN(Number(entry.log)) ? `${entry.log}NM` : ''}</td>
-                <td className="p-3 gliding-value">{entry.engine && !Number.isNaN(Number(entry.engine.hours)) ? `${entry.engine.hours}h` : ''}</td>
+                <td className="p-3 gliding-value">{fmt(entry.log, 'NM')}</td>
+                <td className="p-3 gliding-value">{fmt(entry.engine?.hours, 'h')}</td>
                 <td className="p-3 text-oBlue opacity-80">{entry.author || 'auto'}</td>
                 <td className="p-3 normal-case font-bold text-hud-secondary truncate max-w-xs">{entry.text}</td>
               </tr>
@@ -514,20 +558,23 @@ const LogbookView = () => {
     const stats = [];
     const course = getCourse(entry);
     if (course) stats.push({ label: t('logbook.courseCol'), value: course });
-    if (entry.speed && !Number.isNaN(Number(entry.speed.sog)) && entry.speed.sog !== null) {
+    if (Number.isFinite(entry.speed?.sog)) {
       stats.push({ label: t('logbook.speed'), value: `${entry.speed.sog}kt` });
     }
-    if (entry.wind && typeof entry.wind.speed === 'number') {
-      const dir = typeof entry.wind.direction === 'number' ? ` ${entry.wind.direction}°` : '';
+    if (Number.isFinite(entry.wind?.speed)) {
+      const dir = Number.isFinite(entry.wind.direction) ? ` ${entry.wind.direction}°` : '';
       stats.push({ label: t('logbook.weatherCol'), value: `${entry.wind.speed}kt${dir}` });
     }
-    if (typeof entry.barometer === 'number') {
+    if (Number.isFinite(entry.barometer)) {
       stats.push({ label: t('logbook.baro'), value: `${entry.barometer}` });
     }
-    if (entry.log !== undefined && entry.log !== null && !Number.isNaN(Number(entry.log))) {
+    if (Number.isFinite(entry.depth)) {
+      stats.push({ label: t('logbook.depth'), value: `${entry.depth}m` });
+    }
+    if (Number.isFinite(entry.log)) {
       stats.push({ label: t('logbook.log'), value: `${entry.log}NM` });
     }
-    if (entry.engine && !Number.isNaN(Number(entry.engine.hours)) && entry.engine.hours !== null) {
+    if (Number.isFinite(entry.engine?.hours)) {
       stats.push({ label: t('logbook.eng'), value: `${entry.engine.hours}h` });
     }
     if (entry.point && typeof entry.point.latitude === 'number') {
