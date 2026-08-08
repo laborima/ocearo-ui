@@ -210,8 +210,9 @@ export default function AutopilotView() {
     const handleAdjustHeading = async (deltaDegrees) => {
         try {
             setError(null);
-            const deltaRadians = deltaDegrees * Math.PI / 180;
-            await signalKService.adjustAutopilotTarget(deltaRadians, selectedDevice);
+            // The v2 API takes a value plus its unit; sending bare radians made
+            // providers interpret the delta as degrees.
+            await signalKService.adjustAutopilotTarget(deltaDegrees, selectedDevice);
             await fetchAutopilotData();
         } catch (err) {
             setError(t('autopilot.failedToAdjustHeading', { message: err.message }));
