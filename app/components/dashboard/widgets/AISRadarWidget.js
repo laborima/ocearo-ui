@@ -90,7 +90,11 @@ const AISRadarWidget = React.memo(() => {
           vessel.sceneX,
           -vessel.sceneZ
         ) * 180 / Math.PI;
-        // Apply 180° rotation to match 3D view orientation
+        // atan2(east, north) is already the true bearing; the extra 180° is only
+        // a display rotation so the radar lines up with the 3D view. Keep the
+        // unrotated value for the CPA geometry, or the relative position vector
+        // points the wrong way and the CPA is computed for the reciprocal.
+        const trueBearing = (bearing + 360) % 360;
         const absoluteBearing = (bearing + 180 + 360) % 360;
         
         // Real closest point of approach. The previous formula ignored the
@@ -100,7 +104,7 @@ const AISRadarWidget = React.memo(() => {
         // than a fabricated one.
         const cpa = computeCpaNM({
           rangeMeters: vessel.distanceMeters,
-          bearingRad: absoluteBearing * Math.PI / 180,
+          bearingRad: trueBearing * Math.PI / 180,
           ownSog: mySog,
           ownCog: myCog ?? myHeading,
           targetSog: vessel.sog,
