@@ -1,3 +1,23 @@
+## [0.1.20] - 2026-08-08
+
+### Added
+
+- **Depth column in the logbook** (table, timeline chips and manual-entry capture), translated in all 12 locales. The value was already being collected and stored on every entry — it simply had nowhere to appear.
+
+### Fixed
+
+- **`NaN` on the wind readouts.** Every guard in the conversion pipeline tested for `null`/`undefined` only, and `NaN !== null`, so a single non-numeric value propagated all the way to the DOM as the string "NaN". All converters in `UnitConversions.js` now reject non-finite input, and the weather, speed and wind widgets guard on finiteness instead of nullity. Symmetrically, the `|| 0` sites that silently swallowed `NaN` into a zeroed wind arrow are gone.
+- **Manual logbook entries stored raw SI values under display-unit labels**: the log read 1852x too far (metres shown as NM), SOG and wind speed were m/s shown as knots, and wind direction was radians shown as degrees. Manual entries now use the same conversions as the server-generated ones, so both are comparable.
+- **Logbook cells rendered the literal text `nullNM` / `nullkt`** — `Number(null)` is `0`, so the old `!Number.isNaN(Number(x))` guards let `null` through.
+- **AIS radar flagged moored boats as collision risks.** The "CPA" ignored the target's course and speed entirely and subtracted a heading in radians from a bearing in degrees. Replaced with a real closest-point-of-approach computed from both vessels' COG/SOG, which returns no value at all rather than a fabricated one when a target's motion is unknown.
+- **Autopilot control never reached the server**: calls targeted `/signalk/v2/api/vessels/self/steering/autopilot/{id}`, which is the v1 *data* path and not a REST endpoint, so every request 404'd and the view silently showed "off-line". Now uses the v2 `/autopilots/{id}` API with the `_default` device, and sends `target/adjust` as `{value, units:'deg'}` instead of bare radians.
+- Sail geometry received `NaN` because `windSheer()` raised a negative height (below the waterline) to a fractional power.
+
+### Notes
+
+- True wind (`environment.wind.speedTrue`, `angleTrueWater`, `directionTrue`) and `navigation.headingTrue` are not published by the NMEA2000 bus on Cirrus; they require the **`signalk-derived-data`** plugin, enabled with the `heading`, `angleTrueWater` and `directionTrue` calculations. Without it the true-wind paths are simply absent.
+- The autopilot view additionally requires an autopilot **provider** plugin server-side (e.g. `@signalk/signalk-autopilot`); the v2 API does not exist without one.
+
 ## [0.1.19] - 2026-07-22
 
 ### Added
