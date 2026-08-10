@@ -1,3 +1,14 @@
+## [0.1.21] - 2026-08-10
+
+### Added
+
+- **Raspberry Pi tab** in the battery/system view: temperature, CPU, memory and disk meters, firmware throttling flags and the heaviest processes, polled from the new ocearo-core `/system/metrics` endpoint. Translated in all 12 locales.
+
+### Fixed
+
+- **A missing autopilot provider looked like a working but idle autopilot.** A pilot on the NMEA2000 bus publishes `steering.autopilot.state` even with no v2 provider registered, so the view rendered a plausible panel in which nothing was controllable — precisely the "it doesn't work" case. The view now says so explicitly, distinguishing a pilot detected on the bus without a provider, no provider at all, and a provider that registered no device.
+- The default autopilot device id was `default`; the Signal K v2 autopilot API reserves `_default` for the primary pilot, so every call addressed a device that does not exist.
+
 ## [0.1.20] - 2026-08-08
 
 ### Added
