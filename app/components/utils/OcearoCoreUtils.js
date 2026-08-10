@@ -605,6 +605,16 @@ export const getAnchorStatus = async () => {
   return await makeOcearoCoreApiCall('/navigation/anchor/status');
 };
 
+/**
+ * Get the recorded swing track around the anchor.
+ * @param {number} [limit] keep only the most recent `limit` points
+ * @returns {Promise<Object>} - { anchor, maxRadius, track: [{latitude, longitude, t, r}] }
+ */
+export const getAnchorTrack = async (limit) => {
+  const query = Number.isFinite(limit) && limit > 0 ? `?limit=${limit}` : '';
+  return await makeOcearoCoreApiCall(`/navigation/anchor/track${query}`);
+};
+
 // ===== LOGBOOK PROXY FUNCTIONS =====
 
 /**
