@@ -14,7 +14,35 @@ Inspired by Tesla's autopilot UI, this system delivers a futuristic and streamli
 
 ---
 
-## **Latest Updates (v0.1.19)**
+## **Latest Updates (v0.1.22)**
+
+- **Swing Track at Anchor**: The anchored view draws the path the boat has actually described around the anchor, with the real alarm radius, the 80 % watch ring and the rode line. A veering shift or a dragging anchor is readable from the shape of the track long before the alarm fires. Recorded server-side by ocearo-core, so it survives a UI reload.
+- **KIP-style Card Compass**: The dashboard navigation tab now carries a rotating-rose compass with a fixed lubber line, COG and apparent-wind index markers, drawn in SVG. It replaces the 3D boat widget, which ran a permanent WebGL renderer to show a heading number.
+- **Raspberry Pi Tab**: Temperature, CPU, memory and disk of the machine running the stack, firmware throttling flags and the heaviest processes — the fastest way to see why the boat computer is slow.
+- **GPS-backed Clock**: With no battery on its RTC, the Pi boots with a wrong date after a power cut and no internet, which silently emptied the tide widget. The UI now takes its wall clock from the GPS `navigation.datetime` whenever the system clock is more than a minute off.
+- **No More `NaN` on the Wind**: Every converter in the unit pipeline now rejects non-finite input instead of forwarding `NaN` to the DOM, and the sites that swallowed `NaN` into a silent zero are gone.
+- **Real AIS CPA**: Collision risk is computed from both vessels' course and speed rather than from range alone, so a moored boat abeam is no longer flagged as a hazard.
+- **Depth in the Logbook**, plus manual entries recorded in the same units as the automatic ones.
+
+> ℹ️ Some features need companion Signal K plugins to have any data to show — see [Signal K prerequisites](#signal-k-prerequisites).
+
+---
+
+## **Signal K prerequisites**
+
+The UI reads standard Signal K paths; when a path is not published, the corresponding display is empty rather than broken. On a typical NMEA2000 boat these plugins are what make the paths exist:
+
+| Plugin | Provides | Used by |
+|--------|----------|---------|
+| [`signalk-derived-data`](https://www.npmjs.com/package/signalk-derived-data) | True wind and true heading from apparent wind + STW (enable `heading`, `angleTrueWater`, `directionTrue`) | Wind displays, sail trim, polar view, compass |
+| [`@meri-imperiumi/signalk-autostate`](https://www.npmjs.com/package/@meri-imperiumi/signalk-autostate) | `navigation.state` | Sail visibility, alert prioritisation |
+| [`@signalk/set-system-time`](https://www.npmjs.com/package/@signalk/set-system-time) | System clock disciplined from GPS time | Tides, day/night rendering, logbook ordering |
+| [`@signalk/signalk-autopilot`](https://www.npmjs.com/package/@signalk/signalk-autopilot) | Signal K v2 autopilot API | Autopilot view (which now states explicitly when no provider is registered, instead of showing an inert panel) |
+| [`ocearo-core`](https://www.npmjs.com/package/ocearo-core) | Logbook, anchor, system metrics, AI copilot | Logbook, anchor swing track, Raspberry Pi tab |
+
+---
+
+## **Previous Updates (v0.1.19)**
 
 - **Engine Maintenance Schedule**: New maintenance tab with manufacturer service intervals (Volvo Penta D1/D2, Yanmar YM, generic diesel), last-done tracking and overdue/due-soon statuses.
 - **Engine Alarms**: The 24 NMEA2000 discrete engine notifications (overheat, oil pressure, coolant level…) are now surfaced with a persistent alarm banner and tab badge, plus configurable temperature zones raising audible SignalK alerts.
@@ -70,6 +98,8 @@ Inspired by Tesla's autopilot UI, this system delivers a futuristic and streamli
   - Tide levels
   - Depth
   - Battery status
+- Anchor alarm circle centred on the recorded drop point, at the configured radius, with the 80 % watch ring and the rode line
+- **Swing track**: the path travelled around the anchor, so veering, sailing at anchor and the first metres of dragging are visible before any alarm
 
 ![Anchored View](docs/anchored.png)
 
