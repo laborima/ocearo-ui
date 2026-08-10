@@ -1,3 +1,16 @@
+## [0.1.22] - 2026-08-10
+
+### Added
+
+- **Swing track at anchor.** The anchored 3D view now draws the path the boat has actually described around the anchor, not just a circle. A veering shift, a boat sailing at anchor or an anchor starting to drag are all read at a glance from the shape of the track, where a bare circle showed nothing until the alarm fired. The track is recorded server-side by ocearo-core (`GET /navigation/anchor/track`), so it survives a UI reload and is cleared when the anchor is dropped or raised.
+- **KIP-style card compass** replacing the 3D boat widget on the dashboard's navigation tab: rotating rose with a fixed lubber line, large heading readout, COG and apparent-wind index markers on the rim, and COG/SOG/AWA/AWS in the info bar. Drawn in SVG rather than WebGL — the widget it replaces ran a full renderer, HDR environment and orbit controls permanently to display a heading number, on a Pi already short of CPU. Falls back to magnetic heading, labelled `MAG`, when true heading is unavailable.
+
+### Fixed
+
+- **The anchor circle was drawn wrong in three ways.** Its radius was hard-coded to 50 m and ignored the configured alarm radius; it was centred on the first position seen after mount rather than the recorded drop point; and its north/south sign was inverted relative to the convention the AIS view uses, so the boat appeared to move the wrong way across the circle. It now reads `navigation.anchor.position` and `navigation.anchor.maxRadius`, shares the AIS projection convention, and adds the 80 % watch ring and the rode line.
+- **The anchorage overlay was drawn north-up in a boat-up scene.** `SailBoat3D` pins its yaw to zero, so the hull is always drawn bow-up and the world has to be counter-rotated by the heading — which the AIS view already does and the new anchor overlay did not. An anchor 30 m due north was drawn straight ahead of the bow whatever way the boat was lying, taking the rode line and the swing track with it.
+- **Tides silently returned nothing after a power cut without internet.** The Pi has no RTC battery: it boots at 1970 and `fake-hwclock` restores a possibly days-old date. The tide file is chosen by `MM_YYYY` and then indexed by today's date, so a wrong clock found no entry at all and the widget just looked empty. The UI now derives its wall clock from the GPS `navigation.datetime` published on the NMEA2000 bus whenever the system clock is more than a minute off, and the time widget flags when it is doing so.
+
 ## [0.1.21] - 2026-08-10
 
 ### Added

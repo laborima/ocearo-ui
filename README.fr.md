@@ -14,7 +14,35 @@ Inspiré par l'interface de l'autopilote Tesla, ce système offre une expérienc
 
 ---
 
-## **Dernières mises à jour (v0.1.19)**
+## **Dernières mises à jour (v0.1.22)**
+
+- **Trace au mouillage** : la vue mouillage dessine le chemin réellement parcouru autour de l'ancre, avec le vrai rayon d'alarme, l'anneau de veille à 80 % et la ligne de mouillage. Un changement de veine de courant ou une ancre qui commence à déraper se lit à la forme de la trace bien avant que l'alarme ne parte. La trace est enregistrée côté serveur par ocearo-core, elle survit donc à un rechargement de l'interface.
+- **Compas style KIP** : l'onglet navigation du tableau de bord porte désormais une rose tournante à ligne de foi fixe, avec index de COG et de vent apparent, dessinée en SVG. Il remplace le widget bateau 3D, qui faisait tourner un rendu WebGL permanent pour afficher un cap.
+- **Onglet Raspberry Pi** : température, CPU, mémoire et disque de la machine qui héberge la pile, indicateurs de bridage du firmware et processus les plus gourmands — le moyen le plus rapide de voir pourquoi l'ordinateur de bord rame.
+- **Horloge GPS** : sans pile sur sa RTC, le Pi démarre à une date fausse après une coupure sans internet, ce qui vidait silencieusement le widget marées. L'interface prend maintenant son heure de `navigation.datetime` (GPS) dès que l'horloge système dérive de plus d'une minute.
+- **Fin des `NaN` sur le vent** : tous les convertisseurs d'unités rejettent désormais les valeurs non finies au lieu de propager `NaN` jusqu'au DOM, et les endroits qui avalaient un `NaN` en zéro silencieux ont disparu.
+- **Vrai CPA AIS** : le risque de collision est calculé à partir du cap et de la vitesse des deux navires et non plus de la seule distance ; un bateau amarré par le travers n'est plus signalé comme dangereux.
+- **Profondeur au journal de bord**, et saisies manuelles enregistrées dans les mêmes unités que les entrées automatiques.
+
+> ℹ️ Certaines fonctions ont besoin de plugins Signal K compagnons pour avoir des données à afficher — voir [Prérequis Signal K](#prérequis-signal-k).
+
+---
+
+## **Prérequis Signal K**
+
+L'interface lit des chemins Signal K standards ; quand un chemin n'est pas publié, l'affichage correspondant est vide plutôt que cassé. Sur un bateau NMEA2000 classique, ce sont ces plugins qui font exister les chemins :
+
+| Plugin | Fournit | Utilisé par |
+|--------|---------|-------------|
+| [`signalk-derived-data`](https://www.npmjs.com/package/signalk-derived-data) | Vent vrai et cap vrai à partir du vent apparent et de la vitesse surface (activer `heading`, `angleTrueWater`, `directionTrue`) | Affichages de vent, réglage de voiles, polaires, compas |
+| [`@meri-imperiumi/signalk-autostate`](https://www.npmjs.com/package/@meri-imperiumi/signalk-autostate) | `navigation.state` | Visibilité des voiles, hiérarchisation des alertes |
+| [`@signalk/set-system-time`](https://www.npmjs.com/package/@signalk/set-system-time) | Horloge système recalée sur l'heure GPS | Marées, rendu jour/nuit, tri du journal |
+| [`@signalk/signalk-autopilot`](https://www.npmjs.com/package/@signalk/signalk-autopilot) | API pilote automatique Signal K v2 | Vue pilote automatique (qui indique désormais explicitement l'absence de fournisseur au lieu d'afficher un panneau inerte) |
+| [`ocearo-core`](https://www.npmjs.com/package/ocearo-core) | Journal de bord, mouillage, métriques système, copilote IA | Journal, trace au mouillage, onglet Raspberry Pi |
+
+---
+
+## **Mises à jour précédentes (v0.1.19)**
 
 - **Plan de maintenance moteur** : Nouvel onglet maintenance avec les échéances constructeur (Volvo Penta D1/D2, Yanmar YM, diesel générique), suivi des dernières interventions et statuts en retard/à prévoir.
 - **Alarmes moteur** : Les 24 notifications moteur NMEA2000 (surchauffe, pression d'huile, niveau de liquide de refroidissement…) remontent désormais avec un bandeau d'alarme permanent et un badge d'onglet, plus des zones de température configurables levant des alertes sonores SignalK.
@@ -70,6 +98,8 @@ Inspiré par l'interface de l'autopilote Tesla, ce système offre une expérienc
   - Niveaux de marée
   - Profondeur
   - État de la batterie
+- Cercle d'alarme centré sur le point de mouillage enregistré, au rayon configuré, avec l'anneau de veille à 80 % et la ligne de mouillage
+- **Trace de swing** : le chemin parcouru autour de l'ancre, pour voir l'évitage, le bateau qui fait des bords au mouillage et les premiers mètres de dérapage avant toute alarme
 
 ![Vue au Mouillage](docs/anchored.png)
 
