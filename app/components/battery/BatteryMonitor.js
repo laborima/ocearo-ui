@@ -9,6 +9,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import RaspberryPiTab from './RaspberryPiTab';
 
 // Import extracted components
 import LineChart from '../charts/LineChart';
@@ -20,7 +21,7 @@ const BatteryMonitor = () => {
   const { nightMode } = useOcearoContext();
   const secondaryTextClass = nightMode ? 'text-oNight' : 'text-hud-secondary';
   const mutedTextClass = nightMode ? 'text-oNight/70' : 'text-hud-muted';
-  const [activeTab, setActiveTab] = useState('battery'); // battery, graph, performance
+  const [activeTab, setActiveTab] = useState('battery'); // battery, graph, performance, rpi
   const [activeView, setActiveView] = useState('voltage'); // voltage, current, soc
   const [activePerformanceView, setActivePerformanceView] = useState('fps'); // fps, drawCalls, triangles, memory
   const [selectedBattery, setSelectedBattery] = useState('1'); // Default to first battery
@@ -212,7 +213,8 @@ const BatteryMonitor = () => {
         {[
           { id: 'battery', label: t('battery.energy'), icon: faLeaf },
           { id: 'graph', label: t('battery.usage'), icon: faChartLine },
-          { id: 'performance', label: t('battery.perf'), icon: faGaugeHigh }
+          { id: 'performance', label: t('battery.perf'), icon: faGaugeHigh },
+          { id: 'rpi', label: t('battery.rpi'), icon: faMicrochip }
         ].map((tab) => (
           <button
             key={tab.id}
@@ -519,6 +521,19 @@ const BatteryMonitor = () => {
                   </div>
                 </div>
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'rpi' && (
+            <motion.div
+              key="rpi"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+              className="flex-1 flex flex-col min-h-0"
+            >
+              <RaspberryPiTab />
             </motion.div>
           )}
         </AnimatePresence>

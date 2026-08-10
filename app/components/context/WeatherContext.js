@@ -11,6 +11,7 @@ import React, { createContext, useState, useEffect, useContext, useCallback, use
 import signalKService from '../services/SignalKService';
 import { useOcearoContext } from './OcearoContext';
 import { useSignalKPath, useSignalKPaths } from '../hooks/useSignalK';
+import { finite, knotsToMs, degToRad } from '../utils/UnitConversions';
 
 const WeatherContext = createContext();
 
@@ -129,13 +130,13 @@ export const WeatherContextProvider = ({ children }) => {
             ?? (currentForecast?.humidity ?? null);
         const pressure = sensorValues['environment.outside.pressure']
             ?? (currentForecast?.pressure ?? null);
-        const windSpeed = sensorValues['environment.wind.speedTrue']
-            ?? (currentForecast?.wind?.speed != null ? currentForecast.wind.speed / 1.94384 : null);
-        const windDirection = sensorValues['environment.wind.directionTrue']
-            ?? (currentForecast?.wind?.direction != null ? currentForecast.wind.direction * Math.PI / 180 : null);
+        const windSpeed = finite(sensorValues['environment.wind.speedTrue'])
+            ?? finite(knotsToMs(currentForecast?.wind?.speed));
+        const windDirection = finite(sensorValues['environment.wind.directionTrue'])
+            ?? finite(degToRad(currentForecast?.wind?.direction));
 
         const hasAny = temperature !== null || humidity !== null || pressure !== null || windSpeed !== null;
-        const hasSensor = Object.values(sensorValues).some(v => v !== null);
+        const hasSensor = Object.values(sensorValues).some(v => finite(v) !== null);
 
         // Cloud cover normalized to 0-1 (sources report either ratio or percent)
         const rawClouds = currentForecast?.clouds;
@@ -161,14 +162,15 @@ export const WeatherContextProvider = ({ children }) => {
     const getWindData = useCallback(() => {
         const currentForecast = forecasts.length > 0 ? forecasts[0] : null;
 
-        const speed = sensorValues['environment.wind.speedTrue']
-            ?? (currentForecast?.wind?.speed != null ? currentForecast.wind.speed / 1.94384 : null);
-        const direction = sensorValues['environment.wind.directionTrue']
-            ?? (currentForecast?.wind?.direction != null ? currentForecast.wind.direction * Math.PI / 180 : null);
-        const gust = sensorValues['environment.wind.gust']
-            ?? (currentForecast?.wind?.gust != null ? currentForecast.wind.gust / 1.94384 : null);
+        const speed = finite(sensorValues['environment.wind.speedTrue'])
+            ?? finite(knotsToMs(currentForecast?.wind?.speed));
+        const direction = finite(sensorValues['environment.wind.directionTrue'])
+            ?? finite(degToRad(currentForecast?.wind?.direction));
+        const gust = finite(sensorValues['environment.wind.gust'])
+            ?? finite(knotsToMs(currentForecast?.wind?.gust));
 
-        const hasSensor = sensorValues['environment.wind.speedTrue'] !== null || sensorValues['environment.wind.directionTrue'] !== null;
+        const hasSensor = finite(sensorValues['environment.wind.speedTrue']) !== null
+            || finite(sensorValues['environment.wind.directionTrue']) !== null;
 
         return {
             source: (speed !== null || direction !== null) ? (hasSensor ? 'sensors' : 'forecast') : null,

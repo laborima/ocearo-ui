@@ -75,7 +75,8 @@ export default function AutopilotView() {
 
     const [autopilotData, setAutopilotData] = useState(null);
     const [devices, setDevices] = useState([]);
-    const [selectedDevice, setSelectedDevice] = useState('default');
+    // '_default' is the Signal K v2 autopilot API's reserved id for the primary pilot.
+    const [selectedDevice, setSelectedDevice] = useState('_default');
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isAutopilotAvailable, setIsAutopilotAvailable] = useState(false);
@@ -100,13 +101,23 @@ export default function AutopilotView() {
             setIsAutopilotAvailable(available);
             
             if (!available) {
-                // Use subscribed SignalK values as fallback (via ref to avoid dep loop)
+                // Read-only fallback on the v1 data paths (via ref to avoid dep loop).
+                // A pilot on the NMEA2000 bus publishes `state` even with no v2
+                // provider, so the view can still *show* something — but nothing
+                // is controllable. Say so instead of silently rendering an inert
+                // panel: this is exactly the "it doesn't work" case.
                 const vals = skValuesRef.current;
                 const state = vals['steering.autopilot.state'];
                 const mode = vals['steering.autopilot.mode'];
-                const target = vals['steering.autopilot.target.headingTrue'] || 
+                const target = vals['steering.autopilot.target.headingTrue'] ||
                               vals['steering.autopilot.target.windAngleApparent'];
-                
+
+                if (!debugMode) {
+                    setError(state
+                        ? t('autopilot.providerMissingButDetected')
+                        : t('autopilot.providerMissing'));
+                }
+
                 setAutopilotData({
                     state: state || (debugMode ? 'standby' : 'off-line'),
                     mode: mode || (debugMode ? 'compass' : null),
@@ -115,11 +126,17 @@ export default function AutopilotView() {
                 });
                 return;
             }
-            
+
             // Fetch devices
             const deviceList = await signalKService.getAutopilotDevices();
             setDevices(deviceList);
-            
+
+            // The API answered but registered no device — a provider that failed
+            // to register would otherwise be indistinguishable from a healthy one.
+            if (deviceList.length === 0 && !debugMode) {
+                setError(t('autopilot.noDeviceRegistered'));
+            }
+
             if (deviceList.length > 0 && !deviceList.includes(selectedDevice)) {
                 setSelectedDevice(deviceList[0]);
             }
@@ -134,7 +151,7 @@ export default function AutopilotView() {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedDevice, debugMode]);
+    }, [selectedDevice, debugMode, t]);
 
     /**
      * Fetch controller configuration from OcearoCore
@@ -210,8 +227,9 @@ export default function AutopilotView() {
     const handleAdjustHeading = async (deltaDegrees) => {
         try {
             setError(null);
-            const deltaRadians = deltaDegrees * Math.PI / 180;
-            await signalKService.adjustAutopilotTarget(deltaRadians, selectedDevice);
+            // The v2 API takes a value plus its unit; sending bare radians made
+            // providers interpret the delta as degrees.
+            await signalKService.adjustAutopilotTarget(deltaDegrees, selectedDevice);
             await fetchAutopilotData();
         } catch (err) {
             setError(t('autopilot.failedToAdjustHeading', { message: err.message }));
@@ -723,7 +741,7 @@ export default function AutopilotView() {
             </AnimatePresence>
 
             {/* Device selector - show if multiple devices */}
-            {devices.length > 1 && (
+            {devices.length > 0 && (
                 <div className="px-4 pt-4">
                     <select
                         value={selectedDevice}

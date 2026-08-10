@@ -73,7 +73,7 @@ const ThreeDBoatSpeedIndicator = () => {
                 tabIndex={0}
                 aria-label={`Current speed: ${currentSpeed} ${currentSpeedType}. Click to change speed type.`}
             >
-                {currentSpeed?.toFixed(1) || '--'}
+                {Number.isFinite(currentSpeed) ? currentSpeed.toFixed(1) : '--'}
             </div>
             <div className="flex items-center space-x-2 ml-1">
                 <div className={`text-xs font-black uppercase tracking-[0.3em] ${nightMode ? 'text-oNight' : 'text-hud-secondary'}`}>

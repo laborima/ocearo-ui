@@ -959,7 +959,7 @@ class SignalKService {
      * @returns {Promise<Array<string>>} List of autopilot device IDs
      */
     async getAutopilotDevices() {
-        const path = '/signalk/v2/api/vessels/self/steering/autopilot';
+        const path = '/signalk/v2/api/vessels/self/autopilots';
         try {
             const data = await this.apiCall(path);
             return Object.keys(data || {});
@@ -974,8 +974,8 @@ class SignalKService {
      * @param {string} deviceId - Autopilot device ID (optional, uses default if not specified)
      * @returns {Promise<Object>} Autopilot data (state, mode, target, engaged)
      */
-    async getAutopilotData(deviceId = 'default') {
-        const path = `/signalk/v2/api/vessels/self/steering/autopilot/${deviceId}`;
+    async getAutopilotData(deviceId = '_default') {
+        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}`;
         return await this.apiCall(path);
     }
 
@@ -984,8 +984,8 @@ class SignalKService {
      * @param {string} deviceId - Autopilot device ID
      * @returns {Promise<string>} State ('enabled', 'disabled', 'standby', 'off-line')
      */
-    async getAutopilotState(deviceId = 'default') {
-        const path = `/signalk/v2/api/vessels/self/steering/autopilot/${deviceId}/state`;
+    async getAutopilotState(deviceId = '_default') {
+        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/state`;
         return await this.apiCall(path);
     }
 
@@ -995,12 +995,12 @@ class SignalKService {
      * @param {string} deviceId - Autopilot device ID
      * @returns {Promise<Object>}
      */
-    async setAutopilotState(state, deviceId = 'default') {
+    async setAutopilotState(state, deviceId = '_default') {
         if (!SignalKService.AUTOPILOT_STATES.includes(state)) {
             throw new Error(`Invalid autopilot state: ${state}`);
         }
 
-        const path = `/signalk/v2/api/vessels/self/steering/autopilot/${deviceId}/state`;
+        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/state`;
         return await this.apiCall(path, {
             method: 'PUT',
             body: JSON.stringify({ value: state })
@@ -1012,8 +1012,8 @@ class SignalKService {
      * @param {string} deviceId - Autopilot device ID
      * @returns {Promise<string>} Mode ('compass', 'gps', 'wind', 'route', 'dodge')
      */
-    async getAutopilotMode(deviceId = 'default') {
-        const path = `/signalk/v2/api/vessels/self/steering/autopilot/${deviceId}/mode`;
+    async getAutopilotMode(deviceId = '_default') {
+        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/mode`;
         return await this.apiCall(path);
     }
 
@@ -1023,12 +1023,12 @@ class SignalKService {
      * @param {string} deviceId - Autopilot device ID
      * @returns {Promise<Object>}
      */
-    async setAutopilotMode(mode, deviceId = 'default') {
+    async setAutopilotMode(mode, deviceId = '_default') {
         if (!SignalKService.AUTOPILOT_MODES.includes(mode)) {
             throw new Error(`Invalid autopilot mode: ${mode}`);
         }
 
-        const path = `/signalk/v2/api/vessels/self/steering/autopilot/${deviceId}/mode`;
+        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/mode`;
         return await this.apiCall(path, {
             method: 'PUT',
             body: JSON.stringify({ value: mode })
@@ -1040,8 +1040,8 @@ class SignalKService {
      * @param {string} deviceId - Autopilot device ID
      * @returns {Promise<number>} Target in radians
      */
-    async getAutopilotTarget(deviceId = 'default') {
-        const path = `/signalk/v2/api/vessels/self/steering/autopilot/${deviceId}/target`;
+    async getAutopilotTarget(deviceId = '_default') {
+        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/target`;
         return await this.apiCall(path);
     }
 
@@ -1051,8 +1051,8 @@ class SignalKService {
      * @param {string} deviceId - Autopilot device ID
      * @returns {Promise<Object>}
      */
-    async setAutopilotTarget(target, deviceId = 'default') {
-        const path = `/signalk/v2/api/vessels/self/steering/autopilot/${deviceId}/target`;
+    async setAutopilotTarget(target, deviceId = '_default') {
+        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/target`;
         return await this.apiCall(path, {
             method: 'PUT',
             body: JSON.stringify({ value: target })
@@ -1065,11 +1065,11 @@ class SignalKService {
      * @param {string} deviceId - Autopilot device ID
      * @returns {Promise<Object>}
      */
-    async adjustAutopilotTarget(delta, deviceId = 'default') {
-        const path = `/signalk/v2/api/vessels/self/steering/autopilot/${deviceId}/target/adjust`;
+    async adjustAutopilotTarget(delta, deviceId = '_default') {
+        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/target/adjust`;
         return await this.apiCall(path, {
             method: 'PUT',
-            body: JSON.stringify({ value: delta })
+            body: JSON.stringify({ value: delta, units: 'deg' })
         });
     }
 
@@ -1078,8 +1078,8 @@ class SignalKService {
      * @param {string} deviceId - Autopilot device ID
      * @returns {Promise<Object>}
      */
-    async engageAutopilot(deviceId = 'default') {
-        const path = `/signalk/v2/api/vessels/self/steering/autopilot/${deviceId}/engage`;
+    async engageAutopilot(deviceId = '_default') {
+        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/engage`;
         return await this.apiCall(path, {
             method: 'POST'
         });
@@ -1090,8 +1090,8 @@ class SignalKService {
      * @param {string} deviceId - Autopilot device ID
      * @returns {Promise<Object>}
      */
-    async disengageAutopilot(deviceId = 'default') {
-        const path = `/signalk/v2/api/vessels/self/steering/autopilot/${deviceId}/disengage`;
+    async disengageAutopilot(deviceId = '_default') {
+        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/disengage`;
         return await this.apiCall(path, {
             method: 'POST'
         });
@@ -1103,12 +1103,12 @@ class SignalKService {
      * @param {string} deviceId - Autopilot device ID
      * @returns {Promise<Object>}
      */
-    async autopilotTack(direction, deviceId = 'default') {
+    async autopilotTack(direction, deviceId = '_default') {
         if (direction !== 'port' && direction !== 'starboard') {
             throw new Error(`Invalid tack direction: ${direction}`);
         }
 
-        const path = `/signalk/v2/api/vessels/self/steering/autopilot/${deviceId}/tack/${direction}`;
+        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/tack/${direction}`;
         return await this.apiCall(path, {
             method: 'POST'
         });
@@ -1120,12 +1120,12 @@ class SignalKService {
      * @param {string} deviceId - Autopilot device ID
      * @returns {Promise<Object>}
      */
-    async autopilotGybe(direction, deviceId = 'default') {
+    async autopilotGybe(direction, deviceId = '_default') {
         if (direction !== 'port' && direction !== 'starboard') {
             throw new Error(`Invalid gybe direction: ${direction}`);
         }
 
-        const path = `/signalk/v2/api/vessels/self/steering/autopilot/${deviceId}/gybe/${direction}`;
+        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/gybe/${direction}`;
         return await this.apiCall(path, {
             method: 'POST'
         });
@@ -1137,8 +1137,8 @@ class SignalKService {
      * @param {string} deviceId - Autopilot device ID
      * @returns {Promise<Object>}
      */
-    async autopilotDodge(value, deviceId = 'default') {
-        const path = `/signalk/v2/api/vessels/self/steering/autopilot/${deviceId}/dodge`;
+    async autopilotDodge(value, deviceId = '_default') {
+        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/dodge`;
         return await this.apiCall(path, {
             method: 'PUT',
             body: JSON.stringify({ value })

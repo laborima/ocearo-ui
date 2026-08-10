@@ -173,7 +173,21 @@
     "jsHeap": "Heap JS",
     "vramTextures": "Texturas VRAM",
     "houseBattery": "Batería de servicio",
-    "starterBattery": "Batería de arranque"
+    "starterBattery": "Batería de arranque",
+    "rpi": "RPi",
+    "rpiTemperature": "SoC temp",
+    "rpiCpu": "CPU",
+    "rpiMemory": "Memory",
+    "rpiDisk": "Disk",
+    "rpiLoad": "Load avg",
+    "rpiRam": "RAM",
+    "rpiSwap": "Swap",
+    "rpiUptime": "Up",
+    "rpiTopProcesses": "Top processes",
+    "rpiUnavailable": "Host metrics unavailable",
+    "rpiThrottlingHeat": "Throttling now — SoC over temperature",
+    "rpiThrottlingPower": "Throttling now — under-voltage, check the power supply",
+    "rpiThrottlingPast": "Throttled since boot — heat or power supply"
   },
   "autopilot": {
     "control": "Control",
@@ -222,7 +236,10 @@
     "failedToSetHeading": "Error al establecer rumbo: {{message}}",
     "failedToTack": "Error en la virada: {{message}}",
     "failedToGybe": "Error en la trasluchada: {{message}}",
-    "failedToSaveConfig": "Error al guardar configuración del mando: {{message}}"
+    "failedToSaveConfig": "Error al guardar configuración del mando: {{message}}",
+    "providerMissing": "No autopilot provider installed on the Signal K server — this view is read-only.",
+    "providerMissingButDetected": "Pilot detected on the NMEA2000 bus, but no autopilot provider is installed on the Signal K server — controls are disabled.",
+    "noDeviceRegistered": "The autopilot API is available but no device is registered — check the provider plugin configuration."
   },
   "debug": {
     "systemDebug": "Depuración del sistema",
@@ -446,6 +463,7 @@
     "sog": "SOG",
     "weatherCol": "Meteorología",
     "baro": "Baro",
+    "depth": "Profundidad",
     "position": "Posición",
     "log": "Log",
     "eng": "Mot.",

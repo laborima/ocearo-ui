@@ -173,7 +173,21 @@
     "jsHeap": "JS Heap",
     "vramTextures": "Υφές VRAM",
     "houseBattery": "Μπαταρία υπηρεσίας",
-    "starterBattery": "Μπαταρία εκκίνησης"
+    "starterBattery": "Μπαταρία εκκίνησης",
+    "rpi": "RPi",
+    "rpiTemperature": "SoC temp",
+    "rpiCpu": "CPU",
+    "rpiMemory": "Memory",
+    "rpiDisk": "Disk",
+    "rpiLoad": "Load avg",
+    "rpiRam": "RAM",
+    "rpiSwap": "Swap",
+    "rpiUptime": "Up",
+    "rpiTopProcesses": "Top processes",
+    "rpiUnavailable": "Host metrics unavailable",
+    "rpiThrottlingHeat": "Throttling now — SoC over temperature",
+    "rpiThrottlingPower": "Throttling now — under-voltage, check the power supply",
+    "rpiThrottlingPast": "Throttled since boot — heat or power supply"
   },
   "autopilot": {
     "control": "Έλεγχος",
@@ -222,7 +236,10 @@
     "failedToSetHeading": "Αποτυχία ορισμού πορείας: {{message}}",
     "failedToTack": "Αποτυχία ανάστροφης: {{message}}",
     "failedToGybe": "Αποτυχία προσήνεμης στροφής: {{message}}",
-    "failedToSaveConfig": "Αποτυχία αποθήκευσης ρύθμισης χειριστηρίου: {{message}}"
+    "failedToSaveConfig": "Αποτυχία αποθήκευσης ρύθμισης χειριστηρίου: {{message}}",
+    "providerMissing": "No autopilot provider installed on the Signal K server — this view is read-only.",
+    "providerMissingButDetected": "Pilot detected on the NMEA2000 bus, but no autopilot provider is installed on the Signal K server — controls are disabled.",
+    "noDeviceRegistered": "The autopilot API is available but no device is registered — check the provider plugin configuration."
   },
   "debug": {
     "systemDebug": "Εντοπισμός σφαλμάτων συστήματος",
@@ -446,6 +463,7 @@
     "sog": "SOG",
     "weatherCol": "Καιρός",
     "baro": "Βαρο",
+    "depth": "Βάθος",
     "position": "Θέση",
     "log": "Ημερ.",
     "eng": "Κιν.",

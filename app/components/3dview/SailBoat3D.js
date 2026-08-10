@@ -300,12 +300,14 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
             result.push(`Vessel: ${data.name}`);
         }
         
-        if (data.trueWindSpeed) {
-            result.push(`Wind: ${toKnots(data.trueWindSpeed)} kn @ ${toDegrees(data.trueWindAngle)}°`);
+        if (Number.isFinite(data.trueWindSpeed)) {
+            const angle = toDegrees(data.trueWindAngle);
+            result.push(`Wind: ${toKnots(data.trueWindSpeed)} kn${angle !== null ? ` @ ${angle}°` : ''}`);
         }
-        
-        if (data.appWindSpeed) {
-            result.push(`App Wind: ${toKnots(data.appWindSpeed)} kn @ ${toDegrees(data.appWindAngle)}°`);
+
+        if (Number.isFinite(data.appWindSpeed)) {
+            const angle = toDegrees(data.appWindAngle);
+            result.push(`App Wind: ${toKnots(data.appWindSpeed)} kn${angle !== null ? ` @ ${angle}°` : ''}`);
         }
         
         if (data.speedThroughWater) {

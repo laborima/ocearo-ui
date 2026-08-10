@@ -1,7 +1,7 @@
 'use client';
 import React, { useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { toDegrees, MS_TO_KNOTS, convertSpeedUnit, getSpeedUnitLabel } from '../../context/OcearoContext';
+import { toDegrees, MS_TO_KNOTS, convertSpeedUnit, getSpeedUnitLabel, finite } from '../../context/OcearoContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
 import { faTachometerAlt, faCompass, faWater, faWind } from '@fortawesome/free-solid-svg-icons';
@@ -33,12 +33,14 @@ const SpeedWidget = React.memo(() => {
     
     return {
       hasData: true,
-      sog: sog !== null ? convertSpeedUnit(sog) : null,
-      stw: stw !== null ? convertSpeedUnit(stw) : null,
-      heading: heading !== null ? Math.round(toDegrees(heading)) : null,
-      cog: cog !== null ? Math.round(toDegrees(cog)) : null,
-      windSpeed: windSpeed !== null ? convertSpeedUnit(windSpeed) : null,
-      drift: sog !== null && stw !== null ? convertSpeedUnit(sog - stw) : null,
+      // The converters already collapse null/undefined/NaN to null — guarding on
+      // `!== null` beforehand only let NaN reach Math.round(), which turned it into 0.
+      sog: convertSpeedUnit(sog),
+      stw: convertSpeedUnit(stw),
+      heading: toDegrees(heading),
+      cog: toDegrees(cog),
+      windSpeed: convertSpeedUnit(windSpeed),
+      drift: (finite(sog) !== null && finite(stw) !== null) ? convertSpeedUnit(sog - stw) : null,
       speedUnitLabel: getSpeedUnitLabel()
     };
   }, [sogValue, stwValue, headingValue, cogValue, windSpeedValue, debugMode]);
