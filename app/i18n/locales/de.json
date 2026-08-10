@@ -338,7 +338,6 @@
     "driftEffect": "Drifteffekt",
     "attitudeInertial": "Lage",
     "signalLossIMU": "Signalverlust: IMU-Knoten",
-    "boatView3D": "Boot 3D",
     "initializingNode": "Knoten wird initialisiert",
     "telemetryLive": "Telemetrie live",
     "energyStorage": "Energie",
@@ -425,7 +424,9 @@
     "previous": "Zurück",
     "proceed": "Weiter",
     "distance": "Dist.",
-    "bearing": "Peil."
+    "bearing": "Peil.",
+    "compassHeading": "Kompass",
+    "signalLossHeading": "Kein Kurssignal"
   },
   "logbook": {
     "logbookEntries": "Logbucheinträge",

@@ -338,7 +338,6 @@
     "driftEffect": "Drifteffekt",
     "attitudeInertial": "Attitude",
     "signalLossIMU": "Signaltab: IMU-knude",
-    "boatView3D": "Båd 3D",
     "initializingNode": "Initialiserer knude",
     "telemetryLive": "Telemetri live",
     "energyStorage": "Energi",
@@ -425,7 +424,9 @@
     "previous": "Forr.",
     "proceed": "Næste",
     "distance": "Afst.",
-    "bearing": "Pejl."
+    "bearing": "Pejl.",
+    "compassHeading": "Kompas",
+    "signalLossHeading": "Intet kurssignal"
   },
   "logbook": {
     "logbookEntries": "Logbogsposter",

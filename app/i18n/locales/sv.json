@@ -338,7 +338,6 @@
     "driftEffect": "Drifteffekt",
     "attitudeInertial": "Attityd",
     "signalLossIMU": "Signalförlust: IMU-nod",
-    "boatView3D": "Båt 3D",
     "initializingNode": "Initierar nod",
     "telemetryLive": "Telemetri live",
     "energyStorage": "Energi",
@@ -425,7 +424,9 @@
     "previous": "Föreg.",
     "proceed": "Nästa",
     "distance": "Avst.",
-    "bearing": "Bär."
+    "bearing": "Bär.",
+    "compassHeading": "Kompass",
+    "signalLossHeading": "Ingen kurssignal"
   },
   "logbook": {
     "logbookEntries": "Loggboksposter",

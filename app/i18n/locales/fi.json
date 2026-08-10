@@ -338,7 +338,6 @@
     "driftEffect": "Ajautumisefekti",
     "attitudeInertial": "Asento",
     "signalLossIMU": "Signaalin menetys: IMU-solmu",
-    "boatView3D": "Vene 3D",
     "initializingNode": "Alustetaan solmua",
     "telemetryLive": "Telemetria live",
     "energyStorage": "Energia",
@@ -425,7 +424,9 @@
     "previous": "Edell.",
     "proceed": "Seur.",
     "distance": "Etäs.",
-    "bearing": "Suunt."
+    "bearing": "Suunt.",
+    "compassHeading": "Kompassi",
+    "signalLossHeading": "Ei suuntasignaalia"
   },
   "logbook": {
     "logbookEntries": "Lokikirjan merkinnät",

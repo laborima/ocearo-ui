@@ -385,7 +385,6 @@
     "driftEffect": "Drift effect",
     "attitudeInertial": "Attitude",
     "signalLossIMU": "Signal loss: IMU node",
-    "boatView3D": "3D Boat",
     "initializingNode": "Initializing node",
     "telemetryLive": "Telemetry live",
     "energyStorage": "Energy",
@@ -472,7 +471,9 @@
     "previous": "Prev",
     "proceed": "Next",
     "distance": "Dist",
-    "bearing": "Brg"
+    "bearing": "Brg",
+    "compassHeading": "Compass",
+    "signalLossHeading": "No heading signal"
   },
   "logbook": {
     "logbookEntries": "Logbook Entries",

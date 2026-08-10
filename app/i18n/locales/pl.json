@@ -338,7 +338,6 @@
     "driftEffect": "Efekt dryfu",
     "attitudeInertial": "Przechył",
     "signalLossIMU": "Utrata sygnału: węzeł IMU",
-    "boatView3D": "Łódź 3D",
     "initializingNode": "Inicjalizacja węzła",
     "telemetryLive": "Telemetria na żywo",
     "energyStorage": "Energia",
@@ -425,7 +424,9 @@
     "previous": "Poprz.",
     "proceed": "Dalej",
     "distance": "Dyst.",
-    "bearing": "Namiar"
+    "bearing": "Namiar",
+    "compassHeading": "Kompas",
+    "signalLossHeading": "Brak sygnału kursu"
   },
   "logbook": {
     "logbookEntries": "Wpisy dziennika",

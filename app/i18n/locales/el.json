@@ -338,7 +338,6 @@
     "driftEffect": "Εφέ παρασυρμού",
     "attitudeInertial": "Στάση",
     "signalLossIMU": "Απώλεια σήματος: κόμβος IMU",
-    "boatView3D": "Σκάφος 3D",
     "initializingNode": "Αρχικοποίηση κόμβου",
     "telemetryLive": "Τηλεμετρία ζωντανά",
     "energyStorage": "Ενέργεια",
@@ -425,7 +424,9 @@
     "previous": "Προηγ.",
     "proceed": "Επόμ.",
     "distance": "Απόστ.",
-    "bearing": "Διόπτ."
+    "bearing": "Διόπτ.",
+    "compassHeading": "Πυξίδα",
+    "signalLossHeading": "Χωρίς σήμα πορείας"
   },
   "logbook": {
     "logbookEntries": "Καταχωρήσεις ημερολογίου",

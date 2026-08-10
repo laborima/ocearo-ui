@@ -385,7 +385,6 @@
     "driftEffect": "Effet de dérive",
     "attitudeInertial": "Assiette",
     "signalLossIMU": "Perte de signal : nœud IMU",
-    "boatView3D": "Bateau 3D",
     "initializingNode": "Initialisation du nœud",
     "telemetryLive": "Télémétrie en direct",
     "energyStorage": "Énergie",
@@ -472,7 +471,9 @@
     "previous": "Préc.",
     "proceed": "Suiv.",
     "distance": "Dist.",
-    "bearing": "Relèv."
+    "bearing": "Relèv.",
+    "compassHeading": "Compas",
+    "signalLossHeading": "Pas de signal de cap"
   },
   "logbook": {
     "logbookEntries": "Entrées du journal",

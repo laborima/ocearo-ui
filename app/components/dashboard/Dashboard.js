@@ -10,7 +10,7 @@ import PressureWidget from './widgets/PressureWidget';
 import AirQualityWidget from './widgets/AirQualityWidget';
 import TideWidget from './widgets/TideWidget';
 import TemperatureWidget from './widgets/TemperatureWidget';
-import BoatWidget3D from './widgets/BoatWidget3D';
+import CompassWidget from './widgets/CompassWidget';
 import AttitudeWidget from './widgets/AttitudeWidget';
 import DepthWidget from './widgets/DepthWidget';
 import AISRadarWidget from './widgets/AISRadarWidget';
@@ -134,12 +134,12 @@ export default function Dashboard() {
     >
       {/* Navigation widgets - 6 total */}
       <WidgetWrapper 
-        widgetName="boat3d" 
+        widgetName="compass" 
         fullscreenWidget={fullscreenWidget} 
         toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'boat3d' ? 'hidden' : fullscreenWidget === 'boat3d' ? 'w-full h-full' : ''}
+        className={fullscreenWidget && fullscreenWidget !== 'compass' ? 'hidden' : fullscreenWidget === 'compass' ? 'w-full h-full' : ''}
       >
-        <BoatWidget3D />
+        <CompassWidget />
       </WidgetWrapper>
       <WidgetWrapper 
         widgetName="attitude" 

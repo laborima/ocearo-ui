@@ -338,7 +338,6 @@
     "driftEffect": "Drifteffect",
     "attitudeInertial": "Stand",
     "signalLossIMU": "Signaalverlies: IMU-knooppunt",
-    "boatView3D": "Boot 3D",
     "initializingNode": "Knooppunt initialiseren",
     "telemetryLive": "Telemetrie live",
     "energyStorage": "Energie",
@@ -425,7 +424,9 @@
     "previous": "Vorige",
     "proceed": "Volg.",
     "distance": "Afst.",
-    "bearing": "Peil."
+    "bearing": "Peil.",
+    "compassHeading": "Kompas",
+    "signalLossHeading": "Geen koerssignaal"
   },
   "logbook": {
     "logbookEntries": "Logboekvermeldingen",
