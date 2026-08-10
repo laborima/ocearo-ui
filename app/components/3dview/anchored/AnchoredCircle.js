@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Line } from '@react-three/drei';
 import { oYellow, oRed, oGray } from '../../context/OcearoContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
@@ -15,6 +15,12 @@ const DEFAULT_RADIUS_M = 30;
 
 /** How often the swing track is refreshed. The server samples every 20 s. */
 const TRACK_POLL_MS = 15000;
+
+/** Consecutive failures after which polling backs off (ocearo-core down). */
+const MAX_TRACK_POLL_FAILURES = 3;
+
+/** Slow poll used after repeated failures, so the track returns on its own. */
+const TRACK_POLL_BACKOFF_MS = 120000;
 
 /**
  * Metres → scene units.
@@ -69,63 +75,85 @@ const AnchoredCircle = () => {
     const skPosition = useSignalKPath('navigation.position');
     const skAnchorPosition = useSignalKPath('navigation.anchor.position');
     const skMaxRadius = useSignalKPath('navigation.anchor.maxRadius');
+    const skHeadingTrue = useSignalKPath('navigation.headingTrue');
+    const skHeadingMagnetic = useSignalKPath('navigation.headingMagnetic');
+    const skCog = useSignalKPath('navigation.courseOverGroundTrue');
 
     const [track, setTrack] = useState([]);
-    const [fallbackAnchor, setFallbackAnchor] = useState(null);
-
-    // Keep the latest fix in a ref so the poll does not restart on every delta.
-    const positionRef = useRef(skPosition);
-    positionRef.current = skPosition;
 
     // Poll the swing track recorded by ocearo-core. The server buffer survives
     // a UI reload, which a client-side accumulation would not.
     useEffect(() => {
         let cancelled = false;
+        let id = null;
+        let failures = 0;
+        let inFlight = false;
+
+        const arm = (delay) => {
+            if (id) clearInterval(id);
+            id = setInterval(poll, delay);
+        };
 
         const poll = async () => {
+            // A failing call can hang until the API timeout, which is longer
+            // than the poll period; without this, requests would pile up.
+            if (inFlight) return;
+            inFlight = true;
             try {
                 const res = await getAnchorTrack();
                 if (cancelled) return;
+                if (failures >= MAX_TRACK_POLL_FAILURES) arm(TRACK_POLL_MS);
+                failures = 0;
                 setTrack(Array.isArray(res?.track) ? res.track : []);
             } catch {
-                // Anchor plugin unavailable — the circle still draws from the
-                // Signal K paths or the fallback below.
-                if (!cancelled) setTrack([]);
+                if (cancelled) return;
+                // Keep the last good track: a Signal K restart is routine and
+                // must not erase what is on screen. Back off instead of giving
+                // up, so the track comes back once the server does.
+                if (++failures === MAX_TRACK_POLL_FAILURES) arm(TRACK_POLL_BACKOFF_MS);
+            } finally {
+                inFlight = false;
             }
         };
 
         poll();
-        const id = setInterval(poll, TRACK_POLL_MS);
-        return () => { cancelled = true; clearInterval(id); };
+        arm(TRACK_POLL_MS);
+        return () => { cancelled = true; if (id) clearInterval(id); };
     }, []);
-
-    // Without a dropped anchor there is nothing authoritative to centre on;
-    // remember the first fix so the view is not empty.
-    useEffect(() => {
-        if (!fallbackAnchor && skPosition?.latitude != null && skPosition?.longitude != null) {
-            setFallbackAnchor({ latitude: skPosition.latitude, longitude: skPosition.longitude });
-        }
-    }, [skPosition, fallbackAnchor]);
 
     const anchorPosition = useMemo(() => {
         if (skAnchorPosition?.latitude != null && skAnchorPosition?.longitude != null) {
             return { latitude: skAnchorPosition.latitude, longitude: skAnchorPosition.longitude };
         }
-        return fallbackAnchor;
-    }, [skAnchorPosition, fallbackAnchor]);
+        return null;
+    }, [skAnchorPosition]);
 
-    const radius = Number.isFinite(skMaxRadius) && skMaxRadius > 0
-        ? skMaxRadius / M_PER_UNIT
-        : DEFAULT_RADIUS_M / M_PER_UNIT;
+    const radiusKnown = Number.isFinite(skMaxRadius) && skMaxRadius > 0;
+    const radius = (radiusKnown ? skMaxRadius : DEFAULT_RADIUS_M) / M_PER_UNIT;
 
     // Anchor position in scene coordinates, relative to the boat at the origin.
+    //
+    // With no anchor dropped the circle is centred on the boat itself, as a
+    // preview of the alarm radius. Anchoring it to the first fix ever seen
+    // would drift kilometres away on a moving boat — and the plugin publishes
+    // a null position once the anchor is raised, so that stale centre would
+    // survive weighing anchor.
     const anchorScene = useMemo(() => {
-        if (!anchorPosition || skPosition?.latitude == null || skPosition?.longitude == null) {
-            return null;
-        }
+        if (skPosition?.latitude == null || skPosition?.longitude == null) return null;
+        if (!anchorPosition) return [0, PLANE_Y, 0];
         const [x, z] = project(anchorPosition, skPosition);
         return [x, PLANE_Y, z];
     }, [anchorPosition, skPosition]);
+
+    // The hull is drawn bow-up (SailBoat3D pins its yaw to 0), so the whole
+    // overlay has to be counter-rotated by the heading to sit in the same frame
+    // — exactly what AISView does with its own group. Without this, an anchor
+    // due north is drawn straight ahead whatever way the boat is lying, which
+    // defeats the purpose of showing the rode and the swing.
+    const sceneRotation = useMemo(() => {
+        const h = skHeadingTrue ?? skHeadingMagnetic ?? skCog ?? 0;
+        return Number.isFinite(h) ? h : 0;
+    }, [skHeadingTrue, skHeadingMagnetic, skCog]);
 
     const circlePoints = useMemo(() => {
         const pts = [];
@@ -143,7 +171,10 @@ const AnchoredCircle = () => {
     );
 
     const trackPoints = useMemo(() => {
-        if (!skPosition?.latitude || !track.length) return null;
+        // `!= null`, not a falsy test: latitude 0 is a valid position, and
+        // longitude has to be guarded too since project() dereferences it.
+        if (skPosition?.latitude == null || skPosition?.longitude == null) return null;
+        if (!track.length) return null;
         const pts = track
             .filter(p => Number.isFinite(p?.latitude) && Number.isFinite(p?.longitude))
             .map(p => {
@@ -157,21 +188,23 @@ const AnchoredCircle = () => {
     }, [track, skPosition]);
 
     // Rode: a straight line from the anchor to the bow, the quickest read on
-    // which way the boat is lying.
+    // which way the boat is lying. Pointless when the circle is centred on the
+    // boat because no anchor is down.
     const rodePoints = useMemo(
-        () => (anchorScene ? [anchorScene, [0, PLANE_Y, 0]] : null),
-        [anchorScene]
+        () => (anchorScene && anchorPosition ? [anchorScene, [0, PLANE_Y, 0]] : null),
+        [anchorScene, anchorPosition]
     );
 
     if (!anchorScene) return null;
 
-    // Only a real dropped anchor can drag; the fallback centre is the first fix
-    // seen, so the boat would always sit inside its own circle.
-    const dragging = skAnchorPosition?.latitude != null &&
+    // Drag colouring needs both a real drop point and a real alarm radius:
+    // against the 30 m default, a boat lying correctly at 40 m on a 60 m scope
+    // would be painted as dragging while the server raises nothing.
+    const dragging = anchorPosition !== null && radiusKnown &&
         Math.hypot(anchorScene[0], anchorScene[2]) > radius;
 
     return (
-        <group>
+        <group rotation={[0, sceneRotation, 0]}>
             {/* Alarm circle */}
             <group position={anchorScene}>
                 <Line

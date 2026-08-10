@@ -19,7 +19,7 @@
  * correct if that plugin is ever disabled.
  */
 
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSignalKPath } from '../hooks/useSignalK';
 
 /**
@@ -97,15 +97,19 @@ export const useVesselClock = () => {
     // Derived here rather than read back from the singleton: the effect above
     // runs after render, so reading module state would return the previous
     // value on the render that first receives a reference.
-    return useMemo(() => {
+    const { offsetMs, corrected } = useMemo(() => {
         const ref = datetime == null ? NaN : new Date(datetime).getTime();
         const delta = Number.isFinite(ref) ? ref - Date.now() : 0;
-        const corrected = Math.abs(delta) >= MIN_SIGNIFICANT_OFFSET_MS;
-        const offsetMs = corrected ? delta : 0;
-        return {
-            now: () => new Date(Date.now() + offsetMs),
-            offsetMs,
-            corrected
-        };
+        const significant = Math.abs(delta) >= MIN_SIGNIFICANT_OFFSET_MS;
+        return { offsetMs: significant ? delta : 0, corrected: significant };
     }, [datetime]);
+
+    // `now` must keep a stable identity: navigation.datetime ticks at 1 Hz, and
+    // a fresh function each tick would restart every interval that depends on
+    // it. The offset is read through a ref so the callback stays current.
+    const offsetRef = useRef(offsetMs);
+    offsetRef.current = offsetMs;
+    const now = useCallback(() => new Date(Date.now() + offsetRef.current), []);
+
+    return useMemo(() => ({ now, offsetMs, corrected }), [now, offsetMs, corrected]);
 };

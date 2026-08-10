@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import BaseWidget from './BaseWidget';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import { useOcearoContext } from '../../context/OcearoContext';
@@ -95,7 +95,12 @@ export default function CompassWidget() {
         // labelled as such rather than silently passed off as true.
         const hdgTrue = toDegrees(headingTrue);
         const hdgMag = toDegrees(headingMagnetic);
-        const heading = hdgTrue !== null ? hdgTrue : hdgMag;
+        const cogFallback = toDegrees(cog);
+        // Many boats carry no compass at all and publish only COG. Falling back
+        // to it keeps the card usable — labelled COG, since it is course made
+        // good over the ground, not where the bow points.
+        const heading = hdgTrue ?? hdgMag ?? cogFallback;
+        const source = hdgTrue !== null ? 'true' : (hdgMag !== null ? 'mag' : 'cog');
 
         // AWA is signed relative to the bow: keep it in [-180, 180] so port
         // shows as negative, the way every wind instrument reads it. toDegrees()
@@ -106,7 +111,7 @@ export default function CompassWidget() {
 
         return {
             heading,
-            isMagnetic: hdgTrue === null && hdgMag !== null,
+            source,
             cog: cogDeg,
             sog: convertSpeedUnit(sog),
             // Apparent wind is relative to the bow, so it is drawn on the rim
@@ -118,8 +123,23 @@ export default function CompassWidget() {
         };
     }, [headingTrue, headingMagnetic, cog, sog, awa, aws]);
 
-    const hasData = data.heading !== null;
-    const rose = hasData ? -data.heading : 0;
+    // The card is drawn whenever anything is readable; the info bar below still
+    // carries COG/SOG/AWA/AWS even when nothing at all resolves, which the 3D
+    // widget this replaces always showed.
+    const hasHeading = data.heading !== null;
+    const hasData = hasHeading || data.cog !== null || data.sog !== null ||
+        data.windSpeed !== null || data.windAngleRelative !== null;
+
+    // Unwrapped rotation: `-heading` jumps from -359 to 0 when crossing north,
+    // and the CSS transition would spin the card a full turn backwards once per
+    // lap. Accumulate the shortest delta instead.
+    const roseRef = useRef(0);
+    if (hasHeading) {
+        const target = -data.heading;
+        const delta = ((target - roseRef.current) % 360 + 540) % 360 - 180;
+        roseRef.current += delta;
+    }
+    const rose = roseRef.current;
 
     const accent = nightMode ? 'text-oNight' : 'text-oBlue';
     const roseColor = nightMode ? '#ef4444' : '#e8e8e8';
@@ -147,9 +167,9 @@ export default function CompassWidget() {
             noDataMessage={t('widgets.signalLossHeading')}
         >
             <div className="absolute top-4 right-4 z-10 flex items-center space-x-3">
-                {data.isMagnetic && (
+                {data.source !== 'true' && hasHeading && (
                     <span className="text-xs px-2 py-0.5 rounded-sm uppercase font-black tracking-widest text-hud-main bg-hud-elevated border border-hud">
-                        MAG
+                        {data.source === 'mag' ? 'MAG' : 'COG'}
                     </span>
                 )}
             </div>
@@ -218,12 +238,12 @@ export default function CompassWidget() {
                     <text x={CX} y={CY - 4} textAnchor="middle" dominantBaseline="central"
                         fontSize="38" fontWeight="900" letterSpacing="-1"
                         fill="currentColor" className="text-hud-main">
-                        {hasData ? `${Math.round(data.heading).toString().padStart(3, '0')}°` : '---'}
+                        {hasHeading ? `${Math.round(data.heading).toString().padStart(3, '0')}°` : '---'}
                     </text>
                     <text x={CX} y={CY + 22} textAnchor="middle" dominantBaseline="central"
                         fontSize="9" fontWeight="900" letterSpacing="2"
                         fill="currentColor" className="text-hud-secondary" fillOpacity="0.6">
-                        {data.isMagnetic ? 'HDG MAG' : 'HDG TRUE'}
+                        {data.source === 'true' ? 'HDG TRUE' : data.source === 'mag' ? 'HDG MAG' : 'COG TRUE'}
                     </text>
                 </svg>
             </div>

@@ -209,7 +209,7 @@ export const TideContextProvider = ({ children }) => {
 
     // Keeps the shared vessel clock fed from navigation.datetime; the local
     // tide lookup below reads it through vesselNow().
-    useVesselClock();
+    const { offsetMs: clockOffsetMs } = useVesselClock();
 
     const skValues = useSignalKPaths(TIDE_PATHS);
 
@@ -284,6 +284,22 @@ export const TideContextProvider = ({ children }) => {
             setIsLoading(false);
         }
     }, []);
+
+    // The GPS reference can land after the first fetch: on a cold Pi the
+    // websocket connect plus the first navigation.datetime delta easily exceeds
+    // INITIAL_FETCH_DELAY. Without this, a wrong system date would miss the
+    // tide file for the whole refresh period — the exact blank widget the
+    // vessel clock exists to prevent.
+    const clockCorrectedRef = useRef(false);
+    useEffect(() => {
+        const corrected = clockOffsetMs !== 0;
+        if (corrected && !clockCorrectedRef.current) {
+            clockCorrectedRef.current = true;
+            fetchTideData();
+        } else if (!corrected) {
+            clockCorrectedRef.current = false;
+        }
+    }, [clockOffsetMs, fetchTideData]);
 
     useEffect(() => {
         fetchTimeoutRef.current = setTimeout(() => {
