@@ -11,6 +11,7 @@ import React, { createContext, useState, useEffect, useContext, useCallback, use
 import signalKService from '../services/SignalKService';
 import { useOcearoContext } from './OcearoContext';
 import { useSignalKPaths } from '../hooks/useSignalK';
+import { useVesselClock, vesselNow } from '../utils/VesselClock';
 
 const TideContext = createContext();
 
@@ -117,7 +118,10 @@ export const calculateTideHeightUsingTwelfths = (highTideHeight, lowTideHeight, 
  */
 const fetchLocalTideData = async (updateSignalKData) => {
     try {
-        const date = new Date();
+        // Vessel time, not system time: the tide file is named after the
+        // month and then indexed by today's date, so a clock that is a few
+        // days off returns no tide at all rather than a wrong one.
+        const date = vesselNow();
         const year = date.getFullYear();
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const filePath = `/tides/larochelle/${month}_${year}.json`;
@@ -132,7 +136,7 @@ const fetchLocalTideData = async (updateSignalKData) => {
         const today = date.toISOString().split('T')[0];
         if (!tideData[today]) return;
 
-        const now = new Date();
+        const now = vesselNow();
         const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
 
         let lastTide = null;
@@ -202,6 +206,10 @@ const fetchLocalTideData = async (updateSignalKData) => {
 
 export const TideContextProvider = ({ children }) => {
     const { updateSignalKData } = useOcearoContext();
+
+    // Keeps the shared vessel clock fed from navigation.datetime; the local
+    // tide lookup below reads it through vesselNow().
+    useVesselClock();
 
     const skValues = useSignalKPaths(TIDE_PATHS);
 

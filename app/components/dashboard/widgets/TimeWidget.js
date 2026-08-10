@@ -5,17 +5,23 @@ import { useSignalKPath } from '../../hooks/useSignalK';
 import BaseWidget from './BaseWidget';
 import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClock, faGlobe, faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
+import { faClock, faGlobe, faSun, faMoon, faSatellite } from '@fortawesome/free-solid-svg-icons';
+import { useVesselClock } from '../../utils/VesselClock';
 
 const TimeWidget = React.memo(() => {
   const { t } = useTranslation();
-  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // The Pi has no RTC battery, so the system clock can be days off after a
+  // power cut with no internet. Read the GPS-disciplined clock instead.
+  const { now, corrected } = useVesselClock();
+  const [currentTime, setCurrentTime] = useState(() => now());
 
   // Tick the clock every second (without an interval the display stays frozen at mount time)
   useEffect(() => {
-    const id = setInterval(() => setCurrentTime(new Date()), 1000);
+    setCurrentTime(now());
+    const id = setInterval(() => setCurrentTime(now()), 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [now]);
 
   const { nightMode } = useOcearoContext();
   
@@ -67,6 +73,17 @@ const TimeWidget = React.memo(() => {
       icon={faClock}
       hasData={true}
     >
+      {/* Flagged explicitly: when this badge shows, the displayed time comes
+          from the GPS because the system clock is more than a minute off. */}
+      {corrected && (
+        <div className="absolute top-4 right-4 z-10">
+          <span className="text-xs px-2 py-0.5 rounded-sm uppercase font-black tracking-widest text-hud-main bg-oBlue/40 border border-oBlue/30 flex items-center space-x-1.5">
+            <FontAwesomeIcon icon={faSatellite} className="text-xs opacity-70" />
+            <span>GPS</span>
+          </span>
+        </div>
+      )}
+
       <div className="flex-1 flex flex-col min-h-0">
         {/* Main time display - centered */}
         <div className="flex-1 flex flex-col justify-center">
