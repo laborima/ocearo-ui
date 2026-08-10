@@ -1,7 +1,6 @@
 import React, { useMemo, Suspense } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
-import configService from '../../settings/ConfigService';
 
 const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
 
@@ -9,6 +8,19 @@ const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
 // scales by the vessel's real length (metres).
 const BASE_MODEL_LENGTH = 10;
 const MIN_BOAT_LENGTH = 4; // floor so tiny craft stay visible
+
+// How large a target is drawn, per metre of real vessel length.
+//
+// Deliberately NOT aisLengthScalingFactor. That setting scales scene *positions*
+// (AISContext), so using it here too made one slider do two jobs: turning it down
+// to bring targets closer shrank them by the same amount, which is not a zoom.
+// Targets keep a constant size and only their spacing follows the setting — which
+// is what the control calls itself ("map target visibility"). The value is the old
+// default of that setting, so the default view is unchanged.
+//
+// Trade-off: vessels are no longer to scale against distances. They are symbols
+// whose relative sizes still reflect real length, like a chart plotter.
+const TARGET_SIZE_PER_METRE = 0.7;
 
 // AIS ship type (ITU-R M.1371 tens digit) -> fleet model code in /boats/ais/ais-<code>.glb
 const determineAisModelCode = (shipType) => {
@@ -116,10 +128,7 @@ const AISBoat = ({ position, visible, boatData, onClick, ref }) => {
 
     const providedLength = boatData.length || BASE_MODEL_LENGTH;
     const desiredLength = Math.max(providedLength, MIN_BOAT_LENGTH);
-    // Scene positions are metres * aisLengthScalingFactor, so boat sizes must
-    // apply the same factor or every vessel renders ~1/factor too large.
-    const sceneScale = configService.get('aisLengthScalingFactor') || 0.7;
-    const scaleFactor = (desiredLength * sceneScale) / BASE_MODEL_LENGTH;
+    const scaleFactor = (desiredLength * TARGET_SIZE_PER_METRE) / BASE_MODEL_LENGTH;
 
     return (
         <group
