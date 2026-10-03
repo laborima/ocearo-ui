@@ -4,6 +4,7 @@ import React, { useState, useCallback, useMemo, useEffect, useRef, Suspense } fr
 import dynamic from 'next/dynamic';
 import { useDrag } from '@use-gesture/react';
 import { OcearoContextProvider } from './components/context/OcearoContext';
+import { AISProvider } from './components/3dview/ais/AISContext';
 import { WeatherContextProvider } from './components/context/WeatherContext';
 import { TideContextProvider } from './components/context/TideContext';
 import ErrorBoundary from './ErrorBoundary';
@@ -212,6 +213,8 @@ export default function Home() {
         <ErrorBoundary>
             <I18nProvider>
             <OcearoContextProvider>
+                {/* Single shared AIS connection, opened only while an AIS view is shown */}
+                <AISProvider>
                 <WeatherContextProvider>
                 <TideContextProvider>
                     <div className="h-[100dvh] flex flex-col bg-hud-bg relative overflow-hidden">
@@ -256,6 +259,7 @@ export default function Home() {
                     </div>
                 </TideContextProvider>
                 </WeatherContextProvider>
+                </AISProvider>
             </OcearoContextProvider>
             </I18nProvider>
         </ErrorBoundary>

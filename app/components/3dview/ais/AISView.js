@@ -2,10 +2,10 @@ import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react'
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three'; // Import THREE for Color
 
-import { useOcearoContext, toKnots, toDegrees, oRed } from '../../context/OcearoContext';
+import { toKnots, toDegrees, useOcearoContext } from '../../context/OcearoContext';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import { useAIS } from './AISContext';
-import AISBoat from './AISBoat'; // Assuming AISBoat accepts onClick prop now
+import AISBoat, { AIS_MATERIALS } from './AISBoat';
 
 // Hard cap on simultaneously rendered AIS vessels. Each vessel is a full GLTF
 // model, so on a RPi5 we only ever draw the closest N to keep the GPU happy.
@@ -14,64 +14,49 @@ const MAX_RENDERED_VESSELS = 50;
 // Scratch objects reused every frame to avoid per-boat allocations (GC pressure
 // is a major source of jank on low-power devices).
 const _scratchVec = new THREE.Vector3();
-const _scratchQuatCurrent = new THREE.Quaternion();
 const _scratchQuatTarget = new THREE.Quaternion();
 const _scratchEuler = new THREE.Euler();
 
-/**
- * Recursively searches for a mesh with material in a 3D object hierarchy
- * @param {THREE.Object3D} obj - The 3D object to search
- * @returns {THREE.Mesh|null} - The mesh with material or null if not found
- */
-const findMaterialMesh = (obj) => {
-    if (obj.isMesh && obj.material) return obj;
-    if (obj.children?.length) {
-        for (const child of obj.children) {
-            const found = findMaterialMesh(child);
-            if (found) return found;
-        }
-    }
-    return null;
+// Proximity alert with hysteresis (metres)
+const ALERT_ON_DISTANCE = 500;
+const ALERT_OFF_DISTANCE = 550;
+// Exponential smoothing rate (1/s): ~95% of a position jump is absorbed in 0.75 s,
+// independent of the frame rate.
+const SMOOTHING_RATE = 4;
+// Height of the sea surface in the boat-view group: the water plane sits at
+// -0.3 and the chart/meteo map plane at -0.1 (see Ocean3D / MapPlane3D).
+const WATER_LEVEL = { chart: -0.1, meteo: -0.1 };
+const DEFAULT_WATER_LEVEL = -0.3;
+
+const collectMeshes = (obj) => {
+    const meshes = [];
+    obj.traverse((o) => { if (o.isMesh) meshes.push(o); });
+    return meshes;
 };
 
 /**
- * Updates the boat's transform, optionally interpolating
- * @param {THREE.Object3D} boat - The boat's 3D object
- * @param {object} boatData - The data containing target position/rotation
- * @param {boolean} interpolate - Whether to smoothly interpolate
+ * Moves a boat towards its target pose. `alpha` = 1 snaps.
  */
-const updateBoatTransform = (boat, boatData, interpolate = true) => {
-    const targetRotationY = -boatData.rotationAngleY;
+const updateBoatTransform = (boat, data, alpha) => {
+    _scratchVec.set(data.sceneX, 0, data.sceneZ);
+    boat.position.lerp(_scratchVec, alpha);
 
-    if (interpolate) {
-        // Simple linear interpolation (lerp) — reuse scratch vector
-        _scratchVec.set(boatData.sceneX, boat.position.y, boatData.sceneZ);
-        boat.position.lerp(_scratchVec, 0.1);
-
-        // Shortest angle interpolation for rotation — reuse scratch quaternions/euler
-        _scratchQuatCurrent.setFromEuler(boat.rotation);
-        _scratchEuler.set(0, targetRotationY, 0);
-        _scratchQuatTarget.setFromEuler(_scratchEuler);
-        _scratchQuatCurrent.slerp(_scratchQuatTarget, 0.1);
-        boat.rotation.setFromQuaternion(_scratchQuatCurrent);
-
-    } else {
-        boat.position.set(boatData.sceneX, 0, boatData.sceneZ); // Assuming Y is always 0 initially
-        boat.rotation.set(0, targetRotationY, 0);
-    }
+    // Shortest-path yaw interpolation
+    _scratchEuler.set(0, -data.rotationAngleY, 0);
+    _scratchQuatTarget.setFromEuler(_scratchEuler);
+    boat.quaternion.slerp(_scratchQuatTarget, alpha);
 };
-
 
 const AISView = ({ onUpdateInfoPanel }) => {
-    const { aisData, vesselIds } = useAIS();
-    const boatRefs = useRef({}); // Refs to all boat 3D objects for direct manipulation
-    const materialsCache = useRef({}); // Cache materials per boat { mmsi: { white: mat, red: mat } }
-    const meshCache = useRef({}); // Cache the resolved material mesh per boat to avoid traversing every frame
+    const { aisData, vesselIds, targetsRef } = useAIS();
+    const { states } = useOcearoContext();
+    const waterLevel = WATER_LEVEL[states.oceanMode] ?? DEFAULT_WATER_LEVEL;
+    const boatRefs = useRef({}); // mmsi -> THREE.Group, moved directly every frame
+    const meshCache = useRef({}); // mmsi -> meshes, resolved once the model has loaded
 
-    // State for the selected boat MMSI
-    const [selectedBoat, setSelectedBoat] = useState(null);
+    const [selectedMmsi, setSelectedMmsi] = useState(null);
 
-    // Subscribe to heading paths for boat rotation
+    // Own heading: the AIS layer is laid out north-up, rotate it into the boat frame
     const headingPaths = useMemo(() => [
         'navigation.headingTrue',
         'navigation.headingMagnetic',
@@ -79,141 +64,91 @@ const AISView = ({ onUpdateInfoPanel }) => {
         'navigation.courseOverGroundMagnetic'
     ], []);
     const skHeadingValues = useSignalKPaths(headingPaths);
-
-    // Calculate rotation angle reactively
     const rotationAngle = useMemo(() => {
-        const heading = skHeadingValues['navigation.headingTrue'] || skHeadingValues['navigation.headingMagnetic'];
-        const cog = skHeadingValues['navigation.courseOverGroundTrue'] || skHeadingValues['navigation.courseOverGroundMagnetic'];
-        return heading || cog || 0;
+        const heading = skHeadingValues['navigation.headingTrue'] ?? skHeadingValues['navigation.headingMagnetic'];
+        const cog = skHeadingValues['navigation.courseOverGroundTrue'] ?? skHeadingValues['navigation.courseOverGroundMagnetic'];
+        return heading ?? cog ?? 0;
     }, [skHeadingValues]);
 
-    // Store user's boat rotation angle for relative position calculations
-    const myRotationRef = useRef(0);
-    useEffect(() => {
-        myRotationRef.current = rotationAngle;
-    }, [rotationAngle]);
+    useFrame((_, delta) => {
+        const alpha = 1 - Math.exp(-SMOOTHING_RATE * Math.min(delta, 0.5));
+        const store = targetsRef.current;
 
-    // Proximity alert settings
-    const lowerThreshold = 500; // meters
-    const upperThreshold = 550; // meters
-
-    // --- Frame Loop for Animation & Logic ---
-    useFrame(() => {
-        // Rotation is updated via ref from subscription
-
-        if (!aisData || Object.keys(boatRefs.current).length === 0) return;
-
-        // Iterate through the *rendered* boats (via refs)
-        Object.entries(boatRefs.current).forEach(([mmsi, boat]) => {
-            if (!boat) return; // Skip if ref is null (e.g., during unmount)
-
-            const boatData = aisData[mmsi];
-
-            // If data for this rendered boat doesn't exist anymore, hide it
-            if (!boatData) {
+        for (const mmsi in boatRefs.current) {
+            const boat = boatRefs.current[mmsi];
+            const data = store[mmsi];
+            if (!boat) continue;
+            if (!data || !data.visible) {
                 boat.visible = false;
-                return;
+                continue;
+            }
+            boat.visible = true;
+            updateBoatTransform(boat, data, alpha);
+
+            // Proximity colour, with hysteresis so a target on the edge doesn't flicker
+            const alerted = boat.userData.alert === true;
+            const shouldAlert = alerted
+                ? data.distanceMeters <= ALERT_OFF_DISTANCE
+                : data.distanceMeters < ALERT_ON_DISTANCE;
+
+            let meshes = meshCache.current[mmsi];
+            if (!meshes || meshes.length === 0) {
+                // The model may still be loading (Suspense): retry next frame
+                meshes = collectMeshes(boat);
+                if (meshes.length === 0) continue;
+                meshCache.current[mmsi] = meshes;
+                boat.userData.alert = undefined; // force material assignment
             }
 
-            // Update boat position and rotation
-            updateBoatTransform(boat, boatData, true);
-
-            // Update visibility
-            boat.visible = boatData.visible;
-
-            // Only handle color logic if the boat is visible
-            if (boat.visible) {
-                // Resolve the material mesh once and cache it — traversing the
-                // GLTF hierarchy every frame for every boat is wasteful.
-                let mesh = meshCache.current[mmsi];
-                if (!mesh) {
-                    mesh = findMaterialMesh(boat);
-                    if (!mesh) {
-                        return; // Cannot update color if no material mesh found yet
-                    }
-                    meshCache.current[mmsi] = mesh;
-                }
-
-                // Initialize materials cache for this boat if needed
-                if (!materialsCache.current[mmsi]) {
-                    const originalMaterial = mesh.material;
-                    if (!originalMaterial) return; // Should not happen if findMaterialMesh worked
-
-                    materialsCache.current[mmsi] = {
-                        white: originalMaterial.clone(),
-                        red: originalMaterial.clone(),
-                        // Store original color to reset white correctly if needed
-                        originalColor: originalMaterial.color.clone(),
-                    };
-                    materialsCache.current[mmsi].white.color.copy(materialsCache.current[mmsi].originalColor); // Ensure white is original
-                    materialsCache.current[mmsi].red.color.set(oRed);
-                }
-
-                const boatMaterials = materialsCache.current[mmsi];
-                const currentStoredColor = boat.userData.proximityColor || 'white'; // Get stored color state
-                let targetColor = currentStoredColor;
-
-                // Hysteresis logic
-                if (currentStoredColor === 'red' && boatData.distanceMeters > upperThreshold) {
-                    targetColor = 'white';
-                } else if (currentStoredColor === 'white' && boatData.distanceMeters < lowerThreshold) {
-                    targetColor = 'red';
-                }
-
-                // Swap material only if the target color changed
-                if (targetColor !== currentStoredColor) {
-                    mesh.material = (targetColor === 'red') ? boatMaterials.red : boatMaterials.white;
-                    boat.userData.proximityColor = targetColor; // Store the new color state
-                }
-                // Ensure initial material is set correctly if not set yet
-                else if (!mesh.material || (mesh.material !== boatMaterials.red && mesh.material !== boatMaterials.white)) {
-                    mesh.material = (currentStoredColor === 'red') ? boatMaterials.red : boatMaterials.white;
-                }
-
+            if (shouldAlert !== boat.userData.alert) {
+                const material = shouldAlert ? AIS_MATERIALS.alert : AIS_MATERIALS.normal;
+                for (const mesh of meshes) mesh.material = material;
+                boat.userData.alert = shouldAlert;
             }
-        });
+        }
     });
 
-    // Stable click handler (toggles selection) so the boat list doesn't have to
-    // re-render whenever the selection changes.
-    const handleBoatClick = useCallback((boat) => {
-        if (!boat) return;
-        setSelectedBoat(prev => (prev && prev.mmsi === boat.mmsi) ? null : boat);
+    const handleBoatClick = useCallback((mmsi) => {
+        setSelectedMmsi(prev => (prev === mmsi ? null : mmsi));
     }, []);
 
-    // --- Render Boat Components ---
-    const boats = useMemo(() => {
-        // Render only the closest N vessels to bound GPU/CPU cost on low-power devices.
-        const sorted = vesselIds
-            .filter(Boolean)
-            .slice()
-            .sort((a, b) => (a.distanceMeters ?? Infinity) - (b.distanceMeters ?? Infinity))
-            .slice(0, MAX_RENDERED_VESSELS);
+    // One stable ref callback per vessel, so a list update doesn't detach and
+    // re-attach boats that are still displayed
+    const refCallbacks = useRef({});
+    const getBoatRef = useCallback((mmsi) => {
+        if (!refCallbacks.current[mmsi]) {
+            refCallbacks.current[mmsi] = (el) => {
+                if (el) {
+                    // First placement: snap to the live pose instead of sliding in from the origin
+                    const live = targetsRef.current[mmsi];
+                    el.userData.mmsi = mmsi;
+                    el.position.set(live?.sceneX ?? 0, 0, live?.sceneZ ?? 0);
+                    el.rotation.set(0, -(live?.rotationAngleY ?? 0), 0);
+                    boatRefs.current[mmsi] = el;
+                } else {
+                    delete boatRefs.current[mmsi];
+                    delete meshCache.current[mmsi];
+                    delete refCallbacks.current[mmsi];
+                }
+            };
+        }
+        return refCallbacks.current[mmsi];
+    }, [targetsRef]);
 
-        return sorted.map(vessel => (
-            <AISBoat
-                key={vessel.mmsi}
-                ref={(el) => {
-                    // Cleanup ref when component unmounts
-                    if (el) {
-                        el.userData = { ...el.userData, mmsi: vessel.mmsi }; // Store mmsi in userData
-                        boatRefs.current[vessel.mmsi] = el;
-                    } else {
-                        // Remove ref and caches when boat is removed
-                        delete boatRefs.current[vessel.mmsi];
-                        delete materialsCache.current[vessel.mmsi];
-                        delete meshCache.current[vessel.mmsi];
-                    }
-                }}
-                rotation={[0, -vessel.rotationAngleY, 0]}
-                position={[vessel.sceneX, 0, vessel.sceneZ]}
-                visible={vessel.visible}
-                boatData={vessel}
-                onClick={handleBoatClick}
-            />
-        ));
-    }, [vesselIds, handleBoatClick]); // Stable handler → no re-render on selection change
+    // Render only the closest N vessels (list is already sorted by distance)
+    const boats = useMemo(() => vesselIds.slice(0, MAX_RENDERED_VESSELS).map(vessel => (
+        <AISBoat
+            key={vessel.mmsi}
+            ref={getBoatRef(vessel.mmsi)}
+            boatData={vessel}
+            onClick={handleBoatClick}
+        />
+    )), [vesselIds, handleBoatClick, getBoatRef]);
 
+    // Model swaps (type/length update) remount the inner mesh: drop stale caches
+    useEffect(() => { meshCache.current = {}; }, [vesselIds]);
+
+    const selectedBoat = selectedMmsi ? aisData[selectedMmsi] : null;
 
     // --- Data Formatting Utilities ---
     const formatBoatData = (label, value, unit = '', isAngle = false, isSpeed = false) => {
@@ -289,8 +224,8 @@ const AISView = ({ onUpdateInfoPanel }) => {
     // --- Component Return ---
     return (
         <>
-            {/* Rotate the entire AIS view group based on user's boat rotation */}
-            <group rotation={[0, myRotationRef.current, 0]}>
+            {/* North-up AIS layer rotated into the boat frame, hulls on the sea surface */}
+            <group rotation={[0, rotationAngle, 0]} position={[0, waterLevel, 0]}>
                 {boats}
             </group>
         </>

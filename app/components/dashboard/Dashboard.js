@@ -21,7 +21,6 @@ import WeatherWidget from './widgets/WeatherWidget';
 import SpeedWidget from './widgets/SpeedWidget';
 import TimeWidget from './widgets/TimeWidget';
 import CourseWidget from './widgets/CourseWidget';
-import { AISProvider } from '../3dview/ais/AISContext';
 import { NavigationContextProvider } from '../context/NavigationContext';
 
 const WidgetWrapper = React.memo(({ children, widgetName, className = "", fullscreenWidget, toggleFullscreen }) => (
@@ -171,9 +170,7 @@ export default function Dashboard() {
         toggleFullscreen={toggleFullscreen}
         className={fullscreenWidget && fullscreenWidget !== 'aisradar' ? 'hidden' : fullscreenWidget === 'aisradar' ? 'w-full h-full' : ''}
       >
-        <AISProvider>
-          <AISRadarWidget />
-        </AISProvider>
+        <AISRadarWidget />
       </WidgetWrapper>
       <WidgetWrapper 
         widgetName="course" 

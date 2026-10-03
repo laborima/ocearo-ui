@@ -48,7 +48,9 @@ function computeCpaNM({ rangeMeters, bearingRad, ownSog, ownCog, targetSog, targ
 
 const AISRadarWidget = React.memo(() => {
   const { t } = useTranslation();
-  const { aisData: aisDataRaw, vesselIds } = useAIS();
+  // Every positioned target (not only the ones close enough for the 3D view),
+  // so the 10 and 20 NM ranges actually show something
+  const { targets } = useAIS();
   const [radarRange, setRadarRange] = useState(5); // nautical miles
   const debugMode = configService.get('debugMode');
 
@@ -70,33 +72,26 @@ const AISRadarWidget = React.memo(() => {
   const myCog = useSignalKPath('navigation.courseOverGroundTrue');
   const mySog = useSignalKPath('navigation.speedOverGround');
   // Radians, as published by SignalK — never mix with the degree bearings below.
-  const myHeading = headingTrue ?? headingMagnetic ?? 0;
+  // Same fallback order as the 3D AIS view so both scopes rotate identically.
+  const myHeading = headingTrue ?? headingMagnetic ?? myCog ?? 0;
   
   // The radar sweep is animated purely via SVG <animateTransform> (compositor-driven)
   // instead of React state, so it no longer re-renders the whole widget every frame.
 
   const aisData = useMemo(() => {
-    if (!aisDataRaw || Object.keys(aisDataRaw).length === 0 || !myPosition) {
+    if (!targets.length || !myPosition) {
       return [];
     }
 
-    return vesselIds
+    return targets
       .filter(vessel => vessel.distanceMeters && vessel.distanceMeters <= radarRange * 1852)
       .map(vessel => {
         const distanceNM = vessel.distanceMeters / 1852;
-        // Bearing calculation with 180° rotation to align with 3D view
-        // sceneX=East(+)/West(-), sceneZ=South(+)/North(-)
-        const bearing = Math.atan2(
-          vessel.sceneX,
-          -vessel.sceneZ
-        ) * 180 / Math.PI;
-        // atan2(east, north) is already the true bearing; the extra 180° is only
-        // a display rotation so the radar lines up with the 3D view. Keep the
-        // unrotated value for the CPA geometry, or the relative position vector
-        // points the wrong way and the CPA is computed for the reciprocal.
-        const trueBearing = (bearing + 360) % 360;
-        const absoluteBearing = (bearing + 180 + 360) % 360;
-        
+        // True bearing from East/North scene offsets (sceneZ points South)
+        const trueBearing = (Math.atan2(vessel.sceneX, -vessel.sceneZ) * 180 / Math.PI + 360) % 360;
+        // Head-up display, like the 3D view: own bow at the top of the scope
+        const relativeBearing = (trueBearing - myHeading * 180 / Math.PI + 360) % 360;
+
         // Real closest point of approach. The previous formula ignored the
         // target's course and speed entirely and subtracted a heading in radians
         // from a bearing in degrees, so a moored boat abeam was flagged red.
@@ -115,14 +110,14 @@ const AISRadarWidget = React.memo(() => {
           id: vessel.mmsi,
           name: vessel.name || `MMSI ${vessel.mmsi}`,
           distance: Math.round(distanceNM * 10) / 10,
-          bearing: Math.round(absoluteBearing),
+          bearing: Math.round(relativeBearing),
           type: vessel.shipType || 'unknown',
           cpa: cpa === null ? null : Math.round(cpa * 10) / 10
         };
       })
       .sort((a, b) => a.distance - b.distance)
       .slice(0, 10);
-  }, [aisDataRaw, vesselIds, radarRange, myPosition, myHeading, myCog, mySog]);
+  }, [targets, radarRange, myPosition, myHeading, myCog, mySog]);
 
   const getTargetColor = (target) => {
     // No computable CPA (target not reporting course/speed) — fall back to plain
@@ -133,12 +128,10 @@ const AISRadarWidget = React.memo(() => {
     return 'text-oGreen';
   };
 
+  // shipType is the numeric AIS code: ship icon for fishing, cargo and tankers
   const getTargetIcon = (type) => {
-    switch (type) {
-      case 'cargo': return faShip;
-      case 'fishing': return faShip;
-      default: return faLocationDot;
-    }
+    const code = Number(type);
+    return code === 30 || (code >= 70 && code <= 89) ? faShip : faLocationDot;
   };
 
   // Check if we should show data
