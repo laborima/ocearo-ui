@@ -234,6 +234,15 @@
     "rpiThrottlingPast": "Throttled since boot — heat or power supply"
   },
   "autopilot": {
+    "apparentWindAngle": "Apparent wind angle",
+    "rudder": "Rudder",
+    "confirm": "Confirm?",
+    "dodge": "Dodge",
+    "exitDodge": "Exit dodge",
+    "steerToWaypoint": "Steer to waypoint",
+    "nextWaypoint": "Next waypoint",
+    "failedToDodge": "Failed to dodge: {{message}}",
+    "failedToSteerCourse": "Failed to steer to waypoint: {{message}}",
     "control": "Control",
     "controller": "Controller",
     "state": "State",

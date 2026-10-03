@@ -13,6 +13,9 @@ import Client from '@signalk/client';
 import configService from '../settings/ConfigService';
 import { kelvinToCelsius as _kelvinToCelsius, msToKnots as _msToKnots, radiansToDegrees as _radiansToDegrees } from '../utils/UnitConversions';
 
+// Default HTTP timeout for Signal K REST calls
+const API_TIMEOUT_MS = 10000;
+
 class SignalKService {
     constructor() {
         this.client = null;
@@ -167,32 +170,57 @@ class SignalKService {
         const config = configService.getAll();
         const credentialsOption = config.useAuthentication && config.username ? 'include' : 'omit';
 
+        // A request on flaky boat Wi-Fi must not hang a control forever
+        const { timeoutMs = API_TIMEOUT_MS, ...fetchOptions } = options;
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+
         try {
             // Spread options first: their own `headers` must not replace the auth headers
             const response = await fetch(url, {
                 credentials: credentialsOption,
-                ...options,
-                headers: { ...headers, ...options.headers },
+                ...fetchOptions,
+                headers: { ...headers, ...fetchOptions.headers },
+                signal: controller.signal,
             });
 
-            if (!response.ok) {
-                throw new Error(`SignalK API error (${response.status}): ${response.statusText}`);
+            // Empty bodies (204, some PUT/POST acks) are a success, not a JSON error
+            const text = await response.text();
+            let body = null;
+            if (text) {
+                try { body = JSON.parse(text); } catch { body = text; }
             }
 
-            return await response.json();
+            if (!response.ok) {
+                // v2 APIs explain failures in `message` (e.g. "Autopilot is offline")
+                const detail = body?.message ? ` — ${body.message}` : '';
+                const apiError = new Error(`SignalK API error (${response.status}): ${response.statusText}${detail}`);
+                apiError.status = response.status;
+                throw apiError;
+            }
+
+            return body;
         } catch (error) {
+            if (error.name === 'AbortError') {
+                const timeoutError = new Error(`SignalK request timed out after ${timeoutMs / 1000}s`);
+                timeoutError.name = 'NetworkError';
+                console.warn(`SignalKService: Timeout for ${path}`);
+                throw timeoutError;
+            }
             if (error.name === 'TypeError' && (error.message === 'Failed to fetch' || error.message.includes('NetworkError'))) {
                 const networkError = new Error(`SignalK server unreachable at ${baseUrl}`);
                 networkError.name = 'NetworkError';
                 console.warn(`SignalKService: Server unreachable for ${path}:`, error.message);
                 throw networkError;
             }
-            if (error.message && (error.message.includes('(400)') || error.message.includes('(404)'))) {
+            if (error.status === 400 || error.status === 404) {
                 console.warn(`SignalKService: API call returned error for ${path}:`, error.message);
             } else {
                 console.warn(`SignalKService: API call failed for ${path}:`, error);
             }
             throw error;
+        } finally {
+            clearTimeout(timer);
         }
     }
 
@@ -985,24 +1013,21 @@ class SignalKService {
     // AUTOPILOT API
     // ==========================================
 
-    /**
-     * Autopilot states
-     */
-    static AUTOPILOT_STATES = ['enabled', 'disabled', 'standby', 'off-line'];
+    // States and modes are device specific (pypilot: enabled/disabled,
+    // Raymarine: auto/standby/wind/route...): the valid values are the ones the
+    // device lists in `options`, so the server — not this client — validates them.
 
-    /**
-     * Autopilot modes
-     */
-    static AUTOPILOT_MODES = ['compass', 'gps', 'wind', 'route', 'dodge'];
+    autopilotPath(deviceId = '_default', suffix = '') {
+        return `/signalk/v2/api/vessels/self/autopilots/${encodeURIComponent(deviceId)}${suffix}`;
+    }
 
     /**
      * Get list of available autopilot devices
      * @returns {Promise<Array<string>>} List of autopilot device IDs
      */
     async getAutopilotDevices() {
-        const path = '/signalk/v2/api/vessels/self/autopilots';
         try {
-            const data = await this.apiCall(path);
+            const data = await this.apiCall('/signalk/v2/api/vessels/self/autopilots');
             return Object.keys(data || {});
         } catch (error) {
             console.warn('SignalKService: Could not fetch autopilot devices:', error.message);
@@ -1011,179 +1036,109 @@ class SignalKService {
     }
 
     /**
-     * Get autopilot data for a specific device
-     * @param {string} deviceId - Autopilot device ID (optional, uses default if not specified)
-     * @returns {Promise<Object>} Autopilot data (state, mode, target, engaged)
+     * Get autopilot status for a device
+     * @param {string} deviceId - Autopilot device ID ('_default' = primary pilot)
+     * @returns {Promise<{options:{states?:Array, state?:Array, modes?:Array, mode?:Array, actions?:Array},
+     *                    state:string, mode:string, target:number, engaged:boolean}>}
      */
     async getAutopilotData(deviceId = '_default') {
-        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}`;
-        return await this.apiCall(path);
+        return this.apiCall(this.autopilotPath(deviceId));
     }
 
     /**
-     * Get autopilot state
-     * @param {string} deviceId - Autopilot device ID
-     * @returns {Promise<string>} State ('enabled', 'disabled', 'standby', 'off-line')
-     */
-    async getAutopilotState(deviceId = '_default') {
-        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/state`;
-        return await this.apiCall(path);
-    }
-
-    /**
-     * Set autopilot state
-     * @param {string} state - New state ('enabled', 'disabled', 'standby')
-     * @param {string} deviceId - Autopilot device ID
-     * @returns {Promise<Object>}
+     * Set autopilot state (one of the device's `options` states)
      */
     async setAutopilotState(state, deviceId = '_default') {
-        if (!SignalKService.AUTOPILOT_STATES.includes(state)) {
-            throw new Error(`Invalid autopilot state: ${state}`);
-        }
-
-        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/state`;
-        return await this.apiCall(path, {
+        if (typeof state !== 'string' || !state) throw new Error(`Invalid autopilot state: ${state}`);
+        return this.apiCall(this.autopilotPath(deviceId, '/state'), {
             method: 'PUT',
             body: JSON.stringify({ value: state })
         });
     }
 
     /**
-     * Get autopilot mode
-     * @param {string} deviceId - Autopilot device ID
-     * @returns {Promise<string>} Mode ('compass', 'gps', 'wind', 'route', 'dodge')
-     */
-    async getAutopilotMode(deviceId = '_default') {
-        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/mode`;
-        return await this.apiCall(path);
-    }
-
-    /**
-     * Set autopilot mode
-     * @param {string} mode - New mode ('compass', 'gps', 'wind', 'route')
-     * @param {string} deviceId - Autopilot device ID
-     * @returns {Promise<Object>}
+     * Set autopilot mode (one of the device's `options` modes)
      */
     async setAutopilotMode(mode, deviceId = '_default') {
-        if (!SignalKService.AUTOPILOT_MODES.includes(mode)) {
-            throw new Error(`Invalid autopilot mode: ${mode}`);
-        }
-
-        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/mode`;
-        return await this.apiCall(path, {
+        if (typeof mode !== 'string' || !mode) throw new Error(`Invalid autopilot mode: ${mode}`);
+        return this.apiCall(this.autopilotPath(deviceId, '/mode'), {
             method: 'PUT',
             body: JSON.stringify({ value: mode })
         });
     }
 
     /**
-     * Get autopilot target heading/angle
-     * @param {string} deviceId - Autopilot device ID
-     * @returns {Promise<number>} Target in radians
-     */
-    async getAutopilotTarget(deviceId = '_default') {
-        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/target`;
-        return await this.apiCall(path);
-    }
-
-    /**
      * Set autopilot target heading/angle
      * @param {number} target - Target in radians
-     * @param {string} deviceId - Autopilot device ID
-     * @returns {Promise<Object>}
      */
     async setAutopilotTarget(target, deviceId = '_default') {
-        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/target`;
-        return await this.apiCall(path, {
+        return this.apiCall(this.autopilotPath(deviceId, '/target'), {
             method: 'PUT',
             body: JSON.stringify({ value: target })
         });
     }
 
     /**
-     * Adjust autopilot target by a delta value
-     * @param {number} delta - Adjustment in radians (positive = starboard, negative = port)
-     * @param {string} deviceId - Autopilot device ID
-     * @returns {Promise<Object>}
+     * Adjust autopilot target by a delta
+     * @param {number} deltaDegrees - Adjustment in degrees (positive = starboard)
      */
-    async adjustAutopilotTarget(delta, deviceId = '_default') {
-        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/target/adjust`;
-        return await this.apiCall(path, {
+    async adjustAutopilotTarget(deltaDegrees, deviceId = '_default') {
+        return this.apiCall(this.autopilotPath(deviceId, '/target/adjust'), {
             method: 'PUT',
-            body: JSON.stringify({ value: delta, units: 'deg' })
+            body: JSON.stringify({ value: deltaDegrees, units: 'deg' })
         });
     }
 
-    /**
-     * Engage autopilot
-     * @param {string} deviceId - Autopilot device ID
-     * @returns {Promise<Object>}
-     */
     async engageAutopilot(deviceId = '_default') {
-        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/engage`;
-        return await this.apiCall(path, {
-            method: 'POST'
-        });
+        return this.apiCall(this.autopilotPath(deviceId, '/engage'), { method: 'POST' });
     }
 
-    /**
-     * Disengage autopilot
-     * @param {string} deviceId - Autopilot device ID
-     * @returns {Promise<Object>}
-     */
     async disengageAutopilot(deviceId = '_default') {
-        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/disengage`;
-        return await this.apiCall(path, {
-            method: 'POST'
-        });
+        return this.apiCall(this.autopilotPath(deviceId, '/disengage'), { method: 'POST' });
     }
 
     /**
-     * Execute tack maneuver
-     * @param {string} direction - 'port' or 'starboard'
-     * @param {string} deviceId - Autopilot device ID
-     * @returns {Promise<Object>}
+     * Tack or gybe
+     * @param {'tack'|'gybe'} maneuver
+     * @param {'port'|'starboard'} direction
      */
+    async autopilotManeuver(maneuver, direction, deviceId = '_default') {
+        if (maneuver !== 'tack' && maneuver !== 'gybe') throw new Error(`Invalid maneuver: ${maneuver}`);
+        if (direction !== 'port' && direction !== 'starboard') throw new Error(`Invalid direction: ${direction}`);
+        return this.apiCall(this.autopilotPath(deviceId, `/${maneuver}/${direction}`), { method: 'POST' });
+    }
+
     async autopilotTack(direction, deviceId = '_default') {
-        if (direction !== 'port' && direction !== 'starboard') {
-            throw new Error(`Invalid tack direction: ${direction}`);
-        }
-
-        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/tack/${direction}`;
-        return await this.apiCall(path, {
-            method: 'POST'
-        });
+        return this.autopilotManeuver('tack', direction, deviceId);
     }
 
-    /**
-     * Execute gybe maneuver
-     * @param {string} direction - 'port' or 'starboard'
-     * @param {string} deviceId - Autopilot device ID
-     * @returns {Promise<Object>}
-     */
     async autopilotGybe(direction, deviceId = '_default') {
-        if (direction !== 'port' && direction !== 'starboard') {
-            throw new Error(`Invalid gybe direction: ${direction}`);
-        }
+        return this.autopilotManeuver('gybe', direction, deviceId);
+    }
 
-        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/gybe/${direction}`;
-        return await this.apiCall(path, {
-            method: 'POST'
+    /**
+     * Dodge: enter at current course (no delta), steer by `deltaDegrees` while
+     * dodging, or exit (`exit: true`) — POST / PUT / DELETE per the v2 API.
+     */
+    async autopilotDodge({ deltaDegrees = null, exit = false } = {}, deviceId = '_default') {
+        const path = this.autopilotPath(deviceId, '/dodge');
+        if (exit) return this.apiCall(path, { method: 'DELETE' });
+        if (deltaDegrees === null) return this.apiCall(path, { method: 'POST' });
+        return this.apiCall(path, {
+            method: 'PUT',
+            body: JSON.stringify({ value: deltaDegrees, units: 'deg' })
         });
     }
 
     /**
-     * Enter/exit dodge mode
-     * @param {number|null} value - Dodge angle in radians, or null to exit dodge mode
-     * @param {string} deviceId - Autopilot device ID
-     * @returns {Promise<Object>}
+     * Steer to the active course point, or advance to the next route point
+     * @param {'courseCurrentPoint'|'courseNextPoint'} action
      */
-    async autopilotDodge(value, deviceId = '_default') {
-        const path = `/signalk/v2/api/vessels/self/autopilots/${deviceId}/dodge`;
-        return await this.apiCall(path, {
-            method: 'PUT',
-            body: JSON.stringify({ value })
-        });
+    async autopilotCourseAction(action, deviceId = '_default') {
+        if (action !== 'courseCurrentPoint' && action !== 'courseNextPoint') {
+            throw new Error(`Invalid course action: ${action}`);
+        }
+        return this.apiCall(this.autopilotPath(deviceId, `/${action}`), { method: 'POST' });
     }
 
     /**

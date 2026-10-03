@@ -234,6 +234,15 @@
     "rpiThrottlingPast": "Bridage constaté depuis le démarrage — chaleur ou alimentation"
   },
   "autopilot": {
+    "apparentWindAngle": "Angle du vent apparent",
+    "rudder": "Barre",
+    "confirm": "Confirmer ?",
+    "dodge": "Évitement",
+    "exitDodge": "Fin d'évitement",
+    "steerToWaypoint": "Cap sur le waypoint",
+    "nextWaypoint": "Waypoint suivant",
+    "failedToDodge": "Échec de l'évitement : {{message}}",
+    "failedToSteerCourse": "Échec du cap waypoint : {{message}}",
     "control": "Contrôle",
     "controller": "Manette",
     "state": "État",
