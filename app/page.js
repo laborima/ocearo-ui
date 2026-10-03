@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useDrag } from '@use-gesture/react';
 import { OcearoContextProvider } from './components/context/OcearoContext';

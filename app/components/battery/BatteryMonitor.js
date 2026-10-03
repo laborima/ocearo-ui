@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useOcearoContext, convertTemperature } from '../context/OcearoContext';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { convertTemperature } from '../context/OcearoContext';
 import { useSignalKPaths } from '../hooks/useSignalK';
-import { BATTERY_CONFIG, estimateStateOfCharge, getBatteryColorClass, isBatteryCharging } from '../utils/BatteryUtils';
+import { estimateStateOfCharge, isBatteryCharging } from '../utils/BatteryUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faBolt, faBatteryFull, faChargingStation, faMicrochip, faCube, faMemory, faCode, faTemperatureHalf,
-  faCar, faSnowflake, faArrowUp, faArrowDown, faLeaf, faChartLine, faGaugeHigh, faQuestionCircle, faClock
+import {
+  faChargingStation, faMicrochip, faLeaf, faChartLine, faGaugeHigh, faQuestionCircle, faClock
 } from '@fortawesome/free-solid-svg-icons';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +14,6 @@ import RaspberryPiTab from './RaspberryPiTab';
 import LineChart from '../charts/LineChart';
 import signalKService from '../services/SignalKService';
 
-import * as THREE from 'three';
 
 const HISTORY_SAMPLES = 60;
 const emptyBatteryHistory = () => Array.from({ length: HISTORY_SAMPLES }, () => ({
@@ -24,9 +22,6 @@ const emptyBatteryHistory = () => Array.from({ length: HISTORY_SAMPLES }, () => 
 
 const BatteryMonitor = () => {
   const { t } = useTranslation();
-  const { nightMode } = useOcearoContext();
-  const secondaryTextClass = nightMode ? 'text-oNight' : 'text-hud-secondary';
-  const mutedTextClass = nightMode ? 'text-oNight/70' : 'text-hud-muted';
   const [activeTab, setActiveTab] = useState('battery'); // battery, graph, performance, rpi
   const [activeView, setActiveView] = useState('voltage'); // voltage, current, soc
   const [activePerformanceView, setActivePerformanceView] = useState('fps'); // fps, drawCalls, triangles, memory
@@ -231,7 +226,6 @@ const BatteryMonitor = () => {
   };
 
   const isCharging = isBatteryCharging(currentBatteryData.voltage);
-  const hasTemperatureData = currentBatteryData.temperature !== null;
 
   return (
     <div className="flex flex-col h-full bg-rightPaneBg overflow-hidden">

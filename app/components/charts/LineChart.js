@@ -10,7 +10,6 @@ import {
   Area,
   AreaChart
 } from 'recharts';
-import { useOcearoContext } from '../context/OcearoContext';
 
 const CustomTooltip = ({ active, payload, label: timeLabel, unit }) => {
   // Hovered samples may hold a null value (gaps in the series)
@@ -28,7 +27,6 @@ const CustomTooltip = ({ active, payload, label: timeLabel, unit }) => {
 };
 
 const LineChart = ({ data, dataKey, color, scale, label, unit, showPoints = false, lineWidth = 2, fillGradient = false }) => {
-  const { nightMode } = useOcearoContext();
 
   const validValues = (data || []).filter(item => item[dataKey] !== null && item[dataKey] !== undefined);
 

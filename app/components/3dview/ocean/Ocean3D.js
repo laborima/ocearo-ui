@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useEffect, useState } from "react";
+import React, { useRef, useMemo, useEffect } from "react";
 import { extend, useThree, useLoader, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { Water } from "three/examples/jsm/objects/Water.js";

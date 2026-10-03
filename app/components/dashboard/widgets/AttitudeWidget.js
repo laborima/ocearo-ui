@@ -3,7 +3,7 @@ import React, { useRef, useEffect, useMemo } from 'react';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import BaseWidget from './BaseWidget';
 import { useTranslation } from 'react-i18next';
-import { toDegrees, oBlue, oRed, oYellow, oGreen, oNight, oGray, oGray2, useOcearoContext } from '../../context/OcearoContext';
+import { toDegrees, oBlue, oRed, oYellow, oGreen, oNight, useOcearoContext } from '../../context/OcearoContext';
 import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCompass, faPlane } from '@fortawesome/free-solid-svg-icons';
@@ -58,12 +58,6 @@ export default function AttitudeWidget() {
     const ctx = canvas.getContext('2d');
     const w = canvas.width;
     const h = canvas.height;
-    const cx = w / 2, cy = h / 2;
-    // Scale factor against reference design size
-    const REF_SIZE = 230;
-    const s = Math.min(w, h) / REF_SIZE;
-    const sw = (v) => v * s; // scale width/length
-    const slw = (v) => Math.max(1, v * s); // scaled line width with minimum 1px
 
     const themeColors = getThemeColors();
 

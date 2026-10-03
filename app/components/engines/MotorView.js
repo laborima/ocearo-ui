@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useOcearoContext } from '../context/OcearoContext';
 import { useSignalKPath, useSignalKPaths } from '../hooks/useSignalK';
 import configService from '../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -8,8 +7,7 @@ import {
   faTachometerAlt, faClock, faTemperatureHalf, faGaugeHigh, faGasPump,
   faWrench, faCogs, faBolt, faExclamationTriangle, faCheckCircle,
   faCar, faOilCan, faFire, faSnowflake, faBatteryFull, faChartLine,
-  faWater, faRuler, faArrowUp, faArrowDown, faRotate, faFlask, faPlus,
-  faEuroSign, faHistory
+  faWater, faRuler, faArrowUp, faArrowDown, faRotate, faFlask, faPlus
 } from '@fortawesome/free-solid-svg-icons';
 
 // Import utilities from MotorUtils.js
@@ -94,22 +92,6 @@ const NotificationActions = ({ notification }) => {
 };
 const WARNING_STATES = ['alert', 'warn', 'warning', 'caution'];
 
-// Helper component for displaying individual data points
-const DataField = ({ label, value, unit, icon, statusClass = 'text-hud-main' }) => {
-  const displayValue = (value === null || value === undefined || value === 'NaN') ? 'N/A' : `${value}${unit ? ` ${unit}` : ''}`;
-  
-  return (
-    <div className="tesla-card p-3 tesla-hover border border-hud bg-hud-bg">
-      <div className="flex items-center text-hud-secondary text-xs font-black mb-1 uppercase tracking-widest">
-        {icon && <FontAwesomeIcon icon={icon} className="mr-2 fa-fw text-xs" />}
-        {label}
-      </div>
-      <div className={`font-black text-xl gliding-value ${statusClass}`}>
-        {displayValue}
-      </div>
-    </div>
-  );
-};
 
 const MotorView = () => {
   const { t } = useTranslation();

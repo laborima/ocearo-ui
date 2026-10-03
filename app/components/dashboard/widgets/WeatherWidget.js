@@ -27,7 +27,6 @@ export default function WeatherWidget() {
 
   const weatherData = useMemo(() => {
     const weather = getCurrentWeather();
-    const currentForecast = forecasts.length > 0 ? forecasts[0] : null;
     
     // Convert from SignalK raw units to display units
     // `!= null` used to let NaN through, which is how "NaN kn" reached the widget.
@@ -132,11 +131,6 @@ export default function WeatherWidget() {
     }
   };
 
-  const getPressureTrend = (pressure) => {
-    if (pressure > 1020) return { trend: '↗', text: t('widgets.pressureRising'), color: 'text-oGreen' };
-    if (pressure < 1000) return { trend: '↘', text: t('widgets.pressureFalling'), color: 'text-oRed' };
-    return { trend: '→', text: t('widgets.pressureStable'), color: 'text-oBlue' };
-  };
 
   const getWindDirection = (degrees) => {
     if (finite(degrees) === null) return '';
@@ -144,7 +138,6 @@ export default function WeatherWidget() {
     return directions[((Math.round(degrees / 22.5) % 16) + 16) % 16];
   };
 
-  const pressureTrend = weatherData.hasData ? getPressureTrend(weatherData.pressure) : null;
 
   // Get data source label
   const getDataSourceLabel = () => {

@@ -1,9 +1,7 @@
 'use client';
 import React, { useMemo } from 'react';
 import { useSignalKPath } from '../../hooks/useSignalK';
-import { oGreen, oRed, oYellow, useOcearoContext } from '../../context/OcearoContext';
 import configService from '../../settings/ConfigService';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSun } from '@fortawesome/free-solid-svg-icons';
 import BaseWidget from './BaseWidget';
 import { useTranslation } from 'react-i18next';

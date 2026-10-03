@@ -9,7 +9,6 @@
 
 import React, { createContext, useState, useEffect, useContext, useCallback, useRef, useMemo } from 'react';
 import signalKService from '../services/SignalKService';
-import { useOcearoContext } from './OcearoContext';
 import { useSignalKPath, useSignalKPaths } from '../hooks/useSignalK';
 import { finite, knotsToMs, degToRad } from '../utils/UnitConversions';
 

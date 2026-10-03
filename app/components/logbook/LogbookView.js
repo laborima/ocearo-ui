@@ -3,18 +3,17 @@ import { useOcearoContext } from '../context/OcearoContext';
 import { useSignalKPaths } from '../hooks/useSignalK';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faBook, faTimeline, faChartLine, faRobot, faPlus, faEdit, faTrash,
-  faClock, faCompass, faTachometerAlt, faCloudSun, faThermometerHalf,
-  faMapMarkerAlt, faLocationDot, faRuler, faCar, faUser, faStickyNote,
-  faTimes, faSave, faTrophy, faFlag
+  faBook, faTimeline, faChartLine, faRobot, faPlus,
+   faCompass, faTachometerAlt, faCloudSun,
+      faUser, faStickyNote,
+  faTimes, faTrophy
 } from '@fortawesome/free-solid-svg-icons';
 import configService from '../settings/ConfigService';
 import { msToKnots, toDegrees, convertPressure } from '../utils/UnitConversions';
-import { 
-  isOcearoCoreEnabled, 
-  generateOcearoCoreLogbookEntry, 
+import {
+  isOcearoCoreEnabled,
+  generateOcearoCoreLogbookEntry,
   analyzeLogbookWithOcearoCore,
-  collectCurrentVesselData,
   handleOcearoCoreError,
   fetchLogbookEntries,
   addLogbookEntry,

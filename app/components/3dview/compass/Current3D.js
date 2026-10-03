@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { Vector3 } from 'three';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { oGreen, oNight, useOcearoContext } from '../../context/OcearoContext';

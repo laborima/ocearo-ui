@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGasPump, faTint, faOilCan, faToilet, faTemperatureHalf } from '@fortawesome/free-solid-svg-icons';
+import { faGasPump, faTint, faOilCan, faToilet } from '@fortawesome/free-solid-svg-icons';
 import BaseWidget from './BaseWidget';
 import { useTranslation } from 'react-i18next';
 
@@ -45,12 +45,6 @@ export default function TankLevelsWidget() {
     return { hasData, ...data };
   }, [tankValues, t]);
 
-  const getTankStatus = (level) => {
-    if (level < 0.1) return t('widgets.tankEmpty');
-    if (level < 0.25) return t('widgets.tankLow');
-    if (level < 0.75) return t('widgets.tankMedium');
-    return t('widgets.tankFull');
-  };
 
   const getTankColor = (level, isWaste = false) => {
     if (isWaste) {

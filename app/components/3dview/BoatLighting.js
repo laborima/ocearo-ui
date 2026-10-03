@@ -1,9 +1,8 @@
 import React from 'react';
-import * as THREE from 'three';
 import { useOcearoContext } from '../context/OcearoContext';
 
 const BoatLighting = () => {
-  const { states, nightMode } = useOcearoContext();
+  const { nightMode } = useOcearoContext();
   
   // Adjust lighting based on night mode
   const ambientIntensity = nightMode ? 0.2 : 0.4;

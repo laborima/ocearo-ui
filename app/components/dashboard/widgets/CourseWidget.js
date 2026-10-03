@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import BaseWidget from './BaseWidget';

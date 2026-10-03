@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useMemo } from "react";
 import { useFrame, extend } from "@react-three/fiber";
 import { shaderMaterial } from "@react-three/drei";
 import * as THREE from "three";
-import { useOcearoContext, oBlue, oGreen } from "../../context/OcearoContext";
+import { useOcearoContext, oBlue } from "../../context/OcearoContext";
 import { useSignalKPath } from "../../hooks/useSignalK";
 // Create a custom shader material with an extra 'rainbowActive' uniform.
 const TrailShaderMaterial = shaderMaterial(

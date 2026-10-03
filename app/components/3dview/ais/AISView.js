@@ -188,11 +188,6 @@ const AISView = ({ onUpdateInfoPanel }) => {
         return formattedMMSI;
     };
 
-    const calculateDistanceNM = (distanceMeters) => {
-        if (distanceMeters === undefined || distanceMeters === null) return null;
-        const distanceNM = distanceMeters / 1852;
-        return distanceNM.toFixed(1); // Format to 1 decimal place
-    };
 
     // --- Prepare Info Panel Content ---
     const infoPanelContent = selectedBoat ? [

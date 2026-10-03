@@ -6,11 +6,10 @@
  * including wind angle, wind speed, and sail controls like cunningham.
  */
 import React, { useEffect, useMemo, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import * as Wind from './Wind';
 import SailShape from './SailShape';
-import { oBlue, useOcearoContext } from '../../context/OcearoContext';
+import { oBlue } from '../../context/OcearoContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import { getReefHeightFactor } from './SailTrimUtils';
 
@@ -59,8 +58,6 @@ const Sail3D = ({
     // Access to SignalK data through specialized hooks for better performance
     const appWindAngle = useSignalKPath('environment.wind.angleApparent', 0);
     const appWindSpeed = useSignalKPath('environment.wind.speedApparent', 0);
-    const skAttitude = useSignalKPath('navigation.attitude');
-    const skRudderAngle = useSignalKPath('steering.rudderAngle', 0);
 
     // Component references
     const sailRef = useRef();                       // Reference to the sail mesh
@@ -295,8 +292,6 @@ const Sail3D = ({
         const colorAttr = sailGeometry.attributes.color;
         const colorArray = colorAttr.array;
 
-        // Height of mast foot above water (convert m to mm)
-        const mastFootOverWaterHeight = BOAT_LIMITS.waterlineToMastFootHeight * 1000;
 
         // --------------------------------
         // WIND ANGLE NORMALIZATION
@@ -371,11 +366,7 @@ const Sail3D = ({
          * 3. La rotation de chaque vertex pour créer la forme curve
          */
         for (let level = 0; level <= SAIL_LEVELS; level++) {
-            // Hauteur de ce niveau de voile au-dessus de l'eau
-            const overWaterHeight = level * SAIL_LEVEL_HEIGHT + mastFootOverWaterHeight;
             
-            // Calculer la vitesse du vent à cette hauteur (effets de cisaillement)
-            const levelAws = Wind.windSheer(appWindSpeed, overWaterHeight / 1000.0, windParams.hellman);
             
             /**
              * Angle de la corde principale de la voile à ce niveau

@@ -108,7 +108,6 @@ WindArrow.propTypes = {
  * @param {number} outerRadius - Outer radius of the compass dial
  */
 const WindSector3D = ({ outerRadius }) => {
-    const ocearoContext = useOcearoContext();
     // Read preferred paths from settings
     const preferredWindSpeed = configService.get('preferredWindSpeedPath') || 'speedTrue';
     const preferredWindDir = configService.get('preferredWindDirectionPath') || 'directionTrue';

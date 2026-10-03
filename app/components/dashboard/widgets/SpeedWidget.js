@@ -1,10 +1,10 @@
 'use client';
 import React, { useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { toDegrees, MS_TO_KNOTS, convertSpeedUnit, getSpeedUnitLabel, finite } from '../../context/OcearoContext';
+import { toDegrees, convertSpeedUnit, getSpeedUnitLabel, finite } from '../../context/OcearoContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
-import { faTachometerAlt, faCompass, faWater, faWind } from '@fortawesome/free-solid-svg-icons';
+import { faTachometerAlt, faWind } from '@fortawesome/free-solid-svg-icons';
 import BaseWidget from './BaseWidget';
 import { useTranslation } from 'react-i18next';
 

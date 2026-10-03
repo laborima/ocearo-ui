@@ -36,10 +36,6 @@ export default function ThreeDBoatAttitudeIndicator() {
     const h = CANVAS_HEIGHT;
     const cx = w / 2;
     const cy = h / 2;
-    const outerBezelRadius = Math.min(cx, cy) - 2;
-    const bezelLineWidth = 2;
-    const headingMarkRadius = outerBezelRadius - bezelLineWidth - 1;
-    const radius = headingMarkRadius - 3;
 
     const { roll, pitch, yaw } = attitudeValues;
 

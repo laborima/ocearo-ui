@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useOcearoContext } from './context/OcearoContext';
 import { useTranslation } from 'react-i18next';
 import { useSignalKPath } from './hooks/useSignalK';
 import configService from './settings/ConfigService';
@@ -57,7 +56,6 @@ const DebugView = dynamic(() => import('./debug/DebugView'), {
 
 
 // Constants
-const POSITION_UPDATE_INTERVAL = 10000; // 10 seconds
 const POSITION_CHANGE_THRESHOLD = 0.01;
 const DEFAULT_POSITION = {
     latitude: 46.1591,
@@ -81,7 +79,6 @@ const EXTERNAL_URLS = {
 
 const RightPane = ({ view }) => {
     const { t } = useTranslation();
-    const { nightMode } = useOcearoContext();
     const [myPosition, setMyPosition] = useState(DEFAULT_POSITION);
     const [error, setError] = useState(null);
     const config = configService.getAll();

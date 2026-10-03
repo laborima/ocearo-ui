@@ -31,7 +31,7 @@ export default function PressureWidget() {
     };
   }, [pressureValue, debugMode]);
 
-  const { hasData, pressureMbar } = pressureData;
+  const { pressureMbar } = pressureData;
 
   const getPressureColor = (pressure) => {
     if (pressure < 1000) return 'text-oRed';

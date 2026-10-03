@@ -1,6 +1,5 @@
 'use client';
 import React, { useMemo, useState, useCallback } from 'react';
-import { oBlue, oGreen, oRed, oYellow, useOcearoContext } from '../../context/OcearoContext';
 import { useAIS } from '../../3dview/ais/AISContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
