@@ -25,11 +25,11 @@ const SpeedWidget = React.memo(() => {
       return { hasData: false };
     }
 
-    const sog = sogValue || (debugMode ? 5.2 : null);
-    const stw = stwValue || (debugMode ? 4.8 : null);
-    const heading = headingValue || (debugMode ? 0.52 : null);
-    const cog = cogValue || (debugMode ? 0.61 : null);
-    const windSpeed = windSpeedValue || (debugMode ? 12.5 : null);
+    const sog = sogValue ?? (debugMode ? 5.2 : null);
+    const stw = stwValue ?? (debugMode ? 4.8 : null);
+    const heading = headingValue ?? (debugMode ? 0.52 : null);
+    const cog = cogValue ?? (debugMode ? 0.61 : null);
+    const windSpeed = windSpeedValue ?? (debugMode ? 12.5 : null);
     
     return {
       hasData: true,

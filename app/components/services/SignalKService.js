@@ -579,7 +579,7 @@ class SignalKService {
             throw new Error(`Invalid resource type: ${resourceType}`);
         }
 
-        const path = `/signalk/v2/api/resources/${resourceType}/${resourceId}`;
+        const path = `/signalk/v2/api/resources/${resourceType}/${encodeURIComponent(resourceId)}`;
         return await this.apiCall(path);
     }
 
@@ -595,7 +595,7 @@ class SignalKService {
             throw new Error(`Invalid resource type: ${resourceType}`);
         }
 
-        const path = `/signalk/v2/api/resources/${resourceType}/${resourceId}`;
+        const path = `/signalk/v2/api/resources/${resourceType}/${encodeURIComponent(resourceId)}`;
         return await this.apiCall(path, {
             method: 'PUT',
             body: JSON.stringify(resourceData)
@@ -612,19 +612,10 @@ class SignalKService {
         if (!SignalKService.RESOURCE_TYPES.includes(resourceType)) {
             throw new Error(`Invalid resource type: ${resourceType}`);
         }
-
-        const path = `/signalk/v2/api/resources/${resourceType}/${resourceId}`;
-        const baseUrl = this.getBaseUrl();
-        const url = `${baseUrl}${path}`;
-
-        const response = await fetch(url, {
-            method: 'DELETE',
-            headers: this.getAuthHeaders()
+        // Through apiCall: credentials, timeout and server error messages
+        await this.apiCall(`/signalk/v2/api/resources/${resourceType}/${encodeURIComponent(resourceId)}`, {
+            method: 'DELETE'
         });
-
-        if (!response.ok) {
-            throw new Error(`Failed to delete resource: ${response.statusText}`);
-        }
     }
 
     // ==========================================
@@ -881,25 +872,23 @@ class SignalKService {
     }
 
     /**
-     * Advance to next waypoint in active route
-     * @returns {Promise<Object>}
+     * Move along the active route by `steps` points (negative = back).
+     * The Course API has a single endpoint for both directions.
      */
-    async nextWaypoint() {
-        const path = '/signalk/v2/api/vessels/self/navigation/course/activeRoute/nextPoint';
-        return await this.apiCall(path, {
-            method: 'PUT'
+    async moveRoutePoint(steps) {
+        return this.apiCall('/signalk/v2/api/vessels/self/navigation/course/activeRoute/nextPoint', {
+            method: 'PUT',
+            body: JSON.stringify({ value: steps })
         });
     }
 
-    /**
-     * Go back to previous waypoint in active route
-     * @returns {Promise<Object>}
-     */
+    async nextWaypoint() {
+        return this.moveRoutePoint(1);
+    }
+
+    // There is no activeRoute/previousPoint endpoint (it answered 404)
     async previousWaypoint() {
-        const path = '/signalk/v2/api/vessels/self/navigation/course/activeRoute/previousPoint';
-        return await this.apiCall(path, {
-            method: 'PUT'
-        });
+        return this.moveRoutePoint(-1);
     }
 
     /**
