@@ -26,6 +26,11 @@ const WEATHER_REFRESH_INTERVAL = 30 * 60 * 1000;
  */
 const INITIAL_FETCH_DELAY = 5000;
 
+/**
+ * Max rate at which sensor readings are republished to consumers
+ */
+const SENSOR_PUBLISH_INTERVAL = 2000;
+
 export const WeatherContextProvider = ({ children }) => {
     // Subscribe to position separately — only used for forecast fetch trigger
     const position = useSignalKPath('navigation.position');
@@ -40,7 +45,23 @@ export const WeatherContextProvider = ({ children }) => {
         'environment.wind.gust'
     ], []);
 
-    const sensorValues = useSignalKPaths(weatherSensorPaths);
+    const liveSensorValues = useSignalKPaths(weatherSensorPaths);
+
+    // Wind can update several times per second; republishing the context on
+    // each tick re-rendered every consumer (including the 3D ocean). Weather
+    // readers are fine with a 2 s cadence.
+    const [sensorValues, setSensorValues] = useState(liveSensorValues);
+    const latestSensorsRef = useRef(liveSensorValues);
+    latestSensorsRef.current = liveSensorValues;
+    const sensorTimerRef = useRef(null);
+    useEffect(() => {
+        if (sensorTimerRef.current) return;
+        sensorTimerRef.current = setTimeout(() => {
+            sensorTimerRef.current = null;
+            setSensorValues(latestSensorsRef.current);
+        }, SENSOR_PUBLISH_INTERVAL);
+    }, [liveSensorValues]);
+    useEffect(() => () => clearTimeout(sensorTimerRef.current), []);
     
     // Weather forecast state
     const [forecasts, setForecasts] = useState([]);
@@ -54,16 +75,19 @@ export const WeatherContextProvider = ({ children }) => {
     const refreshIntervalRef = useRef(null);
     const positionRef = useRef(position);
     positionRef.current = position;
+    const hasFetchedRef = useRef(false);
+    const hasPosition = Number.isFinite(position?.latitude) && Number.isFinite(position?.longitude);
 
     /**
      * Fetch weather forecast from SignalK Weather API
      */
     const fetchWeatherForecast = useCallback(async () => {
         const pos = positionRef.current;
-        
-        if (!pos?.latitude || !pos?.longitude) {
+
+        if (!Number.isFinite(pos?.latitude) || !Number.isFinite(pos?.longitude)) {
             return;
         }
+        hasFetchedRef.current = true;
 
         setIsLoading(true);
         setError(null);
@@ -199,6 +223,12 @@ export const WeatherContextProvider = ({ children }) => {
             }
         };
     }, [fetchWeatherForecast]);
+
+    // GPS fixes often take longer than INITIAL_FETCH_DELAY after boot: fetch as
+    // soon as a position appears instead of waiting for the 30 min refresh
+    useEffect(() => {
+        if (hasPosition && !hasFetchedRef.current) fetchWeatherForecast();
+    }, [hasPosition, fetchWeatherForecast]);
 
     const contextValue = useMemo(() => ({
         forecasts,

@@ -401,10 +401,11 @@ class SignalKService {
             }
 
             // Parse other values
-            if (typeof v.outside?.relativeHumidity !== 'undefined') {
-                forecast.humidity = v.outside.relativeHumidity;
-            } else if (typeof v.outside?.absoluteHumidity !== 'undefined') {
-                forecast.humidity = v.outside.absoluteHumidity;
+            // Ratio 0-1 per the spec; tolerate providers sending percent. Absolute
+            // humidity (kg/m³) is a different quantity and must not stand in for it.
+            if (typeof v.outside?.relativeHumidity === 'number') {
+                const rh = v.outside.relativeHumidity;
+                forecast.humidity = rh > 1 ? rh / 100 : rh;
             }
             if (typeof v.outside?.pressure !== 'undefined') {
                 forecast.pressure = Math.round(v.outside.pressure);

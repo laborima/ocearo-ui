@@ -67,8 +67,9 @@ export default function WeatherWidget() {
       const desc = description.toLowerCase();
       if (desc.includes('rain') || desc.includes('shower')) condition = 'rainy';
       else if (desc.includes('snow')) condition = 'snow';
+      // Before the generic 'cloud' test, which "partly cloudy" also matches
+      else if (desc.includes('partly') || desc.includes('few clouds') || desc.includes('scattered')) condition = 'partly-cloudy';
       else if (desc.includes('cloud') || desc.includes('overcast')) condition = 'cloudy';
-      else if (desc.includes('partly') || desc.includes('few clouds')) condition = 'partly-cloudy';
       else if (desc.includes('clear') || desc.includes('sun')) condition = 'sunny';
     } else if (finalPressure) {
       if (finalPressure < 1000) {

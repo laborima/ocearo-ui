@@ -5,6 +5,7 @@ import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTint, faThermometerHalf } from '@fortawesome/free-solid-svg-icons';
 import BaseWidget from './BaseWidget';
+import { convertTemperatureUnit, getTemperatureUnitLabel } from '../../utils/UnitConversions';
 import { useTranslation } from 'react-i18next';
 
 const HUMIDITY_CONFIG = {
@@ -14,7 +15,8 @@ const HUMIDITY_CONFIG = {
   },
   dewPoint: {
     path: 'environment.inside.dewPoint',
-    transform: value => ((value || 0) - 273.15).toFixed(1)
+    // Kelvin -> user temperature unit (was always Celsius)
+    transform: value => convertTemperatureUnit(value)
   }
 };
 
@@ -38,11 +40,11 @@ export default function HumidityWidget() {
       hasData: true,
       humidity: humidityPercent,
       humidityPercentage: humidityPercent,
-      dewPointCelsius: dewPointValue !== null ? HUMIDITY_CONFIG.dewPoint.transform(dewPointValue) : (debugMode ? '18.5' : null)
+      dewPoint: dewPointValue !== null ? HUMIDITY_CONFIG.dewPoint.transform(dewPointValue) : (debugMode ? convertTemperatureUnit(291.65) : null)
     };
   }, [humidityValue, dewPointValue, debugMode]);
 
-  const { humidity, humidityPercentage, dewPointCelsius } = humidityData;
+  const { humidity, humidityPercentage, dewPoint } = humidityData;
 
   const getHumidityColor = (humidity) => {
     const h = parseInt(humidity);
@@ -100,7 +102,7 @@ export default function HumidityWidget() {
               <span className="text-hud-secondary text-xs uppercase font-black tracking-widest">{t('widgets.dewPoint')}</span>
             </div>
             <div className="text-hud-main font-black text-lg gliding-value">
-              {dewPointCelsius !== null ? `${dewPointCelsius}°` : t('common.na')}
+              {dewPoint != null ? `${dewPoint}${getTemperatureUnitLabel()}` : t('common.na')}
             </div>
           </div>
         </div>
