@@ -2,30 +2,23 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOcearoContext, toDegrees } from '../context/OcearoContext';
-import { useSignalKPath, useSignalKPaths } from '../hooks/useSignalK';
+import { useSignalKPaths } from '../hooks/useSignalK';
 import signalKService from '../services/SignalKService';
 import configService from '../settings/ConfigService';
 import { makeOcearoCoreApiCall } from '../utils/OcearoCoreUtils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-    faShip,
     faCompass,
     faWind,
     faRoute,
     faPlay,
     faPause,
     faStop,
-    faArrowLeft,
-    faArrowRight,
-    faPlus,
-    faMinus,
     faGamepad,
-    faCog,
     faSync,
     faExclamationTriangle,
     faCheckCircle,
     faTimesCircle,
-    faBan,
     faAnchor,
     faLocationArrow,
     faSatellite
@@ -43,6 +36,19 @@ import { useTranslation } from 'react-i18next';
  * - Tack and gybe maneuvers
  * - PlayStation controller configuration (via OcearoCore)
  */
+// Time window to confirm a tack or gybe after arming it
+const CONFIRM_WINDOW_MS = 4000;
+const DEFAULT_MODES = ['compass', 'wind', 'gps', 'route'];
+
+/**
+ * Device-advertised option list. The spec example uses `state`/`mode`, the
+ * actions section `states`/`modes`: accept both.
+ */
+const optionList = (options, singular, plural) => {
+    const list = options?.[plural] ?? options?.[singular];
+    return Array.isArray(list) ? list.map(item => (typeof item === 'string' ? item : item?.value ?? item?.name)).filter(Boolean) : null;
+};
+
 export default function AutopilotView() {
     const { t } = useTranslation();
     const debugMode = configService.get('debugMode');
@@ -55,6 +61,8 @@ export default function AutopilotView() {
         'steering.rudderAngle',
         'steering.autopilot.state',
         'steering.autopilot.mode',
+        'steering.autopilot.engaged',
+        'steering.autopilot.target',
         'steering.autopilot.target.headingTrue',
         'steering.autopilot.target.windAngleApparent'
     ], []);
@@ -79,7 +87,6 @@ export default function AutopilotView() {
     const [selectedDevice, setSelectedDevice] = useState('_default');
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [isAutopilotAvailable, setIsAutopilotAvailable] = useState(false);
     
     // Controller config state
     const [controllerConfig, setControllerConfig] = useState(null);
@@ -94,12 +101,11 @@ export default function AutopilotView() {
      */
     const fetchAutopilotData = useCallback(async () => {
         try {
-            setError(null);
-            
-            // Check if autopilot API is available
-            const available = await signalKService.isAutopilotAvailable();
-            setIsAutopilotAvailable(available);
-            
+            // An empty device list means no v2 provider (or none registered)
+            const deviceList = await signalKService.getAutopilotDevices();
+            const available = deviceList.length > 0;
+            setDevices(deviceList);
+
             if (!available) {
                 // Read-only fallback on the v1 data paths (via ref to avoid dep loop).
                 // A pilot on the NMEA2000 bus publishes `state` even with no v2
@@ -112,39 +118,27 @@ export default function AutopilotView() {
                 const target = vals['steering.autopilot.target.headingTrue'] ||
                               vals['steering.autopilot.target.windAngleApparent'];
 
-                if (!debugMode) {
-                    setError(state
-                        ? t('autopilot.providerMissingButDetected')
-                        : t('autopilot.providerMissing'));
-                }
+                setError(debugMode ? null : (state
+                    ? t('autopilot.providerMissingButDetected')
+                    : t('autopilot.providerMissing')));
 
                 setAutopilotData({
                     state: state || (debugMode ? 'standby' : 'off-line'),
                     mode: mode || (debugMode ? 'compass' : null),
                     target: target || (debugMode ? 1.57 : null),
-                    engaged: state === 'enabled'
+                    engaged: vals['steering.autopilot.engaged'] ?? false
                 });
                 return;
             }
 
-            // Fetch devices
-            const deviceList = await signalKService.getAutopilotDevices();
-            setDevices(deviceList);
+            const device = deviceList.includes(selectedDevice) || selectedDevice === '_default'
+                ? selectedDevice
+                : deviceList[0];
+            if (device !== selectedDevice) setSelectedDevice(device);
 
-            // The API answered but registered no device — a provider that failed
-            // to register would otherwise be indistinguishable from a healthy one.
-            if (deviceList.length === 0 && !debugMode) {
-                setError(t('autopilot.noDeviceRegistered'));
-            }
-
-            if (deviceList.length > 0 && !deviceList.includes(selectedDevice)) {
-                setSelectedDevice(deviceList[0]);
-            }
-            
-            // Fetch autopilot data
-            const data = await signalKService.getAutopilotData(selectedDevice);
+            const data = await signalKService.getAutopilotData(device);
             setAutopilotData(data);
-            
+            setError(null);
         } catch (err) {
             console.error('AutopilotView: Failed to fetch autopilot data:', err);
             setError(err.message);
@@ -182,98 +176,57 @@ export default function AutopilotView() {
         return () => clearInterval(interval);
     }, [fetchAutopilotData, fetchControllerConfig]);
 
-    /**
-     * Engage autopilot
-     */
-    const handleEngage = async () => {
+    // One command at a time: a double tap must not send engage twice or stack
+    // two mode changes. Heading adjustments stay usable (they are cumulative).
+    const [busy, setBusy] = useState(false);
+    const runCommand = useCallback(async (command, errorKey, { lock = true } = {}) => {
+        if (lock && busy) return;
+        if (lock) setBusy(true);
         try {
             setError(null);
-            await signalKService.engageAutopilot(selectedDevice);
+            await command();
             await fetchAutopilotData();
         } catch (err) {
-            setError(t('autopilot.failedToEngage', { message: err.message }));
+            setError(t(errorKey, { message: err.message }));
+        } finally {
+            if (lock) setBusy(false);
         }
-    };
+    }, [busy, fetchAutopilotData, t]);
 
-    /**
-     * Disengage autopilot
-     */
-    const handleDisengage = async () => {
-        try {
-            setError(null);
-            await signalKService.disengageAutopilot(selectedDevice);
-            await fetchAutopilotData();
-        } catch (err) {
-            setError(t('autopilot.failedToDisengage', { message: err.message }));
-        }
-    };
+    const handleEngage = () => runCommand(() => signalKService.engageAutopilot(selectedDevice), 'autopilot.failedToEngage');
+    const handleDisengage = () => runCommand(() => signalKService.disengageAutopilot(selectedDevice), 'autopilot.failedToDisengage');
+    const handleSetMode = (mode) => runCommand(() => signalKService.setAutopilotMode(mode, selectedDevice), 'autopilot.failedToSetMode');
+    // The v2 API takes a value plus its unit; sending bare radians made
+    // providers interpret the delta as degrees.
+    const handleAdjustHeading = (deltaDegrees) => runCommand(
+        () => signalKService.adjustAutopilotTarget(deltaDegrees, selectedDevice),
+        'autopilot.failedToAdjustHeading', { lock: false });
+    const handleSetHeading = (headingDegrees) => runCommand(
+        () => signalKService.setAutopilotTarget(headingDegrees * Math.PI / 180, selectedDevice),
+        'autopilot.failedToSetHeading');
+    const handleDodge = (options) => runCommand(() => signalKService.autopilotDodge(options, selectedDevice), 'autopilot.failedToDodge');
+    const handleCourseAction = (action) => runCommand(() => signalKService.autopilotCourseAction(action, selectedDevice), 'autopilot.failedToSteerCourse');
 
-    /**
-     * Set autopilot mode
-     */
-    const handleSetMode = async (mode) => {
-        try {
-            setError(null);
-            await signalKService.setAutopilotMode(mode, selectedDevice);
-            await fetchAutopilotData();
-        } catch (err) {
-            setError(t('autopilot.failedToSetMode', { message: err.message }));
-        }
-    };
+    // Tack / gybe turn the boat through the wind: first tap arms, a second tap
+    // on the same button within CONFIRM_WINDOW_MS executes.
+    const [armedManeuver, setArmedManeuver] = useState(null);
+    useEffect(() => {
+        if (!armedManeuver) return undefined;
+        const id = setTimeout(() => setArmedManeuver(null), CONFIRM_WINDOW_MS);
+        return () => clearTimeout(id);
+    }, [armedManeuver]);
 
-    /**
-     * Adjust heading
-     */
-    const handleAdjustHeading = async (deltaDegrees) => {
-        try {
-            setError(null);
-            // The v2 API takes a value plus its unit; sending bare radians made
-            // providers interpret the delta as degrees.
-            await signalKService.adjustAutopilotTarget(deltaDegrees, selectedDevice);
-            await fetchAutopilotData();
-        } catch (err) {
-            setError(t('autopilot.failedToAdjustHeading', { message: err.message }));
+    const handleManeuver = (maneuver, direction) => {
+        const key = `${maneuver}:${direction}`;
+        if (armedManeuver !== key) {
+            setArmedManeuver(key);
+            return;
         }
-    };
-
-    /**
-     * Set specific heading
-     */
-    const handleSetHeading = async (headingDegrees) => {
-        try {
-            setError(null);
-            const headingRadians = headingDegrees * Math.PI / 180;
-            await signalKService.setAutopilotTarget(headingRadians, selectedDevice);
-            await fetchAutopilotData();
-        } catch (err) {
-            setError(t('autopilot.failedToSetHeading', { message: err.message }));
-        }
-    };
-
-    /**
-     * Execute tack
-     */
-    const handleTack = async (direction) => {
-        try {
-            setError(null);
-            await signalKService.autopilotTack(direction, selectedDevice);
-            await fetchAutopilotData();
-        } catch (err) {
-            setError(t('autopilot.failedToTack', { message: err.message }));
-        }
-    };
-
-    /**
-     * Execute gybe
-     */
-    const handleGybe = async (direction) => {
-        try {
-            setError(null);
-            await signalKService.autopilotGybe(direction, selectedDevice);
-            await fetchAutopilotData();
-        } catch (err) {
-            setError(t('autopilot.failedToGybe', { message: err.message }));
-        }
+        setArmedManeuver(null);
+        runCommand(
+            () => signalKService.autopilotManeuver(maneuver, direction, selectedDevice),
+            maneuver === 'tack' ? 'autopilot.failedToTack' : 'autopilot.failedToGybe'
+        );
     };
 
     /**
@@ -291,27 +244,28 @@ export default function AutopilotView() {
         }
     };
 
-    // Get state color
-    const getStateColor = (state) => {
-        switch (state) {
-            case 'enabled': return 'text-oGreen';
-            case 'standby': return 'text-oYellow';
-            case 'disabled': return 'text-hud-muted';
-            case 'off-line': return 'text-oRed';
-            default: return 'text-hud-muted';
-        }
-    };
+    // Live v2 deltas (default pilot) update instantly after a command; the REST
+    // poll covers other devices and the option lists.
+    const useLive = selectedDevice === '_default' || devices.length <= 1;
+    const liveValue = (path) => (useLive ? skValues[path] : undefined);
+    const pilotState = liveValue('steering.autopilot.state') ?? autopilotData?.state;
+    const pilotMode = liveValue('steering.autopilot.mode') ?? autopilotData?.mode;
+    const liveTarget = liveValue('steering.autopilot.target');
+    const pilotTarget = typeof liveTarget === 'number' ? liveTarget : autopilotData?.target;
+    // `engaged` is the API's answer to "is it steering"; state names are vendor
+    // specific (Raymarine reports auto/wind/route, never 'enabled').
+    const engaged = liveValue('steering.autopilot.engaged') ?? autopilotData?.engaged ?? (pilotState === 'enabled');
+    const offline = pilotState === 'off-line';
+    const modes = optionList(autopilotData?.options, 'mode', 'modes') ?? DEFAULT_MODES;
+    const actions = Array.isArray(autopilotData?.options?.actions) ? autopilotData.options.actions : null;
+    // Without an action list (older providers) keep tack/gybe, hide the rest
+    const isActionAvailable = (id) => (actions
+        ? actions.some(a => a.id === id && a.available)
+        : id === 'tack' || id === 'gybe');
 
-    // Get state icon
-    const getStateIcon = (state) => {
-        switch (state) {
-            case 'enabled': return faCheckCircle;
-            case 'standby': return faPause;
-            case 'disabled': return faBan;
-            case 'off-line': return faTimesCircle;
-            default: return faExclamationTriangle;
-        }
-    };
+    // State colour/icon from `engaged`, not vendor-specific state names
+    const getStateColor = () => (offline ? 'text-oRed' : engaged ? 'text-oGreen' : pilotState ? 'text-oYellow' : 'text-hud-muted');
+    const getStateIcon = () => (offline ? faTimesCircle : engaged ? faCheckCircle : pilotState ? faPause : faExclamationTriangle);
 
     // Get mode icon
     const getModeIcon = (mode) => {
@@ -340,23 +294,23 @@ export default function AutopilotView() {
                 <div className="grid grid-cols-3 gap-2 text-center">
                     {/* State */}
                     <div>
-                        <div className={`text-2xl mb-1 ${getStateColor(autopilotData?.state)}`}>
-                            <FontAwesomeIcon icon={getStateIcon(autopilotData?.state)} />
+                        <div className={`text-2xl mb-1 ${getStateColor()}`}>
+                            <FontAwesomeIcon icon={getStateIcon()} />
                         </div>
                         <div className={`text-xs ${secondaryTextClass} font-bold`}>{t('autopilot.state')}</div>
                         <div className={`text-sm ${primaryTextClass} font-black capitalize`}>
-                            {autopilotData?.state || t('autopilot.unknown')}
+                            {pilotState || t('autopilot.unknown')}
                         </div>
                     </div>
                     
                     {/* Mode */}
                     <div>
                         <div className="text-2xl mb-1 text-oBlue">
-                            <FontAwesomeIcon icon={getModeIcon(autopilotData?.mode)} />
+                            <FontAwesomeIcon icon={getModeIcon(pilotMode)} />
                         </div>
                         <div className={`text-xs ${secondaryTextClass} font-bold`}>{t('autopilot.mode')}</div>
                         <div className={`text-sm ${primaryTextClass} font-black capitalize`}>
-                            {autopilotData?.mode || t('autopilot.none')}
+                            {pilotMode || t('autopilot.none')}
                         </div>
                     </div>
                     
@@ -367,17 +321,24 @@ export default function AutopilotView() {
                         </div>
                         <div className={`text-xs ${secondaryTextClass} font-bold`}>{t('autopilot.target')}</div>
                         <div className={`text-sm ${primaryTextClass} font-black`}>
-                            {formatHeading(autopilotData?.target)}
+                            {formatHeading(pilotTarget)}
                         </div>
                     </div>
                 </div>
                 
-                {/* Current Heading */}
+                {/* Current value of what the pilot steers to: AWA in wind mode, heading otherwise */}
                 <div className="mt-3 pt-3 border-t border-hud text-center">
-                    <div className={`text-xs ${secondaryTextClass} font-bold uppercase`}>{t('autopilot.currentHeading')}</div>
-                    <div className={`text-4xl font-black ${primaryTextClass}`}>
-                        {formatHeading(currentHeading)}
+                    <div className={`text-xs ${secondaryTextClass} font-bold uppercase`}>
+                        {pilotMode === 'wind' ? t('autopilot.apparentWindAngle') : t('autopilot.currentHeading')}
                     </div>
+                    <div className={`text-4xl font-black ${primaryTextClass}`}>
+                        {formatHeading(pilotMode === 'wind' ? apparentWindAngle : currentHeading)}
+                    </div>
+                    {typeof rudderAngle === 'number' && (
+                        <div className={`text-xs mt-1 ${mutedTextClass} font-bold uppercase`}>
+                            {t('autopilot.rudder')} {Math.abs(toDegrees(rudderAngle))}° {rudderAngle < 0 ? t('autopilot.port') : rudderAngle > 0 ? t('autopilot.stbd') : ''}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -385,9 +346,9 @@ export default function AutopilotView() {
             <div className="grid grid-cols-2 gap-3">
                 <button
                     onClick={handleEngage}
-                    disabled={autopilotData?.state === 'enabled' || autopilotData?.state === 'off-line'}
+                    disabled={busy || engaged || offline}
                     className={`py-3 rounded font-black text-base uppercase transition-all ${
-                        autopilotData?.state === 'enabled' 
+                        busy || engaged || offline
                             ? 'bg-hud-bg text-hud-dim cursor-not-allowed border border-hud'
                             : 'bg-oGreen hover:bg-oGreen/80 text-hud-main shadow-lg shadow-oGreen/20'
                     }`}
@@ -397,9 +358,9 @@ export default function AutopilotView() {
                 </button>
                 <button
                     onClick={handleDisengage}
-                    disabled={autopilotData?.state !== 'enabled'}
+                    disabled={busy || !engaged}
                     className={`py-3 rounded font-black text-base uppercase transition-all ${
-                        autopilotData?.state !== 'enabled'
+                        busy || !engaged
                             ? 'bg-hud-bg text-hud-dim cursor-not-allowed border border-hud'
                             : 'bg-oRed hover:bg-oRed/80 text-hud-main shadow-lg shadow-oRed/20'
                     }`}
@@ -413,12 +374,13 @@ export default function AutopilotView() {
             <div className="tesla-card p-3 border border-hud bg-hud-bg">
                 <div className={`text-xs font-black uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.modeSelection')}</div>
                 <div className="grid grid-cols-4 gap-2">
-                    {['compass', 'wind', 'gps', 'route'].map(mode => (
+                    {modes.map(mode => (
                         <button
                             key={mode}
                             onClick={() => handleSetMode(mode)}
-                            className={`py-2 rounded font-bold transition-all flex flex-col items-center border ${
-                                autopilotData?.mode === mode
+                            disabled={busy || offline}
+                            className={`py-2 rounded font-bold transition-all flex flex-col items-center border disabled:opacity-50 ${
+                                pilotMode === mode
                                     ? 'bg-oBlue text-hud-main border-oBlue shadow-lg shadow-oBlue/20'
                                     : 'bg-hud-bg text-hud-secondary border-hud hover:bg-hud-elevated'
                             }`}
@@ -471,46 +433,67 @@ export default function AutopilotView() {
                 </button>
             </div>
 
-            {/* Tack & Gybe */}
+            {/* Tack & Gybe — two-tap confirmation */}
             <div className="tesla-card p-3 border border-hud bg-hud-bg">
                 <div className={`text-xs font-black uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.maneuvers')}</div>
                 <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <div className={`text-xs font-black uppercase ${mutedTextClass} mb-2 text-center`}>{t('autopilot.tack')}</div>
-                        <div className="grid grid-cols-2 gap-2">
-                            <button
-                                onClick={() => handleTack('port')}
-                                className="py-2 bg-hud-bg hover:bg-hud-elevated text-hud-main rounded border border-hud font-bold text-xs"
-                            >
-                                {t('autopilot.port')}
-                            </button>
-                            <button
-                                onClick={() => handleTack('starboard')}
-                                className="py-2 bg-hud-bg hover:bg-hud-elevated text-hud-main rounded border border-hud font-bold text-xs"
-                            >
-                                {t('autopilot.stbd')}
-                            </button>
+                    {['tack', 'gybe'].map(maneuver => (
+                        <div key={maneuver}>
+                            <div className={`text-xs font-black uppercase ${mutedTextClass} mb-2 text-center`}>{t(`autopilot.${maneuver}`)}</div>
+                            <div className="grid grid-cols-2 gap-2">
+                                {['port', 'starboard'].map(direction => {
+                                    const armed = armedManeuver === `${maneuver}:${direction}`;
+                                    return (
+                                        <button
+                                            key={direction}
+                                            onClick={() => handleManeuver(maneuver, direction)}
+                                            disabled={busy || !engaged || !isActionAvailable(maneuver)}
+                                            className={`py-2 rounded border font-bold text-xs transition-all disabled:opacity-40 ${
+                                                armed
+                                                    ? 'bg-oYellow text-hud-bg border-oYellow animate-soft-pulse'
+                                                    : 'bg-hud-bg hover:bg-hud-elevated text-hud-main border-hud'
+                                            }`}
+                                        >
+                                            {armed ? t('autopilot.confirm') : t(direction === 'port' ? 'autopilot.port' : 'autopilot.stbd')}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        <div className={`text-xs font-black uppercase ${mutedTextClass} mb-2 text-center`}>{t('autopilot.gybe')}</div>
-                        <div className="grid grid-cols-2 gap-2">
-                            <button
-                                onClick={() => handleGybe('port')}
-                                className="py-2 bg-hud-bg hover:bg-hud-elevated text-hud-main rounded border border-hud font-bold text-xs"
-                            >
-                                {t('autopilot.port')}
-                            </button>
-                            <button
-                                onClick={() => handleGybe('starboard')}
-                                className="py-2 bg-hud-bg hover:bg-hud-elevated text-hud-main rounded border border-hud font-bold text-xs"
-                            >
-                                {t('autopilot.stbd')}
-                            </button>
-                        </div>
-                    </div>
+                    ))}
                 </div>
             </div>
+
+            {/* Dodge & route actions — only those the pilot advertises */}
+            {(isActionAvailable('dodge') || isActionAvailable('courseCurrentPoint') || isActionAvailable('courseNextPoint')) && (
+                <div className="tesla-card p-3 border border-hud bg-hud-bg">
+                    <div className="grid grid-cols-2 gap-2">
+                        {isActionAvailable('dodge') && (pilotMode === 'dodge' ? (
+                            <button onClick={() => handleDodge({ exit: true })} disabled={busy}
+                                className="py-2 rounded border border-oYellow bg-oYellow/20 text-hud-main font-bold text-xs uppercase disabled:opacity-40">
+                                {t('autopilot.exitDodge')}
+                            </button>
+                        ) : (
+                            <button onClick={() => handleDodge()} disabled={busy || !engaged}
+                                className="py-2 rounded border border-hud bg-hud-bg hover:bg-hud-elevated text-hud-main font-bold text-xs uppercase disabled:opacity-40">
+                                {t('autopilot.dodge')}
+                            </button>
+                        ))}
+                        {isActionAvailable('courseCurrentPoint') && (
+                            <button onClick={() => handleCourseAction('courseCurrentPoint')} disabled={busy}
+                                className="py-2 rounded border border-hud bg-hud-bg hover:bg-hud-elevated text-hud-main font-bold text-xs uppercase disabled:opacity-40">
+                                {t('autopilot.steerToWaypoint')}
+                            </button>
+                        )}
+                        {isActionAvailable('courseNextPoint') && (
+                            <button onClick={() => handleCourseAction('courseNextPoint')} disabled={busy}
+                                className="py-2 rounded border border-hud bg-hud-bg hover:bg-hud-elevated text-hud-main font-bold text-xs uppercase disabled:opacity-40">
+                                {t('autopilot.nextWaypoint')}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 
