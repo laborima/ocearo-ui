@@ -4,6 +4,22 @@ import { useOcearoContext } from '../context/OcearoContext';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+const ToolbarButton = ({ onClick, icon, isActive, activeClass, label }) => (
+    <button
+        onClick={onClick}
+        className={`p-2 rounded-xl tesla-hover transition-all duration-300 group relative ${isActive ? 'bg-hud-elevated shadow-soft' : ''}`}
+        title={label}
+    >
+        <FontAwesomeIcon 
+            icon={icon} 
+            className={`text-xl transition-all duration-300 ${isActive ? activeClass + ' scale-110' : 'text-hud-muted group-hover:text-hud-main'}`} 
+        />
+        {isActive && (
+            <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${activeClass.replace('text-', 'bg-')} animate-soft-pulse`} />
+        )}
+    </button>
+);
+
 const ThreeDBoatToolbar = () => {
     const { t } = useTranslation();
     const { nightMode, setNightMode, states, toggleState, toggleExclusiveMode, cycleOceanMode } = useOcearoContext();
@@ -29,21 +45,6 @@ const ThreeDBoatToolbar = () => {
     const currentOceanMode = states.oceanMode || 'black';
     const oceanConfig = OCEAN_MODE_CONFIG[currentOceanMode];
 
-    const ToolbarButton = ({ onClick, icon, isActive, activeClass, label }) => (
-        <button
-            onClick={onClick}
-            className={`p-2 rounded-xl tesla-hover transition-all duration-300 group relative ${isActive ? 'bg-hud-elevated shadow-soft' : ''}`}
-            title={label}
-        >
-            <FontAwesomeIcon 
-                icon={icon} 
-                className={`text-xl transition-all duration-300 ${isActive ? activeClass + ' scale-110' : 'text-hud-muted group-hover:text-hud-main'}`} 
-            />
-            {isActive && (
-                <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${activeClass.replace('text-', 'bg-')} animate-soft-pulse`} />
-            )}
-        </button>
-    );
 
     return (
         <div className="flex items-center space-x-1 p-1.5 rounded-2xl">

@@ -12,6 +12,21 @@ import {
 } from 'recharts';
 import { useOcearoContext } from '../context/OcearoContext';
 
+const CustomTooltip = ({ active, payload, label: timeLabel, unit }) => {
+  // Hovered samples may hold a null value (gaps in the series)
+  if (active && payload && payload.length && typeof payload[0].value === 'number') {
+    return (
+      <div className="bg-hud-bg backdrop-blur-md border border-hud p-3 rounded-lg shadow-lg">
+        <p className="text-hud-secondary text-xs uppercase mb-1">{timeLabel}</p>
+        <p className="text-hud-main font-bold text-sm">
+          {payload[0].value.toFixed(2)}{unit}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const LineChart = ({ data, dataKey, color, scale, label, unit, showPoints = false, lineWidth = 2, fillGradient = false }) => {
   const { nightMode } = useOcearoContext();
 
@@ -40,19 +55,6 @@ const LineChart = ({ data, dataKey, color, scale, label, unit, showPoints = fals
     scale?.max !== undefined ? scale.max : 'auto'
   ];
 
-  const CustomTooltip = ({ active, payload, label: timeLabel }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-hud-bg backdrop-blur-md border border-hud p-3 rounded-lg shadow-lg">
-          <p className="text-hud-secondary text-xs uppercase mb-1">{timeLabel}</p>
-          <p className="text-hud-main font-bold text-sm">
-            {payload[0].value.toFixed(2)}{unit}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="h-full w-full">
@@ -82,7 +84,7 @@ const LineChart = ({ data, dataKey, color, scale, label, unit, showPoints = fals
               tickLine={false}
               unit={unit}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip unit={unit} />} />
             <Area
               type="monotone"
               dataKey={dataKey}
@@ -113,7 +115,7 @@ const LineChart = ({ data, dataKey, color, scale, label, unit, showPoints = fals
               tickLine={false}
               unit={unit}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={<CustomTooltip unit={unit} />} />
             <Line
               type="monotone"
               dataKey={dataKey}

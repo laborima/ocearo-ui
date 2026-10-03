@@ -11,6 +11,21 @@ const toRadians = (degrees) => (degrees * Math.PI) / 180;
  * DebugView — Right-pane component shown when debug mode is active.
  * Provides wind override sliders, 3D axes toggle, and live SignalK debug data.
  */
+const ToggleRow = ({ label, description, checked, onChange }) => (
+    <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
+        <label className="flex items-center justify-between cursor-pointer">
+            <div className="space-y-1">
+                <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{label}</span>
+                {description && (
+                    <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">{description}</p>
+                )}
+            </div>
+            <input type="checkbox" className="sr-only peer" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+            <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oYellow"></div>
+        </label>
+    </div>
+);
+
 const DebugView = () => {
     const { t } = useTranslation();
     const { updateSignalKData } = useOcearoContext();
@@ -131,20 +146,6 @@ const DebugView = () => {
     const timeStbdDown = getVal('navigation.racing.timeStbdDown', 65);
     const timeStbdUp = getVal('navigation.racing.timeStbdUp', 75);
 
-    const ToggleRow = ({ label, description, checked, onChange }) => (
-        <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
-            <label className="flex items-center justify-between cursor-pointer">
-                <div className="space-y-1">
-                    <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{label}</span>
-                    {description && (
-                        <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">{description}</p>
-                    )}
-                </div>
-                <input type="checkbox" className="sr-only peer" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-                <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oYellow"></div>
-            </label>
-        </div>
-    );
 
     return (
         <div className="p-8 text-hud-main w-full overflow-y-auto h-full">

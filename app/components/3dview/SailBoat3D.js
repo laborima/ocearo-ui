@@ -89,11 +89,12 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
         configService.getSelectedBoat() || defaultBoat
     );
 
-    // Update selectedBoat when config changes
+    // Update selectedBoat when the configured boat changes.
+    // Keyed on the boat name: `config` is a fresh copy on every render.
     useEffect(() => {
         const newSelectedBoat = configService.getSelectedBoat() || defaultBoat;
         setSelectedBoat(newSelectedBoat);
-    }, [config]);
+    }, [config.selectedBoat]);
 
 
 
@@ -289,7 +290,7 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
            
             position: skValues['navigation.position'] || { latitude: 0, longitude: 0 }
         };
-    }, [skValues, selectedBoat.name]);
+    }, [skValues, selectedBoat.name, preferredWindDir, preferredWindSpeed, preferredHeading]);
 
    
     // Format data for InfoPanel display
