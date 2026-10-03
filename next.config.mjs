@@ -6,6 +6,8 @@ const nextConfig = {
   images: {
     unoptimized: true // Disable image optimization for compatibility with export mode
   },
+  // Keep the hand-written AGENTS.md playbook; do not let Next.js append its own rules
+  agentRules: false,
   turbopack: {
     root: process.cwd(),
   },
