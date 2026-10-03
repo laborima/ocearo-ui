@@ -3,6 +3,7 @@ import { useTide } from '../context/TideContext';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSignalKPaths } from '../hooks/useSignalK';
 import { useTranslation } from 'react-i18next';
+import { vesselNow } from '../utils/VesselClock';
 
 // Constants remain the same
 const TIDE_DISPLAY_THRESHOLDS = {
@@ -55,7 +56,7 @@ const ThreeDBoatTideLevelIndicator = () => {
     if (typeof timeValue === 'string') {
       const parts = timeValue.split(':').map(Number);
       if (parts.length < 2) return null;
-      const d = new Date();
+      const d = vesselNow();
       d.setHours(parts[0], parts[1], 0, 0);
       return d;
     }

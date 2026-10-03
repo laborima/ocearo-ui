@@ -4,6 +4,7 @@
  * Values come from the manufacturers' operator manuals — indicative, always
  * check the manual of your exact engine version.
  */
+import { vesselNow } from '../utils/VesselClock';
 
 const VOLVO_D1_ITEMS = [
   { id: 'oilChange', intervalHours: 200, intervalMonths: 12 },
@@ -116,7 +117,7 @@ export const computeMaintenanceStatus = (item, lastDone, currentHours) => {
     const due = new Date(lastDone.date);
     due.setMonth(due.getMonth() + item.intervalMonths);
     dueDate = due;
-    daysLeft = Math.floor((due.getTime() - Date.now()) / 86400000);
+    daysLeft = Math.floor((due.getTime() - vesselNow().getTime()) / 86400000);
   }
 
   let status = 'ok';

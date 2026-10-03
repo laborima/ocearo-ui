@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useSignalKPath } from '../../hooks/useSignalK';
+import signalKService from '../../services/SignalKService';
 import configService from '../../settings/ConfigService';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -221,8 +222,17 @@ export default function MapPlane3D({ mode = 'chart' }) {
         if (z !== zoomLevel) setZoomLevel(z);
     });
 
+    // Set when a redraw is requested while one is in flight, so the latest
+    // zoom/position is drawn as soon as the current one finishes (a static
+    // boat at anchor sends no new position to trigger it otherwise).
+    const redrawQueuedRef = useRef(false);
+    const scheduleRedrawRef = useRef(null);
+
     const scheduleRedraw = useCallback((force = false) => {
-        if (renderPendingRef.current) return;
+        if (renderPendingRef.current) {
+            redrawQueuedRef.current = true;
+            return;
+        }
         const position = positionRef.current;
         if (position?.latitude == null || position?.longitude == null) return;
 
@@ -245,13 +255,25 @@ export default function MapPlane3D({ mode = 'chart' }) {
 
         // Exact physical size of the canvas at this zoom → plane size in scene units
         const widthMeters = CANVAS_SIZE * metersPerPixel(position.latitude, zoomLevel);
-        setPlaneRadius((widthMeters / 2) * sceneScale);
 
-        renderTilesToCanvas(canvas, position, zoomLevel, layersRef.current).then(() => {
-            texture.needsUpdate = true;
-            renderPendingRef.current = false;
-        });
+        renderTilesToCanvas(canvas, position, zoomLevel, layersRef.current)
+            .then(() => {
+                texture.needsUpdate = true;
+                // Resize with the new texture, not before: the old image would
+                // otherwise be stretched to the new zoom for a moment
+                setPlaneRadius((widthMeters / 2) * sceneScale);
+            })
+            .catch((error) => console.warn('MapPlane3D: tile rendering failed:', error?.message || error))
+            .finally(() => {
+                renderPendingRef.current = false;
+                if (redrawQueuedRef.current) {
+                    redrawQueuedRef.current = false;
+                    scheduleRedrawRef.current?.();
+                }
+            });
     }, [zoomLevel, sceneScale]);
+
+    useEffect(() => { scheduleRedrawRef.current = scheduleRedraw; }, [scheduleRedraw]);
 
     useEffect(() => {
         const canvas = document.createElement('canvas');
@@ -301,10 +323,8 @@ export default function MapPlane3D({ mode = 'chart' }) {
             return;
         }
 
-        const config = configService.getAll();
-        const signalkUrl = config.signalkUrl || 'http://localhost:3000';
-        fetch(`${signalkUrl}/signalk/v1/api/resources/charts`)
-            .then((r) => r.json())
+        // Through the service: authenticated servers and request timeout
+        signalKService.apiCall('/signalk/v1/api/resources/charts')
             .then((data) => {
                 if (!data || typeof data !== 'object') return;
                 const entries = Object.values(data);
@@ -341,13 +361,19 @@ export default function MapPlane3D({ mode = 'chart' }) {
         }
     });
 
-    // Use PlaneGeometry to avoid 'arrondie' deformation, UVs map 1:1 to canvas
-    const geometry = useMemo(() => new THREE.PlaneGeometry(planeRadius * 2, planeRadius * 2), [planeRadius]);
+    // Unit plane scaled to the canvas footprint: resizing on every zoom change
+    // no longer allocates (and leaks) a new geometry. UVs map 1:1 to the canvas.
+    const geometry = useMemo(() => new THREE.PlaneGeometry(1, 1), []);
 
     const material = useMemo(() => new THREE.MeshBasicMaterial({
         side: THREE.DoubleSide,
         transparent: false,
     }), []);
+
+    useEffect(() => () => {
+        geometry.dispose();
+        material.dispose();
+    }, [geometry, material]);
 
     if (!hasPosition) {
         return null;
@@ -360,6 +386,7 @@ export default function MapPlane3D({ mode = 'chart' }) {
             material={material}
             rotation={[-Math.PI / 2, 0, 0]} // Fixed rotation, North is -Z
             position={[0, -0.1, 0]}
+            scale={[planeRadius * 2, planeRadius * 2, 1]}
         />
     );
 }

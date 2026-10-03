@@ -1,8 +1,10 @@
 import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import { Line } from '@react-three/drei';
-import { Vector3, CatmullRomCurve3, Group, MathUtils } from 'three';
+import { Vector3, CatmullRomCurve3, MathUtils } from 'three';
 import { useFrame } from '@react-three/fiber';
 import polarData from '@/public/boats/default/polar/polar.json';
+
+const POLAR = polarData.vpp;
 import { convertWindSpeed, oBlue, oGreen, oRed } from '../../context/OcearoContext';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
@@ -11,18 +13,18 @@ import configService from '../../settings/ConfigService';
 const CONSTANTS = {
     DEG2RAD: Math.PI / 180,
     ROTATION_INTERPOLATION_FACTOR: 0.05,
-    SOG_SMOOTHING_FACTOR: 0.1,
-    DEFAULT_SOG: 3,
     ANGLE_INCREMENT: 10,
     SPHERE_SIZE: 0.4,
     SPHERE_SEGMENTS: 32,
     DEFAULT_LINE_WIDTH: 1,
     PLOTS_COUNT: 5,
-    FRAME_TO_MINUTE_RATIO: 3600,
 };
 
 // Utility functions
-const radiusScale = (value, timeInMinute) => value * 0.44704 * 60 * timeInMinute * 0.1;
+// Polar speeds are knots: distance (m) = kn * 0.514444 m/s * 60 s * minutes,
+// drawn at 0.1 scene unit per metre (was 0.44704, the mph factor: 13% short)
+const KNOTS_TO_MPS = 0.514444;
+const radiusScale = (value, timeInMinute) => value * KNOTS_TO_MPS * 60 * timeInMinute * 0.1;
 
 const calculatePosition = (angleDeg, value, timeInMinute) => {
     if (!angleDeg || !value) return new Vector3(0, 0, 0);
@@ -83,7 +85,6 @@ const PolarCurve = ({ points, color }) => {
 };
 
 const PolarPlot = React.memo(({ timeInMinute, windSpeed }) => {
-    const polarRef = useRef(polarData.vpp);
 
     const calculateDiamondPosition = useCallback((angles, vmgs, windSpeedIdx, timeInMinute) => {
         if (!angles?.length || !vmgs?.length || angles.length <= windSpeedIdx || vmgs.length <= windSpeedIdx) {
@@ -108,7 +109,7 @@ const PolarPlot = React.memo(({ timeInMinute, windSpeed }) => {
     }, []);
 
     const createRadialCurve = useCallback((windSpeedIdx, timeInMinute) => {
-        const { speeds, angles, beat_angle, beat_vmg, run_angle, run_vmg } = polarRef.current;
+        const { speeds, angles, beat_angle, beat_vmg, run_angle, run_vmg } = POLAR;
         
         if (!speeds?.length || !angles?.length) {
             console.warn("Invalid polar data");
@@ -138,7 +139,7 @@ const PolarPlot = React.memo(({ timeInMinute, windSpeed }) => {
         // beat_angle to run_angle (excluding the run angle itself)
         angles.forEach(angle => {
             if (angle > beat_angle[windSpeedIdx] && angle < run_angle[windSpeedIdx]) {
-                const speed = polarRef.current[Math.floor(angle)]?.[windSpeedIdx] || 0;
+                const speed = POLAR[Math.floor(angle)]?.[windSpeedIdx] || 0;
                 points.push(calculatePosition(angle, speed, timeInMinute));
             }
         });
@@ -157,7 +158,7 @@ const PolarPlot = React.memo(({ timeInMinute, windSpeed }) => {
     }, []);
 
     const curveData = useMemo(() => {
-        const polar = polarRef.current;
+        const polar = POLAR;
         if (!polar?.speeds?.length) {
             console.warn("Invalid polar data structure");
             return { curve: null, beat: null, run: null };
@@ -193,18 +194,25 @@ const PolarPlot = React.memo(({ timeInMinute, windSpeed }) => {
     );
 });
 
+// Isochrones every 5 minutes
+const PLOTS = Array.from({ length: CONSTANTS.PLOTS_COUNT }, (_, index) => ({
+    id: index,
+    timeInMinute: 5 * (index + 1),
+}));
+
 function PolarProjection() {
     const groupRefs = useRef([]);
-    const [plots, setPlots] = useState([]);
-    const frameCount = useRef(0);
-    const previousAngles = useRef([]);
-    const lastSOG = useRef(CONSTANTS.DEFAULT_SOG);
+    const plots = PLOTS;
+    // Seconds since the curves were (re)drawn — real time, not frames, so the
+    // isochrones age the same at 30 or 60 fps
+    const elapsedSeconds = useRef(0);
+    const previousAngles = useRef(Array(CONSTANTS.PLOTS_COUNT).fill(0));
 
     // Read preferred paths from settings — same logic as WindSector3D / useSailTrim
     const preferredWindSpeed = configService.get('preferredWindSpeedPath') || 'speedTrue';
     const preferredWindDir = configService.get('preferredWindDirectionPath') || 'angleTrueWater';
 
-    // Subscribe to all candidate wind paths + navigation SOG
+    // Subscribe to all candidate wind and heading paths
     const polarPaths = useMemo(() => [
         `environment.wind.${preferredWindDir}`,
         `environment.wind.${preferredWindSpeed}`,
@@ -214,7 +222,6 @@ function PolarProjection() {
         'environment.wind.speedOverGround',
         'environment.wind.angleApparent',
         'environment.wind.speedApparent',
-        'navigation.speedOverGround',
         'navigation.headingTrue',
         'navigation.courseOverGroundTrue'
     ], [preferredWindDir, preferredWindSpeed]);
@@ -258,25 +265,14 @@ function PolarProjection() {
         return convertWindSpeed(raw) || 0;
     }, [skValues, preferredWindSpeed]);
 
-    const sog = skValues['navigation.speedOverGround'] || CONSTANTS.DEFAULT_SOG;
-
     const prevWindSpeedRef = useRef(trueWindSpeed);
-    const [redrawKey, setRedrawKey] = useState(Date.now());
+    const [redrawKey, setRedrawKey] = useState(0);
     const redrawIntervalRef = useRef(null);
 
     useEffect(() => {
-        const initialPlots = Array.from({ length: CONSTANTS.PLOTS_COUNT }, (_, index) => ({
-            id: index,
-            timeInMinute: 5 * (index + 1),
-        }));
-
-        setPlots(initialPlots);
-        groupRefs.current = initialPlots.map(() => new Group());
-        previousAngles.current = Array(CONSTANTS.PLOTS_COUNT).fill(0);
-
         redrawIntervalRef.current = setInterval(() => {
-            setRedrawKey(Date.now());
-            frameCount.current = 0;
+            setRedrawKey(k => k + 1);
+            elapsedSeconds.current = 0;
         }, 120000);
 
         return () => {
@@ -289,21 +285,20 @@ function PolarProjection() {
     // Recreate polar curves when wind speed changes significantly (> 5 kn)
     useEffect(() => {
         if (Math.abs(prevWindSpeedRef.current - trueWindSpeed) > 5) {
-            setRedrawKey(Date.now());
-            frameCount.current = 0;
+            setRedrawKey(k => k + 1);
+            elapsedSeconds.current = 0;
             prevWindSpeedRef.current = trueWindSpeed;
         }
     }, [trueWindSpeed]);
 
-    useFrame(() => {
-        frameCount.current += 1;
-        lastSOG.current = MathUtils.lerp(lastSOG.current, sog, CONSTANTS.SOG_SMOOTHING_FACTOR);
+    useFrame((_, delta) => {
+        elapsedSeconds.current += delta;
 
         plots.forEach((plot, index) => {
             const group = groupRefs.current[index];
             if (!group) return;
 
-            const remainingTime = plot.timeInMinute - frameCount.current / CONSTANTS.FRAME_TO_MINUTE_RATIO;
+            const remainingTime = plot.timeInMinute - elapsedSeconds.current / 60;
 
             if (remainingTime > 0) {
                 const prevAngle = previousAngles.current[index];
