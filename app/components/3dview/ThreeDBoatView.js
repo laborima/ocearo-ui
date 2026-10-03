@@ -8,7 +8,6 @@ import AISView from './ais/AISView';
 import ThreeDCompassView from './ThreeDCompassView';
 import LayLines3D from './compass/LayLines3D';
 import { useOcearoContext } from '../context/OcearoContext';
-import { AISProvider } from './ais/AISContext';
 import PolarProjection from './polar/Polar3D';
 import BoatLighting from './BoatLighting';
 import configService from '../settings/ConfigService';
@@ -96,9 +95,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 {states.showPolar && states.oceanMode === 'black' && <PolarProjection /> }
 
                 {/* AIS Boats */}
-                {states.ais && <AISProvider>
-                    <AISView onUpdateInfoPanel={onUpdateInfoPanel} />
-                </AISProvider>}
+                {states.ais && <AISView onUpdateInfoPanel={onUpdateInfoPanel} />}
 
                 {/* Compass */}
                 <ThreeDCompassView visible={isCompassLayerVisible} />
