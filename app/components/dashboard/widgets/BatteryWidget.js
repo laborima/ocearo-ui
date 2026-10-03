@@ -34,21 +34,21 @@ export default function BatteryWidget() {
       return { hasData: false, house: emptyBattery, starter: emptyBattery };
     }
 
-    const house = houseVoltage || (debugMode ? 12.6 : null);
-    const starter = starterVoltage || (debugMode ? 12.4 : null);
-    const houseCurr = houseCurrent || (debugMode ? -2.3 : null);
-    const starterCurr = starterCurrent || (debugMode ? 0.1 : null);
+    const house = houseVoltage ?? (debugMode ? 12.6 : null);
+    const starter = starterVoltage ?? (debugMode ? 12.4 : null);
+    const houseCurr = houseCurrent ?? (debugMode ? -2.3 : null);
+    const starterCurr = starterCurrent ?? (debugMode ? 0.1 : null);
     
     return {
       hasData: true,
       house: {
-        voltage: house ? Math.round(house * 10) / 10 : null,
-        current: houseCurr ? Math.round(houseCurr * 10) / 10 : null,
+        voltage: house != null ? Math.round(house * 10) / 10 : null,
+        current: houseCurr != null ? Math.round(houseCurr * 10) / 10 : null,
         percentage: house ? Math.min(100, Math.max(0, ((house - 11.8) / (12.8 - 11.8)) * 100)) : null
       },
       starter: {
-        voltage: starter ? Math.round(starter * 10) / 10 : null,
-        current: starterCurr ? Math.round(starterCurr * 10) / 10 : null,
+        voltage: starter != null ? Math.round(starter * 10) / 10 : null,
+        current: starterCurr != null ? Math.round(starterCurr * 10) / 10 : null,
         percentage: starter ? Math.min(100, Math.max(0, ((starter - 11.8) / (12.8 - 11.8)) * 100)) : null
       }
     };

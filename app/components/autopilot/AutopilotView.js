@@ -123,9 +123,9 @@ export default function AutopilotView() {
                     : t('autopilot.providerMissing')));
 
                 setAutopilotData({
-                    state: state || (debugMode ? 'standby' : 'off-line'),
-                    mode: mode || (debugMode ? 'compass' : null),
-                    target: target || (debugMode ? 1.57 : null),
+                    state: state ?? (debugMode ? 'standby' : 'off-line'),
+                    mode: mode ?? (debugMode ? 'compass' : null),
+                    target: target ?? (debugMode ? 1.57 : null),
                     engaged: vals['steering.autopilot.engaged'] ?? false
                 });
                 return;

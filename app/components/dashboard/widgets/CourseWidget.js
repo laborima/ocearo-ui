@@ -61,24 +61,13 @@ export default function CourseWidget() {
     const [showWaypointList, setShowWaypointList] = useState(false);
     const [showRouteList, setShowRouteList] = useState(false);
 
-    // Get course data from SignalK or calculations
+    // Live Signal K values (1 Hz) win over the REST calcValues snapshot (polled
+    // every 5 s); `??` keeps legitimate zeros (bearing 000°, XTE 0 m).
     const courseData = React.useMemo(() => {
-        // Try to get data from courseCalculations first (from Course Provider plugin)
-        if (courseCalculations) {
-            return {
-                hasData: true,
-                distance: courseCalculations.distance,
-                bearingTrue: courseCalculations.bearingTrue,
-                bearingMagnetic: courseCalculations.bearingMagnetic,
-                crossTrackError: courseCalculations.crossTrackError,
-                velocityMadeGood: courseCalculations.velocityMadeGood,
-                timeToGo: courseCalculations.timeToGo,
-                estimatedTimeOfArrival: courseCalculations.estimatedTimeOfArrival,
-                calcMethod: courseCalculations.calcMethod
-            };
-        }
-
-        const hasData = skDistance !== null || skBearingTrue !== null;
+        const calc = courseCalculations || {};
+        const distance = skDistance ?? calc.distance ?? null;
+        const bearingTrue = skBearingTrue ?? calc.bearingTrue ?? null;
+        const hasData = distance !== null || bearingTrue !== null;
 
         if (!hasData && !debugMode) {
             return { hasData: false };
@@ -86,12 +75,14 @@ export default function CourseWidget() {
 
         return {
             hasData: true,
-            distance: skDistance || (debugMode ? 5000 : null),
-            bearingTrue: skBearingTrue || (debugMode ? 0.52 : null),
-            crossTrackError: skXte || (debugMode ? 50 : null),
-            velocityMadeGood: skVmg || (debugMode ? 5.5 : null),
-            timeToGo: null,
-            estimatedTimeOfArrival: null
+            distance: distance ?? (debugMode ? 5000 : null),
+            bearingTrue: bearingTrue ?? (debugMode ? 0.52 : null),
+            bearingMagnetic: calc.bearingMagnetic ?? null,
+            crossTrackError: skXte ?? calc.crossTrackError ?? (debugMode ? 50 : null),
+            velocityMadeGood: skVmg ?? calc.velocityMadeGood ?? (debugMode ? 5.5 : null),
+            timeToGo: calc.timeToGo ?? null,
+            estimatedTimeOfArrival: calc.estimatedTimeOfArrival ?? null,
+            calcMethod: calc.calcMethod
         };
     }, [courseCalculations, skDistance, skBearingTrue, skXte, skVmg, debugMode]);
 

@@ -20,7 +20,7 @@ export default function VisibilityWidget() {
       return { hasData: false };
     }
 
-    const visValue = visibilityValue || (debugMode ? 8000 : null);
+    const visValue = visibilityValue ?? (debugMode ? 8000 : null);
      
     return {
       hasData: true,

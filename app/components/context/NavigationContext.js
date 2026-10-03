@@ -9,8 +9,6 @@
 
 import React, { createContext, useState, useEffect, useContext, useCallback, useRef, useMemo } from 'react';
 import signalKService from '../services/SignalKService';
-import { useOcearoContext } from './OcearoContext';
-import { useSignalKPath } from '../hooks/useSignalK';
 
 const NavigationContext = createContext();
 
@@ -25,8 +23,6 @@ const COURSE_REFRESH_INTERVAL = 5000;
 const RESOURCES_REFRESH_INTERVAL = 5 * 60 * 1000;
 
 export const NavigationContextProvider = ({ children }) => {
-    // Subscribe to boat position for internal calculations
-    const myPosition = useSignalKPath('navigation.position');
     
     // Resources state
     const [routes, setRoutes] = useState({});
@@ -439,7 +435,8 @@ export const NavigationContextProvider = ({ children }) => {
         };
     }, [fetchResources, fetchCourse]);
 
-    const contextValue = {
+    // Memoized: consumers re-render only when navigation data actually changes
+    const contextValue = useMemo(() => ({
         // Resources state
         routes,
         waypoints,
@@ -482,7 +479,9 @@ export const NavigationContextProvider = ({ children }) => {
         getWaypointsList,
         hasActiveDestination,
         getDestinationInfo
-    };
+    }), [
+        routes, waypoints, charts, isLoadingResources, resourcesError, activeCourse, courseCalculations, isLoadingCourse, courseError, fetchResources, fetchRoutes, fetchWaypoints, fetchCourse, navigateToWaypoint, navigateToPosition, activateRoute, clearCourse, goToNextWaypoint, goToPreviousWaypoint, createWaypoint, deleteWaypoint, createRoute, deleteRoute, getRouteCoordinates, getWaypointPosition, getRoutesList, getWaypointsList, hasActiveDestination, getDestinationInfo,
+    ]);
 
     return (
         <NavigationContext.Provider value={contextValue}>
