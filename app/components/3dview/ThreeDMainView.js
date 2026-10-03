@@ -8,6 +8,7 @@ import configService from '../settings/ConfigService';
 // Basic UI components loaded synchronously
 import ThreeDBoatToolbar from './ThreeDBoatToolbar';
 import ThreeDBoatThanksIndicator from './ThreeDBoatThanksIndicator';
+import { vesselNow } from '../utils/VesselClock';
 
 // Heavy 3D components loaded dynamically
 const ThreeDBoatView = dynamic(() => import('./ThreeDBoatView'), { ssr: false });
@@ -55,11 +56,11 @@ const ThreeDMainView = ({ active = true }) => {
     const { states, nightMode } = useOcearoContext(); // Access global context
     const [infoPanelContent, setInfoPanelContent] = useState(null);
     const [showAttitudeIndicator, setShowAttitudeIndicator] = useState(true);
-    const [clock, setClock] = useState(() => new Date());
+    const [clock, setClock] = useState(() => vesselNow());
 
     // Tick the header clock every 30s (it would otherwise only refresh on unrelated re-renders)
     useEffect(() => {
-        const id = setInterval(() => setClock(new Date()), 30000);
+        const id = setInterval(() => setClock(vesselNow()), 30000);
         return () => clearInterval(id);
     }, []);
 

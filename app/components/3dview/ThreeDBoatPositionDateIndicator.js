@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useOcearoContext } from '../context/OcearoContext';
 import { useSignalKPath } from '../hooks/useSignalK';
+import { vesselNow } from '../utils/VesselClock';
 
 const ThreeDBoatPositionDateIndicator = () => {
   const { nightMode } = useOcearoContext();
   const position = useSignalKPath('navigation.position');
-  const [dateTime, setDateTime] = useState(new Date());
+  const [dateTime, setDateTime] = useState(() => vesselNow());
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setDateTime(new Date());
+      setDateTime(vesselNow());
     }, 10000); // Update every 10 seconds is enough for this display
     return () => clearInterval(timer);
   }, []);

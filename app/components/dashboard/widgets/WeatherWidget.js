@@ -16,6 +16,7 @@ import {
   faSync
 } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
+import { vesselNow } from '../../utils/VesselClock';
 
 export default function WeatherWidget() {
   const { t } = useTranslation();
@@ -212,7 +213,7 @@ export default function WeatherWidget() {
         {weatherData.forecast && weatherData.forecast.length > 1 && (
           <div className="space-y-2 shrink-0">
             {weatherData.forecast.slice(1, 4).map((day, idx) => {
-              const dayDate = day.date ? new Date(day.date) : new Date(Date.now() + (idx + 1) * 86400000);
+              const dayDate = day.date ? new Date(day.date) : new Date(vesselNow().getTime() + (idx + 1) * 86400000);
               const dayName = !isNaN(dayDate.getTime()) ? dayDate.toLocaleDateString('en-GB', { weekday: 'short' }) : day.time || `+${idx + 1}d`;
               const dayCondition = day.description ? (
                 day.description.toLowerCase().includes('rain') ? 'rainy' :

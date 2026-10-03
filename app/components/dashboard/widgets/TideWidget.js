@@ -15,6 +15,7 @@ import BaseWidget from './BaseWidget';
 import configService from '../../settings/ConfigService';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import { useTranslation } from 'react-i18next';
+import { vesselNow } from '../../utils/VesselClock';
 
 /**
  * Estimate tide height using the Rule of Twelfths.
@@ -122,7 +123,7 @@ const parseTideTime = (timeValue) => {
   // HH:MM format - create a Date for today
   const parts = timeValue.split(':').map(Number);
   if (parts.length < 2) return null;
-  const d = new Date();
+  const d = vesselNow();
   d.setHours(parts[0], parts[1], 0, 0);
   return d;
 };
@@ -168,11 +169,11 @@ export default function TideWidget() {
   const chartData = useMemo(() => {
     const safeHigh = high || 4.2;
     const safeLow = low || 0.8;
-    const safeHighDate = highDate || (() => { const d = new Date(); d.setHours(14, 0, 0, 0); return d; })();
-    const safeLowDate = lowDate || (() => { const d = new Date(); d.setHours(8, 0, 0, 0); return d; })();
+    const safeHighDate = highDate || (() => { const d = vesselNow(); d.setHours(14, 0, 0, 0); return d; })();
+    const safeLowDate = lowDate || (() => { const d = vesselNow(); d.setHours(8, 0, 0, 0); return d; })();
 
     const data = [];
-    const now = new Date();
+    const now = vesselNow();
     const startOfDay = new Date(now);
     startOfDay.setHours(0, 0, 0, 0);
 

@@ -8,6 +8,7 @@ import { useWeather } from "../../context/WeatherContext";
 import { useSignalKPath } from "../../hooks/useSignalK";
 import { useTexture, Stars } from "@react-three/drei";
 import configService from "../../settings/ConfigService";
+import { vesselNow } from '../../utils/VesselClock';
 
 // Extend the Water and Sky components for use in JSX
 extend({ Water, Sky });
@@ -217,7 +218,9 @@ function Ocean3D({ lite = false }) {
     const latitude = currentPosition && typeof currentPosition.latitude === "number" ? currentPosition.latitude : 46.15;
     const longitude = currentPosition && typeof currentPosition.longitude === "number" ? currentPosition.longitude : -1.15;
 
-    const now = new Date();
+    // GPS-corrected: a Pi without RTC often boots with a wrong date, which
+    // would put the sun (and day/night) at the wrong time
+    const now = vesselNow();
     const debugMode = configService.get("debugMode");
     let timeSource = now;
 
@@ -403,6 +406,25 @@ function Ocean3D({ lite = false }) {
     }
   });
   
+  // Free GPU memory. The water (with its reflection render target) is rebuilt
+  // when its config changes (e.g. day/night fog), so release each replaced
+  // instance; the other resources live until the ocean is hidden (black mode
+  // unmounts it), otherwise every ocean-mode cycle would leak them.
+  useEffect(() => () => {
+    if (!water) return;
+    water.material.uniforms.mirrorSampler?.value?.renderTarget?.dispose();
+    water.material.dispose();
+  }, [water]);
+
+  useEffect(() => () => {
+    geom.dispose();
+    liteWaterMaterial.dispose();
+    cloudTexture.dispose();
+    cloudMaterial.dispose();
+    rainGeometry.dispose();
+    rainMaterial.dispose();
+  }, [geom, liteWaterMaterial, cloudTexture, cloudMaterial, rainGeometry, rainMaterial]);
+
   // Set background and fog
   useEffect(() => {
     const fogColor = nightMode ? new THREE.Color(0x000205) : new THREE.Color(0x001a26);

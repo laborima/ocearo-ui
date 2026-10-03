@@ -1,12 +1,13 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useOcearoContext, oNight, oBlue } from '../../context/OcearoContext';
+import { useOcearoContext } from '../../context/OcearoContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import BaseWidget from './BaseWidget';
 import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClock, faGlobe, faSun, faMoon, faSatellite } from '@fortawesome/free-solid-svg-icons';
 import { useVesselClock } from '../../utils/VesselClock';
+import { computeSunEvents } from '../../utils/SunUtils';
 
 const TimeWidget = React.memo(() => {
   const { t } = useTranslation();
@@ -25,47 +26,44 @@ const TimeWidget = React.memo(() => {
 
   const { nightMode } = useOcearoContext();
   
-  const latitude = useSignalKPath('navigation.position.latitude', 0.7854); // ~45°N
-  const longitude = useSignalKPath('navigation.position.longitude', 0.1396); // ~8°E
-  
-  // Convert radians to degrees
-  const latDeg = (latitude * 180 / Math.PI).toFixed(4);
-  const lonDeg = (longitude * 180 / Math.PI).toFixed(4);
-  
-  // Calculate local time (simplified - in real app would use proper timezone API)
-  const utcTime = new Date(currentTime.getTime());
-  const localOffset = Math.round(longitude * 12 / Math.PI); // rough timezone offset
-  const localTime = new Date(utcTime.getTime() + (localOffset * 60 * 60 * 1000));
-  
-  // Format times
-  const formatTime = (date, includeSeconds = true) => {
-    const options = {
-      hour: '2-digit',
-      minute: '2-digit',
-      ...(includeSeconds && { second: '2-digit' }),
-      hour12: false
-    };
-    return date.toLocaleTimeString('en-GB', options);
-  };
+  // Signal K positions are decimal degrees
+  const position = useSignalKPath('navigation.position');
+  const latitude = position?.latitude;
+  const longitude = position?.longitude;
+  const hasPosition = Number.isFinite(latitude) && Number.isFinite(longitude);
+  const latDeg = hasPosition ? latitude.toFixed(4) : '--';
+  const lonDeg = hasPosition ? longitude.toFixed(4) : '--';
 
-  const formatDate = (date) => {
-    return date.toLocaleDateString('en-GB', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+  const formatTime = (date, includeSeconds = true, timeZone) => date.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    ...(includeSeconds && { second: '2-digit' }),
+    hour12: false,
+    ...(timeZone && { timeZone }),
+  });
 
-  // Determine if it's day or night (simplified)
-  const hour = currentTime.getHours();
-  const isDaytime = hour >= 6 && hour < 18;
+  const formatDate = (date) => date.toLocaleDateString('en-GB', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
 
-  // Calculate sunrise/sunset times (very simplified)
-  const sunrise = new Date(currentTime);
-  sunrise.setHours(6, 30, 0, 0);
-  const sunset = new Date(currentTime);
-  sunset.setHours(18, 45, 0, 0);
+  // Nautical zone time: UTC + round(longitude / 15) hours, shown as UTC so the
+  // display's own time zone doesn't apply twice
+  const zoneOffsetHours = hasPosition ? Math.round(longitude / 15) : 0;
+  const zoneTime = new Date(currentTime.getTime() + zoneOffsetHours * 3600000);
+
+  // Day / night and next sun event from the actual position
+  const sun = hasPosition ? computeSunEvents(latitude, longitude, currentTime) : null;
+  const isDaytime = sun?.sunrise && sun?.sunset
+    ? currentTime >= sun.sunrise && currentTime < sun.sunset
+    : currentTime.getHours() >= 6 && currentTime.getHours() < 18;
+  // After sunset the next sunrise is tomorrow's
+  const nextSunEvent = !sun ? null
+    : isDaytime ? sun.sunset
+    : sun.sunrise && currentTime < sun.sunrise ? sun.sunrise
+    : computeSunEvents(latitude, longitude, new Date(currentTime.getTime() + 86400000))?.sunrise ?? null;
 
   return (
     <BaseWidget
@@ -103,14 +101,14 @@ const TimeWidget = React.memo(() => {
                 <FontAwesomeIcon icon={faGlobe} className="text-oBlue text-xs opacity-50" />
                 <span className="text-hud-muted text-xs font-black uppercase tracking-widest">{t('widgets.localSync')}</span>
               </div>
-              <div className="text-hud-main font-mono font-black text-xl gliding-value">{formatTime(localTime, false)}</div>
+              <div className="text-hud-main font-mono font-black text-xl gliding-value">{formatTime(zoneTime, false, 'UTC')}</div>
             </div>
             <div className="tesla-card p-4 tesla-hover bg-hud-bg">
               <div className="flex items-center space-x-3 mb-2">
                 <FontAwesomeIcon icon={faGlobe} className="text-hud-muted text-xs opacity-50" />
                 <span className="text-hud-muted text-xs font-black uppercase tracking-widest">{t('widgets.utcClock')}</span>
               </div>
-              <div className="text-hud-main font-mono font-black text-xl gliding-value">{formatTime(utcTime, false)}</div>
+              <div className="text-hud-main font-mono font-black text-xl gliding-value">{formatTime(currentTime, false, 'UTC')}</div>
             </div>
           </div>
         </div>
@@ -128,7 +126,7 @@ const TimeWidget = React.memo(() => {
               </span>
             </div>
             <span className="text-hud-muted text-xs font-black font-mono opacity-60">
-              {isDaytime ? '☀' : '☾'} {formatTime(isDaytime ? sunset : sunrise, false)}
+              {isDaytime ? '☀' : '☾'} {nextSunEvent ? formatTime(nextSunEvent, false) : '--:--'}
             </span>
           </div>
           <div className="flex items-center justify-between text-xs font-black uppercase opacity-60">
