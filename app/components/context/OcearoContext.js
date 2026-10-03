@@ -1,5 +1,4 @@
 import React, { createContext, useState, useEffect, useContext, useRef, useCallback, useMemo } from 'react';
-import Client from '@signalk/client';
 import configService from '../settings/ConfigService';
 import signalKService from '../services/SignalKService';
 import { updateOcearoCoreMode, isOcearoCoreEnabled, handleOcearoCoreError } from '../utils/OcearoCoreUtils';
@@ -16,7 +15,6 @@ export {
     convertDistanceUnit, getDistanceUnitLabel
 } from '../utils/UnitConversions';
 
-import { MS_TO_KNOTS } from '../utils/UnitConversions';
 import { SAMPLE_DATA, SAMPLE_DATA_INTERVAL } from './SampleData';
 
 const OcearoContext = createContext();
@@ -231,13 +229,6 @@ export const OcearoContextProvider = ({ children }) => {
 
 
     
-    // Function to get sail visibility state based on navigation mode
-    const getSailVisibility = useCallback(() => {
-        const data = signalkDataRef.current;
-        const navigationState = data['navigation.state'];
-        // Hide sails when in motoring mode
-        return navigationState !== 'motoring';
-    }, []);
    
     const cycleOceanMode = useCallback(() => {
         setStates((prevState) => {

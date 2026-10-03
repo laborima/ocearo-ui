@@ -1,5 +1,5 @@
 import React, { useRef, useMemo, useEffect, useState } from 'react';
-import { toDegrees, toKnots, useOcearoContext } from '../context/OcearoContext';
+import { toDegrees, toKnots } from '../context/OcearoContext';
 import { useSignalKPath, useSignalKPaths } from '../hooks/useSignalK';
 import configService from '../settings/ConfigService';
 import { useGLTF } from '@react-three/drei';
@@ -10,19 +10,6 @@ import Jib3D from './sail/Jib3D';
 import TensionLines3D from './sail/TensionLines3D';
 import Rigging3D from './sail/Rigging3D';
 
-/**
- * Find a mesh with material in an object hierarchy
- * @param {Object} obj - The 3D object to search
- * @returns {Object|null} - The object with material or null if not found
- */
-const findMaterial = (obj) => {
-  if (obj.material) return obj;
-  for (const child of obj.children) {
-    const found = findMaterial(child);
-    if (found) return found;
-  }
-  return null;
-};
 
 const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
 

@@ -1,7 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAnchor, faShip, faMoon, faWater, faParking, faSatellite, faCompass, faRulerCombined, faMap, faCloudSunRain } from '@fortawesome/free-solid-svg-icons';
 import { useOcearoContext } from '../context/OcearoContext';
-import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 const ToolbarButton = ({ onClick, icon, isActive, activeClass, label }) => (
@@ -23,7 +22,6 @@ const ToolbarButton = ({ onClick, icon, isActive, activeClass, label }) => (
 const ThreeDBoatToolbar = () => {
     const { t } = useTranslation();
     const { nightMode, setNightMode, states, toggleState, toggleExclusiveMode, cycleOceanMode } = useOcearoContext();
-    const prevAutopilotRef = useRef(states.autopilot);
 
     const activeColor = {
         autopilot: 'text-oBlue',

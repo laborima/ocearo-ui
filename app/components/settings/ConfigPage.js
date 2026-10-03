@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import configService from './ConfigService';
@@ -22,19 +22,9 @@ const ConfigPage = ({ onSave }) => {
     );
     const [signalKUrlSet, setSignalKUrlSet] = useState(initialConfig.signalKUrlSet || false);
     const [selectedBoat, setSelectedBoat] = useState(null);
-    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [saveIndicator, setSaveIndicator] = useState({ visible: false, message: '' });
 
     const [activeTab, setActiveTab] = useState('system'); // 'system' or 'interface'
-
-    // Track changes by comparing current config with initial config
-    const checkForChanges = useCallback(
-        (newConfig) => {
-            const hasChanges = JSON.stringify(newConfig) !== JSON.stringify(initialConfig);
-            setHasUnsavedChanges(hasChanges);
-        },
-        [initialConfig]
-    );
 
     useEffect(() => {
         const loadConfiguration = async () => {
@@ -58,7 +48,6 @@ const ConfigPage = ({ onSave }) => {
     const updateConfig = (updates) => {
         const newConfig = { ...config, ...updates };
         setConfig(newConfig);
-        checkForChanges(newConfig);
         
         // Auto-save when settings change
         const updatedConfig = { ...newConfig };
@@ -99,38 +88,9 @@ const ConfigPage = ({ onSave }) => {
         // Save the config
         configService.saveConfig(updatedConfig);
         onSave?.(updatedConfig);
-        setHasUnsavedChanges(false);
         
         // Show save indicator
         setSaveIndicator({ visible: true, message: t('settings.savedAuto') });
-        setTimeout(() => setSaveIndicator({ visible: false, message: '' }), 2000);
-    };
-
-    const handleSave = () => {
-        const updatedConfig = { ...config };
-
-        // Should match updateConfig logic
-        if (!signalKUrlSet) {
-            // Only use computed URL when signalKUrlSet is false
-            updatedConfig.signalkUrl = computedSignalKUrl;
-            updatedConfig.username = '';
-            updatedConfig.password = '';
-        } else if (!useAuthentication) {
-            // Keep custom URL but clear auth credentials
-            updatedConfig.username = '';
-            updatedConfig.password = '';
-        }
-        
-        // Always save the state of configuration switches
-        updatedConfig.signalKUrlSet = signalKUrlSet;
-        updatedConfig.useAuthentication = useAuthentication;
-
-        configService.saveConfig(updatedConfig);
-        onSave?.(updatedConfig);
-        setHasUnsavedChanges(false);
-        
-        // Show save indicator
-        setSaveIndicator({ visible: true, message: t('settings.saved') });
         setTimeout(() => setSaveIndicator({ visible: false, message: '' }), 2000);
     };
 
@@ -155,7 +115,6 @@ const ConfigPage = ({ onSave }) => {
         }
         // Save the reset configuration
         configService.saveConfig(defaultConfig);
-        setHasUnsavedChanges(false);
     };
 
     const handleBoatChange = (e) => {

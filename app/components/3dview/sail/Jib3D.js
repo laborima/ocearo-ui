@@ -148,14 +148,12 @@ const Jib3D = ({
         ));
 
         const vertsPerLevel = JIB_SEGMENTS_PER_LEVEL + 1;
-        const luffAxis = new THREE.Vector3(0, 1, 0);
 
         for (let level = 0; level <= JIB_LEVELS; level++) {
             const t = level / JIB_LEVELS;
 
             // Luff point on the forestay for this level
             const luffX = TACK.x + (HEAD.x - TACK.x) * t;
-            const luffY = TACK.y + (HEAD.y - TACK.y) * t;
             const luffZ = TACK.z + (HEAD.z - TACK.z) * t;
 
             // Twist increases toward the top

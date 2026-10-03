@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Vector3, MathUtils } from 'three';
 import { Sphere } from '@react-three/drei';
 import { oGreen, oRed, oYellow, useOcearoContext } from '../../context/OcearoContext';
-import { useSignalKPath, useSignalKPaths } from '../../hooks/useSignalK';
+import { useSignalKPaths } from '../../hooks/useSignalK';
 import signalKService from '../../services/SignalKService';
 import configService from '../../settings/ConfigService';
 
@@ -129,11 +129,10 @@ const LayLines3D = ({ outerRadius = 10 }) => {
 
     const skValues = useSignalKPaths(navigationPaths);
 
-    // State for waypoints from Resources API
-    const [resourceWaypoints, setResourceWaypoints] = useState([]);
+    // Active course (destination) from the Course API
     const [activeCourse, setActiveCourse] = useState(null);
 
-    // Fetch waypoints and course from SignalK Resources API
+    // Fetch the active course (the waypoint list was fetched every 30 s and never used)
     useEffect(() => {
         // Skip fetching in debug mode - use debug waypoint instead
         if (debugMode) {
@@ -142,20 +141,6 @@ const LayLines3D = ({ outerRadius = 10 }) => {
 
         const fetchNavigationData = async () => {
             try {
-                // Fetch waypoints
-                const waypointsData = await signalKService.getWaypoints();
-                if (waypointsData) {
-                    const waypointsList = Object.entries(waypointsData).map(([id, wp]) => {
-                        const position = signalKService.parseWaypointPosition(wp);
-                        return {
-                            id,
-                            name: wp.name || 'Waypoint',
-                            ...position
-                        };
-                    }).filter(wp => wp.latitude && wp.longitude);
-                    setResourceWaypoints(waypointsList);
-                }
-
                 // Fetch active course
                 const courseData = await signalKService.getCourse();
                 setActiveCourse(courseData);

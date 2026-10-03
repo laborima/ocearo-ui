@@ -1,6 +1,6 @@
 'use client';
-import { useState, useCallback, useRef, useMemo } from 'react';
-import { useSignalKPath, useSignalKPaths } from './useSignalK';
+import { useState, useCallback, useMemo } from 'react';
+import { useSignalKPaths } from './useSignalK';
 import configService from '../settings/ConfigService';
 
 /**
