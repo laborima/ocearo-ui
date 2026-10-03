@@ -20,6 +20,7 @@ import { CircularGauge, BarGauge, CompactDataField, PrimaryGauge } from './Gauge
 import FuelLogModal from './FuelLogModal';
 import MaintenanceView from './MaintenanceView';
 import { useTranslation } from 'react-i18next';
+import signalKService from '../services/SignalKService';
 import { 
   addFuelLogEntry, 
   fetchFuelLogEntries, 
@@ -47,6 +48,50 @@ const EXTRA_NOTIFICATION_PATHS = [
 ];
 
 const ALARM_STATES = ['alarm', 'emergency'];
+
+/**
+ * Silence / acknowledge buttons for a notification managed by the Signal K
+ * Notifications API. Renders nothing for notifications without an `id`
+ * (older servers or sources outside the notification manager).
+ */
+const NotificationActions = ({ notification }) => {
+  const { t } = useTranslation();
+  const [pending, setPending] = useState(null);
+  const status = notification.status;
+  if (!notification.id || !status) return null;
+
+  const run = async (action) => {
+    setPending(action);
+    try {
+      await signalKService.notificationAction(notification.id, action);
+    } catch (error) {
+      console.warn(`Notification ${action} failed:`, error?.message || error);
+    } finally {
+      setPending(null);
+    }
+  };
+
+  const buttonClass = 'px-3 py-1.5 rounded-sm border border-hud bg-hud-elevated text-hud-main tesla-hover disabled:opacity-40 transition-all';
+
+  return (
+    <div className="flex items-center gap-2 mt-3 normal-case tracking-normal">
+      {status.silenced
+        ? <span className="text-hud-muted">{t('motor.alarmSilenced')}</span>
+        : status.canSilence && (
+          <button type="button" className={buttonClass} disabled={pending !== null} onClick={() => run('silence')}>
+            {t('motor.silenceAlarm')}
+          </button>
+        )}
+      {status.acknowledged
+        ? <span className="text-hud-muted">{t('motor.alarmAcknowledged')}</span>
+        : status.canAcknowledge && (
+          <button type="button" className={buttonClass} disabled={pending !== null} onClick={() => run('acknowledge')}>
+            {t('motor.acknowledgeAlarm')}
+          </button>
+        )}
+    </div>
+  );
+};
 const WARNING_STATES = ['alert', 'warn', 'warning', 'caution'];
 
 // Helper component for displaying individual data points
@@ -142,7 +187,7 @@ const MotorView = () => {
       }
     }
     return engines.length > 0 ? engines : [{ id: '0', name: t('motor.mainEngine'), hasData: false }];
-  }, [getSKValue, debugMode]);
+  }, [getSKValue, debugMode, t]);
 
   useEffect(() => {
     setAvailableEngines(getAvailableEngines());
@@ -993,6 +1038,7 @@ const MotorView = () => {
                                 <span className="text-oRed text-xs font-black tracking-tighter">{t('motor.alertLevel3')}</span>
                               </div>
                               <div className="text-hud-secondary text-xs mt-3 normal-case font-black tracking-normal opacity-80">{n.message}</div>
+                              <NotificationActions notification={n} />
                             </div>
                           ))}
                         </div>
@@ -1013,6 +1059,7 @@ const MotorView = () => {
                                 <span className="text-oYellow text-xs font-black tracking-tighter">{t('motor.warnLevel2')}</span>
                               </div>
                               <div className="text-hud-secondary text-xs mt-3 normal-case font-black tracking-normal opacity-80">{n.message}</div>
+                              <NotificationActions notification={n} />
                             </div>
                           ))}
                         </div>

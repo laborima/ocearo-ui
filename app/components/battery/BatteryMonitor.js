@@ -13,8 +13,14 @@ import RaspberryPiTab from './RaspberryPiTab';
 
 // Import extracted components
 import LineChart from '../charts/LineChart';
+import signalKService from '../services/SignalKService';
 
 import * as THREE from 'three';
+
+const HISTORY_SAMPLES = 60;
+const emptyBatteryHistory = () => Array.from({ length: HISTORY_SAMPLES }, () => ({
+  voltage: null, current: null, stateOfCharge: null, power: null, temperature: null, time: '',
+}));
 
 const BatteryMonitor = () => {
   const { t } = useTranslation();
@@ -100,17 +106,38 @@ const BatteryMonitor = () => {
   // Latest battery data kept in a ref so the stats loop doesn't restart on every SignalK tick
   const batteryDataRef = useRef(null);
 
-  // Graph history state
-  const [batteryHistory, setBatteryHistory] = useState(() => 
-    Array(60).fill(null).map(() => ({ 
-      voltage: 12, 
-      current: 0, 
-      stateOfCharge: 100, 
-      temperature: null, 
-      time: new Date().toLocaleTimeString() 
-    }))
-  );
-  
+  // Graph history state: 60 one-second samples. Starts empty (not with a fake
+  // 12 V line) and is seeded from the Signal K History API when available.
+  const [batteryHistory, setBatteryHistory] = useState(() => emptyBatteryHistory());
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const base = `electrical.batteries.${selectedBattery}`;
+    signalKService.getHistoryValues({
+      paths: [`${base}.voltage`, `${base}.current`, `${base}.capacity.stateOfCharge`, `${base}.temperature`],
+      duration: `PT${HISTORY_SAMPLES}S`,
+      resolution: '1s',
+    }).then(rows => {
+      if (cancelled || !rows?.length) return;
+      const seeded = rows.slice(-HISTORY_SAMPLES).map(([time, voltage, current, soc, temperatureK]) => ({
+        voltage,
+        current,
+        stateOfCharge: typeof soc === 'number' ? soc * 100 : null,
+        power: typeof voltage === 'number' && typeof current === 'number' ? voltage * current : null,
+        temperature: typeof temperatureK === 'number' ? convertTemperature(temperatureK) : null,
+        time: new Date(time).toLocaleTimeString(),
+      }));
+      // Keep anything sampled live while the request was in flight
+      setBatteryHistory(prev => {
+        const live = prev.filter(sample => sample.voltage !== null);
+        return [...emptyBatteryHistory(), ...seeded, ...live].slice(-HISTORY_SAMPLES);
+      });
+    });
+
+    return () => { cancelled = true; };
+  }, [selectedBattery]);
+
   const [performanceHistory, setPerformanceHistory] = useState(() => {
     const time = new Date().toLocaleTimeString();
     return Array(60).fill({
@@ -258,7 +285,11 @@ const BatteryMonitor = () => {
                 <select 
                   className="bg-hud-elevated px-4 py-1.5 rounded-sm text-hud-main text-xs font-black uppercase border border-hud focus:outline-none tesla-hover transition-all duration-500 shadow-soft"
                   value={selectedBattery}
-                  onChange={(e) => setSelectedBattery(e.target.value)}
+                  onChange={(e) => {
+                    // Don't mix two batteries' samples in the same graph
+                    setBatteryHistory(emptyBatteryHistory());
+                    setSelectedBattery(e.target.value);
+                  }}
                 >
                   {availableBatteries.map((battery) => (
                     <option key={battery.id} value={battery.id} className="bg-leftPaneBg text-hud-main">

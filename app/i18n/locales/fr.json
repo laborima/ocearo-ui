@@ -654,6 +654,10 @@
     "alertLevel3": "Alerte niveau 3",
     "systemAnomalies": "Anomalies système",
     "warnLevel2": "Avertissement niveau 2",
+    "silenceAlarm": "Silence",
+    "acknowledgeAlarm": "Acquitter",
+    "alarmSilenced": "Silence activé",
+    "alarmAcknowledged": "Acquittée",
     "internalDebugTelemetry": "Télémétrie de débogage interne"
   },
   "fuelLog": {

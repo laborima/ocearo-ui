@@ -168,10 +168,11 @@ class SignalKService {
         const credentialsOption = config.useAuthentication && config.username ? 'include' : 'omit';
 
         try {
+            // Spread options first: their own `headers` must not replace the auth headers
             const response = await fetch(url, {
-                headers: { ...headers, ...options.headers },
                 credentials: credentialsOption,
-                ...options
+                ...options,
+                headers: { ...headers, ...options.headers },
             });
 
             if (!response.ok) {
@@ -193,6 +194,46 @@ class SignalKService {
             }
             throw error;
         }
+    }
+
+    /**
+     * Fetch recorded values from the Signal K History API (needs a history
+     * provider plugin such as signalk-parquet or signalk-to-influxdb2).
+     * @param {Object} query
+     * @param {string[]} query.paths - Signal K paths (optionally `path:aggregate`)
+     * @param {string} query.duration - ISO 8601 duration ending now, e.g. 'PT1H'
+     * @param {string} [query.resolution] - sample window, e.g. '1s', '1m'
+     * @param {string} [query.context] - defaults to vessels.self on the server
+     * @returns {Promise<Array<[string, ...any]>|null>} rows of [isoTime, ...values in
+     *          `paths` order], or null when no history provider is available
+     */
+    async getHistoryValues({ paths, duration, resolution, context }) {
+        const params = new URLSearchParams({ paths: paths.join(','), duration });
+        if (resolution) params.set('resolution', resolution);
+        if (context) params.set('context', context);
+        try {
+            const result = await this.apiCall(`/signalk/v2/api/history/values?${params}`);
+            return Array.isArray(result?.data) ? result.data : null;
+        } catch {
+            // 404/501: server without History API or without a provider
+            return null;
+        }
+    }
+
+    /**
+     * Take an action on a notification managed by the Signal K Notifications API
+     * (server >= 2.28). The server re-emits the notification delta with an
+     * updated `status`, so the UI refreshes through the normal data stream.
+     * @param {string} notificationId - `id` field of the notification value
+     * @param {'silence'|'acknowledge'} action
+     */
+    async notificationAction(notificationId, action) {
+        if (!notificationId || !['silence', 'acknowledge'].includes(action)) {
+            throw new Error(`Invalid notification action: ${action}`);
+        }
+        return this.apiCall(`/signalk/v2/api/notifications/${encodeURIComponent(notificationId)}/${action}`, {
+            method: 'POST',
+        });
     }
 
     /**

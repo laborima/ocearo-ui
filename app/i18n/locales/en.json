@@ -654,6 +654,10 @@
     "alertLevel3": "Alert level 3",
     "systemAnomalies": "System anomalies",
     "warnLevel2": "Warn level 2",
+    "silenceAlarm": "Silence",
+    "acknowledgeAlarm": "Acknowledge",
+    "alarmSilenced": "Silenced",
+    "alarmAcknowledged": "Acknowledged",
     "internalDebugTelemetry": "Internal debug telemetry"
   },
   "fuelLog": {
