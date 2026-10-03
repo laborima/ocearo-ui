@@ -61,7 +61,8 @@ class ConfigService {
       const storedConfig = localStorage.getItem(this.configKey);
       if (storedConfig) {
         try {
-          return JSON.parse(storedConfig);
+          // Merge over defaults so keys added in newer versions get a value
+          return { ...this.defaultConfig, ...JSON.parse(storedConfig) };
         } catch (error) {
           console.error('Failed to parse stored configuration:', error);
           return { ...this.defaultConfig };
@@ -113,7 +114,8 @@ class ConfigService {
 
   getSelectedBoat() {
       const selectedBoatName = this.config.selectedBoat;
-      if (!selectedBoatName) return []; // Ensure it's an array
+      // Return null (not []) so callers' `|| defaultBoat` fallback works
+      if (!selectedBoatName) return null;
 
       // Find the selected boat
       return this.getBoatsData().find(boat => boat.name === selectedBoatName)

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext, useRef, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useContext, useRef, useCallback, useMemo } from 'react';
 import Client from '@signalk/client';
 import configService from '../settings/ConfigService';
 import signalKService from '../services/SignalKService';
@@ -56,6 +56,8 @@ const loadPersistedStates = () => {
 };
 
 
+
+const OCEAN_MODES = ['black', 'water', 'chart', 'meteo'];
 
 export const OcearoContextProvider = ({ children }) => {
     const [theme, setTheme] = useState(() => configService.get('theme') || 'dark');
@@ -182,7 +184,7 @@ export const OcearoContextProvider = ({ children }) => {
      * @param {Object} referencePosition - Reference position with lat and lon properties
      * @returns {Object} - {x, y} coordinates in meters { x: Easting, y: Northing }
      */
-    const convertLatLonToXY = (position, referencePosition) => {
+    const convertLatLonToXY = useCallback((position, referencePosition) => {
         // Define Earth radius if not defined elsewhere
         const EARTH_RADIUS_METERS = 6371000;
 
@@ -225,7 +227,7 @@ export const OcearoContextProvider = ({ children }) => {
                 // e.g., // Returns Easting (x) and Northing (y) in meters
 
                 return { x: easting, y: northing }; // Return Easting, Northing
-            };
+            }, []);
 
 
     
@@ -237,18 +239,16 @@ export const OcearoContextProvider = ({ children }) => {
         return navigationState !== 'motoring';
     }, []);
    
-    const OCEAN_MODES = ['black', 'water', 'chart', 'meteo'];
-
-    const cycleOceanMode = () => {
+    const cycleOceanMode = useCallback(() => {
         setStates((prevState) => {
             const currentIndex = OCEAN_MODES.indexOf(prevState.oceanMode);
             const nextIndex = (currentIndex + 1) % OCEAN_MODES.length;
             return { ...prevState, oceanMode: OCEAN_MODES[nextIndex] };
         });
-    };
+    }, []);
 
     // Method to toggle any state (e.g., autopilot, anchorWatch)
-    const toggleState = async (key, value = undefined) => {
+    const toggleState = useCallback(async (key, value = undefined) => {
         const newValue = value !== undefined ? value : !states[key];
 
         setStates((prevState) => ({
@@ -323,13 +323,13 @@ export const OcearoContextProvider = ({ children }) => {
                 }
             }
         }
-    };
+    }, [states]);
 
     /**
      * Toggles a state exclusively, turning off other exclusive states
      * Exclusive states are: autopilot, anchorWatch, parkingMode
      */
-    const toggleExclusiveMode = async (key) => {
+    const toggleExclusiveMode = useCallback(async (key) => {
         const exclusiveKeys = ['autopilot', 'anchorWatch', 'parkingMode'];
         if (!exclusiveKeys.includes(key)) {
             return toggleState(key);
@@ -370,7 +370,7 @@ export const OcearoContextProvider = ({ children }) => {
             // If we're turning it OFF, we just toggle it
             return toggleState(key, false);
         }
-    };
+    }, [states, toggleState]);
 
     // Use useRef to persist client between renders
     const clientRef = useRef(null);
@@ -537,27 +537,29 @@ export const OcearoContextProvider = ({ children }) => {
         }, []); // Empty dependency array means this runs once on mount
 
 
-        // General method to retrieve SignalK values
+        // Memoized so consumers only re-render when a context value actually changes,
+        // not every time the provider's parent re-renders
+        const contextValue = useMemo(() => ({
+            getSignalKValue,
+            subscribe,
+            unsubscribe,
+            updateSignalKData,
+            getBoatRotationAngle,
+            convertLatLonToXY,
+            theme,
+            setTheme,
+            nightMode,
+            setNightMode,
+            states,
+            toggleState,
+            toggleExclusiveMode,
+            cycleOceanMode,
+        }), [
+            getSignalKValue, subscribe, unsubscribe, updateSignalKData, getBoatRotationAngle, convertLatLonToXY, theme, setTheme, nightMode, setNightMode, states, toggleState, toggleExclusiveMode, cycleOceanMode,
+        ]);
 
         return (
-            <OcearoContext.Provider
-                value={{
-                    getSignalKValue,
-                    subscribe,
-                    unsubscribe,
-                    updateSignalKData,
-                    getBoatRotationAngle,
-                    convertLatLonToXY,
-                    theme,
-                    setTheme,
-                    nightMode,
-                    setNightMode,
-                    states,
-                    toggleState,
-                    toggleExclusiveMode,
-                    cycleOceanMode,
-                }}
-            >
+            <OcearoContext.Provider value={contextValue}>
                 {children}
             </OcearoContext.Provider>
         );

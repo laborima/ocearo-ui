@@ -311,7 +311,7 @@ const LogbookView = () => {
     } finally {
       setAiEntryLoading(false);
     }
-  }, [ocearoCoreEnabled, skValues, fetchLogbookEntriesData]);
+  }, [ocearoCoreEnabled, skValues, fetchLogbookEntriesData, t]);
 
   /**
    * Get OcearoCore analysis of logbook data
@@ -342,7 +342,7 @@ const LogbookView = () => {
     } finally {
       setAnalysisLoading(false);
     }
-  }, [ocearoCoreEnabled]);
+  }, [ocearoCoreEnabled, t]);
 
   /**
    * Get logbook-specific analysis
@@ -373,7 +373,7 @@ const LogbookView = () => {
     } finally {
       setAnalysisLoading(false);
     }
-  }, [ocearoCoreEnabled]);
+  }, [ocearoCoreEnabled, t]);
 
   /**
    * Edit an existing entry

@@ -77,8 +77,8 @@ const ThreeDBoatSeaLevelIndicator = () => {
     return `${convertDepthUnit(depth)} ${getDepthUnitLabel()}`;
   }, []);
 
-  // Render progress bar
-  const ProgressBar = () => (
+  // Progress bar element (kept as JSX, not a nested component, so it is not remounted on every depth update)
+  const progressBar = (
     <div
       className="w-1.5 bg-hud-elevated rounded-full overflow-hidden mb-2 relative"
       style={{ height: barHeight }}
@@ -103,7 +103,7 @@ const ThreeDBoatSeaLevelIndicator = () => {
       </div>
 
       {/* Progress Bar */}
-      <ProgressBar />
+      {progressBar}
 
       {/* Depth Value */}
       <div
