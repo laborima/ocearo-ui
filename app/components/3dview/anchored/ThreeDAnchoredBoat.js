@@ -2,15 +2,13 @@ import React, { Suspense, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Html } from '@react-three/drei';
 import SceneSetup from '../SceneSetup';
-import useTheme from '../../theme/useTheme';
-import * as THREE from 'three';
+import SeaGround from '../fsd/SeaGround';
 import SailBoat3D from '../SailBoat3D';
 import AnchoredCircle from './AnchoredCircle';
 
 const ThreeDAnchoredBoat = ({ onUpdateInfoPanel }) => {
     const sailBoatRef = useRef();
     const { size } = useThree(); // Get canvas dimensions
-    const { scene } = useTheme();
     const aspect = size.width / size.height; // Calculate aspect ratio
 
     return (
@@ -46,38 +44,8 @@ const ThreeDAnchoredBoat = ({ onUpdateInfoPanel }) => {
 
             <AnchoredCircle />
 
-            {/* Reflective plane (water or ground) */}
-            <mesh
-                rotation={[-Math.PI / 2, 0, 0]}
-                position={[0, -7, 0]}
-                receiveShadow
-            >
-                <planeGeometry args={[100, 100]} />
-                <shaderMaterial
-                    uniforms={{
-                        uColor: { value: new THREE.Color(scene.ground) }, // Soft ground patch under the boat
-                        uBlurRadius: { value: 0.15 },
-                    }}
-                    vertexShader={`
-                            varying vec2 vUv;
-                            void main() {
-                                vUv = uv;
-                                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                            }
-                        `}
-                    fragmentShader={`
-                            uniform vec3 uColor;
-                            uniform float uBlurRadius;
-                            varying vec2 vUv;
-
-                            void main() {
-                                float distanceToCenter = length(vUv - vec2(0.5));
-                                float alpha = smoothstep(0.5 - uBlurRadius, 0.5 + uBlurRadius, distanceToCenter);
-                                gl_FragColor = vec4(uColor, 1.0 - alpha);
-                            }
-                        `}
-                />
-            </mesh>
+            {/* Same neutral ground as the boat view */}
+            <SeaGround y={-7} />
 
         </Suspense>
     );

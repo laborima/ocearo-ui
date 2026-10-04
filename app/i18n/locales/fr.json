@@ -741,7 +741,15 @@
     "swing": "Évitage",
     "alarmRadius": "Rayon alarme",
     "portShort": "B",
-    "starboardShort": "T"
+    "starboardShort": "T",
+    "tide": "Marée",
+    "depthHistory": "10 dernières minutes",
+    "sunrise": "Lever",
+    "sunset": "Coucher",
+    "air": "Air",
+    "water": "Eau",
+    "pressure": "Pression",
+    "battery": "Batterie"
   },
   "laylines": {
     "tack": "Virer",

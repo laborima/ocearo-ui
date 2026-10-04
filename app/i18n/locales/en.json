@@ -741,7 +741,15 @@
     "swing": "Swing",
     "alarmRadius": "Alarm radius",
     "portShort": "P",
-    "starboardShort": "S"
+    "starboardShort": "S",
+    "tide": "Tide",
+    "depthHistory": "Last 10 minutes",
+    "sunrise": "Sunrise",
+    "sunset": "Sunset",
+    "air": "Air",
+    "water": "Water",
+    "pressure": "Pressure",
+    "battery": "Battery"
   },
   "laylines": {
     "tack": "Tack",

@@ -56,7 +56,7 @@ export const hudMode = (states) => {
  * speed readout. Replaces the depth / tide / rudder / attitude gauges when the
  * HUD style is 'minimal' (the default).
  */
-const ModeHud = () => {
+const ModeHud = ({ omitDepth = false }) => {
     const { t } = useTranslation();
     const { states } = useOcearoContext();
     const v = useSignalKPaths(PATHS);
@@ -65,7 +65,7 @@ const ModeHud = () => {
 
     const items = useMemo(() => {
         const depth = v['environment.depth.belowKeel'] ?? v['environment.depth.belowTransducer'];
-        const depthItem = { label: t('hud.depth'), value: fmt(convertDepthUnit(depth)), unit: getDepthUnitLabel(), warn: Number.isFinite(depth) && depth < 3 };
+        const depthItem = { id: 'depth', label: t('hud.depth'), value: fmt(convertDepthUnit(depth)), unit: getDepthUnitLabel(), warn: Number.isFinite(depth) && depth < 3 };
         const tws = { label: t('hud.tws'), value: fmt(convertSpeedUnit(v['environment.wind.speedTrue'])), unit: getSpeedUnitLabel() };
         const heading = v['navigation.headingTrue'] ?? v['navigation.courseOverGroundTrue'];
 
@@ -111,10 +111,12 @@ const ModeHud = () => {
             }
         }
     }, [v, perf, mode, t]);
+    // The full-screen depth panel already shows it
+    const shown = omitDepth ? items.filter(item => item.id !== 'depth') : items;
 
     return (
         <div className="ml-3 mt-4 flex flex-col gap-3 select-none">
-            {items.map((item) => (
+            {shown.map((item) => (
                 <div key={item.label} className="leading-none">
                     <div className="text-caption font-semibold uppercase tracking-widest text-hud-muted">{item.label}</div>
                     <div className="flex items-baseline gap-1 mt-1">
