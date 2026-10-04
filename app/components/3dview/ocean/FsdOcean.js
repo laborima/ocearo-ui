@@ -125,7 +125,14 @@ const skyFunction = `
 `;
 
 const noise = `
-    float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+    // Sin-free hash (Dave Hoskins): sin() of large arguments loses float
+    // precision on the GPU and the noise falls apart into blocks far from
+    // the session origin. Lattice wrapped to keep the inputs small.
+    float hash(vec2 p) {
+        vec3 p3 = fract(vec3(mod(p, 1024.0).xyx) * 0.1031);
+        p3 += dot(p3, p3.yzx + 33.33);
+        return fract((p3.x + p3.y) * p3.z);
+    }
     float vnoise(vec2 p) {
         vec2 i = floor(p);
         vec2 f = fract(p);
