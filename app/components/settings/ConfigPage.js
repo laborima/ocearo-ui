@@ -174,13 +174,13 @@ const ConfigPage = ({ onSave }) => {
                 {activeTab === 'system' ? (
                     <div className="space-y-8 animate-in fade-in duration-500">
                         {/* Connection Settings */}
-                        <section className="tesla-card p-6 space-y-6">
+                        <section className="tesla-card space-y-6">
                             <div className="flex items-center justify-between mb-2">
                                 <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.connection')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="flex items-center justify-between p-4 rounded-xl bg-hud-bg tesla-hover">
                                     <span className="text-label font-bold uppercase tracking-widest text-hud-secondary flex items-center">
                                         {t('settings.signalkServer')}
@@ -271,7 +271,7 @@ const ConfigPage = ({ onSave }) => {
                         </section>
 
                         {/* Vessel Settings */}
-                        <section className="tesla-card p-6 space-y-6">
+                        <section className="tesla-card space-y-6">
                             <div className="flex items-center justify-between mb-2">
                                 <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.vessel')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
@@ -305,7 +305,7 @@ const ConfigPage = ({ onSave }) => {
                         </section>
 
                         {/* Advanced Settings */}
-                        <section className="tesla-card p-6 space-y-6">
+                        <section className="tesla-card space-y-6">
                             <div className="flex items-center justify-between mb-2">
                                 <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.advanced')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
@@ -340,7 +340,7 @@ const ConfigPage = ({ onSave }) => {
                         </section>
 
                         {/* Danger Zone */}
-                        <section className="tesla-card p-6 border-oRed/10">
+                        <section className="tesla-card border-oRed/10">
                             <div className="flex items-center justify-between mb-6">
                                 <h2 className="text-label font-semibold uppercase tracking-widest text-oRed/80">{t('settings.critical')}</h2>
                                 <div className="h-[1px] flex-grow bg-oRed/5 mx-4" />
@@ -363,13 +363,13 @@ const ConfigPage = ({ onSave }) => {
                 ) : (
                     <div className="space-y-8 animate-in fade-in duration-500">
                         {/* Appearance Settings */}
-                        <section className="tesla-card p-6 space-y-6">
+                        <section className="tesla-card space-y-6">
                             <div className="flex items-center justify-between mb-2">
                                 <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.appearance')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-4">
                                     <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.themeMode')}</label>
                                     <div className="flex bg-hud-bg p-1 rounded-xl border border-hud">
@@ -410,6 +410,25 @@ const ConfigPage = ({ onSave }) => {
                                 </div>
 
                                 <div className="space-y-4">
+                                    <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.hudStyle')}</label>
+                                    <div className="flex bg-hud-bg p-1 rounded-xl border border-hud">
+                                        {['minimal', 'classic'].map((style) => (
+                                            <button
+                                                key={style}
+                                                onClick={() => updateConfig({ hudStyle: style })}
+                                                className={`flex-1 py-3 px-4 rounded-lg text-caption font-semibold uppercase tracking-widest transition-all ${
+                                                    (config.hudStyle || 'minimal') === style
+                                                        ? 'bg-oBlue/15 text-oBlue border border-oBlue/40'
+                                                        : 'text-hud-secondary hover:text-hud-main'
+                                                }`}
+                                            >
+                                                {t(`settings.hudStyle_${style}`)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
                                     <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.uiAccents')}</label>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="flex items-center justify-between p-4 rounded-xl bg-hud-bg tesla-hover self-end h-[60px]">
@@ -439,7 +458,7 @@ const ConfigPage = ({ onSave }) => {
                         </section>
 
                         {/* Language Settings */}
-                        <section className="tesla-card p-6 space-y-6">
+                        <section className="tesla-card space-y-6">
                             <div className="flex items-center justify-between mb-2">
                                 <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.language')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
@@ -470,7 +489,7 @@ const ConfigPage = ({ onSave }) => {
                         </section>
 
                         {/* Navigation & HUD Settings */}
-                        <section className="tesla-card p-6 space-y-6">
+                        <section className="tesla-card space-y-6">
                             <div className="flex items-center justify-between mb-2">
                                 <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.navigationHud')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
@@ -610,7 +629,7 @@ const ConfigPage = ({ onSave }) => {
                         </section>
 
                         {/* Units & Values Settings */}
-                        <section className="tesla-card p-6 space-y-6">
+                        <section className="tesla-card space-y-6">
                             <div className="flex items-center justify-between mb-2">
                                 <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.unitsValues')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
@@ -699,7 +718,7 @@ const ConfigPage = ({ onSave }) => {
                         </section>
 
                         {/* Preferred Paths Settings */}
-                        <section className="tesla-card p-6 space-y-6">
+                        <section className="tesla-card space-y-6">
                             <div className="flex items-center justify-between mb-2">
                                 <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.preferredPaths')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
@@ -766,7 +785,7 @@ const ConfigPage = ({ onSave }) => {
                         </section>
 
                         {/* External Links Settings */}
-                        <section className="tesla-card p-6 space-y-6">
+                        <section className="tesla-card space-y-6">
                             <div className="flex items-center justify-between mb-2">
                                 <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.externalLinks')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
@@ -798,7 +817,7 @@ const ConfigPage = ({ onSave }) => {
                                     animate={{ opacity: 1, height: 'auto' }}
                                     className="space-y-6 pt-4 border-t border-hud"
                                 >
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {[
                                             { id: 'navigation', label: t('settings.urlNavigation'), placeholder: "${signalkUrl}/@signalk/freeboard-sk/" },
                                             { id: 'instrument', label: t('settings.urlInstruments'), placeholder: "${signalkUrl}/@mxtommy/kip/" },

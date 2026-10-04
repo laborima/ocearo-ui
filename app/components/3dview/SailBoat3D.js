@@ -10,6 +10,7 @@ import Jib3D from './sail/Jib3D';
 import TensionLines3D from './sail/TensionLines3D';
 import Rigging3D from './sail/Rigging3D';
 import useTheme from '../theme/useTheme';
+import useColregs from '../hooks/useColregs';
 
 
 const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
@@ -100,10 +101,12 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
     // Without a user-chosen colour the hull takes the theme's own-boat colour
     // (white in the day and dark themes, dim red at night)
     const { scene: sceneTokens } = useTheme();
+    // Light orange hull while we must keep clear of another vessel (COLREG)
+    const { giveWay } = useColregs();
     const materialProperties = useMemo(() => ({
-        primaryColor: config.primaryColor || sceneTokens.ownHull,
+        primaryColor: giveWay ? sceneTokens.giveWay : (config.primaryColor || sceneTokens.ownHull),
         metallicEffect: config.metallicEffect || false
-    }), [config.primaryColor, config.metallicEffect, sceneTokens.ownHull]);
+    }), [config.primaryColor, config.metallicEffect, sceneTokens.ownHull, sceneTokens.giveWay, giveWay]);
 
     // Update materials when properties change
     useEffect(() => {

@@ -180,7 +180,10 @@
     "renderQuality_auto": "Auto",
     "renderQuality_high": "Quality",
     "renderQuality_pi": "Raspberry Pi",
-    "renderQualityHint": "Raspberry Pi: 30 fps, no anti-aliasing, flat water. Applied after reload."
+    "renderQualityHint": "Raspberry Pi: 30 fps, no anti-aliasing, flat water. Applied after reload.",
+    "hudStyle": "3D HUD",
+    "hudStyle_minimal": "Minimal",
+    "hudStyle_classic": "Classic"
   },
   "dashboard": {
     "environment": "Environment",
@@ -723,5 +726,61 @@
     "clear": "Cancel alarm",
     "confirmClear": "Tap again to cancel",
     "relativeBearing": "Direction from the bow"
+  },
+  "hud": {
+    "depth": "Depth",
+    "tws": "TWS",
+    "twa": "TWA",
+    "aws": "AWS",
+    "awa": "AWA",
+    "stw": "STW",
+    "vmg": "VMG",
+    "polar": "Polar",
+    "heading": "Heading",
+    "waypoint": "Waypoint",
+    "swing": "Swing",
+    "alarmRadius": "Alarm radius",
+    "portShort": "P",
+    "starboardShort": "S"
+  },
+  "laylines": {
+    "tack": "Tack",
+    "gybe": "Gybe"
+  },
+  "advice": {
+    "avoid": "Avoid: {{deg}}° to {{side}}",
+    "starboard": "starboard",
+    "port": "port",
+    "vmg": "{{change}} → +{{gain}} kn VMG",
+    "avoidHint": "Collision risk with {{name}}. Advice only: apply the collision regulations.",
+    "vmgHint": "Polar estimate towards the waypoint. Advice only.",
+    "apply": "Apply to pilot",
+    "confirm": "Confirm",
+    "applied": "Sent to the autopilot",
+    "standOn": "Right of way: hold course and speed",
+    "avoidNoSolution": "Keep clear: no single course change clears every vessel, slow down"
+  },
+  "colregs": {
+    "rule": "rule {{rule}}",
+    "labelGiveWay": "Must keep clear",
+    "labelStandOn": "Right of way",
+    "labelBoth": "Both alter to starboard",
+    "overtaking": "You are overtaking {{name}}: keep clear",
+    "overtakenByTarget": "{{name}} is overtaking you and must keep clear",
+    "portTack": "You are on port tack: keep clear of {{name}}",
+    "targetPortTack": "{{name}} is on port tack and must keep clear",
+    "ownWindward": "You are to windward: keep clear of {{name}}",
+    "targetWindward": "{{name}} is to windward and must keep clear",
+    "headOn": "Head-on with {{name}}: both alter to starboard",
+    "crossingStarboard": "{{name}} is on your starboard side: keep clear",
+    "crossingPort": "{{name}} has you on her starboard side and must keep clear",
+    "giveWayTo_sail": "Under engine: keep clear of the sailing vessel {{name}}",
+    "giveWayTo_fishing": "Keep clear of {{name}}, fishing",
+    "giveWayTo_restricted": "Keep clear of {{name}}, restricted in her ability to manoeuvre",
+    "giveWayTo_power": "Keep clear of {{name}}",
+    "standOnFrom_power": "{{name}} is power-driven and must keep clear of you",
+    "standOnFrom_sail": "{{name}} must keep clear of you",
+    "standOnFrom_fishing": "{{name}} must keep clear of you",
+    "standOnFrom_restricted": "{{name}} must keep clear of you"
   }
 }

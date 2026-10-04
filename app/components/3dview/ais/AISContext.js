@@ -3,6 +3,7 @@ import configService from '../../settings/ConfigService';
 import signalKService from '../../services/SignalKService';
 import { useOcearoContext } from '../../context/OcearoContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
+import { closestApproach, collisionRisk, getCollisionThresholds } from '../../utils/Collision';
 
 const AISContext = createContext(null);
 
@@ -38,6 +39,8 @@ const AIS_STATIC_PATHS = [
     'design.length',
     'design.beam',
     'communication.callsignVhf',
+    // AIS navigation status (sailing, fishing, restricted...) for the COLREG roles
+    'navigation.state',
 ];
 const AIS_SUBSCRIPTION = [
     ...AIS_DYNAMIC_PATHS.map(path => ({ path, policy: 'ideal', minPeriod: AIS_DYNAMIC_MIN_PERIOD_MS })),
@@ -66,9 +69,16 @@ const createTarget = (mmsi) => ({
     beam: null,
     shipType: null,
     callsign: null,
+    navState: null,
     distanceMeters: null,
     sceneX: null,
     sceneZ: null,
+    // Closest point of approach (null when either vessel's motion is unknown)
+    cpaMeters: null,
+    tcpaSeconds: null,
+    risk: 'none',
+    cpaScene: null,     // { targetX, targetZ, ownX, ownZ } at the closest point
+
     rotationAngleY: 0,
     visible: false,
     lastUpdate: 0,
@@ -90,7 +100,7 @@ const applyValue = (target, path, value) => {
             target.latitude = value.latitude;
             target.longitude = value.longitude;
             return true;
-        case 'navigation.speedOverGround': target.sog = value; return false;
+        case 'navigation.speedOverGround': target.sog = value; return true;
         case 'navigation.courseOverGroundTrue': target.cog = value; return true;
         case 'navigation.courseOverGroundMagnetic': target.cogMagnetic = value; return true;
         case 'navigation.headingTrue': target.heading = value; return true;
@@ -99,6 +109,7 @@ const applyValue = (target, path, value) => {
         case 'design.length': target.length = value?.overall ?? value; return false;
         case 'design.beam': target.beam = value; return false;
         case 'communication.callsignVhf': target.callsign = value; return false;
+        case 'navigation.state': target.navState = value; return false;
         default: return false;
     }
 };
@@ -114,6 +125,12 @@ const applyValue = (target, path, value) => {
 export const AISProvider = ({ children }) => {
     const { convertLatLonToXY } = useOcearoContext();
     const myPosition = useSignalKPath('navigation.position');
+    const mySog = useSignalKPath('navigation.speedOverGround');
+    const myCog = useSignalKPath('navigation.courseOverGroundTrue');
+    const myHeading = useSignalKPath('navigation.headingTrue');
+    const ownMotionRef = useRef({ sog: null, cog: null });
+    // Read once per provider; settings changes apply on reload
+    const [thresholds] = useState(getCollisionThresholds);
 
     const targetsRef = useRef({});          // mmsi -> mutable target
     const selfIdRef = useRef(null);         // our own vessel id, from the server hello
@@ -153,15 +170,36 @@ export const AISProvider = ({ children }) => {
         target.distanceMeters = Math.hypot(x, y);
         target.visible = target.distanceMeters > MIN_DISPLAYED_DISTANCE_METERS &&
             target.distanceMeters <= MAX_3D_DISTANCE_METERS;
-    }, [convertLatLonToXY]);
 
-    // Own boat moved: every relative position is stale, not just the targets
-    // that happen to report next.
+        const motion = ownMotionRef.current;
+        const approach = closestApproach({
+            rx: x,
+            ry: y,
+            ownSog: motion.sog,
+            ownCog: motion.cog,
+            targetSog: target.sog,
+            targetCog: target.cog ?? target.cogMagnetic,
+        });
+        target.cpaMeters = approach ? approach.cpa : null;
+        target.tcpaSeconds = approach ? approach.tcpa : null;
+        target.risk = collisionRisk(approach, target.distanceMeters, thresholds);
+        target.cpaScene = approach && approach.tcpa > 0 ? {
+            targetX: approach.target.x * scalingFactor,
+            targetZ: -approach.target.y * scalingFactor,
+            ownX: approach.own.x * scalingFactor,
+            ownZ: -approach.own.y * scalingFactor,
+        } : null;
+    }, [convertLatLonToXY, thresholds]);
+
+    // Own boat moved or changed course: every relative position and CPA is
+    // stale, not just the targets that happen to report next.
     useEffect(() => {
         myPositionRef.current = myPosition;
+        // A stopped boat's COG is noise: fall back to the heading
+        ownMotionRef.current = { sog: mySog, cog: myCog ?? myHeading };
         Object.values(targetsRef.current).forEach(updateSpatial);
         dirtyRef.current = true;
-    }, [myPosition, updateSpatial]);
+    }, [myPosition, mySog, myCog, myHeading, updateSpatial]);
 
     // Throttled publication + stale target cleanup
     useEffect(() => {
@@ -250,6 +288,7 @@ export const AISProvider = ({ children }) => {
                 set('length', 'design.length.value.overall');
                 set('beam', 'design.beam.value');
                 set('callsign', 'communication.callsignVhf');
+                set('navState', 'navigation.state.value');
                 set('shipType', 'design.aisShipType.value.id');
                 target.lastUpdate = now;
                 updateSpatial(target);
@@ -307,10 +346,13 @@ export const AISProvider = ({ children }) => {
  * - `targets`:   every positioned target, closest first (radar)
  * - `aisData`:   mmsi -> target snapshot
  * - `targetsRef`: live mutable store, for per-frame reads
+ *
+ * @param {{passive?: boolean}} [options] - passive readers see the targets
+ *   while another consumer keeps the connection open, but never open it
  */
-export const useAIS = () => {
+export const useAIS = ({ passive = false } = {}) => {
     const ctx = useContext(AISContext);
-    const register = ctx?.register;
+    const register = passive ? null : ctx?.register;
     useEffect(() => register?.(), [register]);
     return ctx || { aisData: {}, vesselIds: EMPTY_LIST, targets: EMPTY_LIST, targetsRef: { current: {} } };
 };

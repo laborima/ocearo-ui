@@ -180,7 +180,10 @@
     "renderQuality_auto": "Auto",
     "renderQuality_high": "Qualité",
     "renderQuality_pi": "Raspberry Pi",
-    "renderQualityHint": "Raspberry Pi : 30 i/s, sans anticrénelage, eau plate. Appliqué au rechargement."
+    "renderQualityHint": "Raspberry Pi : 30 i/s, sans anticrénelage, eau plate. Appliqué au rechargement.",
+    "hudStyle": "HUD 3D",
+    "hudStyle_minimal": "Épuré",
+    "hudStyle_classic": "Classique"
   },
   "dashboard": {
     "environment": "Environnement",
@@ -723,5 +726,61 @@
     "clear": "Annuler l'alarme",
     "confirmClear": "Touchez encore pour annuler",
     "relativeBearing": "Direction par rapport à l'étrave"
+  },
+  "hud": {
+    "depth": "Fond",
+    "tws": "Vent réel",
+    "twa": "Angle réel",
+    "aws": "Vent app.",
+    "awa": "Angle app.",
+    "stw": "Surface",
+    "vmg": "VMG",
+    "polar": "Polaire",
+    "heading": "Cap",
+    "waypoint": "Waypoint",
+    "swing": "Évitage",
+    "alarmRadius": "Rayon alarme",
+    "portShort": "B",
+    "starboardShort": "T"
+  },
+  "laylines": {
+    "tack": "Virer",
+    "gybe": "Empanner"
+  },
+  "advice": {
+    "avoid": "Éviter : {{deg}}° sur {{side}}",
+    "starboard": "tribord",
+    "port": "bâbord",
+    "vmg": "{{change}} → +{{gain}} kn de VMG",
+    "avoidHint": "Risque de collision avec {{name}}. Simple conseil : appliquez le RIPAM.",
+    "vmgHint": "Estimation polaire vers le waypoint. Simple conseil.",
+    "apply": "Appliquer au pilote",
+    "confirm": "Confirmer",
+    "applied": "Envoyé au pilote",
+    "standOn": "Privilégié : conservez cap et vitesse",
+    "avoidNoSolution": "Écartez-vous : aucune déviation seule ne suffit, réduisez la vitesse"
+  },
+  "colregs": {
+    "rule": "règle {{rule}}",
+    "labelGiveWay": "Doit s'écarter",
+    "labelStandOn": "Privilégié",
+    "labelBoth": "Tous deux sur tribord",
+    "overtaking": "Vous rattrapez {{name}} : écartez-vous",
+    "overtakenByTarget": "{{name}} vous rattrape et doit s'écarter",
+    "portTack": "Vous êtes bâbord amures : écartez-vous de {{name}}",
+    "targetPortTack": "{{name}} est bâbord amures et doit s'écarter",
+    "ownWindward": "Vous êtes au vent : écartez-vous de {{name}}",
+    "targetWindward": "{{name}} est au vent et doit s'écarter",
+    "headOn": "Face à face avec {{name}} : venez tous deux sur tribord",
+    "crossingStarboard": "{{name}} est sur votre tribord : écartez-vous",
+    "crossingPort": "{{name}} vous voit sur son tribord et doit s'écarter",
+    "giveWayTo_sail": "Au moteur : écartez-vous du voilier {{name}}",
+    "giveWayTo_fishing": "Écartez-vous de {{name}}, en pêche",
+    "giveWayTo_restricted": "Écartez-vous de {{name}}, à capacité de manœuvre restreinte",
+    "giveWayTo_power": "Écartez-vous de {{name}}",
+    "standOnFrom_power": "{{name}} est à moteur et doit s'écarter de vous",
+    "standOnFrom_sail": "{{name}} doit s'écarter de vous",
+    "standOnFrom_fishing": "{{name}} doit s'écarter de vous",
+    "standOnFrom_restricted": "{{name}} doit s'écarter de vous"
   }
 }

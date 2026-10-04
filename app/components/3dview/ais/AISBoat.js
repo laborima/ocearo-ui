@@ -89,6 +89,7 @@ export const AIS_MATERIALS = {
     // Colours are set from the theme by AISView
     normal: new THREE.MeshStandardMaterial({ color: 0x8a9097, roughness: 0.9, metalness: 0 }),
     alert: new THREE.MeshStandardMaterial({ color: 0xff2d38, roughness: 0.9, metalness: 0 }),
+    selected: new THREE.MeshStandardMaterial({ color: 0x09bfff, roughness: 0.9, metalness: 0 }),
 };
 
 // Normalized template per loaded GLB scene; instances clone it (geometry shared).

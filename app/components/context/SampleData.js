@@ -53,6 +53,7 @@ export const SAMPLE_DATA = {
         'navigation.headingTrue': MathUtils.degToRad(0),
         'navigation.courseOverGround': MathUtils.degToRad(20),
         'navigation.courseGreatCircle.nextPoint.bearingTrue': MathUtils.degToRad(30),
+        'navigation.courseGreatCircle.nextPoint.distance': 1500,
         'navigation.attitude': { "roll": MathUtils.degToRad(5), "pitch": MathUtils.degToRad(2), "yaw": MathUtils.degToRad(2) },
     },
     racing: {
