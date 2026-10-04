@@ -6,6 +6,7 @@ import { useSignalKPaths } from '../../hooks/useSignalK';
 import { sunPosition } from '../../utils/SunUtils';
 import { vesselNow } from '../../utils/VesselClock';
 import useOwnTrack from '../fsd/useOwnTrack';
+import { getRenderProfile } from '../../utils/RenderProfile';
 
 // The sea is drawn at the own boat's scale (scene units per metre, see
 // ThreeDBoatView): wavelengths, wake and speed past the hull read true
@@ -19,6 +20,14 @@ const TRAIL = 32;
 const TRAIL_STEP = 1.5;
 // Hull footprint at the waterline (semi-length, semi-beam), scene units
 const HULL = [4.0, 1.35];
+
+// Shader budget: the Raspberry Pi profile halves the noise octaves, the
+// ripples and the wake history (a Pi 4 GPU is fill-rate bound)
+const shaderDefines = (pi) => ({
+    FBM_OCTAVES: pi ? 2 : 4,
+    RIPPLES: pi ? 3 : 6,
+    TRAIL_SEGMENTS: pi ? 12 : TRAIL - 1,
+});
 
 const PATHS = [
     'environment.wind.speedTrue',
@@ -126,7 +135,7 @@ const noise = `
     float fbm(vec2 p) {
         float v = 0.0;
         float a = 0.5;
-        for (int i = 0; i < 4; i++) { v += a * vnoise(p); p = p * 2.03 + vec2(17.1, 9.3); a *= 0.5; }
+        for (int i = 0; i < FBM_OCTAVES; i++) { v += a * vnoise(p); p = p * 2.03 + vec2(17.1, 9.3); a *= 0.5; }
         return v;
     }
 `;
@@ -160,7 +169,7 @@ const seaFragment = `
         if (length(p) > uTrailReach) return 0.0;
         float best = 1e6;
         float age = 0.0;
-        for (int i = 0; i < ${TRAIL - 1}; i++) {
+        for (int i = 0; i < TRAIL_SEGMENTS; i++) {
             vec4 a = uTrail[i];
             vec4 b = uTrail[i + 1];
             if (b.z < 0.0) break;
@@ -204,7 +213,7 @@ const seaFragment = `
         // Short wind waves and ripples, in the normal only, faded with distance
         float detail = (1.0 - smoothstep(30.0, 260.0, vDist)) * (0.5 + 0.5 * uWind);
         vec2 grad = vec2(0.0);
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < RIPPLES; i++) {
             float fi = float(i);
             float ang = uDir + (hash(vec2(fi, 3.7)) - 0.5) * 2.2;
             vec2 d = vec2(sin(ang), cos(ang));
@@ -412,23 +421,27 @@ const FsdOcean = ({ y = -0.3 }) => {
         uOcclude: { value: 0 },
     }), []);
 
+    const defines = useMemo(() => shaderDefines(getRenderProfile().id === 'pi'), []);
+
     const seaMaterial = useMemo(() => new THREE.ShaderMaterial({
         uniforms,
+        defines,
         vertexShader: seaVertex,
         fragmentShader: seaFragment,
         // Drawn first: the HUD (compass, laylines, wake ribbons) stays on top
         depthWrite: false,
-    }), [uniforms]);
+    }), [uniforms, defines]);
 
     // Second pass over the hull footprint only, after the boat: the hull
     // below the waterline is seen through the water
     const waterlineMaterial = useMemo(() => new THREE.ShaderMaterial({
         uniforms: { ...uniforms, uOcclude: { value: 1 } },
+        defines,
         vertexShader: seaVertex,
         fragmentShader: seaFragment,
         transparent: true,
         depthWrite: false,
-    }), [uniforms]);
+    }), [uniforms, defines]);
 
     // A dark theme dims the light to a moon's: no bright glitter on a night sea
     const lightScale = scene.background === '#000000' ? 0.06 : 1;
