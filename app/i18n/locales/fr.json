@@ -830,6 +830,7 @@
     "giveWay": "Mon bateau orange clair : je dois m'écarter (règles de barre)",
     "colregArrow": "Flèche : le navire qui doit manœuvrer, et de quel côté",
     "advice": "Changement de cap suggéré (conseil seulement)",
-    "trim": "Chariots et barre (couleur d'accent) : positions à lire"
+    "trim": "Chariots et barre (couleur d'accent) : positions à lire",
+    "loads": "Écoutes, hale-bas et pataras : charge, du vert (choqué) au rouge (étarqué)"
   }
 }

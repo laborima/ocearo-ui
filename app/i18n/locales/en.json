@@ -830,6 +830,7 @@
     "giveWay": "Own boat light orange: you must keep clear (rules of the road)",
     "colregArrow": "Arrow: the vessel that must give way, and to which side",
     "advice": "Suggested course change (advice only)",
-    "trim": "Trim cars and tiller (accent colour): positions to read"
+    "trim": "Trim cars and tiller (accent colour): positions to read",
+    "loads": "Sheets, vang and backstay: load, green (eased) to red (hard on)"
   }
 }

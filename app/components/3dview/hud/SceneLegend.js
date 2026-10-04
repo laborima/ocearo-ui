@@ -5,6 +5,13 @@ import { faCircleInfo, faXmark } from '@fortawesome/free-solid-svg-icons';
 import useTheme from '../../theme/useTheme';
 import configService from '../../settings/ConfigService';
 import { getCollisionThresholds } from '../../utils/Collision';
+import { tensionToColor } from '../sail/SailTrimUtils';
+
+// The load colours of the sheets, vang and backstay (eased, medium, hard on)
+const LOAD_COLORS = [0, 0.5, 1].map((x) => {
+    const { r, g, b } = tensionToColor(x);
+    return `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
+});
 
 /** A colour sample shaped like what it stands for in the scene */
 const Swatch = ({ kind, colors }) => {
@@ -78,6 +85,7 @@ const SceneLegend = () => {
         { kind: 'arrow', colors: [scene.target], label: t('legend.colregArrow') },
         { kind: 'dashed', colors: [scene.target], label: t('legend.advice') },
         { kind: 'bands', colors: [accent], label: t('legend.trim') },
+        { kind: 'bands', colors: LOAD_COLORS, label: t('legend.loads') },
     ];
 
     if (!open) {
