@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import * as THREE from 'three';
 import { Line } from '@react-three/drei';
 import useTheme from '../../theme/useTheme';
 import { useSignalKPath } from '../../hooks/useSignalK';
@@ -21,6 +22,30 @@ const MAX_TRACK_POLL_FAILURES = 3;
 
 /** Slow poll used after repeated failures, so the track returns on its own. */
 const TRACK_POLL_BACKOFF_MS = 120000;
+
+/**
+ * Local track, recorded in the browser when the server has none (no
+ * ocearo-core): a point every LOCAL_STEP_M metres of movement, the last
+ * LOCAL_MAX_POINTS kept, saved per anchorage so a reload keeps it.
+ */
+const LOCAL_STEP_M = 1;
+const LOCAL_MAX_POINTS = 1500;
+const LOCAL_KEY = 'ocearo.anchorTrack';
+
+const loadLocalTrack = () => {
+    try {
+        return JSON.parse(sessionStorage.getItem(LOCAL_KEY) || 'null') || { anchor: null, points: [] };
+    } catch {
+        return { anchor: null, points: [] };
+    }
+};
+const saveLocalTrack = (data) => {
+    try {
+        sessionStorage.setItem(LOCAL_KEY, JSON.stringify(data));
+    } catch {
+        // Storage full or blocked: the track simply won't survive a reload
+    }
+};
 
 /**
  * Metres → scene units.
@@ -81,6 +106,7 @@ const AnchoredCircle = () => {
     const skCog = useSignalKPath('navigation.courseOverGroundTrue');
 
     const [track, setTrack] = useState([]);
+    const [localTrack, setLocalTrack] = useState(() => loadLocalTrack());
 
     // Poll the swing track recorded by ocearo-core. The server buffer survives
     // a UI reload, which a client-side accumulation would not.
@@ -129,6 +155,23 @@ const AnchoredCircle = () => {
         return null;
     }, [skAnchorPosition]);
 
+    // Record our own swing locally, restarted whenever the anchor moves
+    useEffect(() => {
+        if (skPosition?.latitude == null || skPosition?.longitude == null) return;
+        const key = anchorPosition ? `${anchorPosition.latitude.toFixed(5)},${anchorPosition.longitude.toFixed(5)}` : null;
+        setLocalTrack((prev) => {
+            const points = prev.anchor === key ? prev.points : [];
+            const last = points[points.length - 1];
+            if (last) {
+                const [dx, dz] = project(skPosition, last);
+                if (Math.hypot(dx, dz) < LOCAL_STEP_M) return prev.anchor === key ? prev : { anchor: key, points };
+            }
+            const next = { anchor: key, points: [...points, { latitude: skPosition.latitude, longitude: skPosition.longitude }].slice(-LOCAL_MAX_POINTS) };
+            saveLocalTrack(next);
+            return next;
+        });
+    }, [skPosition, anchorPosition]);
+
     const radiusKnown = Number.isFinite(skMaxRadius) && skMaxRadius > 0;
     const radius = (radiusKnown ? skMaxRadius : DEFAULT_RADIUS_M) / M_PER_UNIT;
 
@@ -175,8 +218,10 @@ const AnchoredCircle = () => {
         // `!= null`, not a falsy test: latitude 0 is a valid position, and
         // longitude has to be guarded too since project() dereferences it.
         if (skPosition?.latitude == null || skPosition?.longitude == null) return null;
-        if (!track.length) return null;
-        const pts = track
+        // The server's track when there is one, else the one recorded here
+        const source = track.length ? track : localTrack.points;
+        if (!source.length) return null;
+        const pts = source
             .filter(p => Number.isFinite(p?.latitude) && Number.isFinite(p?.longitude))
             .map(p => {
                 const [x, z] = project(p, skPosition);
@@ -186,7 +231,15 @@ const AnchoredCircle = () => {
         // line always ends where the hull is drawn.
         pts.push([0, PLANE_Y + 0.05, 0]);
         return pts.length >= 2 ? pts : null;
-    }, [track, skPosition]);
+    }, [track, localTrack, skPosition]);
+
+    // Older swings fade out, the latest stretch is drawn strongest
+    const trackColors = useMemo(() => {
+        if (!trackPoints) return null;
+        const recent = new THREE.Color(oYellow);
+        const old = new THREE.Color(oGray);
+        return trackPoints.map((_, i) => old.clone().lerp(recent, (i / (trackPoints.length - 1)) ** 1.5).toArray());
+    }, [trackPoints, oYellow, oGray]);
 
     // Rode: a straight line from the anchor to the bow, the quickest read on
     // which way the boat is lying. Pointless when the circle is centred on the
@@ -245,10 +298,11 @@ const AnchoredCircle = () => {
             {trackPoints && (
                 <Line
                     points={trackPoints}
-                    color={dragging ? oRed : oYellow}
-                    lineWidth={2}
+                    color={dragging ? oRed : '#ffffff'}
+                    vertexColors={dragging ? undefined : trackColors}
+                    lineWidth={2.5}
                     transparent
-                    opacity={0.85}
+                    opacity={0.9}
                 />
             )}
         </group>
