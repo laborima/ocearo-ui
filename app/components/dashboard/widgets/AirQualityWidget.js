@@ -121,7 +121,7 @@ export default function AirQualityWidget() {
 
         {/* Secondary metric + reference */}
         <div className="grid grid-cols-2 gap-4 shrink-0">
-          <div className="tesla-card p-3 text-center tesla-hover bg-hud-bg">
+          <div className="tesla-card text-center tesla-hover ">
             {pm25 !== null ? (
               <>
                 <div className={`text-value font-semibold mb-1 gliding-value ${pm25 > 25 ? 'text-oRed' : 'text-hud-main'}`}>
@@ -138,7 +138,7 @@ export default function AirQualityWidget() {
               </>
             )}
           </div>
-          <div className="tesla-card p-3 bg-hud-bg tesla-hover flex flex-col justify-center space-y-2">
+          <div className="tesla-card tesla-hover flex flex-col justify-center space-y-2">
             <div className="flex justify-between items-center text-caption font-semibold uppercase tracking-widest">
               <span className="text-hud-muted">{t('widgets.nominal')}</span>
               <span className="text-oGreen">{usesVoc ? '> 300' : '< 800'}</span>

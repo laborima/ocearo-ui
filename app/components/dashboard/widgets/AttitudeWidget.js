@@ -101,7 +101,7 @@ export default function AttitudeWidget() {
           { label: 'PITCH', value: attitudeData.pitch, color: 'text-oBlue', icon: faPlane, rotate: 0 },
           { label: 'HDG', value: attitudeData.heading, color: 'text-oYellow', icon: faCompass, rotate: 0 }
         ].map((item, idx) => (
-          <div key={idx} className="tesla-card p-2 tesla-hover bg-hud-bg border border-hud">
+          <div key={idx} className="tesla-card tesla-hover ">
             <div className="flex items-center justify-center space-x-2 mb-1 opacity-60">
               <FontAwesomeIcon icon={item.icon} className={`${item.color} text-xs`} style={{ transform: `rotate(${item.rotate}deg)` }} />
               <span className={`text-hud-muted uppercase text-caption font-semibold tracking-widest`}>{item.label}</span>

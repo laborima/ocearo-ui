@@ -299,7 +299,7 @@ const BatteryMonitor = () => {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="tesla-card p-4 mb-4 relative overflow-hidden bg-hud-elevated"
+                    className="tesla-card mb-4 relative overflow-hidden "
                   >
                     <button 
                       className="absolute top-2 right-3 text-hud-secondary hover:text-hud-main font-semibold text-value"
@@ -348,7 +348,7 @@ const BatteryMonitor = () => {
               </AnimatePresence>
               
               <div className="flex-1 flex flex-col space-y-4">
-                <div className="relative tesla-card p-6 bg-hud-bg border border-hud">
+                <div className="relative tesla-card ">
                   <div className="mb-6 flex justify-between items-center">
                     <span className="text-hud-secondary text-caption font-semibold uppercase tracking-[0.2em] opacity-60">{t('battery.gridNodeStatus')}</span>
                     <div className={`px-3 py-1 rounded-sm text-caption font-semibold uppercase tracking-widest shadow-soft ${isCharging ? 'bg-oGreen/10 text-oGreen border border-oGreen/20 animate-soft-pulse' : 'bg-oRed/10 text-oRed border border-oRed/20'}`}>
@@ -393,7 +393,7 @@ const BatteryMonitor = () => {
                   </div>
                 </div>
 
-                <div className="tesla-card p-6 flex-1 bg-hud-bg border border-hud">
+                <div className="tesla-card flex-1 ">
                   <div className="text-hud-secondary text-caption font-semibold uppercase tracking-[0.2em] mb-8 flex items-center opacity-60">
                     <div className="w-1.5 h-1.5 rounded-full bg-oBlue mr-3" />
                     {t('battery.loadDistribution')}
@@ -471,7 +471,7 @@ const BatteryMonitor = () => {
                 </div>
               </div>
               
-              <div className="flex-1 tesla-card p-6 min-h-[220px] bg-hud-bg border border-hud">
+              <div className="flex-1 tesla-card min-h-[220px] ">
                 <LineChart 
                   data={batteryHistory}
                   dataKey={activeView}
@@ -512,7 +512,7 @@ const BatteryMonitor = () => {
                 </div>
               </div>
               
-              <div className="flex-1 tesla-card p-6 min-h-[200px] mb-6 bg-hud-bg border border-hud">
+              <div className="flex-1 tesla-card min-h-[200px] mb-6 ">
                 <LineChart 
                   data={performanceHistory}
                   dataKey={activePerformanceView}
@@ -523,7 +523,7 @@ const BatteryMonitor = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="tesla-card p-6 bg-hud-bg tesla-hover border border-hud">
+                <div className="tesla-card tesla-hover ">
                   <div className="text-caption text-hud-muted font-semibold uppercase mb-4 tracking-[0.2em] opacity-60">{t('battery.graphicsEngine')}</div>
                   <div className="flex justify-between items-center text-caption font-semibold text-hud-main uppercase mb-3">
                     <span className="text-hud-secondary tracking-widest">{t('battery.drawCalls')}</span>
@@ -534,7 +534,7 @@ const BatteryMonitor = () => {
                     <span className="gliding-value">{(performanceHistory[performanceHistory.length-1].triangles / 1000).toFixed(1)}k poly</span>
                   </div>
                 </div>
-                <div className="tesla-card p-6 bg-hud-bg tesla-hover border border-hud">
+                <div className="tesla-card tesla-hover ">
                   <div className="text-caption text-hud-muted font-semibold uppercase mb-4 tracking-[0.2em] opacity-60">{t('battery.memoryManagement')}</div>
                   <div className="flex justify-between items-center text-caption font-semibold text-hud-main uppercase mb-3">
                     <span className="text-hud-secondary tracking-widest">{t('battery.jsHeap')}</span>

@@ -44,7 +44,7 @@ export const CircularGauge = ({
   const pulse = isCritical || (!reversed && percentage >= 90);
 
   return (
-    <div className="tesla-card p-2 tesla-hover flex flex-col items-center justify-center">
+    <div className="tesla-card tesla-hover flex flex-col items-center justify-center">
       <div className="relative" style={{ width: size, height: size }}>
         <svg style={{ width: size, height: size }} className="transform -rotate-90" viewBox="0 0 100 100">
           {/* Background circle */}
@@ -123,7 +123,7 @@ export const BarGauge = ({
   const pulse = isCritical || (!reversed && percentage >= 90);
 
   return (
-    <div className="tesla-card p-3 tesla-hover">
+    <div className="tesla-card tesla-hover">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center text-hud-muted text-caption font-semibold uppercase tracking-widest">
           {icon && <FontAwesomeIcon icon={icon} className="mr-2 fa-fw opacity-50" />}
@@ -180,7 +180,7 @@ export const CompactDataField = ({
   };
   
   return (
-    <div className="tesla-card p-3 tesla-hover flex items-center justify-between">
+    <div className="tesla-card tesla-hover flex items-center justify-between">
       <div className="flex items-center text-hud-muted text-caption font-semibold uppercase tracking-widest">
         {icon && <FontAwesomeIcon icon={icon} className="mr-2 fa-fw opacity-50" />}
         {label}
@@ -281,7 +281,7 @@ export const PrimaryGauge = ({
   const pulse = isCritical || (!reversed && percentage >= 90);
 
   return (
-    <div className="tesla-card p-4 text-center tesla-hover">
+    <div className="tesla-card text-center tesla-hover">
       {icon && (
         <FontAwesomeIcon icon={icon} className="text-lg text-hud-muted mb-2 opacity-50" />
       )}

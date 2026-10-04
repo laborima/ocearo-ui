@@ -289,8 +289,8 @@ export default function AutopilotView() {
     const renderControlTab = () => (
         <div className="space-y-3">
             {/* Status Display */}
-            <div className="tesla-card p-3 border border-hud bg-hud-bg">
-                <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="tesla-card ">
+                <div className="grid grid-cols-3 gap-3 text-center">
                     {/* State */}
                     <div>
                         <div className={`text-value mb-1 ${getStateColor()}`}>
@@ -370,9 +370,9 @@ export default function AutopilotView() {
             </div>
 
             {/* Mode Selection */}
-            <div className="tesla-card p-3 border border-hud bg-hud-bg">
+            <div className="tesla-card ">
                 <div className={`text-caption font-semibold uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.modeSelection')}</div>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-4 gap-3">
                     {modes.map(mode => (
                         <button
                             key={mode}
@@ -392,9 +392,9 @@ export default function AutopilotView() {
             </div>
 
             {/* Heading Adjustment */}
-            <div className="tesla-card p-3 border border-hud bg-hud-bg">
+            <div className="tesla-card ">
                 <div className={`text-caption font-semibold uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.targetAdjustment')}</div>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-4 gap-3">
                     <button
                         onClick={() => handleAdjustHeading(-10)}
                         className="py-3 bg-oRed/40 hover:bg-oRed/60 text-hud-main rounded border border-oRed/50 font-semibold text-label"
@@ -433,13 +433,13 @@ export default function AutopilotView() {
             </div>
 
             {/* Tack & Gybe — two-tap confirmation */}
-            <div className="tesla-card p-3 border border-hud bg-hud-bg">
+            <div className="tesla-card ">
                 <div className={`text-caption font-semibold uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.maneuvers')}</div>
                 <div className="grid grid-cols-2 gap-4">
                     {['tack', 'gybe'].map(maneuver => (
                         <div key={maneuver}>
                             <div className={`text-caption font-semibold uppercase ${mutedTextClass} mb-2 text-center`}>{t(`autopilot.${maneuver}`)}</div>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-2 gap-3">
                                 {['port', 'starboard'].map(direction => {
                                     const armed = armedManeuver === `${maneuver}:${direction}`;
                                     return (
@@ -465,8 +465,8 @@ export default function AutopilotView() {
 
             {/* Dodge & route actions — only those the pilot advertises */}
             {(isActionAvailable('dodge') || isActionAvailable('courseCurrentPoint') || isActionAvailable('courseNextPoint')) && (
-                <div className="tesla-card p-3 border border-hud bg-hud-bg">
-                    <div className="grid grid-cols-2 gap-2">
+                <div className="tesla-card ">
+                    <div className="grid grid-cols-2 gap-3">
                         {isActionAvailable('dodge') && (pilotMode === 'dodge' ? (
                             <button onClick={() => handleDodge({ exit: true })} disabled={busy}
                                 className="py-2 rounded border border-oYellow bg-oYellow/20 text-hud-main font-bold text-caption uppercase disabled:opacity-40">
@@ -500,7 +500,7 @@ export default function AutopilotView() {
     const renderControllerTab = () => (
         <div className="space-y-3">
             {/* Controller Status */}
-            <div className="tesla-card p-3 border border-hud bg-hud-bg">
+            <div className="tesla-card ">
                 <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
                         <FontAwesomeIcon 
@@ -531,7 +531,7 @@ export default function AutopilotView() {
             </div>
 
             {/* Button Mappings */}
-            <div className="tesla-card p-3 border border-hud bg-hud-bg">
+            <div className="tesla-card ">
                 <div className={`text-caption font-semibold uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.buttonMappings')}</div>
                 
                 <div className="space-y-2">
@@ -630,7 +630,7 @@ export default function AutopilotView() {
             </div>
 
             {/* Sensitivity Settings */}
-            <div className="tesla-card p-3 border border-hud bg-hud-bg">
+            <div className="tesla-card ">
                 <div className={`text-caption font-semibold uppercase ${secondaryTextClass} mb-3`}>{t('autopilot.sensitivity')}</div>
                 
                 <div className="space-y-4">

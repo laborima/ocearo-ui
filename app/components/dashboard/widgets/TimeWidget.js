@@ -83,8 +83,10 @@ const TimeWidget = React.memo(() => {
         {/* Main time display - centered */}
         <div className="flex-1 flex flex-col justify-center">
           <div className="text-center group mb-6">
-            <div className="text-hero font-medium text-hud-main leading-none font-mono tracking-tight gliding-value">
-              {formatTime(currentTime)}
+            {/* HH:MM large, seconds small: the hero line must fit a 15rem card */}
+            <div className="text-hero font-medium text-hud-main leading-none tracking-tight whitespace-nowrap">
+              {formatTime(currentTime, false)}
+              <span className="text-value text-hud-secondary ml-1">{String(currentTime.getSeconds()).padStart(2, '0')}</span>
             </div>
             <div className="text-hud-secondary text-caption font-semibold uppercase tracking-[0.3em] mt-4 opacity-60">
               {formatDate(currentTime)}
@@ -93,14 +95,14 @@ const TimeWidget = React.memo(() => {
 
           {/* Local + UTC */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="tesla-card p-4 tesla-hover bg-hud-bg">
+            <div className="tesla-card tesla-hover ">
               <div className="flex items-center space-x-3 mb-2">
                 <FontAwesomeIcon icon={faGlobe} className="text-oBlue text-xs opacity-50" />
                 <span className="text-hud-muted text-caption font-semibold uppercase tracking-widest">{t('widgets.localSync')}</span>
               </div>
               <div className="text-hud-main font-mono font-semibold text-value gliding-value">{formatTime(zoneTime, false, 'UTC')}</div>
             </div>
-            <div className="tesla-card p-4 tesla-hover bg-hud-bg">
+            <div className="tesla-card tesla-hover ">
               <div className="flex items-center space-x-3 mb-2">
                 <FontAwesomeIcon icon={faGlobe} className="text-hud-muted text-xs opacity-50" />
                 <span className="text-hud-muted text-caption font-semibold uppercase tracking-widest">{t('widgets.utcClock')}</span>

@@ -73,7 +73,7 @@ const TemperatureWidget = React.memo(() => {
       <div className="flex-1 flex flex-col min-h-0">
         {/* Temperature readings - centered, spacious */}
         <div className="flex-1 flex items-center justify-center">
-          <div className="grid grid-cols-2 gap-6 w-full">
+          <div className="grid grid-cols-2 gap-4 w-full">
             <div className="text-center">
               <div className="text-hud-secondary text-caption uppercase font-semibold tracking-[0.2em] mb-3 opacity-60">{t('widgets.atmosphereLabel')}</div>
               <div className="text-hero font-medium text-hud-main leading-none gliding-value tracking-tight">

@@ -34,7 +34,7 @@ const meterColor = (value, warn, critical) => {
 const Meter = ({ label, value, unit, percent, warn, critical, icon }) => {
   const color = meterColor(percent ?? value, warn, critical);
   return (
-    <div className="tesla-card p-4 bg-hud-elevated rounded-sm border border-hud">
+    <div className="tesla-card ">
       <div className="flex items-center justify-between mb-2">
         <span className="text-hud-secondary text-caption font-semibold uppercase tracking-widest">
           <FontAwesomeIcon icon={icon} className="mr-2 opacity-60" />
@@ -152,14 +152,14 @@ const RaspberryPiTab = () => {
           { label: t('battery.rpiRam'), value: `${gb(mem.used)} / ${gb(mem.total)}` },
           { label: t('battery.rpiSwap'), value: gb(mem.swapUsed) }
         ].map((s) => (
-          <div key={s.label} className="tesla-card p-3 bg-hud-elevated rounded-sm border border-hud">
+          <div key={s.label} className="tesla-card ">
             <div className="text-hud-muted text-caption font-semibold uppercase tracking-widest">{s.label}</div>
             <div className="text-hud-main text-label font-semibold gliding-value mt-1">{s.value}</div>
           </div>
         ))}
       </div>
 
-      <div className="tesla-card bg-hud-elevated rounded-sm border border-hud overflow-hidden">
+      <div className="tesla-card overflow-hidden">
         <div className="px-4 py-2 border-b border-hud text-hud-secondary text-caption font-semibold uppercase tracking-widest">
           {t('battery.rpiTopProcesses')}
         </div>

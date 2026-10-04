@@ -92,13 +92,13 @@ export default function VisibilityWidget() {
 
         {/* Metric + Nautical */}
         <div className="grid grid-cols-2 gap-4 mb-4 shrink-0">
-          <div className="tesla-card p-3 text-center tesla-hover bg-hud-bg">
+          <div className="tesla-card text-center tesla-hover ">
             <div className="text-hud-secondary text-caption uppercase font-semibold tracking-widest mb-1 opacity-60">{t('widgets.metricRange')}</div>
             <div className={`text-value font-semibold gliding-value ${getVisibilityColor(visibilityData.distance)}`}>
               {visibilityData.distance} km
             </div>
           </div>
-          <div className="tesla-card p-3 text-center tesla-hover bg-hud-bg">
+          <div className="tesla-card text-center tesla-hover ">
             <div className="text-hud-secondary text-caption uppercase font-semibold tracking-widest mb-1 opacity-60">{t('widgets.nauticalRange')}</div>
             <div className={`text-value font-semibold gliding-value ${getVisibilityColor(visibilityData.distance)}`}>
               {visibilityData.distanceNM} NM

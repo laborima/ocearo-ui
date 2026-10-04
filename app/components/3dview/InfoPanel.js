@@ -8,7 +8,7 @@ const InfoPanel = ({ content, onClose }) => {
     const contentLines = content.split('\n').filter(line => line.trim());
 
     return (
-        <div className="tesla-card p-4 min-w-[180px] max-w-[240px] bg-hud-bg/90 backdrop-blur-xl border border-hud shadow-2xl rounded-lg">
+        <div className="tesla-card min-w-[180px] max-w-[240px] bg-hud-bg/90 backdrop-blur-xl ">
             <div className="flex items-center justify-between mb-3">
                 <span className="text-caption font-semibold uppercase tracking-[0.2em] text-hud-muted">VESSEL</span>
                 <button

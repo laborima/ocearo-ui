@@ -61,7 +61,7 @@ const AppMenu = ({
                 transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 className="fixed bottom-20 left-1/2 bg-hud-bg backdrop-blur-xl p-3 sm:p-6 rounded-3xl shadow-2xl z-50 w-[95vw] sm:w-full max-w-lg border border-hud ocearo-appmenu-scroll"
             >
-                <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {currentViewMode !== VIEW_MODES.SPLIT && (
                     <MenuButton onClose={closeMenu} icon={faExpand} label={t('menu.splitView')} onClick={() => toggleViewMode(VIEW_MODES.SPLIT)} />
                 )}

@@ -189,7 +189,7 @@ export default function CourseWidget() {
             <div className="flex-1 flex flex-col min-h-0">
                 {/* Waypoint List */}
                 {showWaypointList && (
-                    <div className="mb-4 max-h-40 overflow-y-auto tesla-card bg-hud-bg p-2 space-y-1">
+                    <div className="mb-4 max-h-40 overflow-y-auto tesla-card space-y-1">
                         <div className="text-caption text-hud-muted mb-2 uppercase font-semibold tracking-[0.2em] px-2 pt-1">{t('widgets.storedWaypoints')}</div>
                         {waypointsList.length === 0 ? (
                             <div className="text-caption text-hud-secondary italic px-2 py-4 text-center font-semibold uppercase">{t('widgets.noActiveNodes')}</div>
@@ -210,7 +210,7 @@ export default function CourseWidget() {
 
                 {/* Route List */}
                 {showRouteList && (
-                    <div className="mb-4 max-h-40 overflow-y-auto tesla-card bg-hud-bg p-2 space-y-1">
+                    <div className="mb-4 max-h-40 overflow-y-auto tesla-card space-y-1">
                         <div className="text-caption text-hud-muted mb-2 uppercase font-semibold tracking-[0.2em] px-2 pt-1">{t('widgets.missionRoutes')}</div>
                         {routesList.length === 0 ? (
                             <div className="text-caption text-hud-secondary italic px-2 py-4 text-center font-semibold uppercase">{t('widgets.noRoutesLoaded')}</div>
@@ -234,7 +234,7 @@ export default function CourseWidget() {
 
                 {/* Active Destination */}
                 {hasDestination && (
-                    <div className="tesla-card bg-oYellow/5 p-4 mb-6 shadow-subtle border-l-2 border-oYellow/30 animate-soft-pulse">
+                    <div className="tesla-card bg-oYellow/5 mb-6 border-l-2 border-oYellow/30 animate-soft-pulse">
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center space-x-3">
                                 <FontAwesomeIcon icon={faCrosshairs} className="text-oYellow text-sm" />
@@ -275,7 +275,7 @@ export default function CourseWidget() {
 
                 {/* Autopilot Status */}
                 {autopilotState && (
-                    <div className={`tesla-card px-3 py-2 mb-3 bg-hud-bg flex items-center justify-between ${autopilotState === 'enabled' ? 'border-l-2 border-oGreen/30' : ''}`}>
+                    <div className={`tesla-card px-3 py-2 mb-3 flex items-center justify-between ${autopilotState === 'enabled' ? 'border-l-2 border-oGreen/30' : ''}`}>
                         <div className="flex items-center space-x-2">
                             <FontAwesomeIcon icon={faRobot} className={`text-xs ${autopilotState === 'enabled' ? 'text-oGreen' : 'text-hud-muted'}`} />
                             <span className={`text-caption font-semibold uppercase capitalize gliding-value ${autopilotState === 'enabled' ? 'text-oGreen' : 'text-hud-secondary'}`}>
@@ -295,7 +295,7 @@ export default function CourseWidget() {
                 {courseData.hasData && (
                     <div className="grid grid-cols-2 gap-4">
                         {/* Distance */}
-                        <div className="tesla-card p-4 text-center tesla-hover bg-hud-bg">
+                        <div className="tesla-card text-center tesla-hover ">
                             <FontAwesomeIcon icon={faRuler} className="text-oGreen text-xs mb-2 opacity-50" />
                             <div className="text-hud-main text-value font-semibold gliding-value tracking-tight">
                                 {formatDistance(courseData.distance)}
@@ -304,7 +304,7 @@ export default function CourseWidget() {
                         </div>
 
                         {/* Bearing */}
-                        <div className="tesla-card p-4 text-center tesla-hover bg-hud-bg">
+                        <div className="tesla-card text-center tesla-hover ">
                             <FontAwesomeIcon icon={faCompass} className="text-oBlue text-xs mb-2 opacity-50" />
                             <div className="text-hud-main text-value font-semibold gliding-value tracking-tight">
                                 {courseData.bearingTrue !== null ? `${Math.round(toDegrees(courseData.bearingTrue))}°` : t('common.na')}
@@ -313,7 +313,7 @@ export default function CourseWidget() {
                         </div>
 
                         {/* XTE */}
-                        <div className="tesla-card p-4 text-center tesla-hover bg-hud-bg">
+                        <div className="tesla-card text-center tesla-hover ">
                             <FontAwesomeIcon icon={faArrowRight} className={`${
                                 courseData.crossTrackError > 50 || courseData.crossTrackError < -50 ? 'text-oRed animate-soft-pulse' : 'text-oGreen opacity-50'
                             } text-xs mb-2`} />
@@ -324,7 +324,7 @@ export default function CourseWidget() {
                         </div>
 
                         {/* VMG */}
-                        <div className="tesla-card p-4 text-center tesla-hover bg-hud-bg">
+                        <div className="tesla-card text-center tesla-hover ">
                             <FontAwesomeIcon icon={faPlay} className="text-oGreen text-xs mb-2 opacity-50" />
                             <div className="text-hud-main text-value font-semibold gliding-value tracking-tight">
                                 {courseData.velocityMadeGood !== null ? `${convertSpeedUnit(courseData.velocityMadeGood)}` : t('common.na')}
@@ -335,7 +335,7 @@ export default function CourseWidget() {
 
                         {/* Time to Go */}
                         {courseData.timeToGo !== null && (
-                            <div className="tesla-card p-4 text-center tesla-hover bg-hud-bg">
+                            <div className="tesla-card text-center tesla-hover ">
                                 <FontAwesomeIcon icon={faClock} className="text-oGreen text-xs mb-2 opacity-50" />
                                 <div className="text-hud-main text-value font-semibold gliding-value tracking-tight">
                                     {formatTime(courseData.timeToGo)}
@@ -346,7 +346,7 @@ export default function CourseWidget() {
 
                         {/* ETA */}
                         {courseData.estimatedTimeOfArrival && (
-                            <div className="tesla-card p-4 text-center tesla-hover bg-hud-bg">
+                            <div className="tesla-card text-center tesla-hover ">
                                 <FontAwesomeIcon icon={faClock} className="text-oYellow text-xs mb-2 opacity-50" />
                                 <div className="text-hud-main text-value font-semibold gliding-value tracking-tight">
                                     {formatETA(courseData.estimatedTimeOfArrival)}

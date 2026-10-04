@@ -68,14 +68,14 @@ export default function DepthWidget() {
 
         {/* Depth readings */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="tesla-card p-3 text-center tesla-hover bg-hud-bg">
+          <div className="tesla-card text-center tesla-hover ">
             <div className="text-hud-secondary text-caption uppercase font-semibold tracking-widest mb-1 opacity-60">{t('widgets.belowKeel')}</div>
             <div className={`text-value font-semibold gliding-value ${depthData.belowKeel !== null ? getDepthColor(depthData.belowKeel) : 'text-hud-muted'}`}>
               {depthData.belowKeel !== null ? `${depthData.belowKeel} ${depthData.depthUnitLabel}` : t('common.na')}
             </div>
           </div>
           
-          <div className="tesla-card p-3 text-center tesla-hover bg-hud-bg">
+          <div className="tesla-card text-center tesla-hover ">
             <div className="text-hud-secondary text-caption uppercase font-semibold tracking-widest mb-1 opacity-60">{t('widgets.surface')}</div>
             <div className={`text-value font-semibold gliding-value ${depthData.belowSurface !== null ? getDepthColor(depthData.belowSurface) : 'text-hud-muted'}`}>
               {depthData.belowSurface !== null ? `${depthData.belowSurface} ${depthData.depthUnitLabel}` : t('common.na')}
@@ -100,7 +100,7 @@ export default function DepthWidget() {
         </div>
 
         {/* Status info */}
-        <div className="tesla-card p-3 bg-hud-bg space-y-2">
+        <div className="tesla-card space-y-2">
           <div className="flex justify-between items-center text-caption font-semibold uppercase tracking-widest">
             <span className="text-hud-secondary">{t('widgets.hullClearance')}</span>
             <span className={`gliding-value font-mono ${depthData.belowKeel !== null && depthData.belowKeel < 2 ? 'text-oRed' : 'text-hud-main'}`}>
