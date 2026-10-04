@@ -112,7 +112,7 @@ export const calculateTideHeightUsingTwelfths = (highTideHeight, lowTideHeight, 
 
 /**
  * Fetch tide data from local JSON files (fallback when SignalK plugin is unavailable).
- * Files are expected at /tides/larochelle/MM_YYYY.json.
+ * Files are expected at tides/larochelle/MM_YYYY.json next to the app.
  *
  * @param {Function} updateSignalKData - Callback to inject tide values into the SignalK data store
  */
@@ -124,7 +124,8 @@ const fetchLocalTideData = async (updateSignalKData) => {
         const date = vesselNow();
         const year = date.getFullYear();
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const filePath = `/tides/larochelle/${month}_${year}.json`;
+        // Relative: Signal K serves the app under /ocearo-ui/, not at the root
+        const filePath = `./tides/larochelle/${month}_${year}.json`;
 
         const response = await fetch(filePath);
         if (!response.ok) {
