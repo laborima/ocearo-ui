@@ -100,12 +100,13 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
     const isLightScene = !nightMode && (states.oceanMode === 'chart' || states.oceanMode === 'depth' || states.oceanMode === 'meteo');
 
     return (
-        <div className="w-full h-full relative" data-scene={isLightScene ? 'light' : undefined}>
+        <div className="w-full h-full relative overflow-hidden" data-scene={isLightScene ? 'light' : undefined}>
 
             <div className="absolute top-2 left-2 right-2 z-20 flex items-center justify-between">
                 <ThreeDBoatToolbar />
-                <div className="flex items-center space-x-4">
-                    <SkyClock />
+                <div className="flex items-center space-x-4 min-w-0 shrink-0">
+                    {/* Split view: only the time, sun and UV need the full width */}
+                    <SkyClock compact={!fullscreen} />
                     <ThreeDBoatThanksIndicator />
                 </div>
             </div>
