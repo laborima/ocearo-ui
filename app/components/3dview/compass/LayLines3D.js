@@ -10,6 +10,8 @@ import { convertDistanceUnit, getDistanceUnitLabel } from '../../utils/UnitConve
 
 const MAX_LENGTH = 1500; // scene units
 const Y = -0.15;
+// Short ribbons from the bow at both tacks' optimal headings
+const TACK_PREVIEW = 160;
 
 /** East/North metres -> north-up scene [x, z] */
 const toScene = (p, scale) => [p.x * scale, -p.y * scale];
@@ -41,14 +43,21 @@ const LayLines3D = () => {
     const layline = (h) => [wp[0] - Math.sin(h) * reach, wp[1] + Math.cos(h) * reach];
 
     const tackScene = tack ? toScene(tack.point, scale) : null;
+    // Seen from the boat, a 2 m ribbon 1 km away is thinner than a pixel:
+    // widen with distance
+    const width = Math.min(25, Math.max(3, Math.hypot(wp[0], wp[1]) * 0.015));
+    const ahead = (h) => [Math.sin(h) * TACK_PREVIEW, -Math.cos(h) * TACK_PREVIEW];
     const tackLabel = tack
         ? `${upwind ? t('laylines.tack') : t('laylines.gybe')} ${convertDistanceUnit(tack.distance)} ${getDistanceUnitLabel()}${formatTime(tack.time) ? ` · ${formatTime(tack.time)}` : ''}`
         : null;
 
     return (
         <group rotation={[0, heading, 0]}>
-            <Ribbon from={layline(port.heading)} to={wp} color={scene.laylinePort} y={Y} width={2.6} opacity={0.18} fadeFrom />
-            <Ribbon from={layline(starboard.heading)} to={wp} color={scene.laylineStarboard} y={Y} width={2.6} opacity={0.18} fadeFrom />
+            <Ribbon from={layline(port.heading)} to={wp} color={scene.laylinePort} y={Y} width={width} opacity={0.3} fadeFrom />
+            <Ribbon from={layline(starboard.heading)} to={wp} color={scene.laylineStarboard} y={Y} width={width} opacity={0.3} fadeFrom />
+            {/* Both tacks' optimal headings from the bow */}
+            <Ribbon from={[0, 0]} to={ahead(port.heading)} color={scene.laylinePort} y={Y} width={2.2} opacity={0.35} fadeTo />
+            <Ribbon from={[0, 0]} to={ahead(starboard.heading)} color={scene.laylineStarboard} y={Y} width={2.2} opacity={0.35} fadeTo />
 
             {tackScene && (
                 <group>
