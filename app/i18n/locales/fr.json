@@ -816,5 +816,20 @@
     "astern": "en marche arrière",
     "virtual": "catway virtuel",
     "behind": "Catway derrière vous : faites demi-tour ou replacez-le"
+  },
+  "legend": {
+    "title": "Légende",
+    "close": "Fermer la légende",
+    "route": "Route vers le prochain waypoint",
+    "wake": "Sillage : part de la vitesse polaire (vert ≥ 95 %, jaune 80–95 %, rouge < 80 %)",
+    "laylines": "Laylines : bâbord amures (rouge), tribord amures (vert)",
+    "ghost": "Bateau fantôme : où la vitesse polaire vous placerait",
+    "vessel": "Navire AIS",
+    "danger": "Navire AIS à risque : passera à moins de {{nm}} NM dans les {{min}} prochaines minutes, ou à moins de 100 m",
+    "cpa": "Trait vers le point de rapprochement maximal",
+    "giveWay": "Mon bateau orange clair : je dois m'écarter (règles de barre)",
+    "colregArrow": "Flèche : le navire qui doit manœuvrer, et de quel côté",
+    "advice": "Changement de cap suggéré (conseil seulement)",
+    "trim": "Chariots et barre (couleur d'accent) : positions à lire"
   }
 }

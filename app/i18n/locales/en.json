@@ -816,5 +816,20 @@
     "astern": "astern",
     "virtual": "virtual berth",
     "behind": "Berth behind you: turn round or place it ahead"
+  },
+  "legend": {
+    "title": "Legend",
+    "close": "Close legend",
+    "route": "Route to the next waypoint",
+    "wake": "Wake: share of polar speed (green ≥ 95 %, yellow 80–95 %, red < 80 %)",
+    "laylines": "Laylines: port tack (red), starboard tack (green)",
+    "ghost": "Ghost boat: where the polar speed would put you",
+    "vessel": "AIS vessel",
+    "danger": "AIS vessel at risk: passes within {{nm}} NM in the next {{min}} min, or closer than 100 m",
+    "cpa": "Line to the closest point of approach",
+    "giveWay": "Own boat light orange: you must keep clear (rules of the road)",
+    "colregArrow": "Arrow: the vessel that must give way, and to which side",
+    "advice": "Suggested course change (advice only)",
+    "trim": "Trim cars and tiller (accent colour): positions to read"
   }
 }
