@@ -342,7 +342,7 @@ export const useSun = () => {
  * at the horizon, no clouds (FSD look). Shared by every ocean mode.
  */
 export const SkyDome = () => {
-    const { scene } = useTheme();
+    const { scene, id: themeId } = useTheme();
     const { heading } = useOwnTrack();
     const sun = useSun();
     const uniforms = useMemo(() => ({
@@ -374,7 +374,7 @@ export const SkyDome = () => {
         const wx = e * c - n * s;
         const wz = -e * s - n * c;
         uniforms.uSunDir.value.set(wx, -wz, u).normalize();
-        uniforms.uSunI.value = sun.intensity * (scene.background === '#000000' ? 0.06 : 1); // eslint-disable-line react-hooks/immutability
+        uniforms.uSunI.value = sun.intensity * (themeId === 'day' ? 1 : 0.06); // eslint-disable-line react-hooks/immutability
     });
     useEffect(() => () => material.dispose(), [material]);
     return (
@@ -393,7 +393,7 @@ export const SkyDome = () => {
  * and a small one for the hull's waterline: light enough for a Raspberry Pi.
  */
 const FsdOcean = ({ y = -0.3 }) => {
-    const { scene } = useTheme();
+    const { scene, id: themeId } = useTheme();
     const { heading, offset } = useOwnTrack();
     const v = useSignalKPaths(PATHS);
     const tws = v['environment.wind.speedTrue'];
@@ -451,7 +451,7 @@ const FsdOcean = ({ y = -0.3 }) => {
     }), [uniforms, defines]);
 
     // A dark theme dims the light to a moon's: no bright glitter on a night sea
-    const lightScale = scene.background === '#000000' ? 0.06 : 1;
+    const lightScale = themeId === 'day' ? 1 : 0.06;
     useEffect(() => {
         uniforms.uDeep.value.set(scene.sea);
         uniforms.uScatter.value.set(scene.seaScatter);

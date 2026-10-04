@@ -125,14 +125,14 @@ const AISRadarWidget = React.memo(() => {
               r={ring * 20}
               fill="none"
               stroke="var(--color-oBlue)"
-              strokeOpacity="0.1"
+              strokeOpacity="0.28"
               strokeWidth="0.5"
             />
           ))}
           
           {/* Radar lines */}
-          <line x1="100" y1="20" x2="100" y2="180" stroke="var(--color-oBlue)" strokeOpacity="0.05" strokeWidth="0.5" />
-          <line x1="20" y1="100" x2="180" y2="100" stroke="var(--color-oBlue)" strokeOpacity="0.05" strokeWidth="0.5" />
+          <line x1="100" y1="20" x2="100" y2="180" stroke="var(--color-oBlue)" strokeOpacity="0.16" strokeWidth="0.5" />
+          <line x1="20" y1="100" x2="180" y2="100" stroke="var(--color-oBlue)" strokeOpacity="0.16" strokeWidth="0.5" />
           
           {/* Radar sweep — rotated by the compositor (no React re-render per frame) */}
           <g>

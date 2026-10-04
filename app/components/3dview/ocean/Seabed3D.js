@@ -231,8 +231,8 @@ const fragmentShader = `
 // Palette by theme: paper chart by day, FSD navy and cyan at night
 const PALETTES = {
     light: { shallow: '#b5e0f2', mid: '#5fa8d8', deep: '#1c4f86', land: '#e2d6b8', drying: '#c7d3a6', line: '#0f3557', danger: '#e8873a', fade: '#e8eef3', text: '#0f2f4f', halo: '#ffffff' },
-    dark: { shallow: '#2d7fa8', mid: '#17507a', deep: '#061a2e', land: '#3a3527', drying: '#2b3a26', line: '#6fd0ff', danger: '#e8873a', fade: '#000000', text: '#d6efff', halo: '#000000' },
-    night: { shallow: '#4a0b0b', mid: '#300606', deep: '#140202', land: '#2a0a04', drying: '#2a1004', line: '#ff4a4a', danger: '#ff7a3a', fade: '#000000', text: '#ff9a9a', halo: '#000000' },
+    dark: { shallow: '#3a8fbc', mid: '#1d5f8c', deep: '#0b2238', land: '#4a4434', drying: '#34472e', line: '#8fdcff', danger: '#f0a060', fade: '#16191e', text: '#e6f4ff', halo: '#101216' },
+    night: { shallow: '#7a2a1e', mid: '#4f1a12', deep: '#24100c', land: '#3a1a10', drying: '#3a2410', line: '#ff8a72', danger: '#ffad80', fade: '#120807', text: '#ffb3a3', halo: '#0f0706' },
 };
 
 /** Metres east / north between two positions (local tangent plane) */
@@ -333,7 +333,7 @@ const formatDepth = (d) => (d < 10 ? d.toFixed(1) : String(Math.round(d)));
 
 const Seabed3D = ({ y = -0.4 }) => {
     const v = useSignalKPaths(PATHS);
-    const { scene } = useTheme();
+    const { id: themeId } = useTheme();
     const position = v['navigation.position'];
     const { heading } = useOwnTrack();
     const [data, setData] = useState(null);
@@ -350,7 +350,7 @@ const Seabed3D = ({ y = -0.4 }) => {
     const tide = Number.isFinite(hNow) && Number.isFinite(hHigh) && Number.isFinite(hLow) ? hNow - (hHigh + hLow) / 2 : 0;
     const tideChartDatum = Number.isFinite(hNow) ? hNow : 0;
     const sounder = v['environment.depth.belowSurface'];
-    const palette = scene.background === '#000000' ? (scene.sea === '#120202' ? PALETTES.night : PALETTES.dark) : PALETTES.light;
+    const palette = PALETTES[themeId] || PALETTES.light;
 
     const lat = position?.latitude;
     const lon = position?.longitude;
