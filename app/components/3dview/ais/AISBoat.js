@@ -48,10 +48,10 @@ export const determineAisModelCode = (shipType, length, beam) => {
 export const AIS_MATERIALS = {
     // Colours are set from the theme by AISView
     normal: new THREE.MeshStandardMaterial({ color: 0x8a9097, roughness: 0.5, metalness: 0.05, side: THREE.DoubleSide }),
-    alert: new THREE.MeshStandardMaterial({ color: 0xff2d38, roughness: 0.5, metalness: 0.05, side: THREE.DoubleSide }),
+    alert: new THREE.MeshStandardMaterial({ color: 0xd2504f, roughness: 0.6, metalness: 0, side: THREE.DoubleSide, transparent: true, opacity: 0.88 }),
     selected: new THREE.MeshStandardMaterial({ color: 0x09bfff, roughness: 0.5, metalness: 0.05, side: THREE.DoubleSide }),
-    yields: new THREE.MeshStandardMaterial({ color: 0x7c4dff, roughness: 0.5, metalness: 0.05, side: THREE.DoubleSide }),
-    close: new THREE.MeshStandardMaterial({ color: 0xf08a00, roughness: 0.5, metalness: 0.05, side: THREE.DoubleSide }),
+    yields: new THREE.MeshStandardMaterial({ color: 0x8f86c9, roughness: 0.6, metalness: 0, side: THREE.DoubleSide, transparent: true, opacity: 0.88 }),
+    close: new THREE.MeshStandardMaterial({ color: 0xd9a066, roughness: 0.6, metalness: 0, side: THREE.DoubleSide, transparent: true, opacity: 0.88 }),
 };
 
 // Glazing, boot top and funnel tops: dark whatever the state colour

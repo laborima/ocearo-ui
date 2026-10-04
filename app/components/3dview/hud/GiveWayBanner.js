@@ -19,8 +19,8 @@ const GiveWayBanner = () => {
     const others = encounters.filter(e => e.role.ownRole !== 'stand-on').length - 1;
 
     return (
-        <div className="flex items-center gap-3 px-4 py-2 rounded-2xl shadow-soft select-none text-white"
-            style={{ background: scene.giveWay }} role="alert">
+        <div className="flex items-center gap-3 px-4 py-2 rounded-2xl select-none text-white backdrop-blur"
+            style={{ background: `color-mix(in srgb, ${scene.giveWay} 82%, transparent)` }} role="alert">
             <FontAwesomeIcon icon={faTriangleExclamation} className="text-lg" />
             <div className="leading-tight">
                 <div className="text-label font-bold uppercase tracking-widest">{t('colregs.youGiveWay')}</div>

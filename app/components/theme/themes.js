@@ -51,7 +51,7 @@ const DAY = {
     grid: '#dcdfe3',
     // FSD ocean: grey-blue faceted sea, light crests, pale gradient sky
     sea: '#b9c3cd',
-    seaTrough: '#8f9ba8',
+    seaTrough: '#76838f',
     seaCrest: '#eef1f4',
     skyZenith: '#d5dde6',
     markerDim: '#b5bac0',
@@ -64,9 +64,9 @@ const DAY = {
     compassDim: '#8a9097',
     compassFace: '#dfe2e6',
     vessel: '#9aa0a6',
-    vesselDanger: '#e0262f',   // risk of collision, we must keep clear
-    vesselYields: '#7c4dff',   // risk of collision, it must keep clear of us
-    vesselClose: '#f08a00',    // near, but no risk of collision
+    vesselDanger: '#d2504f',   // risk of collision, we must keep clear
+    vesselYields: '#8f86c9',   // risk of collision, it must keep clear of us
+    vesselClose: '#d9a066',    // near, but no risk of collision
     route: '#1688d8',
     routeGlow: '#5fb8ff',
     laylinePort: '#e0262f',
@@ -77,7 +77,7 @@ const DAY = {
     wakeFoam: '#ffffff',
     ghost: '#5f6b78',
     // Own hull when we must keep clear of another vessel (COLREG)
-    giveWay: '#ff7a00',
+    giveWay: '#e8954f',
     target: '#c98a00',
     wind: '#2b3036',
     current: '#0e9f47',
@@ -131,8 +131,8 @@ const DARK = {
     compassFace: '#0a0a0a',
     vessel: '#8a9097',
     vesselDanger: '#ff2d38',
-    vesselYields: '#9b7bff',
-    vesselClose: '#ff9a2e',
+    vesselYields: '#9d93d8',
+    vesselClose: '#d9a066',
     route: '#09bfff',
     routeGlow: '#6fdcff',
     laylinePort: '#ff3b3b',
@@ -142,7 +142,7 @@ const DARK = {
     wakeBad: '#ff2d38',
     wakeFoam: '#88ccff',
     ghost: '#9fb3c8',
-    giveWay: '#ff7a00',
+    giveWay: '#e8954f',
     target: '#ffbe00',
     wind: '#ffffff',
     current: '#0fcd4f',
