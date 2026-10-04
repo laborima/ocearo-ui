@@ -1,5 +1,6 @@
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Line } from '@react-three/drei';
 import * as THREE from 'three'; // Import THREE for Color
 
 import { toKnots, toDegrees, useOcearoContext } from '../../context/OcearoContext';
@@ -7,6 +8,7 @@ import { useSignalKPaths } from '../../hooks/useSignalK';
 import { useAIS } from './AISContext';
 import AISBoat, { AIS_MATERIALS } from './AISBoat';
 import useTheme from '../../theme/useTheme';
+import ColregMarkers from './ColregMarkers';
 
 // Hard cap on simultaneously rendered AIS vessels. Each vessel is a full GLTF
 // model, so on a RPi5 we only ever draw the closest N to keep the GPU happy.
@@ -18,9 +20,8 @@ const _scratchVec = new THREE.Vector3();
 const _scratchQuatTarget = new THREE.Quaternion();
 const _scratchEuler = new THREE.Euler();
 
-// Proximity alert with hysteresis (metres)
-const ALERT_ON_DISTANCE = 500;
-const ALERT_OFF_DISTANCE = 550;
+// Collision-risk targets drawn with their CPA geometry (closest first)
+const MAX_CPA_LINES = 5;
 // Exponential smoothing rate (1/s): ~95% of a position jump is absorbed in 0.75 s,
 // independent of the frame rate.
 const SMOOTHING_RATE = 4;
@@ -48,8 +49,37 @@ const updateBoatTransform = (boat, data, alpha) => {
     boat.quaternion.slerp(_scratchQuatTarget, alpha);
 };
 
+/**
+ * Dotted lines to the closest point of approach of each risky target: the
+ * target's predicted track to that point and ours, with a ring where the two
+ * boats will be closest. Refreshed with the AIS snapshot (4 Hz).
+ */
+const CpaLines = ({ targets, color }) => {
+    // Targets are mutated in place by the AIS store: copy what we draw
+    const risky = useMemo(() => targets
+        .filter(t => t.risk === 'danger' && t.cpaScene && t.visible)
+        .slice(0, MAX_CPA_LINES)
+        .map(t => ({ mmsi: t.mmsi, sceneX: t.sceneX, sceneZ: t.sceneZ, cpaScene: { ...t.cpaScene } })), [targets]);
+
+    return risky.map((t) => {
+        const c = t.cpaScene;
+        return (
+            <group key={t.mmsi}>
+                <Line points={[[t.sceneX, 0.3, t.sceneZ], [c.targetX, 0.3, c.targetZ]]}
+                    color={color} lineWidth={2} dashed dashSize={3} gapSize={2.5} transparent opacity={0.9} />
+                <Line points={[[0, 0.3, 0], [c.ownX, 0.3, c.ownZ]]}
+                    color={color} lineWidth={1.5} dashed dashSize={2} gapSize={3} transparent opacity={0.6} />
+                <mesh position={[c.targetX, 0.25, c.targetZ]} rotation={[-Math.PI / 2, 0, 0]}>
+                    <ringGeometry args={[2.2, 3, 32]} />
+                    <meshBasicMaterial color={color} transparent opacity={0.8} depthWrite={false} />
+                </mesh>
+            </group>
+        );
+    });
+};
+
 const AISView = ({ onUpdateInfoPanel }) => {
-    const { aisData, vesselIds, targetsRef } = useAIS();
+    const { aisData, vesselIds, targets, targetsRef } = useAIS();
     const { states } = useOcearoContext();
     const waterLevel = WATER_LEVEL[states.oceanMode] ?? DEFAULT_WATER_LEVEL;
     const boatRefs = useRef({}); // mmsi -> THREE.Group, moved directly every frame
@@ -62,7 +92,10 @@ const AISView = ({ onUpdateInfoPanel }) => {
     useEffect(() => {
         AIS_MATERIALS.normal.color.set(scene.vessel);
         AIS_MATERIALS.alert.color.set(scene.vesselDanger);
+        AIS_MATERIALS.selected.color.set(scene.route);
     }, [scene]);
+    const selectedRef = useRef(null);
+    useEffect(() => { selectedRef.current = selectedMmsi; }, [selectedMmsi]);
 
     // Own heading: the AIS layer is laid out north-up, rotate it into the boat frame
     const headingPaths = useMemo(() => [
@@ -93,11 +126,8 @@ const AISView = ({ onUpdateInfoPanel }) => {
             boat.visible = true;
             updateBoatTransform(boat, data, alpha);
 
-            // Proximity colour, with hysteresis so a target on the edge doesn't flicker
-            const alerted = boat.userData.alert === true;
-            const shouldAlert = alerted
-                ? data.distanceMeters <= ALERT_OFF_DISTANCE
-                : data.distanceMeters < ALERT_ON_DISTANCE;
+            // FSD colours: grey, red on collision risk (CPA/TCPA), accent when selected
+            const look = data.risk === 'danger' ? 'alert' : (selectedRef.current === mmsi ? 'selected' : 'normal');
 
             let meshes = meshCache.current[mmsi];
             if (!meshes || meshes.length === 0) {
@@ -105,13 +135,13 @@ const AISView = ({ onUpdateInfoPanel }) => {
                 meshes = collectMeshes(boat);
                 if (meshes.length === 0) continue;
                 meshCache.current[mmsi] = meshes;
-                boat.userData.alert = undefined; // force material assignment
+                boat.userData.look = undefined; // force material assignment
             }
 
-            if (shouldAlert !== boat.userData.alert) {
-                const material = shouldAlert ? AIS_MATERIALS.alert : AIS_MATERIALS.normal;
+            if (look !== boat.userData.look) {
+                const material = AIS_MATERIALS[look];
                 for (const mesh of meshes) mesh.material = material;
-                boat.userData.alert = shouldAlert;
+                boat.userData.look = look;
             }
         }
     });
@@ -202,6 +232,8 @@ const AISView = ({ onUpdateInfoPanel }) => {
         formatBoatData('Vessel', selectedBoat.name),
         formatBoatData('MMSI', formatMMSI(selectedBoat.mmsi)),
         formatBoatData('RNG', selectedBoat.distanceMeters ? selectedBoat.distanceMeters.toFixed(0) : 0, ' m'),
+        formatBoatData('CPA', selectedBoat.cpaMeters != null ? (selectedBoat.cpaMeters / 1852).toFixed(2) : null, ' NM'),
+        formatBoatData('TCPA', selectedBoat.tcpaSeconds != null && selectedBoat.tcpaSeconds > 0 ? Math.round(selectedBoat.tcpaSeconds / 60) : null, ' min'),
         formatBoatData('LOA', selectedBoat.length, ' m'),
         formatBoatData('Type', selectedBoat.shipType),
         formatBoatData('SOG', selectedBoat.sog, ' kn', false, true),
@@ -230,6 +262,8 @@ const AISView = ({ onUpdateInfoPanel }) => {
             {/* North-up AIS layer rotated into the boat frame, hulls on the sea surface */}
             <group rotation={[0, rotationAngle, 0]} position={[0, waterLevel, 0]}>
                 {boats}
+                <CpaLines targets={targets} color={scene.vesselDanger} />
+                <ColregMarkers />
             </group>
         </>
     );

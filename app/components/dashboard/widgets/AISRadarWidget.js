@@ -10,41 +10,6 @@ import { useTranslation } from 'react-i18next';
 
 const RADAR_RANGES = [1, 2, 5, 10, 20];
 
-/**
- * Closest point of approach, in nautical miles.
- *
- * Works in a local East/North frame in metres: the relative position comes from
- * range and bearing, the relative velocity from both vessels' COG/SOG. Returns
- * null unless every input is a finite number, so an unknown CPA stays unknown
- * instead of collapsing to a misleading 0.
- *
- * @param {{rangeMeters:number, bearingRad:number, ownSog:number, ownCog:number,
- *          targetSog:number, targetCog:number}} p - SI inputs (m, m/s, radians)
- * @returns {number|null} CPA in NM, or null when it cannot be computed
- */
-function computeCpaNM({ rangeMeters, bearingRad, ownSog, ownCog, targetSog, targetCog }) {
-  const nums = [rangeMeters, bearingRad, ownSog, ownCog, targetSog, targetCog];
-  if (!nums.every(Number.isFinite)) return null;
-
-  // Relative position of the target (East, North)
-  const rx = rangeMeters * Math.sin(bearingRad);
-  const ry = rangeMeters * Math.cos(bearingRad);
-
-  // Relative velocity (target minus own)
-  const vx = targetSog * Math.sin(targetCog) - ownSog * Math.sin(ownCog);
-  const vy = targetSog * Math.cos(targetCog) - ownSog * Math.cos(ownCog);
-
-  const vv = vx * vx + vy * vy;
-  // Same course and speed: the range never changes.
-  if (vv < 1e-9) return rangeMeters / 1852;
-
-  // Time of closest approach; negative means it is already behind us.
-  const t = Math.max(0, -(rx * vx + ry * vy) / vv);
-  const cx = rx + vx * t;
-  const cy = ry + vy * t;
-  return Math.hypot(cx, cy) / 1852;
-}
-
 const AISRadarWidget = React.memo(() => {
   const { t } = useTranslation();
   // Every positioned target (not only the ones close enough for the 3D view),
@@ -69,7 +34,6 @@ const AISRadarWidget = React.memo(() => {
   const headingTrue = useSignalKPath('navigation.headingTrue');
   const headingMagnetic = useSignalKPath('navigation.headingMagnetic');
   const myCog = useSignalKPath('navigation.courseOverGroundTrue');
-  const mySog = useSignalKPath('navigation.speedOverGround');
   // Radians, as published by SignalK — never mix with the degree bearings below.
   // Same fallback order as the 3D AIS view so both scopes rotate identically.
   const myHeading = headingTrue ?? headingMagnetic ?? myCog ?? 0;
@@ -91,19 +55,9 @@ const AISRadarWidget = React.memo(() => {
         // Head-up display, like the 3D view: own bow at the top of the scope
         const relativeBearing = (trueBearing - myHeading * 180 / Math.PI + 360) % 360;
 
-        // Real closest point of approach. The previous formula ignored the
-        // target's course and speed entirely and subtracted a heading in radians
-        // from a bearing in degrees, so a moored boat abeam was flagged red.
-        // Returns null when either vessel's motion is unknown — better no CPA
-        // than a fabricated one.
-        const cpa = computeCpaNM({
-          rangeMeters: vessel.distanceMeters,
-          bearingRad: trueBearing * Math.PI / 180,
-          ownSog: mySog,
-          ownCog: myCog ?? myHeading,
-          targetSog: vessel.sog,
-          targetCog: vessel.cog ?? vessel.cogMagnetic
-        });
+        // CPA from the shared AIS store (utils/Collision); null when either
+        // vessel's motion is unknown — better no CPA than a fabricated one
+        const cpa = vessel.cpaMeters === null ? null : vessel.cpaMeters / 1852;
 
         return {
           id: vessel.mmsi,
@@ -116,7 +70,7 @@ const AISRadarWidget = React.memo(() => {
       })
       .sort((a, b) => a.distance - b.distance)
       .slice(0, 10);
-  }, [targets, radarRange, myPosition, myHeading, myCog, mySog]);
+  }, [targets, radarRange, myPosition, myHeading]);
 
   const getTargetColor = (target) => {
     // No computable CPA (target not reporting course/speed) — fall back to plain
@@ -252,7 +206,7 @@ const AISRadarWidget = React.memo(() => {
         <div className="mt-4 space-y-2">
           <div className="text-caption text-hud-muted font-semibold uppercase tracking-[0.2em] px-1">{t('widgets.tacticalAnalysis')}</div>
           {aisData.slice(0, 2).map(target => (
-            <div key={target.id} className="flex items-center justify-between text-caption tesla-card bg-hud-bg px-3 py-2 border border-hud tesla-hover">
+            <div key={target.id} className="flex items-center justify-between text-caption tesla-card px-3 py-2 tesla-hover">
               <div className="flex items-center space-x-3 min-w-0">
                 <FontAwesomeIcon 
                   icon={getTargetIcon(target.type)} 

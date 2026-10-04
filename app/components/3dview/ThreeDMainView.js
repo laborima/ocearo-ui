@@ -24,6 +24,8 @@ const ThreeDBoatPositionDateIndicator = dynamic(() => import('./ThreeDBoatPositi
 const ThreeDBoatSeaLevelIndicator = dynamic(() => import('./ThreeDBoatSeaLevelIndicator'));
 const ThreeDBoatAttitudeIndicator = dynamic(() => import('./ThreeDBoatAttitudeIndicator'));
 const InfoPanel = dynamic(() => import('./InfoPanel'));
+const ModeHud = dynamic(() => import('./ModeHud'));
+const AdvicePanel = dynamic(() => import('./AdvicePanel'));
 
 // Component to expose Three.js renderer and info for performance monitoring
 const RendererExposer = () => {
@@ -71,6 +73,9 @@ const ThreeDMainView = ({ active = true }) => {
     const { states, nightMode } = useOcearoContext(); // Access global context
     const [infoPanelContent, setInfoPanelContent] = useState(null);
     const [showAttitudeIndicator, setShowAttitudeIndicator] = useState(true);
+    // 'minimal' (FSD-like: speed + four values per mode) or 'classic' gauges
+    const [hudStyle] = useState(() => configService.get('hudStyle') || 'minimal');
+    const classic = hudStyle === 'classic';
     const [clock, setClock] = useState(() => vesselNow());
 
     // Tick the header clock every 30s (it would otherwise only refresh on unrelated re-renders)
@@ -105,10 +110,11 @@ const ThreeDMainView = ({ active = true }) => {
             <div className="absolute top-14 left-2 z-10">
                 {!states.anchorWatch && <ThreeDBoatSpeedIndicator />}
                 {states.anchorWatch && <ThreeDBoatPositionDateIndicator/> }
+                {!classic && <ModeHud />}
             </div>
 
             {/* Attitude indicator - top right, below toolbar row */}
-            {showAttitudeIndicator && (
+            {classic && showAttitudeIndicator && (
                 <div className="absolute top-14 right-2 z-20">
                     <ThreeDBoatAttitudeIndicator />
                 </div>
@@ -121,17 +127,27 @@ const ThreeDMainView = ({ active = true }) => {
                 </div>
             )}
 
-            {/* See Level Indicator (left-side) */}
-            <div className="absolute left-2 bottom-2 z-20 flex flex-col items-center">
-                <ThreeDBoatSeaLevelIndicator />
-            </div>
-            <div className="absolute right-2 bottom-2 z-20 flex flex-col items-center">
-                <ThreeDBoatTideLevelIndicator />
-            </div>
+            {/* Course advice (avoidance / VMG) in the boat view */}
+            {!states.anchorWatch && !states.parkingMode && (
+                <div className={`absolute left-1/2 -translate-x-1/2 z-20 ${classic ? 'bottom-24' : 'bottom-3'}`}>
+                    <AdvicePanel />
+                </div>
+            )}
 
+            {/* Classic gauges: sea level, tide, rudder */}
+            {classic && (
+                <div className="absolute left-2 bottom-2 z-20 flex flex-col items-center">
+                    <ThreeDBoatSeaLevelIndicator />
+                </div>
+            )}
+            {classic && (
+                <div className="absolute right-2 bottom-2 z-20 flex flex-col items-center">
+                    <ThreeDBoatTideLevelIndicator />
+                </div>
+            )}
 
             {/* Rudder Angle / Heel Indicator (bottom-center slider) */}
-            {!states.anchorWatch && (
+            {classic && !states.anchorWatch && (
                 <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-10">
                     <ThreeDBoatRudderIndicator />
                 </div>

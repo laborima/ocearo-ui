@@ -1,290 +1,72 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { Vector3, MathUtils } from 'three';
-import { Sphere } from '@react-three/drei';
-import { useOcearoContext } from '../../context/OcearoContext';
+import React from 'react';
+import { Billboard, Line, Text } from '@react-three/drei';
+import { useTranslation } from 'react-i18next';
 import useTheme from '../../theme/useTheme';
-import { useSignalKPaths } from '../../hooks/useSignalK';
-import signalKService from '../../services/SignalKService';
+import useLaylines from '../../hooks/useLaylines';
+import useOwnTrack from '../fsd/useOwnTrack';
+import Ribbon from '../fsd/Ribbon';
 import configService from '../../settings/ConfigService';
+import { convertDistanceUnit, getDistanceUnitLabel } from '../../utils/UnitConversions';
 
-// Debug waypoint for testing laylines (position relative to boat)
-const DEBUG_WAYPOINT = {
-    name: 'Debug Waypoint',
-    // Position: 5 units forward (-Z) and 3 units to starboard (+X)
-    x: 3,
-    z: -5
+const MAX_LENGTH = 1500; // scene units
+const Y = -0.15;
+
+/** East/North metres -> north-up scene [x, z] */
+const toScene = (p, scale) => [p.x * scale, -p.y * scale];
+
+const formatTime = (seconds) => {
+    if (!Number.isFinite(seconds)) return null;
+    const m = Math.round(seconds / 60);
+    return m >= 60 ? `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}` : `${m} min`;
 };
 
-
-// Helper function to convert nautical miles and bearing to 3D coordinates
-export function nmToCarthesian(distanceNM, bearingRad, scale = 1) {
-    return new Vector3(
-        distanceNM * Math.sin(bearingRad) * scale,
-        0,
-        -distanceNM * Math.cos(bearingRad) * scale
-    );
-}
-
-// Helper to rotate a 2D vector for the compass view
-export function rotateVector(v) {
-    return new Vector3(v.x, 0, -v.y);
-}
-
-// ParallelepipedLine component to render 3D lines as parallelepipeds
-const ParallelepipedLine = ({ start, end, color, width = 0.2, height = 0.1, dashed = false }) => {
-    // Calculate the midpoint, length, and direction of the line
-    const midpoint = useMemo(() => {
-        if (!start || !end || !start.isVector3 || !end.isVector3) {
-            return new Vector3();
-        }
-        return new Vector3().addVectors(start, end).multiplyScalar(0.5);
-    }, [start, end]);
-    
-    const direction = useMemo(() => {
-        if (!start || !end || !start.isVector3 || !end.isVector3) {
-            return new Vector3(0, 0, 1);
-        }
-        return new Vector3().subVectors(end, start).normalize();
-    }, [start, end]);
-    
-    const length = useMemo(() => {
-        if (!start || !end || !start.isVector3 || !end.isVector3) {
-            return 0;
-        }
-        return start.distanceTo(end);
-    }, [start, end]);
-    
-    // Calculate rotation to align with the direction
-    const rotation = useMemo(() => {
-        // For 3D lines, we need to calculate the rotation to align with the direction
-        // We're working in the XZ plane (Y is up)
-        const angle = Math.atan2(direction.x, direction.z);
-        return [0, angle, 0]; // [rotX, rotY, rotZ]
-    }, [direction]);
-    
-    // Only render if both start and end are valid vectors
-    if (!start || !end || !start.isVector3 || !end.isVector3) {
-        return null;
-    }
-    
-    if (dashed) {
-        // For dashed lines, create multiple small segments
-        const dashLength = 0.4;
-        const gapLength = 0.3;
-        const totalLength = length;
-        const numSegments = Math.floor(totalLength / (dashLength + gapLength));
-        
-        if (numSegments <= 0) return null;
-        
-        const segments = [];
-        for (let i = 0; i < numSegments; i++) {
-            const segmentStart = i * (dashLength + gapLength);
-            const segmentPosition = new Vector3().copy(start).add(
-                new Vector3().copy(direction).multiplyScalar(segmentStart + dashLength / 2)
-            );
-            
-            segments.push(
-                <mesh 
-                    key={i} 
-                    position={segmentPosition.toArray()} 
-                    rotation={rotation} 
-                    scale={[width, height, dashLength]}
-                >
-                    <boxGeometry />
-                    <meshStandardMaterial color={color} />
-                </mesh>
-            );
-        }
-        
-        return <>{segments}</>;
-    }
-    
-    // For solid lines, create a single parallelepiped
-    return (
-        <mesh 
-            position={midpoint.toArray()} 
-            rotation={rotation} 
-            scale={[width, height, length]}
-        >
-            <boxGeometry />
-            <meshBasicMaterial 
-                color={color} 
-                transparent={true} 
-                opacity={0.6}
-                depthWrite={false}
-            />
-        </mesh>
-    );
-};
-
-const LayLines3D = ({ outerRadius = 10 }) => {
-    const { convertLatLonToXY } = useOcearoContext();
+/**
+ * Laylines as translucent ribbons through the next waypoint (polar optimal
+ * angles, both tacks), plus where to tack or gybe from the current course,
+ * with the distance and time to get there.
+ */
+const LayLines3D = () => {
+    const { t } = useTranslation();
     const { scene } = useTheme();
-    const debugMode = configService.get('debugMode');
-    
-    // Subscribe to relevant SignalK paths
-    const navigationPaths = useMemo(() => [
-        'navigation.courseGreatCircle.nextPoint.bearingTrue',
-        'navigation.courseGreatCircle.nextPoint.distance',
-        'navigation.position'
-    ], []);
+    const { heading } = useOwnTrack();
+    const laylines = useLaylines();
+    const scale = configService.get('aisLengthScalingFactor') || 0.7;
 
-    const skValues = useSignalKPaths(navigationPaths);
+    if (!laylines) return null;
+    const { waypoint, port, starboard, tack, upwind } = laylines;
+    const wp = toScene(waypoint, scale);
+    const reach = Math.min(Math.hypot(wp[0], wp[1]) * 1.3 + 200, MAX_LENGTH);
 
-    // Active course (destination) from the Course API
-    const [activeCourse, setActiveCourse] = useState(null);
+    // Each layline runs from far out to the waypoint, along the heading sailed on it
+    const layline = (h) => [wp[0] - Math.sin(h) * reach, wp[1] + Math.cos(h) * reach];
 
-    // Fetch the active course (the waypoint list was fetched every 30 s and never used)
-    useEffect(() => {
-        // Skip fetching in debug mode - use debug waypoint instead
-        if (debugMode) {
-            return;
-        }
-
-        const fetchNavigationData = async () => {
-            try {
-                // Fetch active course
-                const courseData = await signalKService.getCourse();
-                setActiveCourse(courseData);
-            } catch (error) {
-                console.warn('LayLines3D: Could not fetch navigation data:', error.message);
-            }
-        };
-
-        fetchNavigationData();
-        
-        // Refresh every 30 seconds
-        const interval = setInterval(fetchNavigationData, 30000);
-        return () => clearInterval(interval);
-    }, [debugMode]);
-
-    // Get waypoint data from subscribed SignalK values
-    const waypointBearing = skValues['navigation.courseGreatCircle.nextPoint.bearingTrue'] ?? MathUtils.degToRad(30);
-    const waypointDistance = skValues['navigation.courseGreatCircle.nextPoint.distance'] ?? 20;
-    const myPosition = skValues['navigation.position'];
-    
-    // Origin (boat position) is always at 0,0,0
-    const boatPosition = useMemo(() => new Vector3(0, 0, 0), []);
-    
-    // Calculate the waypoint position
-    const waypointPosition = useMemo(() => {
-        // Debug mode: Use fixed debug waypoint for testing
-        if (debugMode) {
-            return new Vector3(DEBUG_WAYPOINT.x, 0, DEBUG_WAYPOINT.z);
-        }
-
-        // First try: Use active course destination position
-        if (activeCourse?.nextPoint?.position) {
-            const destPos = activeCourse.nextPoint.position;
-            if (myPosition?.latitude && myPosition?.longitude && destPos.latitude && destPos.longitude) {
-                const { x, y } = convertLatLonToXY(
-                    { lat: destPos.latitude, lon: destPos.longitude },
-                    { lat: myPosition.latitude, lon: myPosition.longitude }
-                );
-                // Scale down for 3D view (1 unit = ~100m)
-                const scale = 0.01;
-                return new Vector3(x * scale, 0, -y * scale);
-            }
-        }
-        
-        // Second try: Use bearing and distance from SignalK
-        if (waypointBearing !== undefined && waypointDistance !== undefined) {
-            // Scale distance for 3D view
-            const scaledDistance = Math.min(waypointDistance * 0.001, outerRadius * 2);
-            return nmToCarthesian(scaledDistance, waypointBearing, 1);
-        }
-        
-        // Default position
-        return new Vector3(0, 0, -5);
-    }, [debugMode, activeCourse, myPosition, waypointBearing, waypointDistance, convertLatLonToXY, outerRadius]);
-    
-    /**
-     * Calculate layline corners for a rectangular path to waypoint
-     * 
-     * The laylines form a rectangle where:
-     * - One line is along the boat's axis (forward direction, -Z in Three.js)
-     * - The other line is perpendicular (along X axis)
-     * - The lines to the waypoint are parallel to these axes
-     * 
-     * This creates two possible routes:
-     * 1. Green (port): Go forward first, then turn perpendicular to waypoint
-     * 2. Red (starboard): Go perpendicular first, then turn forward to waypoint
-     */
-    const laylineCorners = useMemo(() => {
-        // Waypoint coordinates
-        const wpX = waypointPosition.x;
-        const wpZ = waypointPosition.z;
-        
-        // Port corner: same Z as waypoint, X = 0 (along boat axis first)
-        // This means: go straight forward (along -Z), then turn perpendicular (along X)
-        const portCorner = new Vector3(0, 0, wpZ);
-        
-        // Starboard corner: same X as waypoint, Z = 0 (perpendicular first)
-        // This means: go perpendicular (along X), then turn forward (along -Z)
-        const starboardCorner = new Vector3(wpX, 0, 0);
-        
-        return { port: portCorner, starboard: starboardCorner };
-    }, [waypointPosition]);
+    const tackScene = tack ? toScene(tack.point, scale) : null;
+    const tackLabel = tack
+        ? `${upwind ? t('laylines.tack') : t('laylines.gybe')} ${convertDistanceUnit(tack.distance)} ${getDistanceUnitLabel()}${formatTime(tack.time) ? ` · ${formatTime(tack.time)}` : ''}`
+        : null;
 
     return (
-        <group>
-            <>
-                {/* Target waypoint as yellow sphere with cross */}
-                <Sphere
-                    position={waypointPosition.toArray()}
-                    args={[0.5, 16, 16]}
-                    material-color={scene.target}
-                >
-                    {/* Horizontal cross line */}
-                    <mesh position={[0, 0, 0]} rotation={[0, Math.PI/2, 0]}>
-                        <cylinderGeometry args={[0.05, 0.05, 1, 8]} />
-                        <meshStandardMaterial color={scene.compass} />
+        <group rotation={[0, heading, 0]}>
+            <Ribbon from={layline(port.heading)} to={wp} color={scene.laylinePort} y={Y} width={2.6} opacity={0.18} fadeFrom />
+            <Ribbon from={layline(starboard.heading)} to={wp} color={scene.laylineStarboard} y={Y} width={2.6} opacity={0.18} fadeFrom />
+
+            {tackScene && (
+                <group>
+                    {/* Our course up to the tack point, then along the layline */}
+                    <Line points={[[0, Y + 0.05, 0], [tackScene[0], Y + 0.05, tackScene[1]]]}
+                        color={scene.target} lineWidth={2} dashed dashSize={2.5} gapSize={2} />
+                    <mesh position={[tackScene[0], Y + 0.06, tackScene[1]]} rotation={[-Math.PI / 2, 0, 0]}>
+                        <ringGeometry args={[1.8, 2.6, 32]} />
+                        <meshBasicMaterial color={scene.target} transparent opacity={0.9} depthWrite={false} />
                     </mesh>
-                    {/* Vertical cross line */}
-                    <mesh position={[0, 0, 0]} rotation={[Math.PI/2, 0, 0]}>
-                        <cylinderGeometry args={[0.05, 0.05, 1, 8]} />
-                        <meshStandardMaterial color={scene.compass} />
-                    </mesh>
-                </Sphere>
-                
-                {/* Port tack layline (green) - Forward first, then perpendicular */}
-                {/* Line 1: From boat (0,0,0) forward along -Z axis to port corner */}
-                <ParallelepipedLine 
-                    start={boatPosition} 
-                    end={laylineCorners.port} 
-                    color={scene.laylineStarboard} 
-                    width={0.2} 
-                    height={0.1} 
-                />
-                
-                {/* Line 2: From port corner perpendicular (along X) to waypoint */}
-                <ParallelepipedLine 
-                    start={laylineCorners.port} 
-                    end={waypointPosition} 
-                    color={scene.laylineStarboard} 
-                    width={0.2} 
-                    height={0.1} 
-                />
-                
-                {/* Starboard tack layline (red) - Perpendicular first, then forward */}
-                {/* Line 1: From boat (0,0,0) perpendicular (along X) to starboard corner */}
-                <ParallelepipedLine 
-                    start={boatPosition} 
-                    end={laylineCorners.starboard} 
-                    color={scene.laylinePort} 
-                    width={0.2} 
-                    height={0.1} 
-                />
-                
-                {/* Line 2: From starboard corner forward (along -Z) to waypoint */}
-                <ParallelepipedLine 
-                    start={laylineCorners.starboard} 
-                    end={waypointPosition} 
-                    color={scene.laylinePort} 
-                    width={0.2} 
-                    height={0.1} 
-                />
-            </>
+                    <Billboard position={[tackScene[0], 5, tackScene[1]]}>
+                        <Text fontSize={1.6} color={scene.target} anchorX="center" anchorY="bottom"
+                            font="fonts/Roboto-Bold.ttf" outlineWidth={0.04} outlineColor={scene.background}>
+                            {tackLabel}
+                        </Text>
+                    </Billboard>
+                </group>
+            )}
         </group>
     );
 };
