@@ -5,7 +5,7 @@ import * as THREE from 'three'; // Import THREE for Color
 
 import { toKnots, toDegrees, useOcearoContext } from '../../context/OcearoContext';
 import { useSignalKPaths } from '../../hooks/useSignalK';
-import { useAIS } from './AISContext';
+import { useAIS, predictScenePosition } from './AISContext';
 import AISBoat, { AIS_MATERIALS } from './AISBoat';
 import useTheme from '../../theme/useTheme';
 import ColregMarkers from './ColregMarkers';
@@ -40,8 +40,11 @@ const collectMeshes = (obj) => {
 /**
  * Moves a boat towards its target pose. `alpha` = 1 snaps.
  */
-const updateBoatTransform = (boat, data, alpha) => {
-    _scratchVec.set(data.sceneX, 0, data.sceneZ);
+const updateBoatTransform = (boat, data, alpha, motion, now) => {
+    // Dead reckoning between AIS reports, then a light smoothing for the
+    // correction when a new report lands
+    const { x, z } = predictScenePosition(data, motion, now);
+    _scratchVec.set(x, 0, z);
     boat.position.lerp(_scratchVec, alpha);
 
     // Shortest-path yaw interpolation
@@ -80,7 +83,7 @@ const CpaLines = ({ targets, color }) => {
 };
 
 const AISView = ({ onUpdateInfoPanel }) => {
-    const { aisData, vesselIds, targets, targetsRef } = useAIS();
+    const { aisData, vesselIds, targets, targetsRef, motionRef } = useAIS();
     const { states } = useOcearoContext();
     const waterLevel = WATER_LEVEL[states.oceanMode] ?? DEFAULT_WATER_LEVEL;
     const boatRefs = useRef({}); // mmsi -> THREE.Group, moved directly every frame
@@ -115,6 +118,8 @@ const AISView = ({ onUpdateInfoPanel }) => {
     useFrame((_, delta) => {
         const alpha = 1 - Math.exp(-SMOOTHING_RATE * Math.min(delta, 0.5));
         const store = targetsRef.current;
+        const motion = motionRef.current;
+        const now = Date.now();
 
         for (const mmsi in boatRefs.current) {
             const boat = boatRefs.current[mmsi];
@@ -125,7 +130,7 @@ const AISView = ({ onUpdateInfoPanel }) => {
                 continue;
             }
             boat.visible = true;
-            updateBoatTransform(boat, data, alpha);
+            updateBoatTransform(boat, data, alpha, motion, now);
 
             // FSD colours: grey, red on collision risk (CPA/TCPA), accent when selected
             const look = data.risk === 'danger' ? 'alert' : (selectedRef.current === mmsi ? 'selected' : 'normal');
