@@ -23,6 +23,7 @@ const fragmentShader = `
         float fade = mix(1.0, smoothstep(0.0, 0.35, vUv.y), uFadeFrom)
                    * mix(1.0, 1.0 - smoothstep(0.6, 1.0, vUv.y), uFadeTo);
         gl_FragColor = vec4(uColor, (body * uOpacity + rim * uOpacity * 1.4) * fade);
+        #include <colorspace_fragment>
     }
 `;
 

@@ -32,6 +32,7 @@ const fragmentShader = `
         vec3 color = mix(uColor, uGlow, chevron);
         float alpha = (0.28 * edge + 0.5 * chevron * edge + 0.45 * rim) * fade * uOpacity;
         gl_FragColor = vec4(color, alpha);
+        #include <colorspace_fragment>
     }
 `;
 
