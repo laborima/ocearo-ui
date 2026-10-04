@@ -9,7 +9,6 @@ import configService from '../settings/ConfigService';
 // Basic UI components loaded synchronously
 import ThreeDBoatToolbar from './ThreeDBoatToolbar';
 import ThreeDBoatThanksIndicator from './ThreeDBoatThanksIndicator';
-import { vesselNow } from '../utils/VesselClock';
 
 // Heavy 3D components loaded dynamically
 const ThreeDBoatView = dynamic(() => import('./ThreeDBoatView'), { ssr: false });
@@ -30,7 +29,8 @@ const ParkingPanel = dynamic(() => import('./parkassist/ParkingPanel'));
 // Full-screen HUD panels (translucent, Tesla-style)
 const DepthPanel = dynamic(() => import('./hud/DepthPanel'));
 const TidePanel = dynamic(() => import('./hud/TidePanel'));
-const InfoStack = dynamic(() => import('./hud/InfoStack'));
+const SkyClock = dynamic(() => import('./hud/SkyClock'));
+const SceneLegend = dynamic(() => import('./hud/SceneLegend'));
 
 // Component to expose Three.js renderer and info for performance monitoring
 const RendererExposer = () => {
@@ -83,13 +83,6 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
     const classic = hudStyle === 'classic';
     // Full screen has room for the detailed panels; split view stays minimal
     const rich = fullscreen && !classic;
-    const [clock, setClock] = useState(() => vesselNow());
-
-    // Tick the header clock every 30s (it would otherwise only refresh on unrelated re-renders)
-    useEffect(() => {
-        const id = setInterval(() => setClock(vesselNow()), 30000);
-        return () => clearInterval(id);
-    }, []);
 
     // Get configuration directly using the configService
     useEffect(() => {
@@ -107,9 +100,7 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
             <div className="absolute top-2 left-2 right-2 z-20 flex items-center justify-between">
                 <ThreeDBoatToolbar />
                 <div className="flex items-center space-x-4">
-                    <span className={`text-label font-semibold uppercase tracking-[0.2em] text-hud-muted`}>
-                        {clock.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                    </span>
+                    <SkyClock />
                     <ThreeDBoatThanksIndicator />
                 </div>
             </div>
@@ -120,6 +111,8 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                 {/* Depth lives in its gauge (split view) or its panel (full screen) */}
                 {/* Split view: three values, so the depth gauge below stays clear */}
                 {!classic && <ModeHud omitDepth maxItems={rich ? 4 : 3} />}
+                {/* What the ribbons and colours of the scene mean */}
+                {!states.parkingMode && <div className="mt-2"><SceneLegend /></div>}
             </div>
 
             {/* Attitude indicator - top right, below toolbar row */}
@@ -136,11 +129,6 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                 </div>
             )}
 
-            {rich && (
-                <div className="absolute top-16 right-3 z-20">
-                    <InfoStack />
-                </div>
-            )}
             {rich && (
                 <div className="absolute left-3 bottom-3 z-20">
                     <DepthPanel />
