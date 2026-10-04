@@ -77,7 +77,10 @@ const PerformanceWake = ({ y = -0.25 }) => {
         if (now - lastSampleRef.current < SAMPLE_MS) return;
         if (last && Math.hypot(offset.x - last.x, offset.y - last.y) < MIN_STEP_M) return;
         lastSampleRef.current = now;
-        samples.push({ x: offset.x, y: offset.y, ratio });
+        // A momentary gap in the polar ratio (data still arriving) would leave
+        // a grey patch in the wake for minutes: carry the last known value over
+        const known = Number.isFinite(ratio) ? ratio : last?.ratio;
+        samples.push({ x: offset.x, y: offset.y, ratio: known });
 
         // Trim by count and by length
         while (samples.length > MAX_SAMPLES) samples.shift();
@@ -98,7 +101,8 @@ const PerformanceWake = ({ y = -0.25 }) => {
         const col = geometry.attributes.color.array;
         const c = new THREE.Color();
         // The wake starts at the stern, now
-        const points = [...samples, { x: offset.x, y: offset.y, ratio }];
+        const lastRatio = samples[samples.length - 1]?.ratio;
+        const points = [...samples, { x: offset.x, y: offset.y, ratio: Number.isFinite(ratio) ? ratio : lastRatio }];
         const n = Math.min(points.length, MAX_SAMPLES);
         const first = points.length - n;
 
