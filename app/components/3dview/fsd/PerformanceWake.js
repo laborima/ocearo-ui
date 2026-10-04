@@ -105,6 +105,7 @@ const PerformanceWake = ({ y = -0.25 }) => {
         const points = [...samples, { x: offset.x, y: offset.y, ratio: Number.isFinite(ratio) ? ratio : lastRatio }];
         const n = Math.min(points.length, MAX_SAMPLES);
         const first = points.length - n;
+        const anyKnown = points.some(q => Number.isFinite(q.ratio));
 
         for (let k = 0; k < n; k++) {
             const p = points[first + k];
@@ -124,7 +125,11 @@ const PerformanceWake = ({ y = -0.25 }) => {
 
             // Older = more transparent; the newest end blends into the hull
             const age = 1 - k / Math.max(1, n - 1);
-            const alpha = 0.5 * (1 - age) ** 0.7;
+            // Before the first polar value the colour is unknown: leave that
+            // stretch out rather than paint it grey (boats without polars,
+            // where nothing is ever known, keep a neutral wake)
+            const unknown = !Number.isFinite(p.ratio) && anyKnown;
+            const alpha = unknown ? 0 : 0.5 * (1 - age) ** 0.7;
             colorFor(p.ratio, palette, c);
             col.set([c.r, c.g, c.b, alpha, c.r, c.g, c.b, alpha], k * 8);
         }
