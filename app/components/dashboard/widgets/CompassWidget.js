@@ -2,7 +2,7 @@
 import React, { useMemo, useRef } from 'react';
 import BaseWidget from './BaseWidget';
 import { useSignalKPath } from '../../hooks/useSignalK';
-import { useOcearoContext } from '../../context/OcearoContext';
+import useTheme from '../../theme/useTheme';
 import { toDegrees, radToDeg, convertSpeedUnit, getSpeedUnitLabel, finite } from '../../utils/UnitConversions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCompass } from '@fortawesome/free-solid-svg-icons';
@@ -81,7 +81,7 @@ const RimMarker = ({ angle, color, inward = false }) => {
 
 export default function CompassWidget() {
     const { t } = useTranslation();
-    const { nightMode } = useOcearoContext();
+    const tokens = useTheme();
 
     const headingTrue = useSignalKPath('navigation.headingTrue');
     const headingMagnetic = useSignalKPath('navigation.headingMagnetic');
@@ -141,11 +141,11 @@ export default function CompassWidget() {
     }
     const rose = roseRef.current;
 
-    const accent = nightMode ? 'text-oNight' : 'text-oBlue';
-    const roseColor = nightMode ? '#ef4444' : '#e8e8e8';
-    const northColor = nightMode ? '#ef4444' : '#cc000c';
-    const cogColor = nightMode ? '#ef4444' : '#09bfff';
-    const windColor = nightMode ? '#ef4444' : '#ffbe00';
+    const accent = 'text-oBlue';
+    const roseColor = tokens.textMain;
+    const northColor = tokens.danger;
+    const cogColor = tokens.accent;
+    const windColor = tokens.warn;
 
     // 5° ticks, every third one long. Precomputed once — the rose only rotates.
     const ticks = useMemo(() => {
@@ -168,7 +168,7 @@ export default function CompassWidget() {
         >
             <div className="absolute top-4 right-4 z-10 flex items-center space-x-3">
                 {data.source !== 'true' && hasHeading && (
-                    <span className="text-xs px-2 py-0.5 rounded-sm uppercase font-black tracking-widest text-hud-main bg-hud-elevated border border-hud">
+                    <span className="text-caption px-2 py-0.5 rounded-sm uppercase font-semibold tracking-widest text-hud-main bg-hud-elevated border border-hud">
                         {data.source === 'mag' ? 'MAG' : 'COG'}
                     </span>
                 )}
@@ -228,11 +228,11 @@ export default function CompassWidget() {
                     {/* Fixed lubber line */}
                     <polygon
                         points={`${CX},${CY - R_OUTER + 2} ${CX - 7},${CY - R_OUTER - 10} ${CX + 7},${CY - R_OUTER - 10}`}
-                        fill={nightMode ? '#ef4444' : '#ffffff'}
+                        fill={tokens.textMain}
                         opacity="0.9"
                     />
                     <line x1={CX} y1={CY - R_OUTER + 2} x2={CX} y2={CY - 30}
-                        stroke={nightMode ? '#ef4444' : '#ffffff'} strokeWidth="1" strokeOpacity="0.3" />
+                        stroke={tokens.textMain} strokeWidth="1" strokeOpacity="0.3" />
 
                     {/* Digital readout */}
                     <text x={CX} y={CY - 4} textAnchor="middle" dominantBaseline="central"
@@ -249,7 +249,7 @@ export default function CompassWidget() {
             </div>
 
             {/* Bottom info bar */}
-            <div className="flex justify-between items-center mt-2 shrink-0 text-xs font-black uppercase tracking-widest">
+            <div className="flex justify-between items-center mt-2 shrink-0 text-caption font-semibold uppercase tracking-widest">
                 <div className="flex items-center space-x-3">
                     <span className="text-hud-main gliding-value">
                         {data.cog !== null ? `${Math.round(data.cog)}°` : '---'}

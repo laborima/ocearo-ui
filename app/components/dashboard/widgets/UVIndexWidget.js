@@ -53,17 +53,17 @@ export default function UVIndexWidget() {
       <div className="flex-1 flex flex-col justify-center py-4 space-y-8">
         {/* Main UV display */}
         <div className="text-center group">
-          <div className={`text-6xl font-black mb-4 leading-none gliding-value tracking-tighter ${uvIndex !== null ? getUVInfo(uvIndex).color : 'text-hud-muted'} ${parseFloat(uvIndex) >= 6 ? 'animate-soft-pulse' : ''}`}>
+          <div className={`text-hero font-medium mb-4 leading-none gliding-value tracking-tight ${uvIndex !== null ? getUVInfo(uvIndex).color : 'text-hud-muted'} ${parseFloat(uvIndex) >= 6 ? 'animate-soft-pulse' : ''}`}>
             {uvIndex !== null ? uvIndex : t('common.na')}
           </div>
-          <div className={`text-xs font-black uppercase tracking-[0.3em] mt-4 ${uvIndex !== null ? getUVInfo(uvIndex).color : 'text-hud-muted'}`}>
+          <div className={`text-caption font-semibold uppercase tracking-[0.3em] mt-4 ${uvIndex !== null ? getUVInfo(uvIndex).color : 'text-hud-muted'}`}>
             {uvIndex !== null ? getUVInfo(uvIndex).level : t('widgets.offline')}
           </div>
         </div>
 
         {/* Risk level indicator */}
         <div className="text-center">
-          <div className={`inline-block px-4 py-1.5 rounded-sm uppercase text-xs font-black tracking-[0.2em] shadow-soft ${uvInfo?.bg || 'bg-hud-bg border-hud'} border border-hud`}>
+          <div className={`inline-block px-4 py-1.5 rounded-sm uppercase text-caption font-semibold tracking-[0.2em] shadow-soft ${uvInfo?.bg || 'bg-hud-bg border-hud'} border border-hud`}>
             <span className={uvInfo?.color || 'text-hud-muted'}>
               {uvInfo?.level || t('widgets.uvUnknown')} {t('widgets.riskThreshold')}
             </span>
@@ -91,7 +91,7 @@ export default function UVIndexWidget() {
               />
             </div>
           )}
-          <div className="flex justify-between text-xs font-black text-hud-muted mt-4 uppercase tracking-widest px-0.5">
+          <div className="flex justify-between text-caption font-semibold text-hud-muted mt-4 uppercase tracking-widest px-0.5">
             <span>0</span>
             <span>2</span>
             <span>5</span>

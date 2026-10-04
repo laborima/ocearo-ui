@@ -123,7 +123,7 @@ const FuelLogModal = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-8">
-          <h3 className="text-xl font-black text-hud-main flex items-center tracking-tight">
+          <h3 className="text-value font-semibold text-hud-main flex items-center tracking-tight">
             <FontAwesomeIcon icon={faGasPump} className="mr-3 text-oYellow" />
             {t('fuelLog.logFuelRefill')}
           </h3>
@@ -138,7 +138,7 @@ const FuelLogModal = ({
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
+            <label className="block text-caption font-semibold uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
               <FontAwesomeIcon icon={faGasPump} className="mr-2 text-oBlue" />
               {t('fuelLog.litersAdded')}
             </label>
@@ -155,12 +155,12 @@ const FuelLogModal = ({
               disabled={loading}
             />
             {errors.liters && (
-              <p className="text-oRed text-xs mt-2 font-medium">{errors.liters}</p>
+              <p className="text-oRed text-caption mt-2 font-medium">{errors.liters}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
+            <label className="block text-caption font-semibold uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
               <FontAwesomeIcon icon={faEuroSign} className="mr-2 text-oGreen" />
               {t('fuelLog.cost')} <span className="text-hud-dim font-normal normal-case ml-1">({t('fuelLog.optional')})</span>
             </label>
@@ -177,12 +177,12 @@ const FuelLogModal = ({
               disabled={loading}
             />
             {errors.cost && (
-              <p className="text-oRed text-xs mt-2 font-medium">{errors.cost}</p>
+              <p className="text-oRed text-caption mt-2 font-medium">{errors.cost}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
+            <label className="block text-caption font-semibold uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
               <FontAwesomeIcon icon={faClock} className="mr-2 text-oYellow" />
               {t('fuelLog.currentEngineHours')}
             </label>
@@ -199,22 +199,22 @@ const FuelLogModal = ({
               disabled={loading}
             />
             {errors.engineHours && (
-              <p className="text-oRed text-xs mt-2 font-medium">{errors.engineHours}</p>
+              <p className="text-oRed text-caption mt-2 font-medium">{errors.engineHours}</p>
             )}
             {currentEngineHours !== null && (
-              <p className="text-hud-dim text-xs mt-2 font-medium">
+              <p className="text-hud-dim text-caption mt-2 font-medium">
                 {t('fuelLog.signalkValue')} {Math.round(currentEngineHours * 10) / 10} h
               </p>
             )}
             {currentEngineHours === null && (
-              <p className="text-hud-dim text-xs mt-2 font-medium">
+              <p className="text-hud-dim text-caption mt-2 font-medium">
                 {t('fuelLog.noSignalkHours')}
               </p>
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
+            <label className="block text-caption font-semibold uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
               <FontAwesomeIcon icon={faClock} className="mr-2 text-hud-dim" />
               {t('fuelLog.hoursSinceLastRefill')}
             </label>
@@ -229,7 +229,7 @@ const FuelLogModal = ({
               disabled={loading || (lastRefillEngineHours !== null && formData.hoursSinceLastRefill !== '')}
             />
             {lastRefillEngineHours !== null && (
-              <p className="text-hud-dim text-xs mt-2 font-medium">
+              <p className="text-hud-dim text-caption mt-2 font-medium">
                 {t('fuelLog.lastRefillAt')} {Math.round(lastRefillEngineHours * 10) / 10} h
               </p>
             )}
@@ -244,7 +244,7 @@ const FuelLogModal = ({
               className="w-5 h-5 rounded border-hud bg-hud-elevated text-oBlue focus:ring-oBlue transition-all duration-300"
               disabled={loading}
             />
-            <label htmlFor="additive" className="ml-3 text-sm font-bold text-hud-secondary flex items-center cursor-pointer hover:text-hud-main transition-colors duration-300">
+            <label htmlFor="additive" className="ml-3 text-label font-bold text-hud-secondary flex items-center cursor-pointer hover:text-hud-main transition-colors duration-300">
               <FontAwesomeIcon icon={faFlask} className="mr-2 text-oBlue opacity-70" />
               {t('fuelLog.additiveAdded')}
             </label>

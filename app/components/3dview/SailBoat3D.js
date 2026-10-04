@@ -9,6 +9,7 @@ import Sail3D from './sail/Sail3D';
 import Jib3D from './sail/Jib3D';
 import TensionLines3D from './sail/TensionLines3D';
 import Rigging3D from './sail/Rigging3D';
+import useTheme from '../theme/useTheme';
 
 
 const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
@@ -96,10 +97,13 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
     const { nodes, materials } = useGLTF(modelPath, `${ASSET_PREFIX}/draco/`);
 
     // Memoize material properties
+    // Without a user-chosen colour the hull takes the theme's own-boat colour
+    // (white in the day and dark themes, dim red at night)
+    const { scene: sceneTokens } = useTheme();
     const materialProperties = useMemo(() => ({
-        primaryColor: config.primaryColor,
+        primaryColor: config.primaryColor || sceneTokens.ownHull,
         metallicEffect: config.metallicEffect || false
-    }), [config.primaryColor, config.metallicEffect]);
+    }), [config.primaryColor, config.metallicEffect, sceneTokens.ownHull]);
 
     // Update materials when properties change
     useEffect(() => {
@@ -131,6 +135,16 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
                         child.material.roughness = materialProperties.metallicEffect ? 0.2 : 1.0;
                     }
                 }
+            });
+        }
+
+        // FSD-style matte finish: the scene has no environment map, so any
+        // remaining metal would render black. Only the user's metallic hull
+        // option keeps the glossy look (the scene then adds an environment).
+        if (!materialProperties.metallicEffect) {
+            Object.values(materials).forEach(material => {
+                if ('metalness' in material) material.metalness = Math.min(material.metalness, 0.1);
+                if ('roughness' in material) material.roughness = Math.max(material.roughness, 0.75);
             });
         }
 

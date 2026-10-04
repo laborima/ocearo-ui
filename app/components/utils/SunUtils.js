@@ -101,3 +101,42 @@ export const parseSunTime = (value, reference) => {
 /** HH:MM in the display's local time zone */
 export const formatClockTime = (date) =>
   date ? date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }) : null;
+
+/**
+ * Sun elevation above the horizon and azimuth from true north, in degrees
+ * (NOAA general solar position, ~0.5° accuracy — plenty for lighting and
+ * day/night decisions). Works from UTC, so the display's time zone is irrelevant.
+ * @param {number} latitude - degrees
+ * @param {number} longitude - degrees
+ * @param {Date} date
+ * @returns {{elevation: number, azimuth: number}|null} null without a position
+ */
+export const sunPosition = (latitude, longitude, date) => {
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !(date instanceof Date)) return null;
+
+  const startOfYear = Date.UTC(date.getUTCFullYear(), 0, 1);
+  const dayOfYear = (date.getTime() - startOfYear) / 86400000 + 1;
+  const utcHours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
+  const gamma = 2 * Math.PI / 365 * (dayOfYear - 1 + (utcHours - 12) / 24);
+
+  const eqTime = 229.18 * (
+    0.000075 + 0.001868 * Math.cos(gamma) - 0.032077 * Math.sin(gamma)
+    - 0.014615 * Math.cos(2 * gamma) - 0.040849 * Math.sin(2 * gamma)
+  );
+  const decl = 0.006918 - 0.399912 * Math.cos(gamma) + 0.070257 * Math.sin(gamma)
+    - 0.006758 * Math.cos(2 * gamma) + 0.000907 * Math.sin(2 * gamma)
+    - 0.002697 * Math.cos(3 * gamma) + 0.00148 * Math.sin(3 * gamma);
+
+  const trueSolarMinutes = normalize(utcHours * 60 + eqTime + 4 * longitude, 1440);
+  const hourAngle = toRadians(trueSolarMinutes / 4 - 180);
+  const lat = toRadians(latitude);
+
+  const cosZenith = Math.sin(lat) * Math.sin(decl) + Math.cos(lat) * Math.cos(decl) * Math.cos(hourAngle);
+  const zenith = Math.acos(Math.min(Math.max(cosZenith, -1), 1));
+  const azimuth = normalize(toDegrees(Math.atan2(
+    Math.sin(hourAngle),
+    Math.cos(hourAngle) * Math.sin(lat) - Math.tan(decl) * Math.cos(lat)
+  )) + 180, 360);
+
+  return { elevation: 90 - toDegrees(zenith), azimuth };
+};

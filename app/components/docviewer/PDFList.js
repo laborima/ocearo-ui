@@ -30,7 +30,7 @@ const PDFList = ({ path }) => {
                     <button
                         key={index}
                         onClick={() => setSelectedPdf(pdf)}
-                        className={`flex-1 py-3 px-2 text-xs font-black uppercase flex items-center justify-center transition-all duration-500 whitespace-nowrap ${
+                        className={`flex-1 py-3 px-2 text-caption font-semibold uppercase flex items-center justify-center transition-all duration-500 whitespace-nowrap ${
                             selectedPdf?.file === pdf.file
                                 ? 'text-oGreen border-b-2 border-oGreen bg-hud-bg'
                                 : 'text-hud-secondary hover:text-hud-main tesla-hover'

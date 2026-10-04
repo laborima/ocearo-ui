@@ -36,14 +36,14 @@ const Meter = ({ label, value, unit, percent, warn, critical, icon }) => {
   return (
     <div className="tesla-card p-4 bg-hud-elevated rounded-sm border border-hud">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-hud-secondary text-xs font-black uppercase tracking-widest">
+        <span className="text-hud-secondary text-caption font-semibold uppercase tracking-widest">
           <FontAwesomeIcon icon={icon} className="mr-2 opacity-60" />
           {label}
         </span>
       </div>
-      <div className={`text-3xl font-black gliding-value ${color}`}>
+      <div className={`text-value font-semibold gliding-value ${color}`}>
         {Number.isFinite(value) ? value : '--'}
-        <span className="text-sm ml-1 opacity-60">{unit}</span>
+        <span className="text-label ml-1 opacity-60">{unit}</span>
       </div>
       {Number.isFinite(percent) && (
         <div className="mt-3 h-1 bg-hud rounded-full overflow-hidden">
@@ -84,7 +84,7 @@ const RaspberryPiTab = () => {
 
   if (error && !metrics) {
     return (
-      <div className="flex-1 flex items-center justify-center text-hud-muted text-sm font-black uppercase tracking-widest">
+      <div className="flex-1 flex items-center justify-center text-hud-muted text-label font-semibold uppercase tracking-widest">
         {t('battery.rpiUnavailable')}
       </div>
     );
@@ -102,22 +102,22 @@ const RaspberryPiTab = () => {
   return (
     <div className="flex-1 overflow-auto p-4 space-y-4">
       <div className="flex items-baseline justify-between">
-        <span className="text-hud-main text-sm font-black uppercase tracking-widest">
+        <span className="text-hud-main text-label font-semibold uppercase tracking-widest">
           {metrics?.hostname ?? '--'}
         </span>
-        <span className="text-hud-muted text-xs font-black uppercase tracking-widest">
+        <span className="text-hud-muted text-caption font-semibold uppercase tracking-widest">
           {t('battery.rpiUptime')} {formatUptime(metrics?.uptimeSeconds)}
         </span>
       </div>
 
       {throttlingNow && (
-        <div className="flex items-center p-3 rounded-sm border border-oRed/40 bg-oRed/10 text-oRed text-xs font-black uppercase tracking-widest">
+        <div className="flex items-center p-3 rounded-sm border border-oRed/40 bg-oRed/10 text-oRed text-caption font-semibold uppercase tracking-widest">
           <FontAwesomeIcon icon={faTriangleExclamation} className="mr-2" />
           {thr.softTempLimitNow || thr.throttledNow ? t('battery.rpiThrottlingHeat') : t('battery.rpiThrottlingPower')}
         </div>
       )}
       {!throttlingNow && throttlingPast && (
-        <div className="flex items-center p-3 rounded-sm border border-oYellow/40 bg-oYellow/10 text-oYellow text-xs font-black uppercase tracking-widest">
+        <div className="flex items-center p-3 rounded-sm border border-oYellow/40 bg-oYellow/10 text-oYellow text-caption font-semibold uppercase tracking-widest">
           <FontAwesomeIcon icon={faTriangleExclamation} className="mr-2" />
           {t('battery.rpiThrottlingPast')}
         </div>
@@ -153,17 +153,17 @@ const RaspberryPiTab = () => {
           { label: t('battery.rpiSwap'), value: gb(mem.swapUsed) }
         ].map((s) => (
           <div key={s.label} className="tesla-card p-3 bg-hud-elevated rounded-sm border border-hud">
-            <div className="text-hud-muted text-[10px] font-black uppercase tracking-widest">{s.label}</div>
-            <div className="text-hud-main text-sm font-black gliding-value mt-1">{s.value}</div>
+            <div className="text-hud-muted text-caption font-semibold uppercase tracking-widest">{s.label}</div>
+            <div className="text-hud-main text-label font-semibold gliding-value mt-1">{s.value}</div>
           </div>
         ))}
       </div>
 
       <div className="tesla-card bg-hud-elevated rounded-sm border border-hud overflow-hidden">
-        <div className="px-4 py-2 border-b border-hud text-hud-secondary text-xs font-black uppercase tracking-widest">
+        <div className="px-4 py-2 border-b border-hud text-hud-secondary text-caption font-semibold uppercase tracking-widest">
           {t('battery.rpiTopProcesses')}
         </div>
-        <table className="w-full text-xs font-black">
+        <table className="w-full text-caption font-semibold">
           <tbody className="divide-y divide-hud">
             {(metrics?.processes ?? []).map((p) => (
               <tr key={p.pid} className="text-hud-main">

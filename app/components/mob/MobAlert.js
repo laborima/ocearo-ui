@@ -27,7 +27,7 @@ const formatDistance = (metres) => {
   return `${convertDistanceUnit(metres)} ${getDistanceUnitLabel()}`;
 };
 
-const actionClass = 'px-3 py-2 rounded-lg font-bold uppercase tracking-wider text-sm border-2 border-white/80 disabled:opacity-40 transition-colors';
+const actionClass = 'px-3 py-2 rounded-lg font-bold uppercase tracking-wider text-label border-2 border-white/80 disabled:opacity-40 transition-colors';
 
 const MobEntry = ({ mob, now, ownPosition, heading, canNavigate }) => {
   const { t } = useTranslation();
@@ -70,18 +70,18 @@ const MobEntry = ({ mob, now, ownPosition, heading, canNavigate }) => {
       <div className="flex items-center gap-3">
         <FontAwesomeIcon icon={faLifeRing} className="text-3xl animate-pulse" />
         <div className="flex-1 min-w-0">
-          <div className="text-xl sm:text-2xl font-black uppercase tracking-wider leading-tight">{t('mob.title')}</div>
+          <div className="text-label sm:text-value font-semibold uppercase tracking-wider leading-tight">{t('mob.title')}</div>
           {mob.message && mob.message !== 'Person Overboard!' && (
-            <div className="text-sm opacity-90 truncate">{mob.message}</div>
+            <div className="text-label opacity-90 truncate">{mob.message}</div>
           )}
         </div>
         <div className="text-right font-mono">
-          <div className="text-2xl font-bold">{formatElapsed(now - createdAt)}</div>
-          <div className="text-xs uppercase opacity-80">{t('mob.elapsed')}</div>
+          <div className="text-value font-bold">{formatElapsed(now - createdAt)}</div>
+          <div className="text-caption uppercase opacity-80">{t('mob.elapsed')}</div>
         </div>
       </div>
 
-      <div className="flex items-center gap-4 font-mono text-lg">
+      <div className="flex items-center gap-4 font-mono text-value">
         {range ? (
           <>
             <span>{formatDistance(range.distance)}</span>
@@ -95,7 +95,7 @@ const MobEntry = ({ mob, now, ownPosition, heading, canNavigate }) => {
             </span>
           </>
         ) : (
-          <span className="text-sm opacity-80">{t('mob.noPosition')}</span>
+          <span className="text-label opacity-80">{t('mob.noPosition')}</span>
         )}
       </div>
 
@@ -119,7 +119,7 @@ const MobEntry = ({ mob, now, ownPosition, heading, canNavigate }) => {
           </button>
         )}
       </div>
-      {error && <div className="text-sm bg-black/30 rounded px-2 py-1">{error}</div>}
+      {error && <div className="text-label bg-black/30 rounded px-2 py-1">{error}</div>}
     </div>
   );
 };

@@ -240,7 +240,7 @@ const BatteryMonitor = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-3 px-2 text-xs font-black uppercase flex items-center justify-center transition-all duration-500 ${
+            className={`flex-1 py-3 px-2 text-caption font-semibold uppercase flex items-center justify-center transition-all duration-500 ${
               activeTab === tab.id
                 ? 'text-oGreen border-b-2 border-oGreen bg-hud-bg'
                 : 'text-hud-secondary hover:text-hud-main tesla-hover'
@@ -264,7 +264,7 @@ const BatteryMonitor = () => {
               className="p-4 flex flex-col flex-1 min-h-0 overflow-auto scrollbar-hide"
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-sm font-black text-hud-main uppercase tracking-[0.2em] flex items-center">
+                <h2 className="text-label font-semibold text-hud-main uppercase tracking-[0.2em] flex items-center">
                   <div className="w-2 h-2 rounded-full bg-oGreen mr-3 animate-soft-pulse" />
                   {t('battery.powerGridStatus')}
                   <button 
@@ -277,7 +277,7 @@ const BatteryMonitor = () => {
                 </h2>
                 
                 <select 
-                  className="bg-hud-elevated px-4 py-1.5 rounded-sm text-hud-main text-xs font-black uppercase border border-hud focus:outline-none tesla-hover transition-all duration-500 shadow-soft"
+                  className="bg-hud-elevated px-4 py-1.5 rounded-sm text-hud-main text-caption font-semibold uppercase border border-hud focus:outline-none tesla-hover transition-all duration-500 shadow-soft"
                   value={selectedBattery}
                   onChange={(e) => {
                     // Don't mix two batteries' samples in the same graph
@@ -302,13 +302,13 @@ const BatteryMonitor = () => {
                     className="tesla-card p-4 mb-4 relative overflow-hidden bg-hud-elevated"
                   >
                     <button 
-                      className="absolute top-2 right-3 text-hud-secondary hover:text-hud-main font-black text-xl"
+                      className="absolute top-2 right-3 text-hud-secondary hover:text-hud-main font-semibold text-value"
                       onClick={() => setShowBatteryDetails(false)}
                       aria-label="Close details"
                     >
                       ×
                     </button>
-                    <div className="text-hud-secondary text-xs font-black mb-4 uppercase tracking-widest">{t('battery.batterySpecs')}</div>
+                    <div className="text-hud-secondary text-caption font-semibold mb-4 uppercase tracking-widest">{t('battery.batterySpecs')}</div>
                     <div className="grid grid-cols-2 gap-4">
                       {[
                         { label: t('battery.identifier'), value: currentBatteryData.name },
@@ -319,8 +319,8 @@ const BatteryMonitor = () => {
                         { label: t('battery.condition'), value: currentBatteryData.stateOfHealth ? `${(currentBatteryData.stateOfHealth * 100).toFixed(0)}%` : null }
                       ].map((item, idx) => (
                         <div key={idx} className="flex flex-col">
-                          <div className="text-xs text-hud-muted uppercase font-black tracking-widest mb-0.5">{item.label}</div>
-                          <div className="text-xs text-hud-main font-black truncate uppercase gliding-value">{item.value || 'N/A'}</div>
+                          <div className="text-caption text-hud-muted uppercase font-semibold tracking-widest mb-0.5">{item.label}</div>
+                          <div className="text-caption text-hud-main font-semibold truncate uppercase gliding-value">{item.value || 'N/A'}</div>
                         </div>
                       ))}
                     </div>
@@ -328,7 +328,7 @@ const BatteryMonitor = () => {
                     {/* Capacity information if available */}
                     {(currentBatteryData.nominalCapacity || currentBatteryData.actualCapacity || currentBatteryData.remainingCapacity) && (
                       <div className="mt-4 pt-3 border-t border-hud">
-                        <div className="text-hud-muted text-xs font-black mb-2 uppercase tracking-widest">{t('battery.energyCapacity')}</div>
+                        <div className="text-hud-muted text-caption font-semibold mb-2 uppercase tracking-widest">{t('battery.energyCapacity')}</div>
                         <div className="grid grid-cols-3 gap-3">
                           {[
                             { label: t('battery.nominal'), value: currentBatteryData.nominalCapacity },
@@ -336,8 +336,8 @@ const BatteryMonitor = () => {
                             { label: t('battery.remaining'), value: currentBatteryData.remainingCapacity }
                           ].map((cap, idx) => (
                             <div key={idx} className="bg-hud-bg p-2 rounded text-center tesla-hover">
-                              <div className="text-xs text-hud-secondary uppercase font-black mb-1">{cap.label}</div>
-                              <div className="text-xs text-hud-main font-black gliding-value">{cap.value ? `${(cap.value / 3600).toFixed(1)} Wh` : 'N/A'}</div>
+                              <div className="text-caption text-hud-secondary uppercase font-semibold mb-1">{cap.label}</div>
+                              <div className="text-caption text-hud-main font-semibold gliding-value">{cap.value ? `${(cap.value / 3600).toFixed(1)} Wh` : 'N/A'}</div>
                             </div>
                           ))}
                         </div>
@@ -350,8 +350,8 @@ const BatteryMonitor = () => {
               <div className="flex-1 flex flex-col space-y-4">
                 <div className="relative tesla-card p-6 bg-hud-bg border border-hud">
                   <div className="mb-6 flex justify-between items-center">
-                    <span className="text-hud-secondary text-xs font-black uppercase tracking-[0.2em] opacity-60">{t('battery.gridNodeStatus')}</span>
-                    <div className={`px-3 py-1 rounded-sm text-xs font-black uppercase tracking-widest shadow-soft ${isCharging ? 'bg-oGreen/10 text-oGreen border border-oGreen/20 animate-soft-pulse' : 'bg-oRed/10 text-oRed border border-oRed/20'}`}>
+                    <span className="text-hud-secondary text-caption font-semibold uppercase tracking-[0.2em] opacity-60">{t('battery.gridNodeStatus')}</span>
+                    <div className={`px-3 py-1 rounded-sm text-caption font-semibold uppercase tracking-widest shadow-soft ${isCharging ? 'bg-oGreen/10 text-oGreen border border-oGreen/20 animate-soft-pulse' : 'bg-oRed/10 text-oRed border border-oRed/20'}`}>
                       {isCharging ? t('battery.systemInflow') : t('battery.systemOutflow')}
                     </div>
                   </div>
@@ -371,10 +371,10 @@ const BatteryMonitor = () => {
                       style={{left: `clamp(10%, ${currentBatteryData.stateOfCharge}%, 90%)`, transform: 'translateX(-50%)', top: '-12px'}}
                     >
                       <div className="w-1 h-6 bg-hud-main shadow-[0_0_15px_var(--hud-text-main)] shadow-opacity-80 rounded-full"></div>
-                      <div className="mt-8 text-lg font-black text-hud-main gliding-value tracking-tighter">{currentBatteryData.stateOfCharge.toFixed(0)}%</div>
+                      <div className="mt-8 text-value font-semibold text-hud-main gliding-value tracking-tight">{currentBatteryData.stateOfCharge.toFixed(0)}%</div>
                     </div>
                     
-                    <div className="flex justify-between mt-12 text-xs font-black uppercase tracking-[0.2em]">
+                    <div className="flex justify-between mt-12 text-caption font-semibold uppercase tracking-[0.2em]">
                       <div className="text-oRed opacity-40">{t('battery.criticalNode')}</div>
                       <div className="text-hud-main bg-hud-elevated px-4 py-1.5 rounded-sm flex items-center shadow-soft border border-hud">
                         <FontAwesomeIcon icon={isCharging ? faChargingStation : faClock} className="mr-3 text-xs text-oBlue opacity-60" />
@@ -394,7 +394,7 @@ const BatteryMonitor = () => {
                 </div>
 
                 <div className="tesla-card p-6 flex-1 bg-hud-bg border border-hud">
-                  <div className="text-hud-secondary text-xs font-black uppercase tracking-[0.2em] mb-8 flex items-center opacity-60">
+                  <div className="text-hud-secondary text-caption font-semibold uppercase tracking-[0.2em] mb-8 flex items-center opacity-60">
                     <div className="w-1.5 h-1.5 rounded-full bg-oBlue mr-3" />
                     {t('battery.loadDistribution')}
                   </div>
@@ -408,12 +408,12 @@ const BatteryMonitor = () => {
                         <div className="flex justify-between items-center mb-3">
                           <div className="flex items-center">
                             <FontAwesomeIcon icon={load.icon} className="text-hud-muted mr-3 text-xs opacity-50 group-hover:opacity-100 transition-opacity" />
-                            <span className="text-hud-main text-xs font-black uppercase tracking-widest">{load.label}</span>
+                            <span className="text-hud-main text-caption font-semibold uppercase tracking-widest">{load.label}</span>
                             {load.id === 'autopilot' && load.state && (
-                              <span className="ml-3 px-2 py-0.5 bg-oGreen/10 text-oGreen text-xs font-black uppercase rounded-sm animate-soft-pulse border border-oGreen/20">Sync</span>
+                              <span className="ml-3 px-2 py-0.5 bg-oGreen/10 text-oGreen text-caption font-semibold uppercase rounded-sm animate-soft-pulse border border-oGreen/20">Sync</span>
                             )}
                           </div>
-                          <div className="text-xs text-hud-main font-black gliding-value tracking-tighter">{load.value.toFixed(1)}%</div>
+                          <div className="text-caption text-hud-main font-semibold gliding-value tracking-tighter">{load.value.toFixed(1)}%</div>
                         </div>
                         <div className="h-1 bg-hud-elevated rounded-full overflow-hidden shadow-inner">
                           <div 
@@ -432,8 +432,8 @@ const BatteryMonitor = () => {
                       { label: t('battery.gridOutput'), value: `${(currentBatteryData.voltage * currentBatteryData.current).toFixed(0)}W`, color: 'text-hud-main' }
                     ].map((stat, idx) => (
                       <div key={idx} className="bg-hud-elevated p-4 rounded-sm tesla-hover text-center border border-hud">
-                        <div className="text-xs text-hud-muted uppercase font-black tracking-widest mb-2 opacity-60">{stat.label}</div>
-                        <div className={`text-xl font-black gliding-value tracking-tighter ${stat.color}`}>{stat.value}</div>
+                        <div className="text-caption text-hud-muted uppercase font-semibold tracking-widest mb-2 opacity-60">{stat.label}</div>
+                        <div className={`text-value font-semibold gliding-value tracking-tight ${stat.color}`}>{stat.value}</div>
                       </div>
                     ))}
                   </div>
@@ -452,7 +452,7 @@ const BatteryMonitor = () => {
               className="p-4 flex flex-col flex-1 min-h-0"
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-sm font-black text-hud-main uppercase tracking-[0.2em] flex items-center">
+                <h2 className="text-label font-semibold text-hud-main uppercase tracking-[0.2em] flex items-center">
                   <div className="w-2 h-2 rounded-full bg-oBlue mr-3 animate-soft-pulse" />
                   {t('battery.telemetryHistory')}
                 </h2>
@@ -461,7 +461,7 @@ const BatteryMonitor = () => {
                     <button
                       key={view}
                       onClick={() => setActiveView(view)}
-                      className={`px-4 py-1 rounded-sm text-xs font-black uppercase transition-all duration-500 ${
+                      className={`px-4 py-1 rounded-sm text-caption font-semibold uppercase transition-all duration-500 ${
                         activeView === view ? 'bg-oBlue text-hud-main shadow-lg shadow-oBlue/20' : 'text-hud-secondary hover:text-hud-main tesla-hover'
                       }`}
                     >
@@ -493,7 +493,7 @@ const BatteryMonitor = () => {
               className="p-4 flex flex-col flex-1 min-h-0 overflow-auto scrollbar-hide"
             >
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-sm font-black text-hud-main uppercase tracking-[0.2em] flex items-center">
+                <h2 className="text-label font-semibold text-hud-main uppercase tracking-[0.2em] flex items-center">
                   <div className="w-2 h-2 rounded-full bg-oGreen mr-3 animate-soft-pulse" />
                   {t('battery.systemDiagnostic')}
                 </h2>
@@ -502,7 +502,7 @@ const BatteryMonitor = () => {
                     <button
                       key={view}
                       onClick={() => setActivePerformanceView(view)}
-                      className={`px-4 py-1 rounded-sm text-xs font-black uppercase transition-all duration-500 ${
+                      className={`px-4 py-1 rounded-sm text-caption font-semibold uppercase transition-all duration-500 ${
                         activePerformanceView === view ? 'bg-oBlue text-hud-main shadow-lg shadow-oBlue/20' : 'text-hud-secondary hover:text-hud-main tesla-hover'
                       }`}
                     >
@@ -524,23 +524,23 @@ const BatteryMonitor = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="tesla-card p-6 bg-hud-bg tesla-hover border border-hud">
-                  <div className="text-xs text-hud-muted font-black uppercase mb-4 tracking-[0.2em] opacity-60">{t('battery.graphicsEngine')}</div>
-                  <div className="flex justify-between items-center text-xs font-black text-hud-main uppercase mb-3">
+                  <div className="text-caption text-hud-muted font-semibold uppercase mb-4 tracking-[0.2em] opacity-60">{t('battery.graphicsEngine')}</div>
+                  <div className="flex justify-between items-center text-caption font-semibold text-hud-main uppercase mb-3">
                     <span className="text-hud-secondary tracking-widest">{t('battery.drawCalls')}</span>
                     <span className="gliding-value">{performanceHistory[performanceHistory.length-1].drawCalls}</span>
                   </div>
-                  <div className="flex justify-between items-center text-xs font-black text-hud-main uppercase">
+                  <div className="flex justify-between items-center text-caption font-semibold text-hud-main uppercase">
                     <span className="text-hud-secondary tracking-widest">{t('battery.geometry')}</span>
                     <span className="gliding-value">{(performanceHistory[performanceHistory.length-1].triangles / 1000).toFixed(1)}k poly</span>
                   </div>
                 </div>
                 <div className="tesla-card p-6 bg-hud-bg tesla-hover border border-hud">
-                  <div className="text-xs text-hud-muted font-black uppercase mb-4 tracking-[0.2em] opacity-60">{t('battery.memoryManagement')}</div>
-                  <div className="flex justify-between items-center text-xs font-black text-hud-main uppercase mb-3">
+                  <div className="text-caption text-hud-muted font-semibold uppercase mb-4 tracking-[0.2em] opacity-60">{t('battery.memoryManagement')}</div>
+                  <div className="flex justify-between items-center text-caption font-semibold text-hud-main uppercase mb-3">
                     <span className="text-hud-secondary tracking-widest">{t('battery.jsHeap')}</span>
                     <span className="gliding-value">{performanceHistory[performanceHistory.length-1].memory} MB</span>
                   </div>
-                  <div className="flex justify-between items-center text-xs font-black text-hud-main uppercase">
+                  <div className="flex justify-between items-center text-caption font-semibold text-hud-main uppercase">
                     <span className="text-hud-secondary tracking-widest">{t('battery.vramTextures')}</span>
                     <span className="gliding-value">{performanceHistory[performanceHistory.length-1].textures} units</span>
                   </div>

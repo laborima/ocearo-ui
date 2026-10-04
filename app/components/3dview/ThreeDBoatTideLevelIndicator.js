@@ -1,4 +1,3 @@
-import { useOcearoContext } from '../context/OcearoContext';
 import { useTide } from '../context/TideContext';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSignalKPaths } from '../hooks/useSignalK';
@@ -22,14 +21,8 @@ const COLORS = {
   }
 };
 
-const TEXT_COLORS = {
-  NIGHT: 'text-oNight',
-  DAY: 'text-hud-main'
-};
-
 const ThreeDBoatTideLevelIndicator = () => {
   const { t } = useTranslation();
-  const { nightMode } = useOcearoContext();
   const [maxHeight, setMaxHeight] = useState(240); // Default height (equivalent to h-60)
 
   const tidePaths = useMemo(() => [
@@ -146,7 +139,7 @@ const ThreeDBoatTideLevelIndicator = () => {
   } = tideData;
 
   // Computed values
-  const textColor = nightMode ? TEXT_COLORS.NIGHT : TEXT_COLORS.DAY;
+  const textColor = 'text-hud-main';
   const tideColors = isRising ? COLORS.RISING : COLORS.FALLING;
   const tidePercentage = useMemo(() => 
     computeTidePercentage(level, low, high), 
@@ -164,12 +157,12 @@ const ThreeDBoatTideLevelIndicator = () => {
 
   return (
     <div className="flex flex-col items-center group p-3 transition-all duration-300">
-      <div className={`text-xs font-black uppercase tracking-[0.2em] mb-1 opacity-40 group-hover:opacity-100 transition-opacity ${textColor}`}>
+      <div className={`text-caption font-semibold uppercase tracking-[0.2em] mb-1 opacity-40 group-hover:opacity-100 transition-opacity ${textColor}`}>
         {t('indicators.tide')}
       </div>
-      <div className={`text-xs font-black uppercase tracking-widest mb-4 ${textColor} flex items-center gap-1.5 opacity-60`}>
+      <div className={`text-caption font-semibold uppercase tracking-widest mb-4 ${textColor} flex items-center gap-1.5 opacity-60`}>
         <span className="text-oBlue">{formatTideTime(timeHigh)}</span>
-        <span className={`inline-block transform ${!isRising && 'rotate-180'} ${tideColors.TEXT} text-xs`}>
+        <span className={`inline-block transform ${!isRising && 'rotate-180'} ${tideColors.TEXT} text-caption`}>
           ▲
         </span>
         {coefficient != null && <span className="text-hud-muted">C{coefficient}</span>}
@@ -191,7 +184,7 @@ const ThreeDBoatTideLevelIndicator = () => {
 
         {/* Labels positioned to the right of the bar */}
         <div className="ml-4 h-full relative">
-          <span className={`absolute ${textColor} text-xs font-black uppercase tracking-tighter opacity-30`} style={{ top: '0%' }}>
+          <span className={`absolute ${textColor} text-caption font-semibold uppercase tracking-tighter opacity-30`} style={{ top: '0%' }}>
             {Number(high).toFixed(1)}m
           </span>
           
@@ -201,19 +194,19 @@ const ThreeDBoatTideLevelIndicator = () => {
               style={{ bottom: `${tidePercentage}%`, transform: 'translateY(50%)' }}
             >
               <div className={`w-2 h-[1px] ${tideColors.BACKGROUND} opacity-50`} />
-              <span className={`${textColor} text-xs font-black tracking-tight`}>
+              <span className={`${textColor} text-caption font-semibold tracking-tight`}>
                 {level.toFixed(2)}m
               </span>
             </div>
           )}
           
-          <span className={`absolute ${textColor} text-xs font-black uppercase tracking-tighter opacity-30`} style={{ bottom: '0%' }}>
+          <span className={`absolute ${textColor} text-caption font-semibold uppercase tracking-tighter opacity-30`} style={{ bottom: '0%' }}>
             {Number(low).toFixed(1)}m
           </span>
         </div>
       </div>
 
-      <div className={`text-xs font-black uppercase tracking-widest mt-4 opacity-40 ${textColor}`}>
+      <div className={`text-caption font-semibold uppercase tracking-widest mt-4 opacity-40 ${textColor}`}>
         {formatTideTime(timeLow)}
       </div>
     </div>

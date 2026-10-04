@@ -1,7 +1,6 @@
 import React, { useMemo, Suspense } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
-import { oRed } from '../../context/OcearoContext';
 
 const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
 
@@ -87,8 +86,9 @@ const dracoPath = `${ASSET_PREFIX}/draco/`;
 // Two materials shared by the whole fleet: one per proximity state. Sharing
 // them keeps a single shader program and avoids 3 material clones per target.
 export const AIS_MATERIALS = {
-    normal: new THREE.MeshStandardMaterial({ color: 0xeef2f5, roughness: 0.7, metalness: 0.1 }),
-    alert: new THREE.MeshStandardMaterial({ color: oRed, roughness: 0.7, metalness: 0.1 }),
+    // Colours are set from the theme by AISView
+    normal: new THREE.MeshStandardMaterial({ color: 0x8a9097, roughness: 0.9, metalness: 0 }),
+    alert: new THREE.MeshStandardMaterial({ color: 0xff2d38, roughness: 0.9, metalness: 0 }),
 };
 
 // Normalized template per loaded GLB scene; instances clone it (geometry shared).

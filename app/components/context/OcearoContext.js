@@ -16,6 +16,9 @@ export {
 } from '../utils/UnitConversions';
 
 import { SAMPLE_DATA, SAMPLE_DATA_INTERVAL } from './SampleData';
+import { THEMES, applyThemeTokens, normalizeThemeMode, themeForSunElevation } from '../theme/themes';
+import { sunPosition } from '../utils/SunUtils';
+import { vesselNow } from '../utils/VesselClock';
 
 const OcearoContext = createContext();
 
@@ -58,8 +61,12 @@ const loadPersistedStates = () => {
 const OCEAN_MODES = ['black', 'water', 'chart', 'meteo'];
 
 export const OcearoContextProvider = ({ children }) => {
-    const [theme, setTheme] = useState(() => configService.get('theme') || 'dark');
-    const [nightMode, setNightMode] = useState(false); // Night mode state (separate from theme, for red HUD)
+    // themeMode is the user's choice ('auto' | 'day' | 'dark' | 'night');
+    // theme is what is displayed — in auto mode it follows the sun.
+    const [themeMode, setThemeModeState] = useState(() => normalizeThemeMode(configService.get('theme')));
+    const [autoTheme, setAutoTheme] = useState('dark');
+    const theme = themeMode === 'auto' ? autoTheme : themeMode;
+    const nightMode = theme === 'night';
     const [states, setStates] = useState(() => ({ ...INITIAL_STATES, ...loadPersistedStates() }));
 
     // Save display preferences whenever one of them changes
@@ -71,18 +78,18 @@ export const OcearoContextProvider = ({ children }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, PERSISTED_STATE_KEYS.map((key) => states[key]));
     
-    // Apply theme and night mode to document root
+    const setTheme = useCallback((mode) => {
+        const normalized = normalizeThemeMode(mode);
+        configService.set('theme', normalized);
+        setThemeModeState(normalized);
+    }, []);
+
+    // Push the theme's colour tokens to CSS variables
     useEffect(() => {
         if (typeof document !== 'undefined') {
-            document.documentElement.setAttribute('data-theme', theme);
+            applyThemeTokens(THEMES[theme]);
         }
     }, [theme]);
-
-    useEffect(() => {
-        if (typeof document !== 'undefined') {
-            document.documentElement.setAttribute('data-night', nightMode ? 'true' : 'false');
-        }
-    }, [nightMode]);
 
     // Store subscribers for each path
     const subscribersRef = useRef({});
@@ -557,6 +564,24 @@ export const OcearoContextProvider = ({ children }) => {
         }, []); // Empty dependency array means this runs once on mount
 
 
+        // Automatic theme: follow the sun at the boat's position (GPS time, so a
+        // Pi that booted with a stale clock still switches at the right moment)
+        useEffect(() => {
+            if (themeMode !== 'auto') return undefined;
+            const update = () => {
+                const position = signalkDataRef.current['navigation.position'];
+                const sun = sunPosition(position?.latitude, position?.longitude, vesselNow());
+                setAutoTheme(prev => themeForSunElevation(sun?.elevation, prev));
+            };
+            // First fix may arrive a moment after start-up
+            const first = setTimeout(update, 1500);
+            const timer = setInterval(update, 60000);
+            return () => {
+                clearTimeout(first);
+                clearInterval(timer);
+            };
+        }, [themeMode]);
+
         // Memoized so consumers only re-render when a context value actually changes,
         // not every time the provider's parent re-renders
         const contextValue = useMemo(() => ({
@@ -570,15 +595,16 @@ export const OcearoContextProvider = ({ children }) => {
             getBoatRotationAngle,
             convertLatLonToXY,
             theme,
+            themeMode,
             setTheme,
+            tokens: THEMES[theme],
             nightMode,
-            setNightMode,
             states,
             toggleState,
             toggleExclusiveMode,
             cycleOceanMode,
         }), [
-            getSignalKValue, subscribe, unsubscribe, subscribePrefix, unsubscribePrefix, getSignalKValuesByPrefix, updateSignalKData, getBoatRotationAngle, convertLatLonToXY, theme, setTheme, nightMode, setNightMode, states, toggleState, toggleExclusiveMode, cycleOceanMode,
+            getSignalKValue, subscribe, unsubscribe, subscribePrefix, unsubscribePrefix, getSignalKValuesByPrefix, updateSignalKData, getBoatRotationAngle, convertLatLonToXY, theme, themeMode, setTheme, nightMode, states, toggleState, toggleExclusiveMode, cycleOceanMode,
         ]);
 
         return (

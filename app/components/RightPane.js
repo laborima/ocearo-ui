@@ -150,7 +150,7 @@ const RightPane = ({ view }) => {
     // Render component based on view type
     const renderContent = () => {
         if (error) {
-            return <div className="text-oRed p-4 font-black uppercase text-xs">{error}</div>;
+            return <div className="text-oRed p-4 font-semibold uppercase text-caption">{error}</div>;
         }
 
         switch (view) {
@@ -175,7 +175,7 @@ const RightPane = ({ view }) => {
             default:
                 if (!iframeSrc) {
                     return (
-                        <div className="text-hud-muted p-4 text-sm">
+                        <div className="text-hud-muted p-4 text-label">
                             {t('errors.failedToLoadExternal')}
                         </div>
                     );

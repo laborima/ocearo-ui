@@ -80,11 +80,11 @@ export default function TankLevelsWidget() {
                   <div className="flex items-center justify-center w-6 h-6 bg-hud-elevated rounded-full">
                     <FontAwesomeIcon icon={tank.icon} className={`${tank.color} text-xs opacity-80`} />
                   </div>
-                  <span className="text-hud-main text-xs font-black uppercase tracking-widest">{tank.displayName}</span>
+                  <span className="text-hud-main text-caption font-semibold uppercase tracking-widest">{tank.displayName}</span>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <span className="text-hud-secondary text-xs font-black opacity-60">{liters}/{tank.capacity}L</span>
-                  <span className={`text-sm font-black ${getTankColor(tank.level, isWaste)} ${isCritical ? 'animate-soft-pulse' : ''}`}>
+                  <span className="text-hud-secondary text-caption font-semibold opacity-60">{liters}/{tank.capacity}L</span>
+                  <span className={`text-label font-semibold ${getTankColor(tank.level, isWaste)} ${isCritical ? 'animate-soft-pulse' : ''}`}>
                     {percentage}%
                   </span>
                 </div>

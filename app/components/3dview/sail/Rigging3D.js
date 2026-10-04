@@ -8,6 +8,8 @@
 import React, { useRef, useMemo, useEffect } from 'react';
 import * as THREE from 'three';
 import { useSignalKPath } from '../../hooks/useSignalK';
+import useTheme from '../../theme/useTheme';
+import { tintForTheme } from '../../theme/themes';
 
 const MASTHEAD = [0, 10.0, -1.05];
 const GOOSENECK = [0, 2.0, -1.0];
@@ -114,7 +116,8 @@ const RiggingLine = ({ points, tension }) => {
         return geo;
     }, [points]);
 
-    const color = useMemo(() => tensionToColor(tension), [tension]);
+    const theme = useTheme();
+    const color = useMemo(() => tintForTheme(theme, tensionToColor(tension)), [tension, theme]);
 
     useEffect(() => {
         if (matRef.current) {

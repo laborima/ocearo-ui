@@ -35,7 +35,7 @@ const MenuButton = ({ icon, label, onClick, onClose }) => (
         <div className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-hud-elevated rounded-lg mr-2 sm:mr-3 group-hover:scale-110 transition-transform shrink-0">
             <FontAwesomeIcon icon={icon} className="text-sm sm:text-base text-hud-muted group-hover:text-hud-main transition-colors" />
         </div>
-        <span className="hidden sm:block text-xs sm:text-sm font-bold uppercase tracking-widest truncate">{label}</span>
+        <span className="hidden sm:block text-caption sm:text-label font-bold uppercase tracking-widest truncate">{label}</span>
     </button>
 );
 

@@ -66,19 +66,19 @@ export default function PressureWidget() {
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div className="text-4xl font-black text-hud-main leading-none gliding-value tracking-tighter">
+            <div className="text-hero font-medium text-hud-main leading-none gliding-value tracking-tight">
               {pressureMbar !== null ? pressureMbar : t('common.na')}
             </div>
-            <div className="text-hud-muted text-xs uppercase font-black mt-1 tracking-[0.2em] opacity-60">mbar</div>
+            <div className="text-hud-muted text-caption uppercase font-semibold mt-1 tracking-[0.2em] opacity-60">mbar</div>
           </div>
         </div>
 
         {/* Status row */}
         <div className="flex items-center justify-between w-full shrink-0">
-          <div className={`text-xs font-black uppercase tracking-[0.2em] ${pressureMbar !== null ? getPressureColor(pressureMbar) : 'text-hud-muted'} ${pressureMbar !== null && (pressureMbar < 1000 || pressureMbar > 1025) ? 'animate-soft-pulse' : ''}`}>
+          <div className={`text-caption font-semibold uppercase tracking-[0.2em] ${pressureMbar !== null ? getPressureColor(pressureMbar) : 'text-hud-muted'} ${pressureMbar !== null && (pressureMbar < 1000 || pressureMbar > 1025) ? 'animate-soft-pulse' : ''}`}>
             {pressureMbar !== null ? getPressureStatus(pressureMbar) : t('widgets.offline')}
           </div>
-          <div className="text-hud-muted text-xs uppercase font-black tracking-widest opacity-40">
+          <div className="text-hud-muted text-caption uppercase font-semibold tracking-widest opacity-40">
             950 — 1050
           </div>
         </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { convertPressure, useOcearoContext } from '../context/OcearoContext';
+import { convertPressure } from '../context/OcearoContext';
 import { useSignalKPaths } from '../hooks/useSignalK';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCloud, faDroplet, faWind } from '@fortawesome/free-solid-svg-icons';
@@ -33,9 +33,9 @@ const ENVIRONMENTAL_MODES = {
   }
 };
 
-const EnvironmentalDisplay = ({ mode, value, icon, nightMode }) => {
+const EnvironmentalDisplay = ({ mode, value, icon }) => {
   const { t } = useTranslation();
-  const textColor = nightMode ? 'text-oNight' : 'text-hud-main';
+  const textColor = 'text-hud-main';
   
   if (!value && value !== 0) {
     return null;
@@ -45,10 +45,10 @@ const EnvironmentalDisplay = ({ mode, value, icon, nightMode }) => {
     <div className={`flex items-center flex-shrink-0 space-x-2 sm:space-x-3 px-2 sm:px-3 py-1.5 transition-all duration-300 ${textColor}`}>
       <FontAwesomeIcon icon={icon} className="text-base sm:text-lg opacity-80" />
       <div className="flex flex-col flex-shrink-0">
-        <span className="ocearo-large-label text-xs font-black uppercase tracking-widest text-hud-muted leading-none mb-1">
+        <span className="ocearo-large-label text-caption font-semibold uppercase tracking-widest text-hud-muted leading-none mb-1">
           {t(ENVIRONMENTAL_MODES[mode].labelKey)}
         </span>
-        <span className="text-base sm:text-xl font-bold tracking-tight leading-none whitespace-nowrap">
+        <span className="text-label sm:text-value font-bold tracking-tight leading-none whitespace-nowrap">
           {ENVIRONMENTAL_MODES[mode].format(value)}
         </span>
       </div>
@@ -57,7 +57,6 @@ const EnvironmentalDisplay = ({ mode, value, icon, nightMode }) => {
 };
 
 const BottomEnvironmentalWidget = () => {
-  const { nightMode } = useOcearoContext();
   const [availableModes, setAvailableModes] = useState([]);
   const [displayMode, setDisplayMode] = useState(null);
 
@@ -97,8 +96,8 @@ const BottomEnvironmentalWidget = () => {
 
   if (availableModes.length === 0) {
     return (
-      <div className={`px-3 py-1.5 ${nightMode ? 'text-oNight' : 'text-hud-muted'}`}>
-        <span className="text-sm font-black uppercase tracking-widest">N/A</span>
+      <div className={`px-3 py-1.5 text-hud-muted`}>
+        <span className="text-label font-semibold uppercase tracking-widest">N/A</span>
       </div>
     );
   }
@@ -117,7 +116,6 @@ const BottomEnvironmentalWidget = () => {
           mode={displayMode}
           value={environmentalData[displayMode]}
           icon={ENVIRONMENTAL_MODES[displayMode].icon}
-          nightMode={nightMode}
         />
       )}
     </div>

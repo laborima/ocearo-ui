@@ -1,4 +1,5 @@
 import { Canvas, useThree } from '@react-three/fiber';
+import { getRenderProfile } from '../utils/RenderProfile';
 import dynamic from 'next/dynamic';
 import { useOcearoContext } from '../context/OcearoContext';
 import * as THREE from 'three';
@@ -52,7 +53,21 @@ const RendererExposer = () => {
   return null;
 };
 
+// Caps the frame rate: the canvas runs on demand and this asks for a frame at
+// a fixed pace. Interactions (orbit controls) still request frames themselves.
+const FrameLimiter = ({ fps }) => {
+  const invalidate = useThree((state) => state.invalidate);
+  useEffect(() => {
+    const timer = setInterval(() => invalidate(), 1000 / fps);
+    return () => clearInterval(timer);
+  }, [fps, invalidate]);
+  return null;
+};
+
 const ThreeDMainView = ({ active = true }) => {
+    // Read once: changing it in settings takes effect on reload
+    const [renderProfile] = useState(getRenderProfile);
+    const limited = renderProfile.fps < 60;
     const { states, nightMode } = useOcearoContext(); // Access global context
     const [infoPanelContent, setInfoPanelContent] = useState(null);
     const [showAttitudeIndicator, setShowAttitudeIndicator] = useState(true);
@@ -80,7 +95,7 @@ const ThreeDMainView = ({ active = true }) => {
             <div className="absolute top-2 left-2 right-2 z-20 flex items-center justify-between">
                 <ThreeDBoatToolbar />
                 <div className="flex items-center space-x-4">
-                    <span className={`text-lg font-black uppercase tracking-[0.2em] ${nightMode ? 'text-oNight' : 'text-hud-muted'}`}>
+                    <span className={`text-label font-semibold uppercase tracking-[0.2em] text-hud-muted`}>
                         {clock.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     </span>
                     <ThreeDBoatThanksIndicator />
@@ -127,11 +142,11 @@ const ThreeDMainView = ({ active = true }) => {
                 <Canvas
                 style={{ width: '100%', height: '100%' }}
                 shadows={false}
-                frameloop={active ? 'always' : 'never'}
-                dpr={Math.min(window.devicePixelRatio, 1.5)}
+                frameloop={active ? (limited ? 'demand' : 'always') : 'never'}
+                dpr={renderProfile.dpr}
                 performance={{ min: 0.5 }}
                 gl={{
-                    antialias: true,
+                    antialias: renderProfile.antialias,
                     powerPreference: 'low-power',
                     physicallyCorrectLights: false,
                     toneMapping: THREE.NoToneMapping,
@@ -140,6 +155,7 @@ const ThreeDMainView = ({ active = true }) => {
                     precision: 'lowp'
                 }}>
                     <RendererExposer />
+                    {active && limited && <FrameLimiter fps={renderProfile.fps} />}
                     {states.parkingMode ? (
                         <ThreeDParkAssistBoat onUpdateInfoPanel={setInfoPanelContent} />
                     ) : states.anchorWatch ? (

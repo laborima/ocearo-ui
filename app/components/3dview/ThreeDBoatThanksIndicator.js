@@ -69,7 +69,7 @@ const TankIndicator = ({ level, type }) => {
                     style={{ width: `${percentage}%` }}
                 />
             </div>
-            <span className={`text-[10px] font-black tabular-nums min-w-[28px] text-right ${isDanger ? 'text-oRed animate-soft-pulse' : 'text-hud-main'}`}>
+            <span className={`text-caption font-semibold tabular-nums min-w-[28px] text-right ${isDanger ? 'text-oRed animate-soft-pulse' : 'text-hud-main'}`}>
                 {percentage}%
             </span>
         </div>

@@ -6,6 +6,7 @@ import { toKnots, toDegrees, useOcearoContext } from '../../context/OcearoContex
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import { useAIS } from './AISContext';
 import AISBoat, { AIS_MATERIALS } from './AISBoat';
+import useTheme from '../../theme/useTheme';
 
 // Hard cap on simultaneously rendered AIS vessels. Each vessel is a full GLTF
 // model, so on a RPi5 we only ever draw the closest N to keep the GPU happy.
@@ -55,6 +56,13 @@ const AISView = ({ onUpdateInfoPanel }) => {
     const meshCache = useRef({}); // mmsi -> meshes, resolved once the model has loaded
 
     const [selectedMmsi, setSelectedMmsi] = useState(null);
+
+    // Fleet materials are shared module-wide: recolour them with the theme
+    const { scene } = useTheme();
+    useEffect(() => {
+        AIS_MATERIALS.normal.color.set(scene.vessel);
+        AIS_MATERIALS.alert.color.set(scene.vesselDanger);
+    }, [scene]);
 
     // Own heading: the AIS layer is laid out north-up, rotate it into the boat frame
     const headingPaths = useMemo(() => [

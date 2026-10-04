@@ -1,5 +1,5 @@
 import React, { Suspense, useRef, useMemo } from 'react';
-import { OrbitControls, PerspectiveCamera, Html, Environment } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Html } from '@react-three/drei';
 import SailBoat3D from './SailBoat3D';
 import { Trail } from './ocean/Trail3D';
 import Ocean3D from './ocean/Ocean3D';
@@ -9,8 +9,9 @@ import ThreeDCompassView from './ThreeDCompassView';
 import LayLines3D from './compass/LayLines3D';
 import { useOcearoContext } from '../context/OcearoContext';
 import PolarProjection from './polar/Polar3D';
-import BoatLighting from './BoatLighting';
+import SceneSetup from './SceneSetup';
 import configService from '../settings/ConfigService';
+import { getRenderProfile } from '../utils/RenderProfile';
 import useSailTrim from '../hooks/useSailTrim';
 import { updateSailTrim } from './sail/SailTrimUtils';
 import SailTrimSliders from './sail/SailTrimSliders';
@@ -20,6 +21,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
     const isCompassLayerVisible = true; // Compass visibility
     const sailBoatRef = useRef();
     const showAxes = configService.get('debugShowAxes');
+    const piProfile = useMemo(() => getRenderProfile().id === 'pi', []);
 
     const sailTrim = useSailTrim();
 
@@ -57,16 +59,8 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 rotateSpeed={0.5}
             />
 
-            {/* Environment for reflections */}
-            <Environment
-                files="./assets/ocearo_env.hdr"
-                background={false}
-                intensity={0.8}
-                resolution={256}
-            />
-
-            {/* Lighting setup */}
-            <BoatLighting />
+            {/* Background, fog and lights; the realistic ocean draws its own sky */}
+            <SceneSetup backdrop={states.oceanMode === 'black'} />
 
             <group position={[0, -3, 0]} >
                 {/* Sailboat — the map plane (-0.1) sits 0.2 above the water
@@ -83,7 +77,8 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
 
                 {/* Ocean / Map plane — chart & meteo keep the ocean sky/water,
                     the map plane floats just above the water surface */}
-                {states.oceanMode !== 'black' && <Ocean3D lite={states.oceanMode !== 'water'} />}
+                {/* The mirrored water renders the scene twice: flat water on a Pi */}
+                {states.oceanMode !== 'black' && <Ocean3D lite={states.oceanMode !== 'water' || piProfile} />}
                 {states.oceanMode === 'chart' && <MapPlane3D mode="chart" />}
                 {states.oceanMode === 'meteo' && <MapPlane3D mode="meteo" />}
 

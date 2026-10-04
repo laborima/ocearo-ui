@@ -26,7 +26,7 @@ const MobAlert = dynamic(() => import('./components/mob/MobAlert'));
 const ThreeDMainView = dynamic(() => import('./components/3dview/ThreeDMainView'), {
   loading: () => (
     <div className="w-full h-full flex items-center justify-center">
-      <div className="text-hud-main text-2xl">Loading 3D View...</div>
+      <div className="text-hud-main text-value">Loading 3D View...</div>
     </div>
   ),
   ssr: false // Disable server-side rendering for 3D components

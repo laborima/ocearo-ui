@@ -14,7 +14,6 @@ import {
 import BottomTemperatureWidget from './widgets/BottomTemperatureWidget';
 import BottomEnvironmentalWidget from './widgets/BottomEnvironmentalWidget';
 import MobButton from './mob/MobButton';
-import { useOcearoContext } from './context/OcearoContext';
 import { useTranslation } from 'react-i18next';
 import configService from './settings/ConfigService';
 import { getOcearoCoreDnd, setOcearoCoreDnd, isOcearoCoreEnabled } from './utils/OcearoCoreUtils';
@@ -39,7 +38,7 @@ const NavButton = ({ icon, onClick, label, textColor, badgeColor }) => (
         <span className={`absolute top-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-leftPaneBg ${badgeColor} animate-pulse`} />
       )}
     </div>
-    <span className="ocearo-large-label text-xs font-black uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100 transition-opacity">
+    <span className="ocearo-large-label text-caption font-semibold uppercase tracking-[0.2em] mt-1 opacity-60 group-hover:opacity-100 transition-opacity">
       {label}
     </span>
   </button>
@@ -47,8 +46,7 @@ const NavButton = ({ icon, onClick, label, textColor, badgeColor }) => (
 
 const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
   const { t } = useTranslation();
-  const { nightMode } = useOcearoContext();
-  const textColor = nightMode ? 'text-hud-main/90' : 'text-hud-main';
+  const textColor = 'text-hud-main';
 
   const [dndMode, setDndMode] = useState('off');
 

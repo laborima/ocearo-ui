@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useOcearoContext } from '../context/OcearoContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -8,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 
 const MediaPlayer = () => {
   const { t } = useTranslation();
-  const { nightMode } = useOcearoContext();
   const [selectedService, setSelectedService] = useState(null);
   const [iframeError, setIframeError] = useState(false);
 
@@ -79,15 +77,15 @@ const MediaPlayer = () => {
             height={128}
           />
         </div>
-        <p className={`text-xl font-black uppercase tracking-widest mb-2 ${nightMode ? 'text-oNight' : 'text-hud-main'}`}>
+        <p className={`text-label font-semibold uppercase tracking-widest mb-2 text-hud-main`}>
           {service.name}
         </p>
-        <p className={`text-xs font-black uppercase tracking-widest ${nightMode ? 'text-oNight' : 'text-hud-secondary'} opacity-80 mb-8 text-center`}>
+        <p className={`text-caption font-semibold uppercase tracking-widest text-hud-secondary opacity-80 mb-8 text-center`}>
           {t('mediaPlayer.redirecting')}
         </p>
         <button
           onClick={() => handleOpenExternal(service.url)}
-          className={`px-6 py-2.5 rounded text-xs font-black uppercase tracking-widest flex items-center transition-all duration-500 shadow-soft ${nightMode ? 'bg-oNight/20 text-oNight hover:bg-oNight/30 border border-oNight/30' : 'bg-oBlue text-hud-main hover:bg-oBlue/80 shadow-lg shadow-oBlue/20'}`}
+          className={`px-6 py-2.5 rounded text-caption font-semibold uppercase tracking-widest flex items-center transition-all duration-500 shadow-soft bg-oBlue text-hud-main hover:bg-oBlue/80 shadow-lg shadow-oBlue/20`}
         >
           <span>{t('mediaPlayer.launch')}</span>
           <FontAwesomeIcon icon={faExternalLinkAlt} className="ml-3 text-xs" />
@@ -110,7 +108,7 @@ const MediaPlayer = () => {
           >
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
-              <h2 className={`text-sm font-black uppercase tracking-widest flex items-center ${nightMode ? 'text-oNight' : 'text-hud-main'}`}>
+              <h2 className={`text-label font-semibold uppercase tracking-widest flex items-center text-hud-main`}>
                 <div className="w-2 h-2 rounded-full bg-oBlue mr-3 animate-soft-pulse" />
                 {selectedService.name}
               </h2>
@@ -119,7 +117,7 @@ const MediaPlayer = () => {
                 className="p-2 rounded-full text-hud-muted tesla-hover"
                 aria-label={t('common.close')}
               >
-                <FontAwesomeIcon icon={faTimes} className={`text-sm ${nightMode ? 'text-oNight' : ''}`} />
+                <FontAwesomeIcon icon={faTimes} className={`text-sm `} />
               </button>
             </div>
             
@@ -129,14 +127,14 @@ const MediaPlayer = () => {
                 renderSimulatedViewer(selectedService)
               ) : iframeError ? (
                 <div className="w-full h-full flex flex-col items-center justify-center tesla-card p-10 bg-hud-bg">
-                  <p className={`mb-6 text-sm font-black uppercase tracking-widest ${nightMode ? 'text-oNight' : 'text-hud-main'}`}>
+                  <p className={`mb-6 text-label font-semibold uppercase tracking-widest text-hud-main`}>
                     {t('mediaPlayer.connectionRefused', { name: selectedService.name })}
                   </p>
                   <a 
                     href={selectedService.url} 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className={`flex items-center text-xs font-black uppercase tracking-widest px-4 py-2 rounded transition-all duration-300 ${nightMode ? 'text-oNight hover:bg-oNight/10 border border-oNight/20' : 'text-oBlue hover:bg-oBlue/10 border border-oBlue/20'}`}
+                    className={`flex items-center text-caption font-semibold uppercase tracking-widest px-4 py-2 rounded transition-all duration-300 text-oBlue hover:bg-oBlue/10 border border-oBlue/20`}
                   >
                     <span>{t('mediaPlayer.openExternalNode')}</span>
                     <FontAwesomeIcon icon={faExternalLinkAlt} className="ml-2" />
@@ -163,7 +161,7 @@ const MediaPlayer = () => {
             exit={{ opacity: 0 }}
             className="flex flex-col h-full"
           >
-            <h2 className={`text-sm font-black uppercase tracking-widest mb-6 flex items-center ${nightMode ? 'text-oNight' : 'text-hud-main'}`}>
+            <h2 className={`text-label font-semibold uppercase tracking-widest mb-6 flex items-center text-hud-main`}>
               <FontAwesomeIcon icon={faExternalLinkAlt} className="mr-3 text-oBlue text-xs" />
               {t('mediaPlayer.entertainmentNodes')}
             </h2>
@@ -185,11 +183,11 @@ const MediaPlayer = () => {
                       height={80}
                     />
                   </div>
-                  <span className={`text-xs font-black uppercase tracking-widest transition-colors duration-500 ${nightMode ? 'text-oNight' : 'text-hud-secondary group-hover:text-hud-main'}`}>
+                  <span className={`text-caption font-semibold uppercase tracking-widest transition-colors duration-500 text-hud-secondary group-hover:text-hud-main`}>
                     {service.name}
                   </span>
                   {service.external && (
-                    <div className="mt-2 text-xs font-black text-oBlue opacity-0 group-hover:opacity-100 transition-opacity duration-500 uppercase tracking-tighter">
+                    <div className="mt-2 text-caption font-semibold text-oBlue opacity-0 group-hover:opacity-100 transition-opacity duration-500 uppercase tracking-tighter">
                       {t('mediaPlayer.externalNode')}
                     </div>
                   )}

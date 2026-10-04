@@ -95,7 +95,7 @@ const MobButton = () => {
           />
           <FontAwesomeIcon icon={faLifeRing} className={`relative text-base sm:text-xl ${holding ? 'text-white' : ''}`} />
         </div>
-        <span className="ocearo-large-label text-xs font-black uppercase tracking-[0.2em] mt-1">
+        <span className="ocearo-large-label text-caption font-semibold uppercase tracking-[0.2em] mt-1">
           {t('mob.short')}
         </span>
       </button>
@@ -103,7 +103,7 @@ const MobButton = () => {
       {message && createPortal(
         <div
           role="status"
-          className={`fixed bottom-20 left-4 max-w-[20rem] px-3 py-2 rounded-lg border text-sm z-50 shadow-lg ${message.isError ? 'bg-oRed text-white border-oRed' : 'bg-hud-elevated text-hud-main border-hud'}`}
+          className={`fixed bottom-20 left-4 max-w-[20rem] px-3 py-2 rounded-lg border text-label z-50 shadow-lg ${message.isError ? 'bg-oRed text-white border-oRed' : 'bg-hud-elevated text-hud-main border-hud'}`}
         >
           {message.text}
         </div>,

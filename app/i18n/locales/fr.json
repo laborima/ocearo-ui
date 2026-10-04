@@ -64,7 +64,11 @@
     "oceanBlack": "Noir (sans océan)",
     "oceanWater": "Océan (eau 3D)",
     "oceanChart": "Carte (freeboard-sk)",
-    "oceanMeteo": "Météo (Windy)"
+    "oceanMeteo": "Météo (Windy)",
+    "themeAuto": "Thème : automatique ({{theme}})",
+    "theme_day": "Thème jour",
+    "theme_dark": "Thème sombre",
+    "theme_night": "Thème nuit (rouge)"
   },
   "indicators": {
     "depth": "Profondeur",
@@ -170,7 +174,13 @@
     "unitMs": "m/s",
     "unitMetres": "m",
     "unitFeet": "ft",
-    "unitFathoms": "fa"
+    "unitFathoms": "fa",
+    "themeAuto": "Auto (soleil)",
+    "renderQuality": "Rendu 3D",
+    "renderQuality_auto": "Auto",
+    "renderQuality_high": "Qualité",
+    "renderQuality_pi": "Raspberry Pi",
+    "renderQualityHint": "Raspberry Pi : 30 i/s, sans anticrénelage, eau plate. Appliqué au rechargement."
   },
   "dashboard": {
     "environment": "Environnement",

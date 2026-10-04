@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useOcearoContext } from '../context/OcearoContext';
 import { convertTemperatureUnit, getTemperatureUnitLabel } from '../utils/UnitConversions';
 import { useSignalKPaths } from '../hooks/useSignalK';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -54,9 +53,9 @@ const TEMPERATURE_MODES = {
   }
 };
 
-const TemperatureDisplay = ({ mode, value, icon, nightMode }) => {
+const TemperatureDisplay = ({ mode, value, icon }) => {
   const { t } = useTranslation();
-  const textColor = nightMode ? 'text-oNight' : 'text-hud-main';
+  const textColor = 'text-hud-main';
   
   if (!value && value !== 0) {
     return null;
@@ -68,10 +67,10 @@ const TemperatureDisplay = ({ mode, value, icon, nightMode }) => {
     <div className={`flex items-center flex-shrink-0 space-x-2 sm:space-x-3 px-2 sm:px-3 py-1.5 transition-all duration-300 ${textColor}`}>
       <FontAwesomeIcon icon={icon} className="text-base sm:text-lg opacity-80" />
       <div className="flex flex-col flex-shrink-0">
-        <span className="ocearo-large-label text-xs font-black uppercase tracking-widest text-hud-muted leading-none mb-1">
+        <span className="ocearo-large-label text-caption font-semibold uppercase tracking-widest text-hud-muted leading-none mb-1">
           {label.split(' ')[0]}
         </span>
-        <span className="text-base sm:text-xl font-bold tracking-tight leading-none whitespace-nowrap">
+        <span className="text-label sm:text-value font-bold tracking-tight leading-none whitespace-nowrap">
           {TEMPERATURE_MODES[mode].format(value)}
         </span>
       </div>
@@ -81,7 +80,6 @@ const TemperatureDisplay = ({ mode, value, icon, nightMode }) => {
 
 const BottomTemperatureWidget = () => {
   const { t } = useTranslation();
-  const { nightMode } = useOcearoContext();
   const [availableModes, setAvailableModes] = useState([]);
   const [displayMode, setDisplayMode] = useState(null);
 
@@ -121,8 +119,8 @@ const BottomTemperatureWidget = () => {
 
   if (availableModes.length === 0) {
     return (
-      <div className={`px-3 py-1.5 ${nightMode ? 'text-oNight' : 'text-hud-muted'}`}>
-        <span className="text-sm font-black uppercase tracking-widest">N/A</span>
+      <div className={`px-3 py-1.5 text-hud-muted`}>
+        <span className="text-label font-semibold uppercase tracking-widest">N/A</span>
       </div>
     );
   }
@@ -142,7 +140,6 @@ const BottomTemperatureWidget = () => {
           mode={displayMode}
           value={temperatureData[displayMode]}
           icon={TEMPERATURE_MODES[displayMode].icon}
-          nightMode={nightMode}
         />
       )}
     </div>

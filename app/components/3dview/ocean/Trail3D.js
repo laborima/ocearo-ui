@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useMemo } from "react";
 import { useFrame, extend } from "@react-three/fiber";
 import { shaderMaterial } from "@react-three/drei";
 import * as THREE from "three";
-import { useOcearoContext, oBlue } from "../../context/OcearoContext";
+import useTheme from "../../theme/useTheme";
 import { useSignalKPath } from "../../hooks/useSignalK";
 // Create a custom shader material with an extra 'rainbowActive' uniform.
 const TrailShaderMaterial = shaderMaterial(
@@ -128,14 +128,12 @@ extend({ TrailShaderMaterial });
 
 export const Trail = ({
   color = "#004466",
-  waterColor = "#001a26",
-  foamColor = "#88ccff",
   speed = 1.0,
   scale = 3.0,
   opacity = 0.4,
 }) => {
   const trailRef = useRef();
-  const { nightMode } = useOcearoContext();
+  const { scene } = useTheme();
   
   // Use subscription for autopilot state
   const autopilotState = useSignalKPath("steering.autopilot.state");
@@ -155,9 +153,9 @@ export const Trail = ({
     }
   });
 
-  const finalColor = useMemo(() => new THREE.Color(nightMode ? "#002233" : color), [nightMode, color]);
-  const finalWaterColor = useMemo(() => new THREE.Color(nightMode ? "#000811" : waterColor), [nightMode, waterColor]);
-  const finalFoamColor = useMemo(() => new THREE.Color(nightMode ? oBlue : foamColor), [nightMode, foamColor]);
+  const finalColor = useMemo(() => new THREE.Color(color), [color]);
+  const finalWaterColor = useMemo(() => new THREE.Color(scene.background), [scene.background]);
+  const finalFoamColor = useMemo(() => new THREE.Color(scene.wakeFoam), [scene.wakeFoam]);
 
   return (
     <mesh rotation={[-Math.PI / 2, 0, Math.PI / 2]} position={[0, 0, 22.5]}>

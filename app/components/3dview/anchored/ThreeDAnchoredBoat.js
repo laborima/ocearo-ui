@@ -1,15 +1,16 @@
 import React, { Suspense, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Html, Environment } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Html } from '@react-three/drei';
+import SceneSetup from '../SceneSetup';
+import useTheme from '../../theme/useTheme';
 import * as THREE from 'three';
-import { useOcearoContext } from '../../context/OcearoContext';
 import SailBoat3D from '../SailBoat3D';
 import AnchoredCircle from './AnchoredCircle';
 
 const ThreeDAnchoredBoat = ({ onUpdateInfoPanel }) => {
     const sailBoatRef = useRef();
     const { size } = useThree(); // Get canvas dimensions
-    const { nightMode } = useOcearoContext();
+    const { scene } = useTheme();
     const aspect = size.width / size.height; // Calculate aspect ratio
 
     return (
@@ -33,31 +34,7 @@ const ThreeDAnchoredBoat = ({ onUpdateInfoPanel }) => {
                 minPolarAngle={Math.PI / 4} // Limit upward rotation
             />
 
-            {/* Environment for reflections */}
-            <Environment files="./assets/ocearo_env.hdr" background={false} />
-
-            {/* Lighting setup - Optimized for Tesla-UI HUD aesthetic */}
-            <ambientLight intensity={0.2} />
-
-            {/* Main directional light */}
-            <directionalLight
-                position={[15, 30, 20]}
-                intensity={1.2}
-                castShadow={false}
-                color={nightMode ? "#b0d8ff" : "#ffffff"}
-            />
-
-            {/* Rim light for silhouette definition */}
-            <spotLight
-                position={[0, 50, 100]}
-                intensity={0.8}
-                angle={0.6}
-                penumbra={1}
-                color={nightMode ? "#4080ff" : "#ffffff"}
-            />
-
-            {/* Fill light */}
-            <pointLight position={[-10, 10, -10]} intensity={0.5} />
+            <SceneSetup />
 
             {/* Boat model */}
             <SailBoat3D 
@@ -78,7 +55,7 @@ const ThreeDAnchoredBoat = ({ onUpdateInfoPanel }) => {
                 <planeGeometry args={[100, 100]} />
                 <shaderMaterial
                     uniforms={{
-                        uColor: { value: new THREE.Color(nightMode ? "#050505" : "#0a0a0a") }, // Darker for high contrast
+                        uColor: { value: new THREE.Color(scene.ground) }, // Soft ground patch under the boat
                         uBlurRadius: { value: 0.15 },
                     }}
                     vertexShader={`
