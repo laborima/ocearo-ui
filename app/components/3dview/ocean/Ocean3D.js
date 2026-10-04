@@ -33,7 +33,7 @@ const RAIN_BOX = 240;    // horizontal half-extent around the boat
 const RAIN_HEIGHT = 220; // drops fall from this height
 const _scratchCloudColor = new THREE.Color();
 
-function Ocean3D({ lite = false, fogDensity = 0.00035 }) {
+function Ocean3D({ lite = false, fogDensity = 0.00035, water: showWater = true }) {
   const { nightMode } = useOcearoContext();
   const { getWindData, getCurrentWeather } = useWeather();
   
@@ -435,7 +435,7 @@ function Ocean3D({ lite = false, fogDensity = 0.00035 }) {
       {/* Rain particles around the boat, visible when forecast reports rain */}
       <points ref={rainRef} geometry={rainGeometry} material={rainMaterial} visible={false} />
 
-      {lite ? (
+      {!showWater ? null : lite ? (
         <mesh
           geometry={geom}
           material={liteWaterMaterial}
