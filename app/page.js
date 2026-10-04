@@ -20,6 +20,8 @@ const BottomNavigation = dynamic(() => import('./components/BottomNavigation'));
 
 const AppMenu = dynamic(() => import('./components/AppMenu'));
 
+const MobAlert = dynamic(() => import('./components/mob/MobAlert'));
+
 // Keep ThreeDMainView import dynamic with custom loading component
 const ThreeDMainView = dynamic(() => import('./components/3dview/ThreeDMainView'), {
   loading: () => (
@@ -245,6 +247,8 @@ export default function Home() {
                                 toggleSettings={toggleSettings}
                             />
                         </div>
+
+                        <MobAlert />
 
                         {showAppMenu && (
                             <AppMenu

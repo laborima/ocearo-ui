@@ -699,5 +699,19 @@
   "errors": {
     "errorGeneratingUrl": "Error generating application URL",
     "failedToLoadExternal": "Failed to load external content"
+  },
+  "mob": {
+    "short": "MOB",
+    "buttonLabel": "Man overboard: hold to raise the alarm",
+    "holdHint": "Hold the MOB button for 1 second to raise the alarm",
+    "raiseFailed": "MOB alarm not sent: {{error}}",
+    "title": "Man overboard",
+    "elapsed": "elapsed",
+    "noPosition": "No position for the MOB or the boat",
+    "acknowledge": "Acknowledge",
+    "navigateTo": "Go to MOB",
+    "clear": "Cancel alarm",
+    "confirmClear": "Tap again to cancel",
+    "relativeBearing": "Direction from the bow"
   }
 }
