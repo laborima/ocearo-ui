@@ -13,16 +13,18 @@ export const RIG = {
     forestayTack: [0, 1.45, -5.95],
     innerStayTack: [0, 1.5, -4.3],
     bowsprit: [0, 1.5, -6.5],
-    // Deck hardware for the trim indicators: traveller across the cockpit
-    // floor (~0.62 m), forward of the tiller; jib tracks on the side decks
-    traveller: { z: 2.9, y: 0.7, halfWidth: 1.15 },
-    jibTrack: { x: 1.38, y: 1.5, zFwd: -1.9, zAft: 0.3 },
+    // Deck hardware for the trim indicators: traveller on a bridge across the
+    // cockpit at seat height, forward of the tiller; jib tracks on the side decks
+    traveller: { z: 2.9, y: 1.1, halfWidth: 1.15 },
+    jibTrack: { x: 1.42, y: 1.43, zFwd: -1.9, zAft: 0.3 },
+    // Cockpit floor under the tiller
+    cockpitFloor: 0.62,
     // Mainsheet attachment on the boom, metres from the gooseneck (above the traveller)
     mainsheetOnBoom: 3.5,
-    // Rudder stocks: pivot (top of the blade) and axis (twin rudders are toed out ~12°)
+    // Rudder stocks: pivot (top of the blade) and axis (twin rudders are canted out ~7.5°)
     rudders: {
-        port: { pivot: [-1.06, 0.03, 4.72], axis: [-0.21, -0.98, 0] },
-        starboard: { pivot: [1.06, 0.03, 4.72], axis: [0.21, -0.98, 0] },
+        port: { pivot: [-1.12, 0.05, 4.7], axis: [-0.13, -0.99, 0] },
+        starboard: { pivot: [1.12, 0.05, 4.7], axis: [0.13, -0.99, 0] },
         centre: { pivot: [0, -0.1, 4.26], axis: [0, -1, 0] },
     },
     // Tiller: from the rudder linkage at the transom forward over the cockpit
