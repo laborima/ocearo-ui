@@ -412,21 +412,22 @@ const LogbookView = () => {
         wind.push(`${entry.wind.direction}°`);
       }
       if (wind.length) {
-        weather.push(`${entry.wind.apparent ? 'AWind' : 'Wind'} ${wind.join(' ')}`);
+        weather.push(`${entry.wind.apparent ? t('logbook.windApparentShort') : ''}${wind.join(' ')}`.trim());
       }
     }
     if (entry.observations) {
       if (Number.isFinite(entry.observations.seaState)) {
-        weather.push(`Sea state ${entry.observations.seaState}`);
+        weather.push(t('logbook.seaStateShort', { value: entry.observations.seaState }));
       }
       if (Number.isFinite(entry.observations.cloudCoverage)) {
-        weather.push(`Clouds ${entry.observations.cloudCoverage}/8`);
+        weather.push(`☁ ${entry.observations.cloudCoverage}/8`);
       }
       if (Number.isFinite(entry.observations.visibility)) {
-        weather.push(`Visibility ${entry.observations.visibility + 1}`);
+        weather.push(t('logbook.visibilityShort', { value: entry.observations.visibility + 1 }));
       }
     }
-    return weather.join(', ');
+    // Compact, one line: "12 kt 180° · sea 2 · ☁ 3/8 · vis 8"
+    return weather.join(' · ');
   };
 
   const getCourse = (entry) => {
@@ -517,7 +518,7 @@ const LogbookView = () => {
                 </td>
                 <td className="p-3 gliding-value">{getCourse(entry)}</td>
                 <td className="p-3 gliding-value">{fmt(entry.speed?.sog, 'kt')}</td>
-                <td className="p-3 text-hud-secondary font-bold lowercase normal-case">{getWeather(entry)}</td>
+                <td className="p-3 text-hud-secondary font-bold normal-case whitespace-nowrap">{getWeather(entry)}</td>
                 <td className="p-3 gliding-value opacity-60">{fmt(entry.barometer)}</td>
                 <td className="p-3 gliding-value">{fmt(entry.depth, 'm')}</td>
                 <td className="p-3 text-caption text-hud-muted font-mono tracking-tighter">{entry.point ? entry.point.toString() : 'n/a'}</td>

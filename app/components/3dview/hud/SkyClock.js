@@ -25,7 +25,7 @@ const uvClass = (uv) => {
  * sunrise or sunset (from the server when it publishes them, else computed
  * from the position) and the UV index when a sensor or forecast provides it.
  */
-const SkyClock = () => {
+const SkyClock = ({ compact = false }) => {
     const { t } = useTranslation();
     const v = useSignalKPaths(PATHS);
     const [now, setNow] = useState(() => vesselNow());
@@ -47,13 +47,13 @@ const SkyClock = () => {
 
     return (
         <div className="flex items-center gap-3 text-label font-semibold tracking-[0.15em] text-hud-muted">
-            {nextSun && (
+            {nextSun && !compact && (
                 <span className="flex items-center gap-1.5" title={nextSun.rise ? t('hud.sunrise') : t('hud.sunset')}>
                     <FontAwesomeIcon icon={nextSun.rise ? faSun : faMoon} className="text-oYellow text-sm" />
                     {formatClockTime(nextSun.at)}
                 </span>
             )}
-            {Number.isFinite(uv) && (
+            {Number.isFinite(uv) && !compact && (
                 <span className="flex items-center gap-1" title={t('environmental.uvIndex')}>
                     <span className={`text-caption ${uvClass(uv)}`}>UV</span>
                     {uv.toFixed(0)}

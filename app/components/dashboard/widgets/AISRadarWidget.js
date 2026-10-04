@@ -156,10 +156,19 @@ const AISRadarWidget = React.memo(() => {
           </g>
           
           {/* AIS Targets */}
-          {aisData.map(target => {
-            const distance = (target.distance / radarRange) * 80;
-            const x = 100 + distance * Math.cos((target.bearing - 90) * Math.PI / 180);
-            const y = 100 + distance * Math.sin((target.bearing - 90) * Math.PI / 180);
+          {(() => {
+            // Place labels so close targets don't print over each other
+            const placed = [];
+            return aisData.map(target => {
+              const distance = (target.distance / radarRange) * 80;
+              const x = 100 + distance * Math.cos((target.bearing - 90) * Math.PI / 180);
+              const y = 100 + distance * Math.sin((target.bearing - 90) * Math.PI / 180);
+              let ly = y - 5;
+              while (placed.some(p => Math.abs(p.x - x) < 26 && Math.abs(p.y - ly) < 6)) ly += 6;
+              placed.push({ x, y: ly });
+              return { target, x, y, ly };
+            });
+          })().map(({ target, x, y, ly }) => {
             const hazard = isHazard(target);
             
             return (
@@ -173,7 +182,7 @@ const AISRadarWidget = React.memo(() => {
                 />
                 <text
                   x={x + 5}
-                  y={y - 5}
+                  y={ly}
                   fill="currentColor"
                   fontSize="5"
                   className="font-black pointer-events-none uppercase tracking-tighter opacity-60 text-hud-main"

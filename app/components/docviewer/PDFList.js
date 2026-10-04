@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileAlt } from '@fortawesome/free-solid-svg-icons';
 
 const PDFList = ({ path }) => {
     const [pdfFiles, setPdfFiles] = useState([]);
     const [selectedPdf, setSelectedPdf] = useState(null);
+    const [failed, setFailed] = useState(false);
+    const { t } = useTranslation();
     const viewerRef = useRef(null);
 
     useEffect(() => {
@@ -16,7 +19,8 @@ const PDFList = ({ path }) => {
                 setPdfFiles(data);
                 if (data.length > 0) setSelectedPdf(data[0]);
             } catch (error) {
-                console.error('Error fetching PDF files:', error);
+                console.warn('Manuals: cannot list the documents:', error.message);
+                setFailed(true);
             }
         };
         fetchPdfFiles();
@@ -44,6 +48,11 @@ const PDFList = ({ path }) => {
 
             {/* PDF Viewer */}
             <div className="flex-grow bg-hud-bg text-hud-main flex items-center justify-center">
+                {!selectedPdf && (
+                    <div className="text-label text-hud-secondary p-6 text-center">
+                        {failed ? t('manual.unavailable') : t('manual.none')}
+                    </div>
+                )}
                 {selectedPdf && (
                     <iframe
                         src={`${path}/${selectedPdf.file}`}

@@ -571,7 +571,10 @@
       "shutdown": "Arrêt",
       "test": "Test",
       "performance": "Performance"
-    }
+    },
+    "windApparentShort": "app. ",
+    "seaStateShort": "mer {{value}}",
+    "visibilityShort": "vis {{value}}"
   },
   "maintenance": {
     "title": "Plan de maintenance",
@@ -851,5 +854,9 @@
   "meteo": {
     "forecast": "Prévision",
     "now": "Maintenant"
+  },
+  "manual": {
+    "unavailable": "Impossible de charger les manuels.",
+    "none": "Aucun manuel installé."
   }
 }

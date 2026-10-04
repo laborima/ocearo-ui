@@ -155,7 +155,8 @@ const RightPane = ({ view }) => {
 
         switch (view) {
             case 'manual':
-                return <PDFList path="/docs" />;
+                // Relative to the page: the app is served under a prefix (/ocearo-ui)
+                return <PDFList path="./docs" />;
             case 'settings':
                 return <ConfigPage />;
             case 'mediaplayer':
