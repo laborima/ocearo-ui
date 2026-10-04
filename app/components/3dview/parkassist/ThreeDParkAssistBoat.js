@@ -9,14 +9,14 @@ import WindSector3D from '../compass/WindSector3D';
 import Current3D from '../compass/Current3D';
 import PathRibbon from './PathRibbon';
 import VirtualBerth from './VirtualBerth';
-import { predictPath } from './steering';
+import { Line } from '@react-three/drei';
+import { predictTrack } from './steering';
+import { wrapPi } from '../../utils/Polar';
 
 // Harbour scene scale: scene units per metre (the boat model is drawn at 0.5)
 const SCALE = 0.5;
-// Seconds of motion shown ahead, and the path length limits (metres)
-const LOOKAHEAD_S = 15;
-const MIN_PATH = 8;
-const MAX_PATH = 25;
+// Seconds of motion shown ahead
+const LOOKAHEAD_S = 20;
 
 const PATHS = [
     'steering.rudderAngle',
@@ -25,12 +25,18 @@ const PATHS = [
     'propulsion.0.transmission.gear',
     'propulsion.main.transmission.gear',
     'propulsion.port.transmission.gear',
+    'environment.current',
+    'environment.wind.speedTrue',
+    'environment.wind.angleTrueWater',
+    'navigation.headingTrue',
+    'navigation.courseOverGroundTrue',
 ];
 
 /**
- * Harbour view, Tesla parking style: seen from above, the path the boat will
- * follow with the current rudder and speed (blue band with chevrons, astern
- * when the gearbox is in reverse), the berth to reach, and wind and current.
+ * Harbour view, Tesla parking style: seen from above, the track the boat
+ * will follow over the next 20 s with the rudder, speed, current and windage
+ * (blue band with chevrons, astern when the gearbox is in reverse; dashed: the
+ * same without drift), the berth to reach, and the wind and current arrows.
  */
 const ThreeDParkAssistBoat = ({ onUpdateInfoPanel }) => {
     const { scene, accent } = useTheme();
@@ -42,12 +48,26 @@ const ThreeDParkAssistBoat = ({ onUpdateInfoPanel }) => {
     const gear = v['propulsion.0.transmission.gear'] ?? v['propulsion.main.transmission.gear'] ?? v['propulsion.port.transmission.gear'];
     const reverse = gear === 'reverse';
 
-    const path = useMemo(() => {
-        const length = Math.min(MAX_PATH, Math.max(MIN_PATH, speed * LOOKAHEAD_S));
-        // Path starts at the bow (or the stern going astern)
+    const heading = v['navigation.headingTrue'] ?? v['navigation.courseOverGroundTrue'];
+    const currentData = v['environment.current'];
+    const windSpeed = v['environment.wind.speedTrue'];
+    const windAngle = v['environment.wind.angleTrueWater'];
+
+    // Predicted track with wind and current, and the same without drift
+    const { path, noDrift } = useMemo(() => {
+        const signed = reverse ? -speed : speed;
+        const current = currentData && Number.isFinite(heading)
+            ? { set: wrapPi((currentData.setTrue ?? 0) - heading), drift: currentData.drift ?? 0 }
+            : null;
+        const wind = Number.isFinite(windSpeed) && Number.isFinite(windAngle) ? { angle: windAngle, speed: windSpeed } : null;
+        // Start at the bow (or the stern going astern)
         const start = (reverse ? 1 : -1) * 5.4;
-        return predictPath(rudder, length, reverse).map(([x, z]) => [x * SCALE, (z + start) * SCALE]);
-    }, [rudder, speed, reverse]);
+        const toScene = ([x, z]) => [x * SCALE, (z + start) * SCALE];
+        return {
+            path: predictTrack({ rudder, speed: signed, seconds: LOOKAHEAD_S, current, wind }).map(toScene),
+            noDrift: predictTrack({ rudder, speed: signed, seconds: LOOKAHEAD_S }).map(toScene),
+        };
+    }, [rudder, speed, reverse, heading, currentData, windSpeed, windAngle]);
 
     return (
         <Suspense fallback={<Html center>Loading...</Html>}>
@@ -76,7 +96,9 @@ const ThreeDParkAssistBoat = ({ onUpdateInfoPanel }) => {
                 />
 
                 {/* Where the boat goes with this rudder and speed */}
-                <PathRibbon points={path} width={3.9 * SCALE} color={accent} glow={scene.routeGlow} opacity={speed < 0.2 ? 0.5 : 1} />
+                <PathRibbon points={path} width={3.9 * SCALE} color={accent} glow={scene.routeGlow} />
+                {/* Without wind and current, for comparison */}
+                <Line points={noDrift.map(([x, z]) => [x, 0.06, z])} color={scene.compassDim} lineWidth={1.5} dashed dashSize={0.6} gapSize={0.5} />
 
                 <WindSector3D outerRadius={5} />
                 <Current3D outerRadius={5} />
