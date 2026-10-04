@@ -100,7 +100,7 @@ const SceneLegend = () => {
     }
 
     return (
-        <div className="hud-halo px-2 py-2 max-w-[19rem] select-none">
+        <div className="hud-halo px-2 py-2 max-w-[19rem] max-h-[45vh] overflow-y-auto select-none">
             <div className="flex items-center justify-between mb-1">
                 <span className="text-caption font-semibold uppercase tracking-widest text-hud-muted">{t('legend.title')}</span>
                 <button type="button" onClick={toggle} aria-label={t('legend.close')} className="text-hud-muted hover:text-hud-main px-1">
