@@ -20,6 +20,15 @@
       ]
     },
     {
+      "name": "Catamaran 14",
+      "modelPath": "catamaran",
+      "capabilities": [
+        "navigation",
+        "sail",
+        "color"
+      ]
+    },
+    {
       "name": "Optimist",
       "modelPath": "optimist",
       "capabilities": [
