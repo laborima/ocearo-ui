@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import useTheme from '../../../theme/useTheme';
 import configService from '../../../settings/ConfigService';
-import SailPlan, { boomAngleFor } from './SailPlan';
+import SailPlan, { boomAngleWithTraveller } from './SailPlan';
 import DeckTrim from './DeckTrim';
 import { RIG, chooseSails } from './rig';
 import { buildRacerParts, sheerOutline } from './racerGeometry';
@@ -14,14 +14,18 @@ import { useSignalKPath } from '../../../hooks/useSignalK';
 export const KEELS = ['keel_single_twinrudder', 'keel_single_singlerudder'];
 
 // Part -> theme colour (or fixed tone), all matte
+const DARK = '#262c33';
 const PART_COLORS = (scene, hull) => ({
     hull,
+    bottom: DARK,
     deck: scene.ownDeck,
-    roof: scene.ownDeck,
-    glass: '#262c33',
+    roof: hull,
+    glass: DARK,
+    ports: scene.rigging,
     rig: scene.rigging,
+    rails: scene.compassDim,
     boom: scene.rigging,
-    stripes: '#262c33',
+    stripes: DARK,
 });
 
 /**
@@ -41,8 +45,6 @@ const RacerBoat = ({ hullColor, windData, trim, showSail = true }) => {
         for (const [part, color] of Object.entries(colors)) {
             out[part] = new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0 });
         }
-        // Bottom paint is a darker shade of the hull colour (vertex colours)
-        out.hull.vertexColors = true;
         out.stripes.side = THREE.DoubleSide;
         out.glass.side = THREE.DoubleSide;
         // Underwater: keel and rudders seen through the water, so they turn
@@ -56,16 +58,18 @@ const RacerBoat = ({ hullColor, windData, trim, showSail = true }) => {
 
     const awa = windData?.awa ?? 0.6;
     const leeward = awa >= 0 ? -1 : 1;
-    const boomAngle = boomAngleFor(awa) * leeward;
+    const travellerX = ((trim?.trimState?.mainCar ?? 0.5) - 0.5) * 2 * RIG.traveller.halfWidth;
+    const boomAngle = boomAngleWithTraveller(awa, travellerX) * leeward;
+    const jibCar = trim?.trimState?.jibCar ?? 0.5;
+    const jibCarAt = [leeward * RIG.jibTrack.x, RIG.jibTrack.y + 0.15, RIG.jibTrack.zFwd + (RIG.jibTrack.zAft - RIG.jibTrack.zFwd) * jibCar];
     const sails = useMemo(
         () => chooseSails(windData?.tws, windData?.twa, configService.get('sailPlanOverride')),
         [windData?.tws, windData?.twa]
     );
 
-    const parts = ['hull', 'deck', 'roof', 'glass', 'stripes', 'rig'];
+    const parts = ['hull', 'bottom', 'deck', 'roof', 'glass', 'ports', 'stripes', 'rig', 'rails'];
     const [gx, gy, gz] = RIG.gooseneck;
     const rudder = useSignalKPath('steering.rudderAngle', 0) || 0;
-    const travellerX = ((trim?.trimState?.mainCar ?? 0.5) - 0.5) * 2 * RIG.traveller.halfWidth;
 
     return (
         <group>
@@ -94,8 +98,8 @@ const RacerBoat = ({ hullColor, windData, trim, showSail = true }) => {
                 );
             })}
             <Tiller rudder={rudder} />
-            {showSail && <SailPlan awa={awa} sails={sails} trim={trim} travellerX={travellerX} />}
-            <DeckTrim mainCar={trim?.trimState?.mainCar} jibCar={trim?.trimState?.jibCar} leeward={leeward} />
+            {showSail && <SailPlan awa={awa} boomAngle={boomAngle} sails={sails} trim={trim} travellerX={travellerX} jibCarAt={jibCarAt} />}
+            <DeckTrim mainCar={trim?.trimState?.mainCar} jibCar={jibCar} leeward={leeward} />
         </group>
     );
 };
