@@ -88,18 +88,18 @@ const MaintenanceView = ({ currentEngineHours }) => {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="tesla-card p-3 text-center bg-hud-bg border border-hud">
+      <div className="grid grid-cols-3 gap-3">
+        <div className="tesla-card text-center ">
           <div className="text-value font-semibold text-hud-main gliding-value">
             {currentEngineHours != null ? currentEngineHours.toFixed(1) : t('common.na')}
           </div>
           <div className="text-hud-secondary text-caption font-semibold uppercase tracking-widest mt-1">{t('motor.currentEngineHours')}</div>
         </div>
-        <div className={`tesla-card p-3 text-center border ${overdueCount > 0 ? 'bg-oRed/10 border-oRed/30' : 'bg-hud-bg border-hud'}`}>
+        <div className={`tesla-card text-center ${overdueCount > 0 ? 'bg-oRed/10 border-oRed/30' : ' '}`}>
           <div className={`text-value font-semibold gliding-value ${overdueCount > 0 ? 'text-oRed' : 'text-hud-main'}`}>{overdueCount}</div>
           <div className="text-hud-secondary text-caption font-semibold uppercase tracking-widest mt-1">{t('maintenance.overdue')}</div>
         </div>
-        <div className={`tesla-card p-3 text-center border ${dueCount > 0 ? 'bg-oYellow/10 border-oYellow/30' : 'bg-hud-bg border-hud'}`}>
+        <div className={`tesla-card text-center ${dueCount > 0 ? 'bg-oYellow/10 border-oYellow/30' : ' '}`}>
           <div className={`text-value font-semibold gliding-value ${dueCount > 0 ? 'text-oYellow' : 'text-hud-main'}`}>{dueCount}</div>
           <div className="text-hud-secondary text-caption font-semibold uppercase tracking-widest mt-1">{t('maintenance.dueSoon')}</div>
         </div>
@@ -111,7 +111,7 @@ const MaintenanceView = ({ currentEngineHours }) => {
           const style = STATUS_STYLES[status];
           const isEditing = editingItem === item.id;
           return (
-            <div key={item.id} className="tesla-card p-3 bg-hud-bg border border-hud tesla-hover">
+            <div key={item.id} className="tesla-card tesla-hover">
               <div className="flex items-center justify-between">
                 <div className="flex items-center min-w-0">
                   <span className={`w-2 h-2 rounded-full mr-3 flex-shrink-0 ${style.dot} ${status === 'overdue' ? 'animate-soft-pulse' : ''}`} />

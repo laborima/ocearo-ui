@@ -482,7 +482,7 @@ const LogbookView = () => {
         </div>
       )}
 
-      <div className="tesla-card flex-1 overflow-auto bg-hud-bg">
+      <div className="tesla-card flex-1 overflow-auto ">
         <table className="w-full text-caption font-semibold uppercase tracking-tight">
           <thead className="sticky top-0 bg-hud-bg backdrop-blur-md z-10">
             <tr className="text-hud-secondary border-b border-hud">
@@ -718,7 +718,7 @@ const LogbookView = () => {
       </div>
 
       {ocearoCoreEnabled && (
-        <div className="tesla-card p-4 mb-6 bg-hud-bg">
+        <div className="tesla-card mb-6 ">
           <h4 className="text-caption font-semibold text-hud-secondary mb-4 uppercase tracking-widest">{t('logbook.selectOperation')}</h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {[
@@ -731,7 +731,7 @@ const LogbookView = () => {
             ].map((opt) => (
               <button
                 key={opt.id}
-                className="tesla-card tesla-hover p-4 flex flex-col items-center justify-center space-y-3 shadow-soft group border border-hud"
+                className="tesla-card tesla-hover flex flex-col items-center justify-center space-y-3 group "
                 onClick={opt.action}
                 disabled={analysisLoading}
               >
@@ -753,7 +753,7 @@ const LogbookView = () => {
 
       {/* Loading indicator with progress bar */}
       {analysisLoading && (
-        <div className="tesla-card p-10 text-center bg-hud-bg">
+        <div className="tesla-card text-center ">
           <FontAwesomeIcon icon={faRobot} className="text-4xl text-oGreen mb-6 animate-soft-pulse" />
           <h4 className="text-caption font-semibold text-hud-main uppercase tracking-widest mb-4">{t('logbook.neuralProcessing')}</h4>
           <div className="w-48 mx-auto bg-hud-elevated h-1 rounded-full overflow-hidden">
@@ -798,7 +798,7 @@ const LogbookView = () => {
           (isSailResult ? { course: analysisResult.course, settings: analysisResult.settings } : null);
 
         return (
-          <div className="tesla-card p-6 shadow-xl animate-fade-in">
+          <div className="tesla-card animate-fade-in">
             <div className="flex items-center mb-6 border-b border-hud pb-4">
               <FontAwesomeIcon icon={faChartLine} className="text-oGreen mr-3 text-sm" />
               <h4 className="text-caption font-semibold text-hud-main uppercase tracking-widest">{t('logbook.operationReport')} {analysisType}</h4>
@@ -807,7 +807,7 @@ const LogbookView = () => {
             <div className="space-y-6">
               {/* Display main analysis text */}
               {mainText && (
-                <div className="tesla-card bg-hud-bg p-4 border-l-2 border-oBlue/30 shadow-subtle">
+                <div className="tesla-card border-l-2 border-oBlue/30 ">
                   <h5 className="text-caption font-semibold text-oBlue mb-3 uppercase tracking-widest">{t('logbook.executiveSummary')}</h5>
                   <p className="text-hud-secondary text-caption font-bold leading-relaxed italic normal-case">
                     {mainText}
@@ -819,7 +819,7 @@ const LogbookView = () => {
               {(insights || recommendations) && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {insights && (
-                    <div className="tesla-card bg-hud-bg p-4 shadow-subtle">
+                    <div className="tesla-card ">
                       <h5 className="text-caption font-semibold text-oBlue mb-3 uppercase tracking-widest flex items-center">
                         <FontAwesomeIcon icon={faRobot} className="mr-2 text-xs" />
                         {t('logbook.strategicInsights')}
@@ -842,7 +842,7 @@ const LogbookView = () => {
                     </div>
                   )}
                   {recommendations && (
-                    <div className="tesla-card bg-hud-bg p-4 shadow-subtle">
+                    <div className="tesla-card ">
                       <h5 className="text-caption font-semibold text-oGreen mb-3 uppercase tracking-widest flex items-center">
                         <FontAwesomeIcon icon={faChartLine} className="mr-2 text-xs" />
                         {t('logbook.operationalAdvice')}
@@ -892,7 +892,7 @@ const LogbookView = () => {
 
               {/* Display technical data */}
               {technicalData && (
-                <div className="tesla-card bg-hud-bg p-4 border border-hud">
+                <div className="tesla-card ">
                   <h5 className="text-caption font-semibold text-hud-secondary mb-3 uppercase tracking-widest">{t('logbook.rawTelemetryData')}</h5>
                   <pre className="text-oGreen/70 text-caption font-mono overflow-auto max-h-40 font-bold scrollbar-thin">
                     {JSON.stringify(technicalData, null, 2)}
@@ -913,7 +913,7 @@ const LogbookView = () => {
 
       {/* Placeholder */}
       {!analysisResult && !analysisLoading && (
-        <div className="tesla-card p-12 text-center bg-hud-bg shadow-inner border border-hud">
+        <div className="tesla-card text-center ">
           <div className="text-hud-muted">
             <FontAwesomeIcon icon={faRobot} size="3x" className="mb-6 opacity-20" />
             <h4 className="text-caption font-semibold text-hud-main uppercase tracking-widest mb-3">{t('logbook.diagnosticReady')}</h4>

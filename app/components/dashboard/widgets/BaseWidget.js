@@ -1,6 +1,6 @@
 'use client';
 import React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import Card from '../../ui/Card';
 
 /**
  * BaseWidget - A shared component for dashboard widgets to ensure UI consistency
@@ -15,47 +15,28 @@ const BaseWidget = ({
   children,
   className = ""
 }) => {
-  const primaryTextClass = 'text-hud-main';
-  const mutedTextClass = 'text-hud-muted';
-  const accentIconClass = iconColorClass;
-
-  const renderIcon = () => {
-    if (typeof icon === 'function') {
-      return icon();
-    }
-    return <FontAwesomeIcon icon={icon} className={`${accentIconClass} text-sm opacity-80`} />;
-  };
+  // A function icon renders a custom icon element
+  const headerIcon = typeof icon === 'function' ? icon() : icon;
 
   if (!hasData) {
     return (
-      <div className={`tesla-card p-4 h-full flex flex-col tesla-hover overflow-hidden ${className}`}>
-        <div className="flex items-center space-x-3 mb-3 shrink-0">
-          {renderIcon()}
-          <span className={`${primaryTextClass} text-caption font-semibold uppercase tracking-widest`}>{title}</span>
-        </div>
+      <Card title={title} icon={headerIcon} iconClass={iconColorClass} className={`h-full overflow-hidden ${className}`}>
         <div className="flex-1 flex items-center justify-center min-h-0">
           <div className="text-center">
-            <div className="text-hero font-medium text-hud-dim mb-2 gliding-value">N/A</div>
-            <div className={`text-caption font-semibold uppercase tracking-tighter ${mutedTextClass}`}>{noDataMessage}</div>
+            <div className="text-hero font-medium text-hud-dim mb-2">N/A</div>
+            <div className="text-caption font-semibold uppercase text-hud-muted">{noDataMessage}</div>
           </div>
         </div>
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div className={`tesla-card p-4 h-full flex flex-col tesla-hover overflow-hidden ${className}`}>
-      {/* Header */}
-      <div className="flex items-center space-x-3 mb-3 shrink-0">
-        {renderIcon()}
-        <span className={`${primaryTextClass} text-caption font-semibold uppercase tracking-widest`}>{title}</span>
-      </div>
-      
-      {/* Content */}
+    <Card title={title} icon={headerIcon} iconClass={iconColorClass} className={`h-full overflow-hidden ${className}`}>
       <div className="flex-1 flex flex-col justify-center min-h-0 overflow-hidden">
         {children}
       </div>
-    </div>
+    </Card>
   );
 };
 

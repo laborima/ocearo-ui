@@ -42,7 +42,7 @@ class ErrorBoundary extends React.Component {
 
       return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-hud-bg text-hud-main p-6">
-          <div className="tesla-card p-10 max-w-2xl w-full bg-hud-elevated backdrop-blur-xl border border-hud rounded-3xl shadow-2xl flex flex-col items-center text-center">
+          <div className="tesla-card max-w-2xl w-full backdrop-blur-xl flex flex-col items-center text-center">
             <div className="w-20 h-20 rounded-full bg-oRed/20 flex items-center justify-center mb-8">
               <div className="w-4 h-4 rounded-full bg-oRed animate-soft-pulse" />
             </div>

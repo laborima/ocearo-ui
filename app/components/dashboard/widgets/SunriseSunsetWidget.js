@@ -71,7 +71,7 @@ export default function SunriseSunsetWidget() {
 
         {/* Times display */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="text-center tesla-card bg-hud-bg p-4 tesla-hover border border-hud">
+          <div className="text-center tesla-card tesla-hover ">
             <div className="text-hud-muted text-caption uppercase mb-3 font-semibold tracking-widest">{t('widgets.solarIngress')}</div>
             <div className="text-value font-semibold text-oYellow leading-none gliding-value tracking-tight">
               {sunrise !== null ? sunrise : t('common.na')}
@@ -79,7 +79,7 @@ export default function SunriseSunsetWidget() {
             <div className="text-hud-muted text-caption uppercase mt-3 font-semibold tracking-widest opacity-60">{t('widgets.localMeridian')}</div>
           </div>
           
-          <div className="text-center tesla-card bg-hud-bg p-4 tesla-hover border border-hud">
+          <div className="text-center tesla-card tesla-hover ">
             <div className="text-hud-muted text-caption uppercase mb-3 font-semibold tracking-widest">{t('widgets.solarEgress')}</div>
             <div className="text-value font-semibold text-oYellow leading-none gliding-value tracking-tight">
               {sunset !== null ? sunset : t('common.na')}

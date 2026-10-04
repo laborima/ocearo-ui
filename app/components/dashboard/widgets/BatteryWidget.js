@@ -84,7 +84,7 @@ export default function BatteryWidget() {
         {/* Battery readings */}
         <div className="grid grid-cols-2 gap-4 mb-8">
           {/* House Battery */}
-          <div className="text-center tesla-card p-3 tesla-hover bg-hud-bg">
+          <div className="text-center tesla-card tesla-hover ">
             <div className="text-hud-muted text-caption uppercase mb-2 font-semibold tracking-widest">{t('widgets.serviceBank')}</div>
             <div className="flex items-center justify-center space-x-3 mb-2">
               <FontAwesomeIcon 
@@ -104,7 +104,7 @@ export default function BatteryWidget() {
           </div>
           
           {/* Starter Battery */}
-          <div className="text-center tesla-card p-3 tesla-hover bg-hud-bg">
+          <div className="text-center tesla-card tesla-hover ">
             <div className="text-hud-muted text-caption uppercase mb-2 font-semibold tracking-widest">{t('widgets.ignitionBank')}</div>
             <div className="flex items-center justify-center space-x-3 mb-2">
               <FontAwesomeIcon 
@@ -150,7 +150,7 @@ export default function BatteryWidget() {
         </div>
 
         {/* Status and info */}
-        <div className="tesla-card p-3 bg-hud-bg tesla-hover border border-hud">
+        <div className="tesla-card tesla-hover ">
           <div className={`text-caption font-semibold uppercase tracking-[0.2em] text-center mb-3 ${
             batteryData.house.percentage !== null && batteryData.starter.percentage !== null 
               ? getBatteryColor(Math.min(batteryData.house.percentage, batteryData.starter.percentage)) 

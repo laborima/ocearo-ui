@@ -67,7 +67,7 @@ const MediaPlayer = () => {
 
   const renderSimulatedViewer = (service) => {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center tesla-card p-10 bg-hud-elevated">
+      <div className="w-full h-full flex flex-col items-center justify-center tesla-card ">
         <div className="w-32 h-32 mb-6 relative group">
           <Image 
             src={service.icon} 
@@ -126,7 +126,7 @@ const MediaPlayer = () => {
               {selectedService.external ? (
                 renderSimulatedViewer(selectedService)
               ) : iframeError ? (
-                <div className="w-full h-full flex flex-col items-center justify-center tesla-card p-10 bg-hud-bg">
+                <div className="w-full h-full flex flex-col items-center justify-center tesla-card ">
                   <p className={`mb-6 text-label font-semibold uppercase tracking-widest text-hud-main`}>
                     {t('mediaPlayer.connectionRefused', { name: selectedService.name })}
                   </p>
@@ -172,7 +172,7 @@ const MediaPlayer = () => {
                 <button
                   key={service.name}
                   onClick={() => handleServiceClick(service)}
-                  className="tesla-card p-6 flex flex-col items-center justify-center tesla-hover group border border-hud bg-hud-bg"
+                  className="tesla-card flex flex-col items-center justify-center tesla-hover group "
                 >
                   <div className="w-20 h-20 mb-4 relative overflow-hidden flex items-center justify-center">
                     <Image 

@@ -156,7 +156,7 @@ const DebugView = () => {
 
             <div className="space-y-6">
                 {/* 3D Axes Toggle */}
-                <section className="tesla-card p-6 space-y-4">
+                <section className="tesla-card space-y-4">
                     <div className="flex items-center justify-between mb-2">
                         <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">3D</h2>
                         <div className="h-[1px] flex-grow bg-hud-border mx-4" />
@@ -170,7 +170,7 @@ const DebugView = () => {
                 </section>
 
                 {/* Wind Override */}
-                <section className="tesla-card p-6 space-y-4">
+                <section className="tesla-card space-y-4">
                     <div className="flex items-center justify-between mb-2">
                         <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.debugWindOverride')}</h2>
                         <div className="h-[1px] flex-grow bg-hud-border mx-4" />
@@ -214,12 +214,12 @@ const DebugView = () => {
                 </section>
 
                 {/* SignalK Debug Data */}
-                <section className="tesla-card p-6 space-y-4">
+                <section className="tesla-card space-y-4">
                     <div className="flex items-center justify-between mb-2">
                         <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('debug.windDynamics')}</h2>
                         <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-3">
                         <DebugRow label="TWA" value={`${(trueWindAngle * (180 / Math.PI)).toFixed(1)}°`} />
                         <DebugRow label="TWS" value={`${trueWindSpeed.toFixed(1)} kn`} />
                         <DebugRow label="AWA" value={`${(appWindAngle * (180 / Math.PI)).toFixed(1)}°`} />
@@ -227,12 +227,12 @@ const DebugView = () => {
                     </div>
                 </section>
 
-                <section className="tesla-card p-6 space-y-4">
+                <section className="tesla-card space-y-4">
                     <div className="flex items-center justify-between mb-2">
                         <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('debug.performanceMetrics')}</h2>
                         <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-3">
                         <DebugRow label="Beat ∠" value={`${(beatAngle * (180 / Math.PI)).toFixed(1)}°`} />
                         <DebugRow label="Gybe ∠" value={`${(gybeAngle * (180 / Math.PI)).toFixed(1)}°`} />
                         <DebugRow label="VMG Beat" value={`${beatVMG.toFixed(1)} kn`} />
@@ -248,12 +248,12 @@ const DebugView = () => {
                     </div>
                 </section>
 
-                <section className="tesla-card p-6 space-y-4">
+                <section className="tesla-card space-y-4">
                     <div className="flex items-center justify-between mb-2">
                         <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('debug.navigation')}</h2>
                         <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-3">
                         <DebugRow label="Heading" value={`${(headingTrue * (180 / Math.PI)).toFixed(1)}°`} />
                         <DebugRow label="COG" value={`${(courseOverGroundAngle * (180 / Math.PI)).toFixed(1)}°`} />
                         <DebugRow label="WPT Brg" value={`${(nextWaypointBearing * (180 / Math.PI)).toFixed(1)}°`} accent="text-oYellow" />
@@ -261,12 +261,12 @@ const DebugView = () => {
                     </div>
                 </section>
 
-                <section className="tesla-card p-6 space-y-4">
+                <section className="tesla-card space-y-4">
                     <div className="flex items-center justify-between mb-2">
                         <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('debug.laylineAnalysis')}</h2>
                         <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-3">
                         <DebugRow label="Dist" value={`${laylineDistance.toFixed(0)}m`} />
                         <DebugRow label="Time" value={`${laylineTime}s`} />
                         <DebugRow label="Opp Dist" value={`${oppositeLaylineDistance.toFixed(0)}m`} />
@@ -274,12 +274,12 @@ const DebugView = () => {
                     </div>
                 </section>
 
-                <section className="tesla-card p-6 space-y-4">
+                <section className="tesla-card space-y-4">
                     <div className="flex items-center justify-between mb-2">
                         <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('debug.regattaStart')}</h2>
                         <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-3">
                         <DebugRow label="Start Dist" value={`${distanceToStartline.toFixed(1)}m`} accent="text-oRed" />
                         <DebugRow label="TT Start" value={`${timeToStart}s`} accent="text-oRed" />
                         <DebugRow label="Port DW" value={`${timePortDown}s`} />

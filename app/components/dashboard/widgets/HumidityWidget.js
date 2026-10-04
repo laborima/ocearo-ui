@@ -95,7 +95,7 @@ export default function HumidityWidget() {
           </div>
         </div>
 
-        <div className="tesla-card p-4 bg-hud-bg tesla-hover border border-hud">
+        <div className="tesla-card tesla-hover ">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <FontAwesomeIcon icon={faThermometerHalf} className="text-oBlue text-xs opacity-50" />

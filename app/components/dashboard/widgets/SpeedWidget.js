@@ -81,24 +81,24 @@ const SpeedWidget = React.memo(() => {
           </div>
 
           {/* SOG / STW / Heading / COG grid */}
-          <div className="grid grid-cols-4 gap-3">
-            <div className="tesla-card p-2 text-center tesla-hover bg-hud-bg">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="tesla-card text-center tesla-hover ">
               <div className="text-hud-secondary text-caption uppercase font-semibold tracking-widest opacity-60">SOG</div>
               <div className={`text-value font-semibold gliding-value ${speedData.sog !== null ? getSpeedColor(speedData.sog) : 'text-hud-muted'}`}>
                 {speedData.sog !== null ? speedData.sog : '--'}
               </div>
             </div>
-            <div className="tesla-card p-2 text-center tesla-hover bg-hud-bg">
+            <div className="tesla-card text-center tesla-hover ">
               <div className="text-hud-secondary text-caption uppercase font-semibold tracking-widest opacity-60">STW</div>
               <div className={`text-value font-semibold gliding-value ${speedData.stw !== null ? getSpeedColor(speedData.stw) : 'text-hud-muted'}`}>
                 {speedData.stw !== null ? speedData.stw : '--'}
               </div>
             </div>
-            <div className="tesla-card p-2 text-center tesla-hover bg-hud-bg">
+            <div className="tesla-card text-center tesla-hover ">
               <div className="text-hud-secondary text-caption uppercase font-semibold tracking-widest opacity-60">HDG</div>
               <div className="text-hud-main text-value font-semibold gliding-value">{speedData.heading !== null ? `${speedData.heading}°` : '--'}</div>
             </div>
-            <div className="tesla-card p-2 text-center tesla-hover bg-hud-bg">
+            <div className="tesla-card text-center tesla-hover ">
               <div className="text-hud-secondary text-caption uppercase font-semibold tracking-widest opacity-60">COG</div>
               <div className="text-hud-main text-value font-semibold gliding-value">{speedData.cog !== null ? `${speedData.cog}°` : '--'}</div>
             </div>
@@ -124,7 +124,7 @@ const SpeedWidget = React.memo(() => {
         </div>
 
         {/* Drift + Wind info */}
-        <div className="tesla-card p-3 bg-hud-bg tesla-hover shrink-0">
+        <div className="tesla-card tesla-hover shrink-0">
           <div className="flex justify-between items-center text-caption font-semibold uppercase tracking-widest">
             <div className="flex items-center space-x-2">
               <span className="text-hud-secondary">{t('widgets.driftEffect')}</span>
