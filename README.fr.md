@@ -89,11 +89,15 @@ Les couleurs ont partout le même sens : **rouge** — risque de collision et c�
 | | |
 |---|---|
 | ![Tableau de bord](docs/screenshots/dashboard.jpg) | ![Tableau de bord, thème sombre](docs/screenshots/dashboard-dark.jpg) |
-| **Tableau de bord.** Radar AIS, météo, route vers le waypoint, réservoirs… à côté de la vue 3D, en thème jour… | …en thème sombre, et un thème nuit rouge qui préserve la vision de nuit. Le thème peut suivre le soleil. |
+| **Tableau de bord.** Radar AIS, météo, route vers le waypoint, réservoirs… à côté de la vue 3D, en thème jour… | …et en thème sombre, dans l’esprit de l’affichage FSD de Tesla : anthracite, formes claires, accents lumineux. |
 | ![Moteur](docs/screenshots/engine.jpg) | ![Énergie](docs/screenshots/energy.jpg) |
 | **Moteur.** Régime, heures, températures, pressions, inverseur et alarmes (les 24 notifications moteur NMEA 2000), plus un calendrier d’entretien. | **Énergie.** Batteries, charge et consommation, solaire, et l’état du Raspberry Pi qui fait tourner l’ensemble. |
 | ![Journal de bord](docs/screenshots/logbook.jpg) | ![Réglages](docs/screenshots/settings.jpg) |
 | **Journal de bord.** Entrées automatiques et manuelles, chronologie, et sorties enregistrées à rejouer dans la vue 3D. | **Réglages.** Bateau, unités, langue, thèmes, qualité 3D (dont un profil Raspberry Pi), seuils d’alarme et données hors-ligne. |
+
+![Thème nuit](docs/screenshots/dashboard-night.jpg)
+
+**Thème nuit.** Uniquement du rouge et du rouge orangé, pour préserver la vision de nuit, avec des valeurs plus lumineuses que les libellés pour rester facile à lire. Le thème peut changer tout seul avec le soleil.
 
 ---
 

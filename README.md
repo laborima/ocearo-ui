@@ -89,11 +89,15 @@ Colours mean the same thing everywhere: **red** — risk of collision and it is 
 | | |
 |---|---|
 | ![Dashboard](docs/screenshots/dashboard.jpg) | ![Dashboard, dark theme](docs/screenshots/dashboard-dark.jpg) |
-| **Dashboard.** AIS radar, weather, course to the waypoint, tanks… next to the 3D view, in the day theme… | …the dark theme, and a red night theme that keeps your night vision. The theme can follow the sun. |
+| **Dashboard.** AIS radar, weather, course to the waypoint, tanks… next to the 3D view, in the day theme… | …and the dark theme, in the spirit of Tesla's FSD display: charcoal, light shapes, luminous accents. |
 | ![Engine](docs/screenshots/engine.jpg) | ![Energy](docs/screenshots/energy.jpg) |
 | **Engine.** Speed, hours, temperatures, pressures, gear and alarms (the 24 NMEA 2000 engine notifications), plus a maintenance schedule. | **Energy.** Batteries, charge and consumption, solar, and the health of the Raspberry Pi running the stack. |
 | ![Logbook](docs/screenshots/logbook.jpg) | ![Settings](docs/screenshots/settings.jpg) |
 | **Logbook.** Automatic and manual entries, mission timeline, and recorded voyages you can replay in the 3D view. | **Settings.** Boat, units, language, themes, 3D quality (including a Raspberry Pi profile), alarm thresholds and offline data. |
+
+![Night theme](docs/screenshots/dashboard-night.jpg)
+
+**Night theme.** Red and red-orange only, so the screen keeps your night vision, with values brighter than labels so it stays easy to read. The theme can switch itself with the sun.
 
 ---
 
