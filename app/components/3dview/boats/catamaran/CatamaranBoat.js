@@ -17,7 +17,7 @@ const DARK = '#262c33';
  * and trim hardware as the racer, with a rudder per hull turning with the
  * helm and daggerboards seen through the water.
  */
-const CatamaranBoat = ({ hullColor, windData, trim, showSail = true }) => {
+const CatamaranBoat = ({ hullColor, alert = false, windData, trim, showSail = true }) => {
     const nodes = useMemo(() => buildCatParts(), []);
     const outlines = useMemo(() => catOutline(), []);
     const layout = useMemo(() => trimLayout(CAT_RIG, { edgeAt: catDeckEdgeAt, heightAt: catDeckHeightAt }), []);
@@ -25,7 +25,7 @@ const CatamaranBoat = ({ hullColor, windData, trim, showSail = true }) => {
 
     const materials = useMemo(() => {
         const hull = hullColor || scene.ownHull;
-        const colors = { hull, deck: scene.ownDeck, roof: hull, glass: DARK, stripes: DARK, net: DARK, rig: scene.rigging, boom: scene.rigging };
+        const colors = { hull, deck: alert ? new THREE.Color(hull).multiplyScalar(0.8).getStyle() : scene.ownDeck, roof: hull, glass: DARK, stripes: DARK, net: DARK, rig: scene.rigging, boom: scene.rigging };
         const out = {};
         for (const [part, color] of Object.entries(colors)) {
             out[part] = new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0 });
@@ -39,7 +39,7 @@ const CatamaranBoat = ({ hullColor, windData, trim, showSail = true }) => {
             color: scene.vessel, roughness: 0.9, metalness: 0, transparent: true, opacity: 0.45, depthWrite: false,
         });
         return out;
-    }, [scene, hullColor]);
+    }, [scene, hullColor, alert]);
     useEffect(() => () => Object.values(materials).forEach(m => m.dispose()), [materials]);
 
     const awa = windData?.awa ?? 0.6;

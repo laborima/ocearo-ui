@@ -4,7 +4,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleInfo, faXmark } from '@fortawesome/free-solid-svg-icons';
 import useTheme from '../../theme/useTheme';
 import configService from '../../settings/ConfigService';
-import { getCollisionThresholds } from '../../utils/Collision';
 import { tensionToColor } from '../sail/SailTrimUtils';
 
 // The load colours of the sheets, vang and backstay (eased, medium, hard on)
@@ -71,7 +70,6 @@ const SceneLegend = () => {
         setOpen(!open);
     };
 
-    const thresholds = getCollisionThresholds();
     const rows = [
         { kind: 'chevrons', colors: [scene.route], label: t('legend.route') },
         { kind: 'bands', colors: [scene.wakeGood, scene.wakeFair, scene.wakeBad], label: t('legend.wake') },
@@ -79,11 +77,11 @@ const SceneLegend = () => {
         { kind: 'dashed', colors: [scene.compass], label: t('legend.isochrones') },
         { kind: 'hull', colors: [scene.ghost, scene.ghost], label: t('legend.ghost') },
         { kind: 'hull', colors: [scene.vessel, scene.vessel], label: t('legend.vessel') },
-        { kind: 'hull', colors: [scene.vesselDanger, scene.vesselDanger], label: t('legend.danger', {
-            nm: +(thresholds.cpaMeters / 1852).toFixed(2), min: Math.round(thresholds.tcpaSeconds / 60) }) },
+        { kind: 'hull', colors: [scene.vesselDanger, scene.vesselDanger], label: t('legend.danger') },
+        { kind: 'hull', colors: [scene.vesselYields, scene.vesselYields], label: t('legend.yields') },
+        { kind: 'hull', colors: [scene.vesselClose, scene.vesselClose], label: t('legend.close') },
         { kind: 'dashed', colors: [scene.vesselDanger], label: t('legend.cpa') },
         { kind: 'hull', colors: [scene.giveWay, scene.giveWay], label: t('legend.giveWay') },
-        { kind: 'arrow', colors: [scene.target], label: t('legend.colregArrow') },
         { kind: 'dashed', colors: [scene.target], label: t('legend.advice') },
         { kind: 'bands', colors: [accent], label: t('legend.trim') },
         { kind: 'bands', colors: LOAD_COLORS, label: t('legend.loads') },
@@ -100,7 +98,7 @@ const SceneLegend = () => {
     }
 
     return (
-        <div className="hud-halo px-2 py-2 max-w-[19rem] max-h-[45vh] overflow-y-auto select-none">
+        <div className="relative z-40 px-3 py-2 max-w-[19rem] max-h-[45vh] overflow-y-auto select-none rounded-2xl bg-hud-bg/90 backdrop-blur shadow-soft">
             <div className="flex items-center justify-between mb-1">
                 <span className="text-caption font-semibold uppercase tracking-widest text-hud-muted">{t('legend.title')}</span>
                 <button type="button" onClick={toggle} aria-label={t('legend.close')} className="text-hud-muted hover:text-hud-main px-1">

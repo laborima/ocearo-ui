@@ -89,7 +89,8 @@ const useCourseAdvice = () => {
         const sog = v['navigation.speedOverGround'];
         const cog = v['navigation.courseOverGroundTrue'] ?? perf.heading;
 
-        const primary = colregs.primary;
+        // A vessel we must keep clear of comes first, then the most urgent one
+        const primary = colregs.giveWayTo || colregs.primary;
         if (primary && Number.isFinite(sog) && sog > 0.3 && Number.isFinite(cog)) {
             const { target, role } = primary;
             const info = { targetName: target.name, rule: role.rule, reason: role.reason };

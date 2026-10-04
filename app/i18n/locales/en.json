@@ -779,7 +779,7 @@
   "colregs": {
     "rule": "rule {{rule}}",
     "labelGiveWay": "Must keep clear",
-    "labelStandOn": "Right of way",
+    "labelStandOn": "Has right of way · keep clear",
     "labelBoth": "Both alter to starboard",
     "overtaking": "You are overtaking {{name}}: keep clear",
     "overtakenByTarget": "{{name}} is overtaking you and must keep clear",
@@ -797,7 +797,8 @@
     "standOnFrom_power": "{{name}} is power-driven and must keep clear of you",
     "standOnFrom_sail": "{{name}} must keep clear of you",
     "standOnFrom_fishing": "{{name}} must keep clear of you",
-    "standOnFrom_restricted": "{{name}} must keep clear of you"
+    "standOnFrom_restricted": "{{name}} must keep clear of you",
+    "youGiveWay": "You must give way"
   },
   "parking": {
     "type_bow": "Bow-in berth",
@@ -820,20 +821,20 @@
   },
   "legend": {
     "title": "Legend",
-    "close": "Close legend",
+    "close": "Orange vessel: close, but no risk of collision",
     "route": "Route to the next waypoint",
     "wake": "Wake: share of polar speed (green ≥ 95 %, yellow 80–95 %, red < 80 %)",
     "laylines": "Laylines: port tack (red), starboard tack (green)",
     "ghost": "Ghost boat: where the polar speed would put you",
     "vessel": "AIS vessel",
-    "danger": "AIS vessel at risk: passes within {{nm}} NM in the next {{min}} min, or closer than 100 m",
+    "danger": "Red vessel: risk of collision and you must keep clear",
     "cpa": "Line to the closest point of approach",
-    "giveWay": "Own boat light orange: you must keep clear (rules of the road)",
-    "colregArrow": "Arrow: the vessel that must give way, and to which side",
+    "giveWay": "Your boat all orange + banner: you must give way (rules of the road)",
     "advice": "Suggested course change (advice only)",
     "trim": "Trim cars and tiller (accent colour): positions to read",
     "loads": "Sheets, vang and backstay: load, green (eased) to red (hard on)",
-    "isochrones": "Isochrones: where you will be in 5, 10, 15 min on each heading (polar, wind, current); dot: current heading"
+    "isochrones": "Isochrones: where you will be in 5, 10, 15 min on each heading (polar, wind, current); dot: current heading",
+    "yields": "Violet vessel: risk of collision, it must keep clear of you (arrow: its expected turn)"
   },
   "replay": {
     "title": "Replay",

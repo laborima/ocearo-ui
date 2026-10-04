@@ -779,7 +779,7 @@
   "colregs": {
     "rule": "règle {{rule}}",
     "labelGiveWay": "Doit s'écarter",
-    "labelStandOn": "Privilégié",
+    "labelStandOn": "Prioritaire · écartez-vous",
     "labelBoth": "Tous deux sur tribord",
     "overtaking": "Vous rattrapez {{name}} : écartez-vous",
     "overtakenByTarget": "{{name}} vous rattrape et doit s'écarter",
@@ -797,7 +797,8 @@
     "standOnFrom_power": "{{name}} est à moteur et doit s'écarter de vous",
     "standOnFrom_sail": "{{name}} doit s'écarter de vous",
     "standOnFrom_fishing": "{{name}} doit s'écarter de vous",
-    "standOnFrom_restricted": "{{name}} doit s'écarter de vous"
+    "standOnFrom_restricted": "{{name}} doit s'écarter de vous",
+    "youGiveWay": "Vous devez manœuvrer"
   },
   "parking": {
     "type_bow": "Catway avant",
@@ -820,20 +821,20 @@
   },
   "legend": {
     "title": "Légende",
-    "close": "Fermer la légende",
+    "close": "Navire orange : proche, sans risque de collision",
     "route": "Route vers le prochain waypoint",
     "wake": "Sillage : part de la vitesse polaire (vert ≥ 95 %, jaune 80–95 %, rouge < 80 %)",
     "laylines": "Laylines : bâbord amures (rouge), tribord amures (vert)",
     "ghost": "Bateau fantôme : où la vitesse polaire vous placerait",
     "vessel": "Navire AIS",
-    "danger": "Navire AIS à risque : passera à moins de {{nm}} NM dans les {{min}} prochaines minutes, ou à moins de 100 m",
+    "danger": "Navire rouge : risque de collision, c'est à vous de manœuvrer",
     "cpa": "Trait vers le point de rapprochement maximal",
-    "giveWay": "Mon bateau orange clair : je dois m'écarter (règles de barre)",
-    "colregArrow": "Flèche : le navire qui doit manœuvrer, et de quel côté",
+    "giveWay": "Votre bateau entièrement orange + bandeau : vous devez manœuvrer (règles de barre)",
     "advice": "Changement de cap suggéré (conseil seulement)",
     "trim": "Chariots et barre (couleur d'accent) : positions à lire",
     "loads": "Écoutes, hale-bas et pataras : charge, du vert (choqué) au rouge (étarqué)",
-    "isochrones": "Isochrones : où vous serez dans 5, 10, 15 min selon le cap (polaire, vent, courant) ; point : cap actuel"
+    "isochrones": "Isochrones : où vous serez dans 5, 10, 15 min selon le cap (polaire, vent, courant) ; point : cap actuel",
+    "yields": "Navire violet : risque de collision, c'est à lui de s'écarter (flèche : sa manœuvre attendue)"
   },
   "replay": {
     "title": "Rejeu",

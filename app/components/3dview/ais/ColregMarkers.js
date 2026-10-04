@@ -37,7 +37,8 @@ const ColregMarkers = () => {
         const label = role.ownRole === 'both'
             ? t('colregs.labelBoth')
             : targetGivesWay ? t('colregs.labelGiveWay') : t('colregs.labelStandOn');
-        const color = targetGivesWay ? scene.target : scene.vesselDanger;
+        // Same colours as the targets: violet it keeps clear, red we keep clear
+        const color = targetGivesWay ? scene.vesselYields : scene.vesselDanger;
         // Arrow ahead of its bow, turned to the side it should alter to
         const turn = role.targetTurn || 1;
         const heading = course + turn * TURN;
@@ -48,7 +49,8 @@ const ColregMarkers = () => {
             <group key={target.mmsi}>
                 {/* Screen-sized label: readable at any range */}
                 <Html position={[target.sceneX, 12, target.sceneZ]} center zIndexRange={[15, 10]} style={{ pointerEvents: 'none' }}>
-                    <div className={`whitespace-nowrap px-2 py-1 rounded-md text-caption font-semibold shadow-soft ${targetGivesWay ? 'bg-oYellow text-black' : 'bg-oRed text-white'}`}>
+                    <div className="whitespace-nowrap px-2 py-1 rounded-md text-caption font-semibold shadow-soft text-white"
+                        style={{ background: color }}>
                         {target.name} · {label} · {t('colregs.rule', { rule: role.rule })}
                     </div>
                 </Html>

@@ -1,6 +1,8 @@
 'use client';
 import React, { useMemo, useState, useCallback } from 'react';
 import { useAIS } from '../../3dview/ais/AISContext';
+import useColregs from '../../hooks/useColregs';
+import useTheme from '../../theme/useTheme';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -15,6 +17,8 @@ const AISRadarWidget = React.memo(() => {
   // Every positioned target (not only the ones close enough for the 3D view),
   // so the 10 and 20 NM ranges actually show something
   const { targets } = useAIS();
+  const { statuses } = useColregs();
+  const { scene } = useTheme();
   const [radarRange, setRadarRange] = useState(5); // nautical miles
   const debugMode = configService.get('debugMode');
 
@@ -72,14 +76,11 @@ const AISRadarWidget = React.memo(() => {
       .slice(0, 10);
   }, [targets, radarRange, myPosition, myHeading]);
 
-  const getTargetColor = (target) => {
-    // No computable CPA (target not reporting course/speed) — fall back to plain
-    // range rather than implying we assessed a collision risk.
-    if (target.cpa === null) return target.distance < 0.5 ? 'text-oYellow' : 'text-hud-secondary';
-    if (target.cpa < 0.5) return 'text-oRed';
-    if (target.cpa < 1.0) return 'text-oYellow';
-    return 'text-oGreen';
-  };
+  // Same colours as the 3D view: red we must keep clear, violet it must keep
+  // clear of us, orange close without risk of collision, neutral otherwise
+  const STATUS_COLOR = { giveWay: scene.vesselDanger, yields: scene.vesselYields, close: scene.vesselClose };
+  const getTargetColor = (target) => STATUS_COLOR[statuses[target.id]] || 'var(--hud-text-secondary, #8a9097)';
+  const isHazard = (target) => statuses[target.id] === 'giveWay' || statuses[target.id] === 'yields';
 
   // shipType is the numeric AIS code: ship icon for fishing, cargo and tankers
   const getTargetIcon = (type) => {
@@ -159,15 +160,15 @@ const AISRadarWidget = React.memo(() => {
             const distance = (target.distance / radarRange) * 80;
             const x = 100 + distance * Math.cos((target.bearing - 90) * Math.PI / 180);
             const y = 100 + distance * Math.sin((target.bearing - 90) * Math.PI / 180);
-            const isHazard = target.cpa !== null && target.cpa < 0.5;
+            const hazard = isHazard(target);
             
             return (
-              <g key={target.id} className={isHazard ? 'animate-soft-pulse' : ''}>
+              <g key={target.id} className={hazard ? 'animate-soft-pulse' : ''}>
                 <circle
                   cx={x}
                   cy={y}
-                  r={isHazard ? "3" : "2"}
-                  fill={isHazard ? 'var(--color-oRed)' : (target.cpa !== null && target.cpa < 1.0) ? 'var(--color-oYellow)' : 'var(--color-oGreen)'}
+                  r={hazard ? "3" : "2"}
+                  fill={getTargetColor(target)}
                   className="transition-all duration-1000"
                 />
                 <text
@@ -210,13 +211,14 @@ const AISRadarWidget = React.memo(() => {
               <div className="flex items-center space-x-3 min-w-0">
                 <FontAwesomeIcon 
                   icon={getTargetIcon(target.type)} 
-                  className={`${getTargetColor(target)} text-xs opacity-80 ${target.cpa !== null && target.cpa < 0.5 ? 'animate-soft-pulse' : ''}`} 
+                  style={{ color: getTargetColor(target) }}
+                  className={`text-xs opacity-80 ${isHazard(target) ? 'animate-soft-pulse' : ''}`} 
                 />
                 <span className="text-hud-main truncate font-black uppercase tracking-tight">{target.name}</span>
               </div>
               <div className="flex space-x-4 text-hud-secondary font-black tracking-tighter">
                 <span className="gliding-value">{target.distance.toFixed(1)} NM</span>
-                <span className={`${getTargetColor(target)} gliding-value`}>CPA: {target.cpa === null ? '--' : target.cpa.toFixed(1)}</span>
+                <span className="gliding-value" style={{ color: getTargetColor(target) }}>CPA: {target.cpa === null ? '--' : target.cpa.toFixed(1)}</span>
               </div>
             </div>
           ))}
