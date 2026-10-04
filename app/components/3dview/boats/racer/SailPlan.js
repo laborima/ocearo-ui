@@ -131,30 +131,6 @@ const SailMesh = ({ geometry, color, opacity, edge, stripe, accent, label, label
     );
 };
 
-/**
- * Wordmark printed on the spinnaker, on both faces (each one reads the right
- * way round from its side).
- */
-const SailLogo = ({ geometry, color }) => {
-    const placements = useMemo(() => {
-        const { point, normal } = geometry.userData.frameAt(0.62, 0.45);
-        return [1, -1].map((side) => {
-            // Facing out of this face, upright, reading left to right
-            const z = normal.clone().multiplyScalar(side).setY(0).normalize();
-            const y = UP.clone();
-            const x = new THREE.Vector3().crossVectors(y, z).normalize();
-            const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
-            return { position: point.clone().addScaledVector(z, 0.06).toArray(), quaternion: q };
-        });
-    }, [geometry]);
-    return placements.map(({ position, quaternion }, i) => (
-        <Text key={i} position={position} quaternion={quaternion} fontSize={1.8} letterSpacing={0.12}
-            color={color} anchorX="center" anchorY="middle" font="fonts/Roboto-Bold.ttf">
-            OCEARO
-        </Text>
-    ));
-};
-
 /** Telltales on a sail: pairs (windward / leeward faces) at each stripe */
 const Telltales = ({ geometry, at, states, colors }) => (
     <group>
@@ -296,7 +272,6 @@ const SailPlan = ({ awa = 0.6, boomAngle, sails, trim, mainCarAt, jibCarAt, rig 
             {geometry.jibClew && jibCarAt && (
                 <Line points={[geometry.jibClew.toArray(), jibCarAt]} color={loadColor(trim?.tensions?.jibSheet)} lineWidth={2.5} />
             )}
-            {isSpi && <SailLogo geometry={geometry.fore} color={scene.sail} />}
             {backstay && backstay.map((points, i) => (
                 <Line key={i} points={points} color={loadColor(trim?.tensions?.backstay)} lineWidth={2.5} />
             ))}

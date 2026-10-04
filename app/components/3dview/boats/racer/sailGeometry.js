@@ -91,10 +91,5 @@ export const makeSailGeometry = ({ tack, head, clew, headWidth = 0, camber = 0.1
             point: (u) => point(f, u),
         };
     });
-    // Frame of the sail at (u, v), for placing a logo on its surface
-    geo.userData.frameAt = (u, v) => {
-        const f = { ...frame(v), v };
-        return { point: point(f, u), chord: f.chord.clone().normalize(), normal: f.normal.clone() };
-    };
     return geo;
 };
