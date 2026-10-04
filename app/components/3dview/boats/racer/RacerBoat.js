@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import useTheme from '../../../theme/useTheme';
 import configService from '../../../settings/ConfigService';
 import SailPlan, { boomAngleWithTraveller } from './SailPlan';
-import DeckTrim, { carSheave } from './DeckTrim';
+import DeckTrim, { jibCarSheave, mainCarSheave } from './DeckTrim';
 import { RIG, chooseSails } from './rig';
 import { buildRacerParts, sheerOutline } from './racerGeometry';
 import { Line } from '@react-three/drei';
@@ -60,9 +60,8 @@ const RacerBoat = ({ hullColor, windData, trim, showSail = true }) => {
     const travellerX = ((trim?.trimState?.mainCar ?? 0.5) - 0.5) * 2 * RIG.traveller.halfWidth;
     const boomAngle = boomAngleWithTraveller(awa, travellerX) * leeward;
     const jibCar = trim?.trimState?.jibCar ?? 0.5;
-    const { jibTrack: j, traveller: tr } = RIG;
-    const jibCarAt = carSheave([leeward * j.x, 0, j.zFwd], [leeward * j.x, 0, j.zAft], jibCar);
-    const mainCarAt = carSheave([-tr.halfWidth, 0, tr.z], [tr.halfWidth, 0, tr.z], trim?.trimState?.mainCar ?? 0.5);
+    const jibCarAt = jibCarSheave(leeward, jibCar);
+    const mainCarAt = mainCarSheave(trim?.trimState?.mainCar ?? 0.5);
     const sails = useMemo(
         () => chooseSails(windData?.tws, windData?.twa, configService.get('sailPlanOverride')),
         [windData?.tws, windData?.twa]

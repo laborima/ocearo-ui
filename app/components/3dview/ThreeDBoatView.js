@@ -116,9 +116,8 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 <ThreeDCompassView visible={isCompassLayerVisible} />
                 <PolarTargets3D />
 
-                {/* Sail trim car indicators at compass level */}
-                {/* The cruiser-racer shows its cars on deck instead of on the compass ring */}
-                {configService.get('showSailTrimSliders') !== false && (configService.getSelectedBoat()?.modelPath ?? 'racer') !== 'racer' && <SailTrimSliders />}
+                {/* Sail trim car indicators at compass level (also on deck for the racer) */}
+                {configService.get('showSailTrimSliders') !== false && <SailTrimSliders />}
             </group>
 
             {/* Debug 3D axes */}
