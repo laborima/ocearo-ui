@@ -833,5 +833,17 @@
     "trim": "Trim cars and tiller (accent colour): positions to read",
     "loads": "Sheets, vang and backstay: load, green (eased) to red (hard on)",
     "isochrones": "Isochrones: where you will be in 5, 10, 15 min on each heading (polar, wind, current); dot: current heading"
+  },
+  "replay": {
+    "title": "Replay",
+    "play": "Play",
+    "pause": "Pause",
+    "timeline": "Replay timeline",
+    "close": "Back to live",
+    "voyages": "Voyages",
+    "explain": "Voyages recorded on this display (every 5 s under way). Replay one to watch it again in the 3D view, accelerated.",
+    "none": "No voyage recorded yet. They appear here after a first outing.",
+    "max": "max",
+    "replay": "Replay"
   }
 }

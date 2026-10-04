@@ -6,8 +6,7 @@ import {
   faBook, faTimeline, faChartLine, faRobot, faPlus,
    faCompass, faTachometerAlt, faCloudSun,
       faUser, faStickyNote,
-  faTimes, faTrophy
-} from '@fortawesome/free-solid-svg-icons';
+  faTimes, faTrophy, faRoute } from '@fortawesome/free-solid-svg-icons';
 import configService from '../settings/ConfigService';
 import { msToKnots, toDegrees, convertPressure } from '../utils/UnitConversions';
 import {
@@ -20,6 +19,7 @@ import {
   requestAnalysis
 } from '../utils/OcearoCoreUtils';
 import { motion, AnimatePresence } from 'framer-motion';
+import VoyageList from '../replay/VoyageList';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -1045,7 +1045,8 @@ const LogbookView = () => {
         {[
           { id: 'timeline', label: t('logbook.missionTimeline'), icon: faTimeline },
           { id: 'logbook', label: t('logbook.tacticalLog'), icon: faBook },
-          { id: 'analysis', label: t('logbook.fleetIntelligence'), icon: faChartLine }
+          { id: 'analysis', label: t('logbook.fleetIntelligence'), icon: faChartLine },
+          { id: 'voyages', label: t('replay.voyages'), icon: faRoute }
         ].map((tab) => (
           <button
             key={tab.id}
@@ -1073,6 +1074,7 @@ const LogbookView = () => {
             className="h-full overflow-auto scrollbar-hide"
           >
             {activeTab === 'logbook' && renderLogbookTable()}
+            {activeTab === 'voyages' && <VoyageList />}
             {activeTab === 'timeline' && renderTimeline()}
             {activeTab === 'analysis' && renderAnalysis()}
           </motion.div>

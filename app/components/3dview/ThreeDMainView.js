@@ -26,6 +26,8 @@ const InfoPanel = dynamic(() => import('./InfoPanel'));
 const ModeHud = dynamic(() => import('./ModeHud'));
 const AdvicePanel = dynamic(() => import('./AdvicePanel'));
 const ParkingPanel = dynamic(() => import('./parkassist/ParkingPanel'));
+const ReplayBar = dynamic(() => import('../replay/ReplayBar'));
+import { useReplay } from '../replay/ReplayBar';
 // Full-screen HUD panels (translucent, Tesla-style)
 const DepthPanel = dynamic(() => import('./hud/DepthPanel'));
 const TidePanel = dynamic(() => import('./hud/TidePanel'));
@@ -76,6 +78,7 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
     const [renderProfile] = useState(getRenderProfile);
     const limited = renderProfile.fps < 60;
     const { states, nightMode } = useOcearoContext(); // Access global context
+    const replaying = useReplay().active;
     const [infoPanelContent, setInfoPanelContent] = useState(null);
     const [showAttitudeIndicator, setShowAttitudeIndicator] = useState(true);
     // 'minimal' (FSD-like: speed + four values per mode) or 'classic' gauges
@@ -140,6 +143,11 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                 </div>
             )}
 
+            {/* Voyage replay controls */}
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-3 z-30 max-w-[calc(100%-1rem)]">
+                <ReplayBar />
+            </div>
+
             {/* Harbour: berth type, guidance */}
             {states.parkingMode && (
                 <div className="absolute left-1/2 -translate-x-1/2 bottom-3 z-20 max-w-[calc(100%-9rem)]">
@@ -148,7 +156,7 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
             )}
 
             {/* Course advice (avoidance / VMG) in the boat view */}
-            {!states.anchorWatch && !states.parkingMode && (
+            {!states.anchorWatch && !states.parkingMode && !replaying && (
                 <div className={`absolute left-1/2 -translate-x-1/2 z-20 max-w-[calc(100%-9rem)] ${classic ? 'bottom-24' : 'bottom-3'}`}>
                     <AdvicePanel />
                 </div>

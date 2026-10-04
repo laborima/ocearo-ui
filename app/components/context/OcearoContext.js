@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, useRef, useCallback, useMemo } from 'react';
 import configService from '../settings/ConfigService';
+import { isReplaying } from '../replay/replayEngine';
 import signalKService from '../services/SignalKService';
 import { updateOcearoCoreMode, isOcearoCoreEnabled, handleOcearoCoreError } from '../utils/OcearoCoreUtils';
 import { MathUtils } from 'three';
@@ -450,6 +451,7 @@ export const OcearoContextProvider = ({ children }) => {
 
                 // Create interval that only updates values that actually change
                 sampleDataIntervalRef.current = setInterval(() => {
+                    if (isReplaying()) return;
                     // Smooth rudder oscillation instead of random jumps
                     currentRudderAngle += rudderDirection * 2;
                     if (currentRudderAngle >= 15 || currentRudderAngle <= -15) {
@@ -511,6 +513,8 @@ export const OcearoContextProvider = ({ children }) => {
                     if (configService.get('debugWindOverride') && WIND_OVERRIDE_PATHS.includes(value.path)) {
                         return;
                     }
+                    // A voyage replay owns the own-boat data meanwhile
+                    if (isReplaying()) return;
                     updateSignalKData({
                         [value.path]: value.value,
                     });
