@@ -1,25 +1,11 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLeaf, faCompass, faCog, faExpand, faCompress } from '@fortawesome/free-solid-svg-icons';
+import { faExpand, faCompress } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
-import SunriseSunsetWidget from './widgets/SunriseSunsetWidget';
-import UVIndexWidget from './widgets/UVIndexWidget';
-import HumidityWidget from './widgets/HumidityWidget';
-import PressureWidget from './widgets/PressureWidget';
-import AirQualityWidget from './widgets/AirQualityWidget';
-import TideWidget from './widgets/TideWidget';
-import TemperatureWidget from './widgets/TemperatureWidget';
-import CompassWidget from './widgets/CompassWidget';
-import AttitudeWidget from './widgets/AttitudeWidget';
-import DepthWidget from './widgets/DepthWidget';
 import AISRadarWidget from './widgets/AISRadarWidget';
-import BatteryWidget from './widgets/BatteryWidget';
 import TankLevelsWidget from './widgets/TankLevelsWidget';
-import VisibilityWidget from './widgets/VisibilityWidget';
 import WeatherWidget from './widgets/WeatherWidget';
-import SpeedWidget from './widgets/SpeedWidget';
-import TimeWidget from './widgets/TimeWidget';
 import CourseWidget from './widgets/CourseWidget';
 import { NavigationContextProvider } from '../context/NavigationContext';
 
@@ -56,246 +42,49 @@ const containerVariants = {
   }
 };
 
+/**
+ * Dashboard: only what the 3D view does not already show — AIS targets
+ * beyond the 3D range, the forecast, route control and tank levels. Speed,
+ * heading, attitude, depth, tide, temperatures, pressure, battery and time
+ * live in the 3D HUD.
+ */
 export default function Dashboard() {
-  const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('environment');
   const [fullscreenWidget, setFullscreenWidget] = useState(null);
 
   const toggleFullscreen = React.useCallback((widgetName) => {
-    setFullscreenWidget(prev => prev === widgetName ? null : widgetName);
+    setFullscreenWidget(prev => (prev === widgetName ? null : widgetName));
   }, []);
 
-  const renderEnvironmentTab = React.useMemo(() => (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-      className={`${fullscreenWidget ? 'flex h-full' : 'card-grid'}`}
+  const wrap = (name, content, className = '') => (
+    <WidgetWrapper
+      widgetName={name}
+      fullscreenWidget={fullscreenWidget}
+      toggleFullscreen={toggleFullscreen}
+      className={fullscreenWidget && fullscreenWidget !== name ? 'hidden' : fullscreenWidget === name ? 'w-full h-full' : className}
     >
-      {/* Environment widgets - 6 total */}
-      <WidgetWrapper 
-        widgetName="temperature" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'temperature' ? 'hidden' : fullscreenWidget === 'temperature' ? 'w-full h-full' : ''}
-      >
-        <TemperatureWidget />
-      </WidgetWrapper>
-      <WidgetWrapper 
-        widgetName="weather" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'weather' ? 'hidden' : fullscreenWidget === 'weather' ? 'w-full h-full' : ''}
-      >
-        <WeatherWidget />
-      </WidgetWrapper>
-      <WidgetWrapper 
-        widgetName="tide" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'tide' ? 'hidden' : fullscreenWidget === 'tide' ? 'w-full h-full' : ''}
-      >
-        <TideWidget />
-      </WidgetWrapper>
-      <WidgetWrapper 
-        widgetName="visibility" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'visibility' ? 'hidden' : fullscreenWidget === 'visibility' ? 'w-full h-full' : ''}
-      >
-        <VisibilityWidget />
-      </WidgetWrapper>
-      <WidgetWrapper 
-        widgetName="airquality" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'airquality' ? 'hidden' : fullscreenWidget === 'airquality' ? 'w-full h-full' : ''}
-      >
-        <AirQualityWidget />
-      </WidgetWrapper>
-      <WidgetWrapper 
-        widgetName="pressure" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'pressure' ? 'hidden' : fullscreenWidget === 'pressure' ? 'w-full h-full' : ''}
-      >
-        <PressureWidget />
-      </WidgetWrapper>
-    </motion.div>
-  ), [fullscreenWidget, toggleFullscreen]);
-
-  const renderNavigationTab = React.useMemo(() => (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-      className={`${fullscreenWidget ? 'flex h-full' : 'card-grid'}`}
-    >
-      {/* Navigation widgets - 6 total */}
-      <WidgetWrapper 
-        widgetName="compass" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'compass' ? 'hidden' : fullscreenWidget === 'compass' ? 'w-full h-full' : ''}
-      >
-        <CompassWidget />
-      </WidgetWrapper>
-      <WidgetWrapper 
-        widgetName="attitude" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'attitude' ? 'hidden' : fullscreenWidget === 'attitude' ? 'w-full h-full' : ''}
-      >
-        <AttitudeWidget />
-      </WidgetWrapper>
-      <WidgetWrapper 
-        widgetName="speed" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'speed' ? 'hidden' : fullscreenWidget === 'speed' ? 'w-full h-full' : ''}
-      >
-        <SpeedWidget />
-      </WidgetWrapper>
-      <WidgetWrapper 
-        widgetName="depth" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'depth' ? 'hidden' : fullscreenWidget === 'depth' ? 'w-full h-full' : ''}
-      >
-        <DepthWidget />
-      </WidgetWrapper>
-      <WidgetWrapper 
-        widgetName="aisradar" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'aisradar' ? 'hidden' : fullscreenWidget === 'aisradar' ? 'w-full h-full' : ''}
-      >
-        <AISRadarWidget />
-      </WidgetWrapper>
-      <WidgetWrapper 
-        widgetName="course" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'course' ? 'hidden' : fullscreenWidget === 'course' ? 'w-full h-full' : ''}
-      >
-        <NavigationContextProvider>
-          <CourseWidget />
-        </NavigationContextProvider>
-      </WidgetWrapper>
-    </motion.div>
-  ), [fullscreenWidget, toggleFullscreen]);
-
-  const renderSystemTab = React.useMemo(() => (
-    <motion.div 
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-      className={`${fullscreenWidget ? 'flex h-full' : 'card-grid'}`}
-    >
-      {/* System widgets - 5 total */}
-      <WidgetWrapper 
-        widgetName="battery" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'battery' ? 'hidden' : fullscreenWidget === 'battery' ? 'w-full h-full' : ''}
-      >
-        <BatteryWidget />
-      </WidgetWrapper>
-      <WidgetWrapper 
-        widgetName="tanks" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'tanks' ? 'hidden' : fullscreenWidget === 'tanks' ? 'w-full h-full' : ''}
-      >
-        <TankLevelsWidget />
-      </WidgetWrapper>
-      <WidgetWrapper 
-        widgetName="humidity" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'humidity' ? 'hidden' : fullscreenWidget === 'humidity' ? 'w-full h-full' : ''}
-      >
-        <HumidityWidget />
-      </WidgetWrapper>
-      <WidgetWrapper 
-        widgetName="uvindex" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'uvindex' ? 'hidden' : fullscreenWidget === 'uvindex' ? 'w-full h-full' : ''}
-      >
-        <UVIndexWidget />
-      </WidgetWrapper>
-      <WidgetWrapper 
-        widgetName="sunrise" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'sunrise' ? 'hidden' : fullscreenWidget === 'sunrise' ? 'w-full h-full' : ''}
-      >
-        <SunriseSunsetWidget />
-      </WidgetWrapper>
-      <WidgetWrapper 
-        widgetName="time" 
-        fullscreenWidget={fullscreenWidget} 
-        toggleFullscreen={toggleFullscreen}
-        className={fullscreenWidget && fullscreenWidget !== 'time' ? 'hidden' : fullscreenWidget === 'time' ? 'w-full h-full' : ''}
-      >
-        <TimeWidget />
-      </WidgetWrapper>
-    </motion.div>
-  ), [fullscreenWidget, toggleFullscreen]);
-
-
-  const renderTabContent = React.useMemo(() => {
-    switch (activeTab) {
-      case 'environment':
-        return renderEnvironmentTab;
-      case 'navigation':
-        return renderNavigationTab;
-      case 'system':
-        return renderSystemTab;
-      default:
-        return renderEnvironmentTab;
-    }
-  }, [activeTab, renderEnvironmentTab, renderNavigationTab, renderSystemTab]);
+      {content}
+    </WidgetWrapper>
+  );
 
   return (
     <div className="flex flex-col h-full bg-rightPaneBg overflow-hidden">
-      {/* Tab Navigation - Tesla Style */}
-      <div className="flex border-b border-hud bg-hud-bg">
-        {[
-          { id: 'environment', label: t('dashboard.environment'), icon: faLeaf },
-          { id: 'navigation', label: t('dashboard.navigation'), icon: faCompass },
-          { id: 'system', label: t('dashboard.systems'), icon: faCog }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-3 px-2 text-caption font-semibold uppercase flex items-center justify-center transition-all duration-500 ${
-              activeTab === tab.id
-                ? 'text-oGreen border-b-2 border-oGreen bg-hud-bg'
-                : 'text-hud-secondary hover:text-hud-main tesla-hover'
-            }`}
-          >
-            <FontAwesomeIcon icon={tab.icon} className="mr-2" />
-            {tab.label}
-          </button>
-        ))}
-      </div>
-    
-      {/* Dashboard Content */}
       <div className="flex-1 p-4 min-h-0 overflow-auto scrollbar-hide">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="h-full"
-          >
-            {renderTabContent}
-          </motion.div>
-        </AnimatePresence>
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="show"
+          className={fullscreenWidget ? 'flex h-full' : 'card-grid'}
+        >
+          {/* The radar gets the room: two columns and two rows when they exist */}
+          {wrap('aisradar', <AISRadarWidget />, 'sm:col-span-2 sm:row-span-2')}
+          {wrap('weather', <WeatherWidget />)}
+          {wrap('course', (
+            <NavigationContextProvider>
+              <CourseWidget />
+            </NavigationContextProvider>
+          ))}
+          {wrap('tanks', <TankLevelsWidget />)}
+        </motion.div>
       </div>
     </div>
   );
