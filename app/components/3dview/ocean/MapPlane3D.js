@@ -12,13 +12,11 @@ const TILE_SIZE = 256;    // OSM tile pixel size
 
 const OSM_TEMPLATE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const SEAMARK_TEMPLATE = 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png';
-const WINDY_TEMPLATE = 'https://tiles.windy.com/tiles/v10.0/wind/{z}/{x}/{y}.png';
 const RAINVIEWER_INDEX = 'https://api.rainviewer.com/public/weather-maps.json';
 
 const OSM_MAX_ZOOM = 19;     // OSM serves up to z19 — pontoons/piers appear from z17
 const CUSTOM_MAX_ZOOM = 18;  // safe cap for SignalK-provided charts (unknown max)
 const SEAMARK_MAX_ZOOM = 18; // OpenSeaMap seamark overlay (buoys, lights, marks)
-const WINDY_MAX_ZOOM = 11;   // windy wind tiles are low-zoom only
 const RAIN_MAX_ZOOM = 12;    // rainviewer radar tiles
 
 // Meteo is a weather map, not a harbor chart: keep a wide fixed coverage so the
@@ -26,7 +24,6 @@ const RAIN_MAX_ZOOM = 12;    // rainviewer radar tiles
 const METEO_MAX_ZOOM = 11;
 const METEO_MIN_COVERAGE = 40000; // meters
 const CHART_MIN_COVERAGE = 500;   // meters — z18, pontoons still visible
-const WINDY_FILTER = 'saturate(1.8) contrast(1.35)';
 
 // Tone down the bright OSM palette so the plane fits the dark HUD
 const BASE_MAP_FILTER = 'brightness(0.72) saturate(1.15) contrast(1.05)';
@@ -180,7 +177,6 @@ export default function MapPlane3D({ mode = 'chart' }) {
         mode === 'meteo'
             ? [
                 { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: BASE_MAP_FILTER },
-                { template: WINDY_TEMPLATE, maxZoom: WINDY_MAX_ZOOM, filter: WINDY_FILTER },
               ]
             : [
                 { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: BASE_MAP_FILTER },
@@ -303,7 +299,6 @@ export default function MapPlane3D({ mode = 'chart' }) {
         if (mode === 'meteo') {
             layersRef.current = [
                 { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: BASE_MAP_FILTER },
-                { template: WINDY_TEMPLATE, maxZoom: WINDY_MAX_ZOOM, filter: WINDY_FILTER },
             ];
             scheduleRedraw(true);
             // Add the latest rain radar frame (free, no API key)

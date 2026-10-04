@@ -845,5 +845,9 @@
     "none": "Aucune sortie enregistrée pour l'instant. Elles apparaîtront ici après une première sortie.",
     "max": "max",
     "replay": "Rejouer"
+  },
+  "meteo": {
+    "forecast": "Prévision",
+    "now": "Maintenant"
   }
 }

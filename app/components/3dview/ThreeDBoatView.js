@@ -9,6 +9,7 @@ import LayLines3D from './compass/LayLines3D';
 import { useOcearoContext } from '../context/OcearoContext';
 import PolarProjection from './polar/Polar3D';
 import FsdOcean from './ocean/FsdOcean';
+import WindLayer3D from './meteo/WindLayer3D';
 import { useReplay } from '../replay/ReplayBar';
 import SceneSetup from './SceneSetup';
 import SeaGround from './fsd/SeaGround';
@@ -51,7 +52,8 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 makeDefault
                 fov={60}
                 near={5}
-                far={6000}
+                // Meteo: the camera pulls far out over the wind field
+                far={states.oceanMode === 'meteo' ? 60000 : 6000}
                 position={[0, 5, 20]}
             />
             {/* Orbit controls */}
@@ -91,7 +93,9 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 {/* The mirrored water renders the scene twice: flat water on a Pi */}
                 {/* Water: FSD faceted sea and gradient sky; chart / meteo keep the flat lite water */}
                 {states.oceanMode === 'water' && <FsdOcean />}
-                {(states.oceanMode === 'chart' || states.oceanMode === 'meteo') && <Ocean3D lite />}
+                {(states.oceanMode === 'chart' || states.oceanMode === 'meteo') && <Ocean3D lite fogDensity={states.oceanMode === 'meteo' ? 0.00003 : undefined} />}
+                {/* Windy-style forecast wind: colours and streaks over the chart */}
+                {states.oceanMode === 'meteo' && <WindLayer3D />}
                 {states.oceanMode === 'chart' && <MapPlane3D mode="chart" />}
                 {states.oceanMode === 'meteo' && <MapPlane3D mode="meteo" />}
 

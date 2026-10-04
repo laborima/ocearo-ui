@@ -33,7 +33,7 @@ const RAIN_BOX = 240;    // horizontal half-extent around the boat
 const RAIN_HEIGHT = 220; // drops fall from this height
 const _scratchCloudColor = new THREE.Color();
 
-function Ocean3D({ lite = false }) {
+function Ocean3D({ lite = false, fogDensity = 0.00035 }) {
   const { nightMode } = useOcearoContext();
   const { getWindData, getCurrentWeather } = useWeather();
   
@@ -396,14 +396,14 @@ function Ocean3D({ lite = false }) {
   useEffect(() => {
     const fogColor = nightMode ? new THREE.Color(0x000205) : new THREE.Color(0x001a26);
     scene.background = fogColor;
-    scene.fog = new THREE.FogExp2(fogColor, 0.00035); // Slightly denser fog for depth
+    scene.fog = new THREE.FogExp2(fogColor, fogDensity);
     gl.outputColorSpace = THREE.SRGBColorSpace;
     
     return () => {
       scene.background = null;
       scene.fog = null;
     };
-  }, [scene, nightMode, gl]);
+  }, [scene, nightMode, gl, fogDensity]);
 
   return (
     <>
