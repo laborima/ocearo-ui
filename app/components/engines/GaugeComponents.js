@@ -180,12 +180,13 @@ export const CompactDataField = ({
   };
   
   return (
-    <div className="tesla-card tesla-hover flex items-center justify-between">
-      <div className="flex items-center text-hud-muted text-caption font-semibold uppercase tracking-widest">
-        {icon && <FontAwesomeIcon icon={icon} className="mr-2 fa-fw opacity-50" />}
-        {label}
+    <div className="tesla-card tesla-hover flex items-center justify-between gap-3">
+      {/* Long labels wrap on two lines; the value never wraps nor gets clipped */}
+      <div className="flex items-center min-w-0 text-hud-muted text-caption font-semibold uppercase tracking-widest leading-snug">
+        {icon && <FontAwesomeIcon icon={icon} className="mr-2 fa-fw opacity-50 shrink-0" />}
+        <span className="min-w-0">{label}</span>
       </div>
-      <div className={`font-semibold text-value gliding-value ${getColor()} ${(criticalThreshold && (reversed ? value <= criticalThreshold : value >= criticalThreshold)) ? 'animate-soft-pulse' : ''}`}>
+      <div className={`shrink-0 whitespace-nowrap font-semibold text-value gliding-value ${getColor()} ${(criticalThreshold && (reversed ? value <= criticalThreshold : value >= criticalThreshold)) ? 'animate-soft-pulse' : ''}`}>
         {displayValue !== 'N/A' ? `${displayValue}${unit ? ` ${unit}` : ''}` : 'N/A'}
       </div>
     </div>
