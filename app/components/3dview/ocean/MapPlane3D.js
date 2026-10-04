@@ -5,14 +5,15 @@ import { useSignalKPath } from '../../hooks/useSignalK';
 import signalKService from '../../services/SignalKService';
 import configService from '../../settings/ConfigService';
 import useOwnTrack from '../fsd/useOwnTrack';
+import { cachedImage } from '../../utils/offlineCache';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const CANVAS_SIZE = 1024; // texture resolution
 const TILE_SIZE = 256;    // OSM tile pixel size
 
-const OSM_TEMPLATE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-const SEAMARK_TEMPLATE = 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png';
+export const OSM_TEMPLATE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+export const SEAMARK_TEMPLATE = 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png';
 const RAINVIEWER_INDEX = 'https://api.rainviewer.com/public/weather-maps.json';
 
 const OSM_MAX_ZOOM = 19;     // OSM serves up to z19 — pontoons/piers appear from z17
@@ -64,13 +65,8 @@ const tileCache = new Map();
 
 function loadTile(url) {
     if (tileCache.has(url)) return tileCache.get(url);
-    const promise = new Promise((resolve) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => resolve(img);
-        img.onerror = () => resolve(null);
-        img.src = url;
-    });
+    // Network or the offline cache (kept for sailing without internet)
+    const promise = cachedImage(url).catch(() => null);
     tileCache.set(url, promise);
     return promise;
 }

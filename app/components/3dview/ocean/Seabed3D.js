@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import configService from '../../settings/ConfigService';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import useOwnTrack from '../fsd/useOwnTrack';
+import { cachedImage } from '../../utils/offlineCache';
 
 /**
  * 3D seabed for the chart mode: a relief mesh under the (translucent) chart,
@@ -16,10 +17,11 @@ import useOwnTrack from '../fsd/useOwnTrack';
  * are relative to mean sea level, not chart datum; the tide is added on top.
  */
 
-const TERRARIUM = 'https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png';
+export const BATHY_ZOOM = 10;
+export const TERRARIUM = 'https://elevation-tiles-prod.s3.amazonaws.com/terrarium/{z}/{x}/{y}.png';
 // Terrarium carries bathymetry up to zoom 10 only (sea is 0 above): ~150 m
 // per pixel at 45°N, smoothed by bilinear sampling
-const ZOOM = 10;
+const ZOOM = BATHY_ZOOM;
 const TILES = 3;            // 3×3 tiles: ~80 km square around the boat
 const GRID = 160;           // mesh resolution
 const EXAGGERATION = 4;     // vertical exaggeration so a 10 m shoal reads from the cockpit view
@@ -42,13 +44,8 @@ const tileToLatLon = (x, y, z) => {
     return { lat, lon };
 };
 
-const loadImage = (url) => new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error(`tile ${url}`));
-    img.src = url;
-});
+// Network or the offline cache
+const loadImage = (url) => cachedImage(url);
 
 const cache = new Map();
 

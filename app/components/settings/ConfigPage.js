@@ -1,3 +1,4 @@
+import OfflineSection from './OfflineSection';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -173,6 +174,9 @@ const ConfigPage = ({ onSave }) => {
             <div className="space-y-8">
                 {activeTab === 'system' ? (
                     <div className="space-y-8 animate-in fade-in duration-500">
+                        {/* Offline chart, bathymetry and forecast for sailing without internet */}
+                        <OfflineSection />
+
                         {/* Connection Settings */}
                         <section className="tesla-card space-y-6">
                             <div className="flex items-center justify-between mb-2">
