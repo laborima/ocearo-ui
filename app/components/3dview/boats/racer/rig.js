@@ -1,7 +1,7 @@
 /**
- * RM 1080 rig geometry, in the boat's model frame (metres, bow towards -Z,
- * starboard +X, waterline at y = 0), measured on the builder's model by
- * models/rm1080/build.mjs. Fractional rig, swept spreaders, bowsprit.
+ * Rig and deck hardware of the procedural 10.8 m cruiser-racer, in the boat
+ * frame (metres, bow towards -Z, starboard +X, waterline at y = 0).
+ * Fractional rig, swept spreaders, bowsprit, twin rudders, tiller.
  */
 export const RIG = {
     mastFoot: [0, 1.85, -0.56],

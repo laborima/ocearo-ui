@@ -4,7 +4,7 @@ import useTheme from '../../theme/useTheme';
 import useOwnTrack from '../fsd/useOwnTrack';
 import { useBerth, getBerth, placeVirtualBerth } from './parkingStore';
 
-// Boat footprint (RM 1080 class), metres
+// Boat footprint (10.8 m cruiser-racer), metres
 export const BOAT = { length: 10.8, beam: 3.9 };
 const HALF_L = BOAT.length / 2;
 const HALF_B = BOAT.beam / 2;

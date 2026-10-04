@@ -98,7 +98,7 @@ const SailMesh = ({ geometry, color, opacity, edge }) => {
 };
 
 /**
- * RM 1080 sail plan: main (reefed by the wind), the headsail for the wind
+ * Cruiser-racer sail plan: main (reefed by the wind), the headsail for the wind
  * (J1, J2, J3, staysail or asymmetric spinnaker on the bowsprit), boom swung
  * to leeward, and the vang / mainsheet coloured by load. Sails are
  * translucent so AIS targets and the scene stay visible behind them.
