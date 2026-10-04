@@ -10,15 +10,15 @@ export const RIG = {
     innerHounds: [0, 12.6, 0.2],    // staysail stay
     gooseneck: [0, 2.65, -0.62],
     boomLength: 4.95,
-    forestayTack: [0, 1.45, -5.95],
+    forestayTack: [0, 1.5, -4.85],     // stem head (reverse bow)
     innerStayTack: [0, 1.5, -4.3],
     bowsprit: [0, 1.5, -6.5],
-    // Deck hardware for the trim indicators: traveller on a bridge across the
-    // cockpit at seat height, forward of the tiller; jib tracks on the side decks
-    traveller: { z: 2.9, y: 1.1, halfWidth: 1.15 },
+    // Deck hardware for the trim indicators: traveller across the cockpit
+    // floor, forward of the tiller; jib tracks on the side decks
+    traveller: { z: 2.9, y: 0.72, halfWidth: 1.15 },
     jibTrack: { x: 1.42, y: 1.43, zFwd: -1.9, zAft: 0.3 },
     // Cockpit floor under the tiller
-    cockpitFloor: 0.62,
+    cockpitFloor: 0.64,
     // Mainsheet attachment on the boom, metres from the gooseneck (above the traveller)
     mainsheetOnBoom: 3.5,
     // Rudder stocks: pivot (top of the blade) and axis (twin rudders are canted out ~7.5°)
