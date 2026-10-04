@@ -8,6 +8,8 @@ import ThreeDCompassView from './ThreeDCompassView';
 import LayLines3D from './compass/LayLines3D';
 import { useOcearoContext } from '../context/OcearoContext';
 import PolarProjection from './polar/Polar3D';
+import FsdOcean from './ocean/FsdOcean';
+import { useReplay } from '../replay/ReplayBar';
 import SceneSetup from './SceneSetup';
 import SeaGround from './fsd/SeaGround';
 import RouteRibbon from './fsd/RouteRibbon';
@@ -16,7 +18,6 @@ import GhostBoat from './fsd/GhostBoat';
 import AdvicePath3D from './fsd/AdvicePath3D';
 import PolarTargets3D from './compass/PolarTargets3D';
 import configService from '../settings/ConfigService';
-import { getRenderProfile } from '../utils/RenderProfile';
 import useSailTrim from '../hooks/useSailTrim';
 import { updateSailTrim } from './sail/SailTrimUtils';
 import SailTrimSliders from './sail/SailTrimSliders';
@@ -25,8 +26,8 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
     const { states } = useOcearoContext(); // Application state from context
     const isCompassLayerVisible = true; // Compass visibility
     const sailBoatRef = useRef();
+    const replaying = useReplay().active;
     const showAxes = configService.get('debugShowAxes');
-    const piProfile = useMemo(() => getRenderProfile().id === 'pi', []);
 
     const sailTrim = useSailTrim();
 
@@ -65,7 +66,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
             />
 
             {/* Background, fog and lights; the realistic ocean draws its own sky */}
-            <SceneSetup backdrop={states.oceanMode === 'black'} fogNear={600} fogFar={4200} />
+            <SceneSetup backdrop={states.oceanMode === 'black' || states.oceanMode === 'water'} fogNear={600} fogFar={4200} />
 
             <group position={[0, -3, 0]} >
                 {/* Sailboat — the map plane (-0.1) sits 0.2 above the water
@@ -88,7 +89,9 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 {/* Ocean / Map plane — chart & meteo keep the ocean sky/water,
                     the map plane floats just above the water surface */}
                 {/* The mirrored water renders the scene twice: flat water on a Pi */}
-                {states.oceanMode !== 'black' && <Ocean3D lite={states.oceanMode !== 'water' || piProfile} />}
+                {/* Water: FSD faceted sea and gradient sky; chart / meteo keep the flat lite water */}
+                {states.oceanMode === 'water' && <FsdOcean />}
+                {(states.oceanMode === 'chart' || states.oceanMode === 'meteo') && <Ocean3D lite />}
                 {states.oceanMode === 'chart' && <MapPlane3D mode="chart" />}
                 {states.oceanMode === 'meteo' && <MapPlane3D mode="meteo" />}
 
@@ -110,7 +113,8 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 {states.showPolar && states.oceanMode === 'black' && <PolarProjection /> }
 
                 {/* AIS Boats */}
-                {states.ais && <AISView onUpdateInfoPanel={onUpdateInfoPanel} />}
+                {/* Live AIS makes no sense around a replayed voyage */}
+                {states.ais && !replaying && <AISView onUpdateInfoPanel={onUpdateInfoPanel} />}
 
                 {/* Compass */}
                 <ThreeDCompassView visible={isCompassLayerVisible} />
