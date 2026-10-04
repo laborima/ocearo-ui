@@ -39,7 +39,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
             jibCar: sailTrim.trimState.jibCar,
             tension: sailTrim.trimState.tension,
         });
-        return { ...computed, trimState: sailTrim.trimState };
+        return { ...computed, trimState: sailTrim.trimState, windData: sailTrim.windData };
     }, [sailTrim.windData, sailTrim.trimState]);
 
 
@@ -117,7 +117,8 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 <PolarTargets3D />
 
                 {/* Sail trim car indicators at compass level */}
-                {configService.get('showSailTrimSliders') !== false && <SailTrimSliders />}
+                {/* The RM 1080 shows its cars on deck instead of on the compass ring */}
+                {configService.get('showSailTrimSliders') !== false && configService.getSelectedBoat()?.modelPath !== 'rm1080' && <SailTrimSliders />}
             </group>
 
             {/* Debug 3D axes */}

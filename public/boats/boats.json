@@ -3,27 +3,53 @@
     {
       "name": "Default",
       "modelPath": "default",
-      "capabilities": ["navigation","rudder","sail","color"]
+      "capabilities": [
+        "navigation",
+        "rudder",
+        "sail",
+        "color"
+      ]
+    },
+    {
+      "name": "RM1080",
+      "modelPath": "rm1080",
+      "capabilities": [
+        "navigation",
+        "sail",
+        "color"
+      ]
     },
     {
       "name": "Optimist",
       "modelPath": "optimist",
-      "capabilities": ["navigation","ais"]
+      "capabilities": [
+        "navigation",
+        "ais"
+      ]
     },
     {
       "name": "Sailboat",
       "modelPath": "sailboat",
-      "capabilities": ["navigation","ais"]
+      "capabilities": [
+        "navigation",
+        "ais"
+      ]
     },
     {
       "name": "Ship",
       "modelPath": "ship",
-      "capabilities": ["navigation","ais"]
+      "capabilities": [
+        "navigation",
+        "ais"
+      ]
     },
     {
       "name": "Windsurf",
       "modelPath": "windsurf",
-      "capabilities": ["navigation","ais"]
+      "capabilities": [
+        "navigation",
+        "ais"
+      ]
     }
   ]
 }
