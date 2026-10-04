@@ -55,6 +55,8 @@ const fragmentShader = `
         alpha += smoothstep(0.86, 0.94, across) * (1.0 - smoothstep(0.94, 1.0, across)) * 0.35 * farFade;
 
         gl_FragColor = vec4(color, alpha);
+
+        #include <colorspace_fragment>
     }
 `;
 

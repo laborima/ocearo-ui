@@ -45,9 +45,10 @@ const DAY = {
   // Attitude instrument faces
   instrument: { sky: '#9fd3f2', sea: '#b9bcc0', bezel: '#c5c9ce' },
   scene: {
-    background: '#eceef1',
-    ground: '#e0e2e5',
-    grid: '#c9cdd2',
+    // FSD day look: near-white world, thin light-grey lines, mid-grey vehicles
+    background: '#f7f8f9',
+    ground: '#f2f3f5',
+    grid: '#dcdfe3',
     markerDim: '#b5bac0',
     water: '#9fb4c2',
     ownHull: '#ffffff',

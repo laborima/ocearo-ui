@@ -41,6 +41,8 @@ const fragmentShader = `
         vec3 color = mix(uGround, uLine, line * 0.4 * gridFade);
         color = mix(color, uBackground, smoothstep(uFadeNear, uFadeFar, dist));
         gl_FragColor = vec4(color, 1.0);
+        // Uniform colours are linear: convert for the screen like built-in materials
+        #include <colorspace_fragment>
     }
 `;
 
