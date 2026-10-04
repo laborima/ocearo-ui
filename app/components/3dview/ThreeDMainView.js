@@ -116,7 +116,9 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
             <div className="absolute top-14 left-2 z-10">
                 {!states.anchorWatch && <ThreeDBoatSpeedIndicator />}
                 {states.anchorWatch && <ThreeDBoatPositionDateIndicator/> }
-                {!classic && <ModeHud omitDepth={rich} />}
+                {/* Depth lives in its gauge (split view) or its panel (full screen) */}
+                {/* Split view: three values, so the depth gauge below stays clear */}
+                {!classic && <ModeHud omitDepth maxItems={rich ? 4 : 3} />}
             </div>
 
             {/* Attitude indicator - top right, below toolbar row */}
@@ -151,18 +153,18 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
 
             {/* Course advice (avoidance / VMG) in the boat view */}
             {!states.anchorWatch && !states.parkingMode && (
-                <div className={`absolute left-1/2 -translate-x-1/2 z-20 ${classic ? 'bottom-24' : 'bottom-3'}`}>
+                <div className={`absolute left-1/2 -translate-x-1/2 z-20 max-w-[calc(100%-9rem)] ${classic ? 'bottom-24' : 'bottom-3'}`}>
                     <AdvicePanel />
                 </div>
             )}
 
-            {/* Classic gauges: sea level, tide, rudder */}
-            {classic && (
+            {/* Depth and tide gauges whenever the full-screen panels are not shown */}
+            {!rich && (
                 <div className="absolute left-2 bottom-2 z-20 flex flex-col items-center">
                     <ThreeDBoatSeaLevelIndicator />
                 </div>
             )}
-            {classic && (
+            {!rich && (
                 <div className="absolute right-2 bottom-2 z-20 flex flex-col items-center">
                     <ThreeDBoatTideLevelIndicator />
                 </div>

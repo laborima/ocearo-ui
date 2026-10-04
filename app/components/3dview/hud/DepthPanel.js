@@ -50,7 +50,7 @@ const DepthPanel = () => {
                 )}
             </div>
             <div className="mt-2">
-                <Sparkline values={history} width={240} height={48} invert
+                <Sparkline values={history} width={240} height={48} invert endDot
                     color={shallow ? 'var(--color-oRed)' : 'var(--color-oBlue)'} />
             </div>
             <div className="text-caption text-hud-muted mt-1">{t('hud.depthHistory')}</div>

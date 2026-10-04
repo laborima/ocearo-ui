@@ -99,6 +99,15 @@
     min-height: 100%;
   }
 
+  /* Text and lines floating straight on the 3D scene (no panel behind):
+     a soft halo of the background colour keeps them readable */
+  .hud-halo {
+    text-shadow: 0 0 6px var(--background), 0 0 2px var(--background);
+  }
+  .hud-halo svg {
+    filter: drop-shadow(0 0 2px var(--background)) drop-shadow(0 0 4px var(--background));
+  }
+
   /* Grid of tiles inside a card */
   .tile-grid {
     display: grid;

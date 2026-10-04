@@ -56,7 +56,7 @@ export const hudMode = (states) => {
  * speed readout. Replaces the depth / tide / rudder / attitude gauges when the
  * HUD style is 'minimal' (the default).
  */
-const ModeHud = ({ omitDepth = false }) => {
+const ModeHud = ({ omitDepth = false, maxItems = 4 }) => {
     const { t } = useTranslation();
     const { states } = useOcearoContext();
     const v = useSignalKPaths(PATHS);
@@ -87,6 +87,7 @@ const ModeHud = ({ omitDepth = false }) => {
             case 'harbour':
                 return [
                     depthItem,
+                    { label: t('hud.heading'), value: fmtAngle(heading) },
                     { label: t('hud.stw'), value: fmt(convertSpeedUnit(v['navigation.speedThroughWater'])), unit: getSpeedUnitLabel() },
                     { label: t('hud.aws'), value: fmt(convertSpeedUnit(v['environment.wind.speedApparent'])), unit: getSpeedUnitLabel() },
                     { label: t('hud.awa'), value: fmtWindAngle(v['environment.wind.angleApparent'], t) },
@@ -103,16 +104,15 @@ const ModeHud = ({ omitDepth = false }) => {
                 return [
                     { label: t('hud.heading'), value: fmtAngle(heading) },
                     tws,
+                    { label: t('hud.awa'), value: fmtWindAngle(v['environment.wind.angleApparent'], t) },
                     depthItem,
-                    Number.isFinite(wptDistance)
-                        ? { label: t('hud.waypoint'), value: fmt(convertDistanceUnit(wptDistance)), unit: getDistanceUnitLabel(), sub: fmtDuration(v['navigation.courseGreatCircle.nextPoint.timeToGo']) }
-                        : { label: t('hud.awa'), value: fmtWindAngle(v['environment.wind.angleApparent'], t) },
-                ];
+                    Number.isFinite(wptDistance) && { label: t('hud.waypoint'), value: fmt(convertDistanceUnit(wptDistance)), unit: getDistanceUnitLabel(), sub: fmtDuration(v['navigation.courseGreatCircle.nextPoint.timeToGo']) },
+                ].filter(Boolean);
             }
         }
     }, [v, perf, mode, t]);
     // The full-screen depth panel already shows it
-    const shown = omitDepth ? items.filter(item => item.id !== 'depth') : items;
+    const shown = (omitDepth ? items.filter(item => item.id !== 'depth') : items).slice(0, maxItems);
 
     return (
         <div className="ml-3 mt-4 flex flex-col gap-3 select-none">
