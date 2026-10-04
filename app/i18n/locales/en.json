@@ -326,7 +326,13 @@
   "environmental": {
     "pressure": "Pressure",
     "humidity": "Humidity",
-    "voc": "VOC"
+    "voc": "VOC",
+    "co2": "CO₂",
+    "pm25": "PM2.5",
+    "dewPoint": "Dew point",
+    "outsideHumidity": "Outside humidity",
+    "uvIndex": "UV index",
+    "visibility": "Visibility"
   },
   "widgets": {
     "solarCycle": "Sun",
@@ -749,7 +755,8 @@
     "air": "Air",
     "water": "Water",
     "pressure": "Pressure",
-    "battery": "Battery"
+    "battery": "Battery",
+    "sailDepth": "Depth"
   },
   "laylines": {
     "tack": "Tack",
