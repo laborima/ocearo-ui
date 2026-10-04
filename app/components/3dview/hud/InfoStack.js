@@ -17,14 +17,15 @@ const PATHS = [
 ];
 
 const Chip = ({ icon, iconClass = 'text-hud-secondary', label, value, unit }) => (
-    <div className="flex items-center gap-3 rounded-xl border border-hud bg-hud-bg backdrop-blur-md shadow-soft px-3 py-2 min-w-[11rem]">
-        <FontAwesomeIcon icon={icon} className={`${iconClass} text-sm w-4`} />
-        <div className="leading-tight">
+    <div className="hud-halo flex items-center justify-end gap-3 px-1 py-1">
+        {/* Right-aligned column: text first, icon against the screen edge */}
+        <div className="leading-tight text-right">
             <div className="text-caption font-semibold uppercase tracking-widest text-hud-muted">{label}</div>
             <div className="text-label font-semibold text-hud-main">
                 {value}{unit && <span className="text-caption text-hud-secondary ml-1">{unit}</span>}
             </div>
         </div>
+        <FontAwesomeIcon icon={icon} className={`${iconClass} text-sm w-4`} />
     </div>
 );
 

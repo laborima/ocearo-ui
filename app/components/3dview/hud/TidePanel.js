@@ -14,6 +14,11 @@ const TidePanel = () => {
     const start = chartData[0].ms;
     const end = chartData[chartData.length - 1].ms;
     const marker = Math.min(1, Math.max(0, (vesselNow().getTime() - start) / (end - start)));
+    // Without a measured height, read the curve at "now"
+    const pos = marker * (chartData.length - 1);
+    const i = Math.min(chartData.length - 2, Math.floor(pos));
+    const estimated = chartData[i].height + (chartData[i + 1].height - chartData[i].height) * (pos - i);
+    const shown = Number.isFinite(level) ? level : estimated;
 
     return (
         <GlassPanel
@@ -22,7 +27,7 @@ const TidePanel = () => {
             className="w-[19rem]"
         >
             <div className="flex items-baseline gap-2">
-                <span className="text-value font-semibold text-hud-main">{Number.isFinite(level) ? level.toFixed(1) : '--'}</span>
+                <span className="text-value font-semibold text-hud-main">{Number.isFinite(shown) ? shown.toFixed(1) : '--'}</span>
                 <span className="text-caption text-hud-secondary">m</span>
                 <span className={`text-caption font-semibold uppercase tracking-widest ${isRising ? 'text-oGreen' : 'text-oBlue'}`}>
                     {isRising ? t('widgets.rising') : t('widgets.ebb')}
