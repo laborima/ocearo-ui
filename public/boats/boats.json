@@ -11,8 +11,8 @@
       ]
     },
     {
-      "name": "RM1080",
-      "modelPath": "rm1080",
+      "name": "Racer 10.8",
+      "modelPath": "racer",
       "capabilities": [
         "navigation",
         "sail",
