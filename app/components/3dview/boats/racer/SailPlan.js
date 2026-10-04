@@ -101,7 +101,7 @@ export const makeSailGeometry = ({ tack, head, clew, headWidth = 0, camber = 0.1
  */
 export const boomAngleFor = (awa) => {
     const a = Math.abs(awa || 0);
-    return Math.min(80 * DEG, Math.max(4 * DEG, a - 32 * DEG));
+    return Math.min(80 * DEG, Math.max(4 * DEG, a - 26 * DEG));
 };
 
 /**
@@ -111,11 +111,12 @@ export const boomAngleFor = (awa) => {
  *
  * @param {number} awa - apparent wind angle, rad
  * @param {number} travellerX - car position, m (+ = starboard)
+ * @param {number} [sheetOnBoom] - mainsheet attachment, m from the gooseneck
  */
-export const boomAngleWithTraveller = (awa, travellerX = 0) => {
+export const boomAngleWithTraveller = (awa, travellerX = 0, sheetOnBoom = RIG.mainsheetOnBoom) => {
     const leeward = (awa || 0) >= 0 ? -1 : 1;
     const toLeeward = (travellerX || 0) * leeward;
-    const angle = boomAngleFor(awa) + Math.atan2(toLeeward, RIG.mainsheetOnBoom) * 0.8;
+    const angle = boomAngleFor(awa) + Math.atan2(toLeeward, sheetOnBoom) * 0.8;
     return Math.max(-1 * DEG, Math.min(80 * DEG, angle));
 };
 
@@ -199,7 +200,9 @@ const SailMesh = ({ geometry, color, opacity, edge, stripe, accent, label, label
             ))}
             {label && mid && (
                 <Billboard position={mid.deepest.clone().addScaledVector(mid.frame.normal, 0.5).toArray()}>
-                    <Text fontSize={0.5} color={stripe} anchorX="center" anchorY="middle"
+                    {/* Drawn over the sails so a sail in front never hides it */}
+                    <Text fontSize={0.5} color={stripe} anchorX="center" anchorY="middle" renderOrder={10}
+                        material-depthTest={false} material-transparent
                         font="fonts/Roboto-Bold.ttf" outlineWidth={0.04} outlineColor={labelOutline}>
                         {label}
                     </Text>
@@ -236,8 +239,9 @@ const Telltales = ({ geometry, at, states, colors }) => (
  * @param {Object} [trim] - sailTrimData (camber, twist, tensions, trimState)
  * @param {number[]} mainCarAt - mainsheet car sheave [x, y, z] on the traveller
  * @param {number[]} jibCarAt - jib car sheave [x, y, z] on the leeward track
+ * @param {Object} [rig] - rig geometry (see racer/rig.js), the racer's by default
  */
-const SailPlan = ({ awa = 0.6, boomAngle, sails, trim, mainCarAt, jibCarAt }) => {
+const SailPlan = ({ awa = 0.6, boomAngle, sails, trim, mainCarAt, jibCarAt, rig = RIG }) => {
     const theme = useTheme();
     const { t } = useTranslation();
     const { scene, accent } = theme;
@@ -264,12 +268,12 @@ const SailPlan = ({ awa = 0.6, boomAngle, sails, trim, mainCarAt, jibCarAt }) =>
     const jibSheetAngle = Math.max(7 * DEG, Math.min(40 * DEG, wind - jibEntry - TARGET_AOA));
 
     const geometry = useMemo(() => {
-        const gooseneck = v3(RIG.gooseneck);
+        const gooseneck = v3(rig.gooseneck);
         const boomDir = new THREE.Vector3(0, 0, 1).applyAxisAngle(UP, boom);
-        const clew = gooseneck.clone().addScaledVector(boomDir, RIG.boomLength - 0.15).add(new THREE.Vector3(0, 0.12, 0));
+        const clew = gooseneck.clone().addScaledVector(boomDir, rig.boomLength - 0.15).add(new THREE.Vector3(0, 0.12, 0));
         // Reefing lowers the head down the (raked) mast
-        const mastDir = v3(RIG.masthead).sub(v3(RIG.mastFoot)).normalize();
-        const head = v3(RIG.masthead).addScaledVector(mastDir, -0.25 - reef * REEF_DROP);
+        const mastDir = v3(rig.masthead).sub(v3(rig.mastFoot)).normalize();
+        const head = v3(rig.masthead).addScaledVector(mastDir, -0.25 - reef * REEF_DROP);
         const main = makeSailGeometry({
             tack: gooseneck.clone().add(new THREE.Vector3(0, 0.15, 0)),
             head,
@@ -285,15 +289,16 @@ const SailPlan = ({ awa = 0.6, boomAngle, sails, trim, mainCarAt, jibCarAt }) =>
         let fore;
         let jibClew = null;
         if (headsail === 'spi') {
-            const tack = v3(RIG.bowsprit);
-            const spiHead = v3(RIG.hounds).add(new THREE.Vector3(0, -0.3, -0.1));
+            const tack = v3(rig.bowsprit);
+            const spiHead = v3(rig.hounds).add(new THREE.Vector3(0, -0.3, -0.1));
             // Clew well aft and outboard, eased with the apparent wind
             const ease = Math.min(1, Math.abs(awa || 0) / Math.PI);
-            const spiClew = new THREE.Vector3(leeward * (4.2 + 1.5 * ease), 2.6, 1.8 - 1.5 * ease);
+            const sp = rig.spiClew ?? { out: 4.2, y: 2.6, z: 1.8 };
+            const spiClew = new THREE.Vector3(leeward * (sp.out + 1.5 * ease), sp.y, sp.z - 1.5 * ease);
             fore = makeSailGeometry({ tack, head: spiHead, clew: spiClew, camber: 0.24, draft: 0.45, twist: 0.25, leeward, stripes: STRIPES });
         } else {
-            const tack = v3(cut.inner ? RIG.innerStayTack : RIG.forestayTack);
-            const top = v3(cut.inner ? RIG.innerHounds : RIG.hounds);
+            const tack = v3(cut.inner ? rig.innerStayTack : rig.forestayTack);
+            const top = v3(cut.inner ? rig.innerHounds : rig.hounds);
             const head = tack.clone().lerp(top, cut.hoist);
             const j = Math.abs(top.z - tack.z) || 6;
             const back = j * cut.lp;
@@ -301,7 +306,7 @@ const SailPlan = ({ awa = 0.6, boomAngle, sails, trim, mainCarAt, jibCarAt }) =>
             fore = makeSailGeometry({ tack, head, clew: jibClew, camber: jibCamber, draft: 0.38, twist: jibTwist, leeward, stripes: STRIPES });
         }
         return { main, fore, clew, gooseneck, jibClew };
-    }, [awa, boom, reef, headsail, leeward, cut, mainCamber, mainTwist, jibCamber, jibTwist, jibSheetAngle]);
+    }, [awa, boom, reef, headsail, leeward, cut, mainCamber, mainTwist, jibCamber, jibTwist, jibSheetAngle, rig]);
 
     // Flow at each stripe: jib luff and main leech
     const jibStates = flowStates(wind + WIND_GRADIENT / 2 - (jibSheetAngle + jibTwist / 2 + jibEntry), jibTwist);
@@ -318,11 +323,11 @@ const SailPlan = ({ awa = 0.6, boomAngle, sails, trim, mainCarAt, jibCarAt }) =>
         lee: leeward > 0 ? scene.laylineStarboard : scene.laylinePort,
         windward: leeward > 0 ? scene.laylinePort : scene.laylineStarboard,
     };
-    const vangFoot = v3(RIG.mastFoot).add(new THREE.Vector3(0, 0.3, 0.15));
+    const vangFoot = v3(rig.mastFoot).add(new THREE.Vector3(0, 0.3, 0.15));
     const vangBoom = geometry.gooseneck.clone().lerp(geometry.clew, 0.3);
     // Mainsheet: boom point above the traveller down to the car
-    const sheetOnBoom = geometry.gooseneck.clone().add(new THREE.Vector3(0, 0, RIG.mainsheetOnBoom).applyAxisAngle(UP, boom));
-    const traveller = mainCarAt ?? [0, RIG.traveller.y + 0.2, RIG.traveller.z];
+    const sheetOnBoom = geometry.gooseneck.clone().add(new THREE.Vector3(0, 0, rig.mainsheetOnBoom).applyAxisAngle(UP, boom));
+    const traveller = mainCarAt ?? [0, rig.traveller.y + 0.2, rig.traveller.z];
     const pct = (x) => Math.round(x * 100);
     const isSpi = headsail === 'spi';
 

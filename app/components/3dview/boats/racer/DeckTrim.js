@@ -3,38 +3,67 @@ import * as THREE from 'three';
 import { RoundedBox } from '@react-three/drei';
 import useTheme from '../../../theme/useTheme';
 import { RIG } from './rig';
-import { deckHeightAt } from './racerGeometry';
+import { deckHeightAt, deckEdgeAt } from './racerGeometry';
 
 const TRACK_RADIUS = 0.03;
 const TICK_EVERY = 0.25; // m between graduations
 
-/** Track (a slim rail) laid on the deck between two points, following its camber */
-const useTrack = (from, to, lift) => {
+// Jib tracks run parallel to the sheer, this far inboard of the deck edge
+const JIB_INSET = 0.45;
+
+const layouts = new WeakMap();
+
+/**
+ * Where the trim hardware runs on a given boat. Paths map f (0..1) to a
+ * point on the deck: the traveller crosses straight (port -> starboard);
+ * each jib track (forward -> aft) runs at a fixed `x` when the rig gives
+ * one, else along the curve of the deck edge.
+ *
+ * @param {Object} rig - rig geometry (traveller, jibTrack)
+ * @param {{ edgeAt: (z) => number, heightAt: (x, z) => number }} deck
+ */
+export const trimLayout = (rig = RIG, deck = { edgeAt: deckEdgeAt, heightAt: deckHeightAt }) => {
+    if (layouts.has(rig)) return layouts.get(rig);
+    const onDeck = (x, z) => new THREE.Vector3(x, deck.heightAt(x, z), z);
+    const t = rig.traveller;
+    const j = rig.jibTrack;
+    const jib = (side) => (f) => {
+        const z = j.zFwd + (j.zAft - j.zFwd) * f;
+        const x = Number.isFinite(j.x) ? j.x : deck.edgeAt(z) - (j.inset ?? JIB_INSET);
+        return onDeck(side * x, z);
+    };
+    const layout = {
+        traveller: (f) => onDeck((f * 2 - 1) * t.halfWidth, t.z),
+        jib: { 1: jib(1), [-1]: jib(-1) },
+    };
+    layouts.set(rig, layout);
+    return layout;
+};
+
+/** Point on a track at fraction f, raised by `lift` */
+const along = (path, f, lift) => path(f).add(new THREE.Vector3(0, lift, 0));
+
+/** Direction of a track at f, as a yaw angle */
+const yawAt = (path, f) => {
+    const a = path(Math.max(0, f - 0.01));
+    const b = path(Math.min(1, f + 0.01));
+    return Math.atan2(b.x - a.x, b.z - a.z);
+};
+
+/** Track (a slim rail) laid on the deck along its path, following the camber */
+const useTrack = (path, lift) => {
     const geometry = useMemo(() => {
-        const pts = Array.from({ length: 13 }, (_, i) => {
-            const p = new THREE.Vector3(...from).lerp(new THREE.Vector3(...to), i / 12);
-            p.y = deckHeightAt(p.x, p.z) + lift;
-            return p;
-        });
-        return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 24, TRACK_RADIUS, 8, false);
-    }, [from, to, lift]);
+        const pts = Array.from({ length: 17 }, (_, i) => along(path, i / 16, lift));
+        return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 32, TRACK_RADIUS, 8, false);
+    }, [path, lift]);
     useEffect(() => () => geometry.dispose(), [geometry]);
     return geometry;
 };
 
-/** Point on a track at fraction f, sitting on the deck */
-const along = (from, to, f, lift) => {
-    const p = new THREE.Vector3(...from).lerp(new THREE.Vector3(...to), f);
-    p.y = deckHeightAt(p.x, p.z) + lift;
-    return p;
-};
-
-const Track = ({ from, to, color, tickColor }) => {
-    const geometry = useTrack(from, to, TRACK_RADIUS);
-    const length = new THREE.Vector3(...from).distanceTo(new THREE.Vector3(...to));
+const Track = ({ path, color, tickColor }) => {
+    const geometry = useTrack(path, TRACK_RADIUS);
+    const length = along(path, 0, 0).distanceTo(along(path, 1, 0));
     const ticks = Math.floor(length / TICK_EVERY);
-    const dir = new THREE.Vector3(...to).sub(new THREE.Vector3(...from)).normalize();
-    const yaw = Math.atan2(dir.x, dir.z);
     return (
         <group>
             <mesh geometry={geometry}>
@@ -42,7 +71,7 @@ const Track = ({ from, to, color, tickColor }) => {
             </mesh>
             {/* End stops */}
             {[0, 1].map(f => (
-                <mesh key={f} position={along(from, to, f, TRACK_RADIUS)}>
+                <mesh key={f} position={along(path, f, TRACK_RADIUS)}>
                     <sphereGeometry args={[TRACK_RADIUS * 1.8, 12, 8]} />
                     <meshStandardMaterial color={color} roughness={0.35} metalness={0.6} />
                 </mesh>
@@ -52,7 +81,7 @@ const Track = ({ from, to, color, tickColor }) => {
                 const f = ticks ? i / ticks : 0;
                 const mid = Math.abs(f - 0.5) < 1e-6;
                 return (
-                    <mesh key={i} position={along(from, to, f, 0.012)} rotation={[0, yaw, 0]}>
+                    <mesh key={i} position={along(path, f, 0.012)} rotation={[0, yawAt(path, f), 0]}>
                         <boxGeometry args={[mid ? 0.34 : 0.2, 0.012, 0.025]} />
                         <meshBasicMaterial color={tickColor} />
                     </mesh>
@@ -85,29 +114,22 @@ const Car = ({ position, yaw, size, color, opacity = 1 }) => (
  * leeward one, in use, highlighted), both graduated so positions read at a
  * glance. Values 0..1: traveller port -> starboard, jib car forward -> aft.
  */
-const DeckTrim = ({ mainCar = 0.5, jibCar = 0.5, leeward = -1 }) => {
+const DeckTrim = ({ mainCar = 0.5, jibCar = 0.5, leeward = -1, layout = trimLayout() }) => {
     const { scene, accent } = useTheme();
-    const t = RIG.traveller;
-    const j = RIG.jibTrack;
-    const travFrom = useMemo(() => [-t.halfWidth, 0, t.z], [t.halfWidth, t.z]);
-    const travTo = useMemo(() => [t.halfWidth, 0, t.z], [t.halfWidth, t.z]);
-    const tracks = useMemo(() => [1, -1].map(side => ({
-        side,
-        from: [side * j.x, 0, j.zFwd],
-        to: [side * j.x, 0, j.zAft],
-    })), [j.x, j.zFwd, j.zAft]);
 
     return (
         <group>
-            <Track from={travFrom} to={travTo} color={scene.rigging} tickColor={scene.compass} />
-            <Car position={along(travFrom, travTo, mainCar ?? 0.5, TRACK_RADIUS)} yaw={Math.PI / 2}
+            <Track path={layout.traveller} color={scene.rigging} tickColor={scene.compass} />
+            <Car position={along(layout.traveller, mainCar ?? 0.5, TRACK_RADIUS)} yaw={Math.PI / 2}
                 size={[0.42, 0.13, 0.26]} color={accent} />
-            {tracks.map(({ side, from, to }) => {
+            {[1, -1].map((side) => {
+                const path = layout.jib[side];
                 const active = side === leeward;
+                const f = jibCar ?? 0.5;
                 return (
                     <group key={side}>
-                        <Track from={from} to={to} color={scene.rigging} tickColor={scene.compass} />
-                        <Car position={along(from, to, jibCar ?? 0.5, TRACK_RADIUS)} yaw={0}
+                        <Track path={path} color={scene.rigging} tickColor={scene.compass} />
+                        <Car position={along(path, f, TRACK_RADIUS)} yaw={yawAt(path, f)}
                             size={[0.2, 0.12, 0.4]} color={active ? accent : scene.markerDim} opacity={active ? 1 : 0.7} />
                     </group>
                 );
@@ -116,7 +138,9 @@ const DeckTrim = ({ mainCar = 0.5, jibCar = 0.5, leeward = -1 }) => {
     );
 };
 
-/** Where a sheet meets its car (top of the sheave), for drawing the sheet */
-export const carSheave = (from, to, f) => along(from, to, f, TRACK_RADIUS + 0.19).toArray();
+/** Top of the sheave of the mainsheet car, for drawing the sheet */
+export const mainCarSheave = (f, layout = trimLayout()) => along(layout.traveller, f, TRACK_RADIUS + 0.19).toArray();
+/** Top of the sheave of a jib car (side +1 starboard / -1 port), for drawing the sheet */
+export const jibCarSheave = (side, f, layout = trimLayout()) => along(layout.jib[side], f, TRACK_RADIUS + 0.19).toArray();
 
 export default DeckTrim;
