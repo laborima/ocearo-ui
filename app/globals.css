@@ -22,6 +22,7 @@
   --color-oGray: #989898;
   --color-oGray2: #424242;
   --color-oNight: #ef4444;
+  --color-onAccent: #ffffff;
 
   --color-primary: #1976d2;
   --color-accent: #ff4081;
@@ -129,6 +130,10 @@
   /* Light 3D scene: plain white text flips dark inside the pane */
   [data-scene='light'] .text-white { color: #1a1a1a; }
   
+  /* Text on a filled accent (buttons, selected chips): white by day and in
+     the dark theme, near-black at night where the accent is a light red */
+  .bg-oBlue, .bg-oBlue * { color: var(--color-onAccent) !important; }
+
   .bg-hud-bg { background-color: var(--hud-bg); }
   .bg-hud-elevated { background-color: var(--hud-bg-elevated); }
   .border-hud { border-color: var(--hud-border); }
