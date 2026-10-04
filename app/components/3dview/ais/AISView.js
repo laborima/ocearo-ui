@@ -32,7 +32,8 @@ const DEFAULT_WATER_LEVEL = -0.3;
 
 const collectMeshes = (obj) => {
     const meshes = [];
-    obj.traverse((o) => { if (o.isMesh) meshes.push(o); });
+    // Fixed-colour details (glazing, boot top) keep their own material
+    obj.traverse((o) => { if (o.isMesh && !o.userData.fixed) meshes.push(o); });
     return meshes;
 };
 
