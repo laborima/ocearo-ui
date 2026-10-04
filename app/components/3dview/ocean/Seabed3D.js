@@ -4,6 +4,7 @@ import configService from '../../settings/ConfigService';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import useOwnTrack from '../fsd/useOwnTrack';
 import { cachedImage } from '../../utils/offlineCache';
+import { bathymetryTileTemplate } from '../../utils/OcearoCoreUtils';
 
 /**
  * 3D seabed for the chart mode: a relief mesh under the (translucent) chart,
@@ -15,6 +16,10 @@ import { cachedImage } from '../../utils/offlineCache';
  * h = R·256 + G + B/256 − 32768 m), which carry GEBCO / ETOPO bathymetry at
  * sea up to zoom 10 (~150 m per pixel: a smoothed seabed, not a survey). Depths
  * are relative to mean sea level, not chart datum; the tide is added on top.
+ *
+ * Where the boat's server has SHOM models (ocearo-core downloads them when
+ * online: 5 – 20 m surveys of the French coast), their tiles take over:
+ * same encoding, referenced to chart datum, transparent where not covered.
  */
 
 export const BATHY_ZOOM = 10;
@@ -22,8 +27,11 @@ export const TERRARIUM = 'https://elevation-tiles-prod.s3.amazonaws.com/terrariu
 // Terrarium carries bathymetry up to zoom 10 only (sea is 0 above): ~150 m
 // per pixel at 45°N, smoothed by bilinear sampling
 const ZOOM = BATHY_ZOOM;
+// SHOM tiles from ocearo-core: ~13 m per pixel at 45°N, 3×3 tiles ≈ 10 km
+export const SHOM_ZOOM = 13;
 const TILES = 3;            // 3×3 tiles: ~80 km square around the boat
 const GRID = 160;           // mesh resolution
+const GRID_SHOM = 256;      // finer where the survey allows it (~30 m between vertices)
 const EXAGGERATION = 4;     // vertical exaggeration so a 10 m shoal reads from the cockpit view
 const SAFETY_MARGIN = 1.0;  // metres under the keel
 const DEFAULT_DRAFT = 2.0;
@@ -49,50 +57,72 @@ const loadImage = (url) => cachedImage(url);
 
 const cache = new Map();
 
-/** Heights (m) on a TILES×256 square of pixels around a tile, with its geographic bounds */
-const loadHeights = async (lat, lon) => {
-    const c = tileXY(lat, lon, ZOOM);
+/**
+ * Heights (m) on a TILES×256 square of pixels around a tile, with its
+ * geographic bounds. Pixels no tile covers (missing tile, transparent pixel)
+ * are NaN; null when nothing at all was loaded.
+ */
+const loadHeights = async (lat, lon, template = TERRARIUM, z = ZOOM) => {
+    const c = tileXY(lat, lon, z);
     const x0 = Math.floor(c.x) - 1;
     const y0 = Math.floor(c.y) - 1;
-    const key = `${x0},${y0}`;
+    const key = `${template}|${z}/${x0},${y0}`;
     if (cache.has(key)) return cache.get(key);
     const size = TILES * 256;
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    await Promise.all(Array.from({ length: TILES * TILES }, async (_, k) => {
+    const loaded = await Promise.all(Array.from({ length: TILES * TILES }, async (_, k) => {
         const tx = x0 + (k % TILES);
         const ty = y0 + Math.floor(k / TILES);
-        const url = TERRARIUM.replace('{z}', ZOOM).replace('{x}', tx).replace('{y}', ty);
-        const img = await loadImage(url);
-        ctx.drawImage(img, (k % TILES) * 256, Math.floor(k / TILES) * 256);
+        const url = template.replace('{z}', z).replace('{x}', tx).replace('{y}', ty);
+        try {
+            const img = await loadImage(url);
+            ctx.drawImage(img, (k % TILES) * 256, Math.floor(k / TILES) * 256);
+            return true;
+        } catch {
+            return false; // not covered (SHOM) or unreachable: left transparent
+        }
     }));
+    if (!loaded.some(Boolean)) return null;
     const px = ctx.getImageData(0, 0, size, size).data;
     const heights = new Float32Array(size * size);
     for (let i = 0; i < size * size; i++) {
-        heights[i] = px[i * 4] * 256 + px[i * 4 + 1] + px[i * 4 + 2] / 256 - 32768;
+        heights[i] = px[i * 4 + 3] < 255 ? NaN : px[i * 4] * 256 + px[i * 4 + 1] + px[i * 4 + 2] / 256 - 32768;
     }
-    const nw = tileToLatLon(x0, y0, ZOOM);
-    const se = tileToLatLon(x0 + TILES, y0 + TILES, ZOOM);
-    const result = { heights, size, nw, se };
+    const nw = tileToLatLon(x0, y0, z);
+    const se = tileToLatLon(x0 + TILES, y0 + TILES, z);
+    const result = { heights, size, nw, se, z };
     cache.set(key, result);
     return result;
 };
 
-/** Height (m) at a lat/lon, bilinear in the pixel grid */
+/** Terrarium around the boat, and the SHOM survey from ocearo-core where there is one */
+const loadSeabed = async (lat, lon) => {
+    const shomTemplate = bathymetryTileTemplate();
+    const [global, shom] = await Promise.all([
+        loadHeights(lat, lon),
+        shomTemplate ? loadHeights(lat, lon, shomTemplate, SHOM_ZOOM).catch(() => null) : null,
+    ]);
+    if (!global && !shom) throw new Error('No bathymetry');
+    return { global, shom };
+};
+
+/** Height (m) at a lat/lon, bilinear in the pixel grid; NaN where not covered */
 const heightAt = (data, lat, lon) => {
-    const { heights, size, nw, se } = data;
+    const { heights, size, nw, se, z } = data;
     const fx = (lon - nw.lon) / (se.lon - nw.lon) * (size - 1);
     // Mercator rows: interpolate in tile space for accuracy
-    const tNw = tileXY(nw.lat, nw.lon, ZOOM);
-    const tSe = tileXY(se.lat, se.lon, ZOOM);
-    const ty = tileXY(lat, lon, ZOOM).y;
+    const tNw = tileXY(nw.lat, nw.lon, z);
+    const tSe = tileXY(se.lat, se.lon, z);
+    const ty = tileXY(lat, lon, z).y;
     const fy = (ty - tNw.y) / (tSe.y - tNw.y) * (size - 1);
-    const i = Math.max(0, Math.min(size - 2, Math.floor(fx)));
-    const j = Math.max(0, Math.min(size - 2, Math.floor(fy)));
-    const a = Math.min(1, Math.max(0, fx - i));
-    const b = Math.min(1, Math.max(0, fy - j));
+    if (fx < 0 || fy < 0 || fx > size - 1 || fy > size - 1) return NaN;
+    const i = Math.min(size - 2, Math.floor(fx));
+    const j = Math.min(size - 2, Math.floor(fy));
+    const a = fx - i;
+    const b = fy - j;
     const h = (x, y) => heights[y * size + x];
     return (h(i, j) * (1 - a) + h(i + 1, j) * a) * (1 - b) + (h(i, j + 1) * (1 - a) + h(i + 1, j + 1) * a) * b;
 };
@@ -156,12 +186,15 @@ const Seabed3D = ({ y = -0.4 }) => {
     const scale = configService.get('aisLengthScalingFactor') || 0.7;
     const draft = Number.isFinite(v['design.draft']?.maximum) ? v['design.draft'].maximum
         : Number(configService.get('boatDraft')) || DEFAULT_DRAFT;
-    // Tide heights are above chart datum, the seabed is relative to mean sea
-    // level: use the height above mid-tide (≈ MSL) of today's high and low
+    // Tide heights are above chart datum. Terrarium is relative to mean sea
+    // level: use the height above mid-tide (≈ MSL) of today's high and low.
+    // The SHOM survey is relative to chart datum, like the tide: add it as is
+    // (none known: chart datum, the cautious case).
     const hNow = v['environment.tide.heightNow'];
     const hHigh = v['environment.tide.heightHigh'];
     const hLow = v['environment.tide.heightLow'];
     const tide = Number.isFinite(hNow) && Number.isFinite(hHigh) && Number.isFinite(hLow) ? hNow - (hHigh + hLow) / 2 : 0;
+    const tideChartDatum = Number.isFinite(hNow) ? hNow : 0;
 
     const lat = position?.latitude;
     const lon = position?.longitude;
@@ -171,7 +204,7 @@ const Seabed3D = ({ y = -0.4 }) => {
     useEffect(() => {
         if (!tileKey) return undefined;
         let cancelled = false;
-        loadHeights(lat, lon).then((d) => { if (!cancelled) setData(d); }).catch(() => {});
+        loadSeabed(lat, lon).then((d) => { if (!cancelled) setData(d); }).catch(() => {});
         return () => { cancelled = true; };
     }, [tileKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -179,7 +212,8 @@ const Seabed3D = ({ y = -0.4 }) => {
     const HALF = 4000;
     const geometry = useMemo(() => {
         if (!data || !Number.isFinite(lat)) return null;
-        const g = new THREE.PlaneGeometry(HALF * 2 * scale, HALF * 2 * scale, GRID, GRID);
+        const grid = data.shom ? GRID_SHOM : GRID;
+        const g = new THREE.PlaneGeometry(HALF * 2 * scale, HALF * 2 * scale, grid, grid);
         const p = g.attributes.position;
         const depth = new Float32Array(p.count);
         const mPerDegLat = 111320;
@@ -187,7 +221,13 @@ const Seabed3D = ({ y = -0.4 }) => {
         for (let i = 0; i < p.count; i++) {
             const east = p.getX(i) / scale;
             const north = p.getY(i) / scale;
-            const h = heightAt(data, lat + north / mPerDegLat, lon + east / mPerDegLon) + tide;
+            const pLat = lat + north / mPerDegLat;
+            const pLon = lon + east / mPerDegLon;
+            const survey = data.shom ? heightAt(data.shom, pLat, pLon) : NaN;
+            const global = data.global ? heightAt(data.global, pLat, pLon) : NaN;
+            let h = 0;
+            if (Number.isFinite(survey)) h = survey + tideChartDatum;
+            else if (Number.isFinite(global)) h = global + tide;
             depth[i] = -h;
             // Below the sea surface the seabed sinks (exaggerated); land stays
             // flat at sea level under the chart, so it never hides the boat
@@ -198,7 +238,7 @@ const Seabed3D = ({ y = -0.4 }) => {
         g.computeVertexNormals();
         return g;
         // Rebuilt when the tile data changes or the boat has moved ~200 m
-    }, [data, scale, tide, lat && Math.round(lat * 500), lon && Math.round(lon * 500)]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [data, scale, tide, tideChartDatum, lat && Math.round(lat * 500), lon && Math.round(lon * 500)]); // eslint-disable-line react-hooks/exhaustive-deps
     useEffect(() => () => geometry?.dispose(), [geometry]);
 
     const material = useMemo(() => new THREE.ShaderMaterial({

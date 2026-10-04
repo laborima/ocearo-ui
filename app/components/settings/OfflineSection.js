@@ -7,6 +7,7 @@ import { useSignalKPath } from '../hooks/useSignalK';
 import { clearOfflineCache, offlineCacheSize, prefetchArea } from '../utils/offlineCache';
 import { TERRARIUM, BATHY_ZOOM } from '../3dview/ocean/Seabed3D';
 import { windFieldUrl } from '../3dview/meteo/windField';
+import { downloadBathymetry, getBathymetryStatus, isOcearoCoreEnabled } from '../utils/OcearoCoreUtils';
 
 const NM = 1852;
 const RADII_NM = [5, 10, 20];
@@ -15,6 +16,10 @@ const RADII_NM = [5, 10, 20];
  * Offline data: download the bathymetry and the wind forecast around the
  * boat while there is internet (marina, 4G), for the 3D view to use at sea;
  * chart tiles viewed are kept as you go. Shows the progress and the space used.
+ *
+ * The SHOM surveys are kept by ocearo-core on the boat's server (shared by
+ * every display): the same button asks it to fetch the models around the
+ * boat, and their state is listed here.
  */
 const OfflineSection = () => {
     const { t } = useTranslation();
@@ -23,14 +28,31 @@ const OfflineSection = () => {
     const [progress, setProgress] = useState(null);
     const [size, setSize] = useState(null);
 
+    const [shom, setShom] = useState(null);
+
     const refreshSize = useCallback(() => { offlineCacheSize().then(setSize).catch(() => {}); }, []);
     useEffect(() => { refreshSize(); }, [refreshSize]);
+
+    const refreshShom = useCallback(() => {
+        if (!isOcearoCoreEnabled()) return;
+        getBathymetryStatus().then(setShom).catch(() => setShom(null));
+    }, []);
+    useEffect(() => { refreshShom(); }, [refreshShom]);
+    // Follow the server's downloads while they run
+    const shomBusy = shom?.jobs?.some(j => !['done', 'error'].includes(j.state));
+    useEffect(() => {
+        if (!shomBusy) return undefined;
+        const id = setInterval(refreshShom, 2000);
+        return () => clearInterval(id);
+    }, [shomBusy, refreshShom]);
 
     const download = async () => {
         if (!Number.isFinite(position?.latitude)) return;
         const { latitude: lat, longitude: lon } = position;
         const radiusM = radiusNm * NM;
         setProgress({ done: 0, total: 0, failed: 0 });
+        // SHOM surveys: downloaded by the boat's server, in the background
+        if (shom) downloadBathymetry(lat, lon, radiusNm).then(refreshShom).catch(() => {});
         // Bathymetry (open data) and the wind forecast. The chart itself is not
         // bulk-downloaded: the OpenStreetMap and OpenSeaMap tile servers forbid
         // it. Chart tiles viewed are kept as you go; for full offline charts,
@@ -82,6 +104,7 @@ const OfflineSection = () => {
                     <span className="text-caption text-hud-muted tabular-nums">{t('offline.used', { mb: (size / 1e6).toFixed(0) })}</span>
                 )}
             </div>
+            {shom && <ShomStatus shom={shom} t={t} />}
             {progress && (
                 <div className="space-y-1">
                     <div className="h-1.5 rounded-full bg-hud-bg overflow-hidden">
@@ -95,6 +118,42 @@ const OfflineSection = () => {
                 </div>
             )}
         </section>
+    );
+};
+
+const jobLabel = (job, t) => {
+    if (job.state === 'downloading' && job.total) return t('offline.shomDownloading', { pct: Math.round(job.received / job.total * 100) });
+    return t(`offline.shom_${job.state}`, { error: job.error });
+};
+
+/** SHOM models on the boat's server, and those available around the boat */
+const ShomStatus = ({ shom, t }) => {
+    const jobs = new Map((shom.jobs || []).map(j => [j.id, j]));
+    const rows = (shom.available || []).filter(d => d.kind === 'coastal' || d.installed);
+    // Imported by hand or installed elsewhere: listed too
+    for (const r of shom.regions || []) {
+        if (!rows.some(d => d.id === r.id)) rows.push({ id: r.id, name: r.name, resolutionM: r.resolutionM, installed: true });
+    }
+    return (
+        <div className="space-y-1.5">
+            <div className="text-caption font-semibold text-hud-secondary">{t('offline.shomTitle')}</div>
+            {rows.length === 0 && <div className="text-caption text-hud-muted">{t('offline.shomNone')}</div>}
+            {rows.map((d) => {
+                const job = jobs.get(d.id);
+                const state = d.installed ? t('offline.shom_done') : job ? jobLabel(job, t) : t('offline.shomAvailable');
+                return (
+                    <div key={d.id} className="flex items-baseline justify-between gap-3 text-caption">
+                        <span className="text-hud-main truncate">
+                            {d.name}
+                            {Number.isFinite(d.resolutionM) && <span className="text-hud-muted tabular-nums"> · {d.resolutionM} m</span>}
+                        </span>
+                        <span className={`shrink-0 tabular-nums ${d.installed ? 'text-oGreen' : job?.state === 'error' ? 'text-oRed' : 'text-hud-muted'}`}>{state}</span>
+                    </div>
+                );
+            })}
+            {shom.sevenZip === null && <div className="text-caption text-oYellow">{t('offline.shomNo7z')}</div>}
+            <div className="text-caption text-hud-muted">{t('offline.shomCredit')}</div>
+        </div>
     );
 };
 
