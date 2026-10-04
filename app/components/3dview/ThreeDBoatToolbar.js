@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAnchor, faShip, faMoon, faSun, faEye, faCircleHalfStroke, faWater, faParking, faSatellite, faCompass, faRulerCombined, faMap, faCloudSunRain } from '@fortawesome/free-solid-svg-icons';
+import { faAnchor, faShip, faMoon, faSun, faEye, faCircleHalfStroke, faWater, faParking, faSatellite, faCompass, faRulerCombined, faMap, faCloudSunRain, faLayerGroup } from '@fortawesome/free-solid-svg-icons';
 import { THEME_MODES } from '../theme/themes';
 import { useOcearoContext } from '../context/OcearoContext';
 import { useTranslation } from 'react-i18next';
@@ -37,6 +37,7 @@ const ThreeDBoatToolbar = () => {
         black: { icon: faWater,        color: 'text-hud-muted',  label: t('toolbar.oceanBlack') },
         water: { icon: faWater,        color: 'text-oBlue',      label: t('toolbar.oceanWater') },
         chart: { icon: faMap,          color: 'text-oGreen',     label: t('toolbar.oceanChart') },
+        depth: { icon: faLayerGroup,   color: 'text-oBlue',      label: t('toolbar.oceanDepth') },
         meteo: { icon: faCloudSunRain, color: 'text-oYellow',    label: t('toolbar.oceanMeteo') },
     };
 

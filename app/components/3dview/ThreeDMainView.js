@@ -96,7 +96,7 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
 
     // Chart/meteo scenes have a light background: flip the HUD overlay text to
     // the light-theme palette (night mode keeps its red HUD).
-    const isLightScene = !nightMode && (states.oceanMode === 'chart' || states.oceanMode === 'meteo');
+    const isLightScene = !nightMode && (states.oceanMode === 'chart' || states.oceanMode === 'depth' || states.oceanMode === 'meteo');
 
     return (
         <div className="w-full h-full relative" data-scene={isLightScene ? 'light' : undefined}>

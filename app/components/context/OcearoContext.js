@@ -59,7 +59,7 @@ const loadPersistedStates = () => {
 
 
 
-const OCEAN_MODES = ['black', 'water', 'chart', 'meteo'];
+const OCEAN_MODES = ['black', 'water', 'chart', 'depth', 'meteo'];
 
 export const OcearoContextProvider = ({ children }) => {
     // themeMode is the user's choice ('auto' | 'day' | 'dark' | 'night');

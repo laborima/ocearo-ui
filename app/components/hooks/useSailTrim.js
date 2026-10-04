@@ -34,16 +34,26 @@ const useSailTrim = () => {
         'environment.wind.speedTrue',
         'environment.wind.angleTrueWater',
         'environment.wind.angleApparent',
-        'environment.wind.speedApparent'
+        'environment.wind.speedApparent',
+        'environment.wind.directionTrue',
+        'environment.wind.angleTrueGround',
+        'navigation.headingTrue',
+        'navigation.courseOverGroundTrue',
     ], [preferredSpeed, preferredDir]);
 
     const skWind = useSignalKPaths(windPaths);
 
     const trueWindSpeed = skWind[`environment.wind.${preferredSpeed}`]
         ?? skWind['environment.wind.speedTrue'] ?? 0;
-    const trueWindAngle = (preferredDir === 'directionTrue' || preferredDir === 'angleTrueGround')
-        ? (skWind[`environment.wind.${preferredDir}`] ?? skWind['environment.wind.angleTrueWater'] ?? 0)
-        : (skWind[`environment.wind.${preferredDir}`] ?? skWind['environment.wind.angleTrueWater'] ?? 0);
+    // True wind ANGLE off the bow. A direction (directionTrue: where the wind
+    // comes from, relative to north) is turned into an angle with the heading;
+    // used as-is it chose the sails for the wrong angle (no spinnaker downwind)
+    const heading = skWind['navigation.headingTrue'] ?? skWind['navigation.courseOverGroundTrue'];
+    const wrapPi = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+    const direction = skWind['environment.wind.directionTrue'];
+    const trueWindAngle = skWind['environment.wind.angleTrueWater']
+        ?? skWind['environment.wind.angleTrueGround']
+        ?? (Number.isFinite(direction) && Number.isFinite(heading) ? wrapPi(direction - heading) : 0);
     const appWindAngle = skWind['environment.wind.angleApparent'] ?? 0;
     const appWindSpeed = skWind['environment.wind.speedApparent'] ?? 0;
 

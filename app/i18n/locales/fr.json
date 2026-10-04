@@ -63,12 +63,13 @@
     "aisRadar": "Radar AIS",
     "oceanBlack": "Noir (sans océan)",
     "oceanWater": "Océan (eau 3D)",
-    "oceanChart": "Carte (freeboard-sk)",
-    "oceanMeteo": "Météo (Windy)",
+    "oceanChart": "Carte et balisage",
+    "oceanMeteo": "Météo (vent)",
     "themeAuto": "Thème : automatique ({{theme}})",
     "theme_day": "Thème jour",
     "theme_dark": "Thème sombre",
-    "theme_night": "Thème nuit (rouge)"
+    "theme_night": "Thème nuit (rouge)",
+    "oceanDepth": "Bathymétrie (relief du fond)"
   },
   "indicators": {
     "depth": "Profondeur",

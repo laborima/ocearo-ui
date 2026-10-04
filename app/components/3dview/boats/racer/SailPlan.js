@@ -81,7 +81,7 @@ const flowStates = (mid, twist) => STRIPES.map((v) => {
  */
 const telltalePoints = (origin, chord, normal, state, side) => {
     const aft = chord.clone().normalize();
-    const len = 0.6;
+    const len = 1.0;
     let dir;
     if (state === 'flowing') dir = aft.clone().addScaledVector(UP, -0.08);
     else if ((state === 'luffing' && side < 0) || (state === 'stalled' && side > 0)) {
@@ -139,7 +139,7 @@ const Telltales = ({ geometry, at, states, colors }) => (
             return [1, -1].map(side => (
                 <Line key={`${s.v}${side}`}
                     points={telltalePoints(origin, s.frame.chord, s.frame.normal, states[i], side)}
-                    color={side > 0 ? colors.lee : colors.windward} lineWidth={3} />
+                    color={side > 0 ? colors.lee : colors.windward} lineWidth={5} />
             ));
         })}
     </group>

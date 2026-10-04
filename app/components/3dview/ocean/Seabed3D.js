@@ -26,7 +26,7 @@ const EXAGGERATION = 4;     // vertical exaggeration so a 10 m shoal reads from 
 const SAFETY_MARGIN = 1.0;  // metres under the keel
 const DEFAULT_DRAFT = 2.0;
 
-const PATHS = ['navigation.position', 'design.draft', 'environment.tide.heightNow'];
+const PATHS = ['navigation.position', 'design.draft', 'environment.tide.heightNow', 'environment.tide.heightHigh', 'environment.tide.heightLow'];
 
 const tileXY = (lat, lon, z) => {
     const n = 2 ** z;
@@ -159,7 +159,12 @@ const Seabed3D = ({ y = -0.4 }) => {
     const scale = configService.get('aisLengthScalingFactor') || 0.7;
     const draft = Number.isFinite(v['design.draft']?.maximum) ? v['design.draft'].maximum
         : Number(configService.get('boatDraft')) || DEFAULT_DRAFT;
-    const tide = Number.isFinite(v['environment.tide.heightNow']) ? v['environment.tide.heightNow'] : 0;
+    // Tide heights are above chart datum, the seabed is relative to mean sea
+    // level: use the height above mid-tide (≈ MSL) of today's high and low
+    const hNow = v['environment.tide.heightNow'];
+    const hHigh = v['environment.tide.heightHigh'];
+    const hLow = v['environment.tide.heightLow'];
+    const tide = Number.isFinite(hNow) && Number.isFinite(hHigh) && Number.isFinite(hLow) ? hNow - (hHigh + hLow) / 2 : 0;
 
     const lat = position?.latitude;
     const lon = position?.longitude;
