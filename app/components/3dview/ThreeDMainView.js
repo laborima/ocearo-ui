@@ -26,6 +26,10 @@ const ThreeDBoatAttitudeIndicator = dynamic(() => import('./ThreeDBoatAttitudeIn
 const InfoPanel = dynamic(() => import('./InfoPanel'));
 const ModeHud = dynamic(() => import('./ModeHud'));
 const AdvicePanel = dynamic(() => import('./AdvicePanel'));
+// Full-screen HUD panels (translucent, Tesla-style)
+const DepthPanel = dynamic(() => import('./hud/DepthPanel'));
+const TidePanel = dynamic(() => import('./hud/TidePanel'));
+const InfoStack = dynamic(() => import('./hud/InfoStack'));
 
 // Component to expose Three.js renderer and info for performance monitoring
 const RendererExposer = () => {
@@ -66,7 +70,7 @@ const FrameLimiter = ({ fps }) => {
   return null;
 };
 
-const ThreeDMainView = ({ active = true }) => {
+const ThreeDMainView = ({ active = true, fullscreen = false }) => {
     // Read once: changing it in settings takes effect on reload
     const [renderProfile] = useState(getRenderProfile);
     const limited = renderProfile.fps < 60;
@@ -76,6 +80,8 @@ const ThreeDMainView = ({ active = true }) => {
     // 'minimal' (FSD-like: speed + four values per mode) or 'classic' gauges
     const [hudStyle] = useState(() => configService.get('hudStyle') || 'minimal');
     const classic = hudStyle === 'classic';
+    // Full screen has room for the detailed panels; split view stays minimal
+    const rich = fullscreen && !classic;
     const [clock, setClock] = useState(() => vesselNow());
 
     // Tick the header clock every 30s (it would otherwise only refresh on unrelated re-renders)
@@ -110,7 +116,7 @@ const ThreeDMainView = ({ active = true }) => {
             <div className="absolute top-14 left-2 z-10">
                 {!states.anchorWatch && <ThreeDBoatSpeedIndicator />}
                 {states.anchorWatch && <ThreeDBoatPositionDateIndicator/> }
-                {!classic && <ModeHud />}
+                {!classic && <ModeHud omitDepth={rich} />}
             </div>
 
             {/* Attitude indicator - top right, below toolbar row */}
@@ -124,6 +130,22 @@ const ThreeDMainView = ({ active = true }) => {
             {infoPanelContent && (
                 <div className="absolute top-28 left-2 z-30">
                     <InfoPanel content={infoPanelContent} onClose={() => setInfoPanelContent(null)} />
+                </div>
+            )}
+
+            {rich && (
+                <div className="absolute top-16 right-3 z-20">
+                    <InfoStack />
+                </div>
+            )}
+            {rich && (
+                <div className="absolute left-3 bottom-3 z-20">
+                    <DepthPanel />
+                </div>
+            )}
+            {rich && (
+                <div className="absolute right-3 bottom-3 z-20">
+                    <TidePanel />
                 </div>
             )}
 

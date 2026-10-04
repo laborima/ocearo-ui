@@ -14,6 +14,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useSignalKPath } from '../../hooks/useSignalK';
+import useTheme from '../../theme/useTheme';
 
 // Forestay anchor points in boat-local coordinates (Y up, Z forward/negative = bow)
 // Tack: where the jib attaches at the bow — near the waterline
@@ -40,6 +41,8 @@ const Jib3D = ({
     camber = 0.8,
     twist = 0.0,
 }) => {
+    // Vertex colours show the trim; the theme tints them (red at night)
+    const { scene: { sail: sailTint } } = useTheme();
     const appWindAngle = useSignalKPath('environment.wind.angleApparent', 0);
     const appWindSpeed = useSignalKPath('environment.wind.speedApparent', 0);
 
@@ -199,6 +202,7 @@ const Jib3D = ({
             <bufferGeometry {...jibGeometry} />
             <meshBasicMaterial
                 vertexColors
+                color={sailTint}
                 transparent
                 opacity={0.4}
                 side={THREE.DoubleSide}

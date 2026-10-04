@@ -224,7 +224,7 @@ export default function Home() {
                             <div className={layoutClasses.leftPane}>
                                 {/* Pause the 3D render loop when the boat view is hidden (APP mode)
                                     so it doesn't keep burning GPU on low-power devices. */}
-                                <ThreeDMainView active={currentViewMode !== VIEW_MODES.APP} />
+                                <ThreeDMainView active={currentViewMode !== VIEW_MODES.APP} fullscreen={currentViewMode === VIEW_MODES.BOAT} />
                             </div>
 
                             <div 

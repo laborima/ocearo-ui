@@ -1,6 +1,7 @@
 import React, { Suspense, useRef, useMemo } from 'react';
 import { OrbitControls, PerspectiveCamera, Html } from '@react-three/drei';
 import SceneSetup from '../SceneSetup';
+import SeaGround from '../fsd/SeaGround';
 import SailBoat3D from '../SailBoat3D';
 import { convertWindSpeed } from '../../context/OcearoContext';
 import { useSignalKPaths } from '../../hooks/useSignalK';
@@ -77,6 +78,8 @@ const ThreeDParkAssistBoat = ({ onUpdateInfoPanel }) => {
           showSail={false}
           onUpdateInfoPanel={onUpdateInfoPanel}
         />
+
+        <SeaGround />
 
         <WindSector3D outerRadius={5} />
 

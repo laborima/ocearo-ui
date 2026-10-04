@@ -12,6 +12,10 @@ const HEADING_PATHS = [
 
 // First fix of the session: world-anchored effects measure from here
 let sessionOrigin = null;
+const originFor = (here) => {
+    if (!sessionOrigin) sessionOrigin = here;
+    return sessionOrigin;
+};
 
 /**
  * Own heading (rad) used to turn north-up layers into the boat-up scene, the
@@ -29,8 +33,7 @@ const useOwnTrack = () => {
     const offset = useMemo(() => {
         if (!Number.isFinite(position?.latitude) || !Number.isFinite(position?.longitude)) return { x: 0, y: 0 };
         const here = { lat: position.latitude, lon: position.longitude };
-        if (!sessionOrigin) sessionOrigin = here;
-        return convertLatLonToXY(here, sessionOrigin);
+        return convertLatLonToXY(here, originFor(here));
     }, [position, convertLatLonToXY]);
 
     return { heading, offset };

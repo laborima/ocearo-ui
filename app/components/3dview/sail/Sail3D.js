@@ -72,7 +72,7 @@ const Sail3D = ({
      * Creation of cones to visualize the apparent wind
      * These cones indicate the wind direction and strength at different heights
      */
-    const { accent } = useTheme();
+    const { accent, scene: { sail: sailTint } } = useTheme();
     const createWindCone = useMemo(() => {
         // Create a group to contain all the wind cone elements
         const windcone = new THREE.Group();
@@ -522,6 +522,7 @@ const Sail3D = ({
             <group ref={windGroupRef} />
             <meshBasicMaterial
                 vertexColors
+                color={sailTint}
                 transparent
                 opacity={0.4} // More translucent for HUD look
                 side={THREE.DoubleSide}
