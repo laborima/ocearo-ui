@@ -362,38 +362,6 @@ const buildRig = () => {
     return merge(parts);
 };
 
-// Pulpit, pushpits, stanchions and two lifelines
-const buildRails = () => {
-    const parts = [];
-    const r = 0.016;
-    const H = 0.62;
-    const at = (t, inset = 0.1) => [halfBeam(t) - inset, sheer(t) + 0.04, zAt(t)];
-    const up = ([x, y, z], h = H) => [x, y + h, z];
-    // Pulpit: hoop over the bow
-    const pulpit = [[0.12, 0.0], [0.42, 0.04], [0.85, 0.07]].map(([dx, t]) => [dx, sheer(t) + H, zAt(t) + 0.25]);
-    parts.push(tube([-pulpit[0][0], pulpit[0][1], pulpit[0][2]], pulpit[0], r));
-    const stanchionTs = [0.07, 0.2, 0.36, 0.52, 0.68, 0.84];
-    for (const side of [-1, 1]) {
-        const mirror = ([x, y, z]) => [side * x, y, z];
-        parts.push(tube(mirror(pulpit[0]), mirror(pulpit[1]), r), tube(mirror(pulpit[1]), mirror(pulpit[2]), r));
-        parts.push(tube(mirror([pulpit[2][0], sheer(0.07) + 0.04, pulpit[2][2]]), mirror(pulpit[2]), r));
-        let prev = pulpit[2];
-        for (const t of stanchionTs.slice(1)) {
-            const base = at(t);
-            parts.push(tube(mirror(base), mirror(up(base)), r));
-            parts.push(tube(mirror(prev), mirror(up(base)), 0.008));
-            parts.push(tube(mirror([prev[0], prev[1] - H / 2, prev[2]]), mirror(up(base, H / 2)), 0.008));
-            prev = up(base);
-        }
-        // Pushpit: rail round the stern quarter
-        const q1 = up(at(0.95, 0.12));
-        const q2 = [0.55, sheer(1) + 0.04 + H, zAt(1) - 0.05];
-        parts.push(tube(mirror(at(0.95, 0.12)), mirror(q1), r), tube(mirror(prev), mirror(q1), 0.008), tube(mirror(q1), mirror(q2), r));
-        parts.push(tube(mirror([q2[0], sheer(1) - 0.2, q2[2]]), mirror(q2), r));
-    }
-    return merge(parts);
-};
-
 const buildBoom = () => tube(RIG.gooseneck, [RIG.gooseneck[0], RIG.gooseneck[1], RIG.gooseneck[2] + RIG.boomLength], 0.085, 0.06, 12);
 
 /** Symmetric foil section (NACA 00xx), `n` points per side, chord along +Z */
@@ -496,7 +464,6 @@ export const buildRacerParts = () => {
         ports: geo(buildPorts()),
         stripes: geo(warpBow(buildStripes())),
         rig: geo(buildRig()),
-        rails: geo(warpBow(buildRails())),
         boom: geo(buildBoom()),
         keel_single_twinrudder: geo(buildKeel()),
         keel_single_twinrudder_rudder_port: geo(buildRudder(RIG.rudders.port)),
