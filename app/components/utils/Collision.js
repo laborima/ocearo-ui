@@ -53,16 +53,19 @@ export const closestApproach = ({ rx, ry, ownSog, ownCog, targetSog, targetCog }
 };
 
 /**
- * 'danger' when the target will pass closer than the CPA threshold within the
- * TCPA horizon, or is very close (or close and closing), 'none' otherwise.
+ * Risk class of a target:
+ * - 'danger': risk of collision — it will pass closer than the CPA threshold
+ *   within the TCPA horizon, or it is within 100 m and still closing;
+ * - 'close': near us (within 30 % of the CPA threshold, at least 200 m) but
+ *   not on a collision course (opening, or passing clear);
+ * - 'none' otherwise.
  */
 export const collisionRisk = (approach, distance, thresholds = getCollisionThresholds()) => {
-    // Very close is a risk; merely close only while still closing in
-    if (Number.isFinite(distance) && distance < 100) return 'danger';
-    if (Number.isFinite(distance) && distance < thresholds.cpaMeters * 0.3 && (!approach || approach.tcpa > 0)) return 'danger';
-    if (!approach) return 'none';
-    if (approach.tcpa > 0 && approach.tcpa <= thresholds.tcpaSeconds && approach.cpa < thresholds.cpaMeters) {
+    const closing = !approach || approach.tcpa > 0;
+    if (approach && approach.tcpa > 0 && approach.tcpa <= thresholds.tcpaSeconds && approach.cpa < thresholds.cpaMeters) {
         return 'danger';
     }
+    if (Number.isFinite(distance) && distance < 100 && closing) return 'danger';
+    if (Number.isFinite(distance) && distance < Math.max(200, thresholds.cpaMeters * 0.3)) return 'close';
     return 'none';
 };

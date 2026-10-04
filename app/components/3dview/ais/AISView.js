@@ -6,6 +6,7 @@ import * as THREE from 'three'; // Import THREE for Color
 import { toKnots, toDegrees, useOcearoContext } from '../../context/OcearoContext';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import { useAIS, predictScenePosition } from './AISContext';
+import useColregs from '../../hooks/useColregs';
 import AISBoat, { AIS_MATERIALS } from './AISBoat';
 import useTheme from '../../theme/useTheme';
 import ColregMarkers from './ColregMarkers';
@@ -58,7 +59,7 @@ const updateBoatTransform = (boat, data, alpha, motion, now) => {
  * target's predicted track to that point and ours, with a ring where the two
  * boats will be closest. Refreshed with the AIS snapshot (4 Hz).
  */
-const CpaLines = ({ targets, color }) => {
+const CpaLines = ({ targets, statuses, colors }) => {
     // Targets are mutated in place by the AIS store: copy what we draw
     const risky = useMemo(() => targets
         .filter(t => t.risk === 'danger' && t.cpaScene && t.visible)
@@ -67,6 +68,8 @@ const CpaLines = ({ targets, color }) => {
 
     return risky.map((t) => {
         const c = t.cpaScene;
+        // Same colour as the target: red we keep clear, violet it keeps clear
+        const color = statuses[t.mmsi] === 'yields' ? colors.yields : colors.giveWay;
         return (
             <group key={t.mmsi}>
                 <Line points={[[t.sceneX, 0.3, t.sceneZ], [c.targetX, 0.3, c.targetZ]]}
@@ -96,9 +99,14 @@ const AISView = ({ onUpdateInfoPanel }) => {
     useEffect(() => {
         AIS_MATERIALS.normal.color.set(scene.vessel);
         AIS_MATERIALS.alert.color.set(scene.vesselDanger);
+        AIS_MATERIALS.yields.color.set(scene.vesselYields);
+        AIS_MATERIALS.close.color.set(scene.vesselClose);
         AIS_MATERIALS.selected.color.set(scene.route);
     }, [scene]);
     const selectedRef = useRef(null);
+    const { statuses } = useColregs();
+    const statusesRef = useRef({});
+    useEffect(() => { statusesRef.current = statuses; }, [statuses]);
     useEffect(() => { selectedRef.current = selectedMmsi; }, [selectedMmsi]);
 
     // Own heading: the AIS layer is laid out north-up, rotate it into the boat frame
@@ -132,8 +140,12 @@ const AISView = ({ onUpdateInfoPanel }) => {
             boat.visible = true;
             updateBoatTransform(boat, data, alpha, motion, now);
 
-            // FSD colours: grey, red on collision risk (CPA/TCPA), accent when selected
-            const look = data.risk === 'danger' ? 'alert' : (selectedRef.current === mmsi ? 'selected' : 'normal');
+            // Colour by what the target means for us: red we must keep clear,
+            // violet it must keep clear of us, orange near without risk,
+            // accent when selected, grey otherwise
+            const status = statusesRef.current[mmsi];
+            const look = status === 'giveWay' ? 'alert' : status === 'yields' ? 'yields'
+                : selectedRef.current === mmsi ? 'selected' : status === 'close' ? 'close' : 'normal';
 
             let meshes = meshCache.current[mmsi];
             if (!meshes || meshes.length === 0) {
@@ -268,7 +280,7 @@ const AISView = ({ onUpdateInfoPanel }) => {
             {/* North-up AIS layer rotated into the boat frame, hulls on the sea surface */}
             <group rotation={[0, rotationAngle, 0]} position={[0, waterLevel, 0]}>
                 {boats}
-                <CpaLines targets={targets} color={scene.vesselDanger} />
+                <CpaLines targets={targets} statuses={statuses} colors={{ giveWay: scene.vesselDanger, yields: scene.vesselYields }} />
                 <ColregMarkers />
             </group>
         </>

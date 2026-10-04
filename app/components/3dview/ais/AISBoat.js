@@ -50,6 +50,8 @@ export const AIS_MATERIALS = {
     normal: new THREE.MeshStandardMaterial({ color: 0x8a9097, roughness: 0.5, metalness: 0.05, side: THREE.DoubleSide }),
     alert: new THREE.MeshStandardMaterial({ color: 0xff2d38, roughness: 0.5, metalness: 0.05, side: THREE.DoubleSide }),
     selected: new THREE.MeshStandardMaterial({ color: 0x09bfff, roughness: 0.5, metalness: 0.05, side: THREE.DoubleSide }),
+    yields: new THREE.MeshStandardMaterial({ color: 0x7c4dff, roughness: 0.5, metalness: 0.05, side: THREE.DoubleSide }),
+    close: new THREE.MeshStandardMaterial({ color: 0xf08a00, roughness: 0.5, metalness: 0.05, side: THREE.DoubleSide }),
 };
 
 // Glazing, boot top and funnel tops: dark whatever the state colour

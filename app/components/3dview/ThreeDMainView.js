@@ -28,6 +28,7 @@ const AdvicePanel = dynamic(() => import('./AdvicePanel'));
 const ParkingPanel = dynamic(() => import('./parkassist/ParkingPanel'));
 const ReplayBar = dynamic(() => import('../replay/ReplayBar'));
 const MeteoBar = dynamic(() => import('./meteo/MeteoBar'));
+const GiveWayBanner = dynamic(() => import('./hud/GiveWayBanner'));
 import { useReplay } from '../replay/ReplayBar';
 // Full-screen HUD panels (translucent, Tesla-style)
 const DepthPanel = dynamic(() => import('./hud/DepthPanel'));
@@ -109,7 +110,7 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                 </div>
             </div>
 
-            <div className="absolute top-14 left-2 z-10">
+            <div className="absolute top-14 left-2 z-30">
                 {!states.anchorWatch && <ThreeDBoatSpeedIndicator />}
                 {states.anchorWatch && <ThreeDBoatPositionDateIndicator/> }
                 {/* Depth lives in its gauge (split view) or its panel (full screen) */}
@@ -141,6 +142,13 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
             {rich && (
                 <div className="absolute right-3 bottom-3 z-20">
                     <TidePanel />
+                </div>
+            )}
+
+            {/* We must keep clear: unmistakable banner (the hull turns the same colour) */}
+            {!replaying && (
+                <div className="absolute left-1/2 -translate-x-1/2 top-14 z-30 max-w-[calc(100%-12rem)]">
+                    <GiveWayBanner />
                 </div>
             )}
 

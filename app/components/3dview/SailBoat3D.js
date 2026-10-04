@@ -390,6 +390,7 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
             {PROCEDURAL_BOATS[selectedBoat.modelPath] ? (
                 React.createElement(PROCEDURAL_BOATS[selectedBoat.modelPath], {
                     hullColor: materialProperties.primaryColor,
+                    alert: giveWay,
                     windData: sailTrimData?.windData,
                     trim: sailTrimData,
                     showSail,

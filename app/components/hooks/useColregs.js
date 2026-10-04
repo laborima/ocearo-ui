@@ -29,7 +29,8 @@ const useOwnCategory = () => {
  * COLREG roles for every AIS target on a collision course.
  *
  * @returns {{ ownCategory: string, encounters: Array<{ target, role }>,
- *             giveWay: boolean, primary: null|{ target, role } }}
+ *             statuses: { [mmsi]: 'giveWay'|'yields'|'close' },
+ *             giveWay: boolean, giveWayTo, primary: null|{ target, role } }}
  *   encounters sorted by time to CPA; giveWay: we must keep clear of at least
  *   one of them; primary: the most urgent encounter
  */
@@ -60,10 +61,25 @@ const useColregs = () => {
             }
         }
         encounters.sort((a, b) => (a.target.tcpaSeconds ?? Infinity) - (b.target.tcpaSeconds ?? Infinity));
+        // What each target means for us (drives its colour everywhere):
+        // 'giveWay' we must keep clear of it, 'yields' it must keep clear of
+        // us, 'close' near but no risk of collision
+        const statuses = {};
+        for (const t of targets) {
+            if (t.risk === 'close') statuses[t.mmsi] = 'close';
+            else if (t.risk === 'danger') statuses[t.mmsi] = 'giveWay';
+        }
+        for (const e of encounters) {
+            statuses[e.target.mmsi] = e.role.ownRole === 'stand-on' ? 'yields' : 'giveWay';
+        }
+        const mine = encounters.filter(e => e.role.ownRole !== 'stand-on');
         return {
             ownCategory,
             encounters,
-            giveWay: encounters.some(e => e.role.ownRole !== 'stand-on'),
+            statuses,
+            giveWay: mine.length > 0,
+            // The encounter that makes us manoeuvre, most urgent first
+            giveWayTo: mine[0] || null,
             primary: encounters[0] || null,
         };
     }, [targets, twd, heading, v, ownCategory, scale]);

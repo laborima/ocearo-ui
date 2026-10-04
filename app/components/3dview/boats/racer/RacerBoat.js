@@ -32,7 +32,7 @@ const PART_COLORS = (scene, hull) => ({
  * keel / rudder variant from settings (`rmKeel`), boom swung by the apparent
  * wind, sail plan for the wind, tiller and trim cars on deck.
  */
-const RacerBoat = ({ hullColor, windData, trim, showSail = true }) => {
+const RacerBoat = ({ hullColor, alert = false, windData, trim, showSail = true }) => {
     const nodes = useMemo(() => buildRacerParts(), []);
     const outline = useMemo(() => sheerOutline(), []);
     const { scene } = useTheme();
@@ -40,6 +40,8 @@ const RacerBoat = ({ hullColor, windData, trim, showSail = true }) => {
 
     const materials = useMemo(() => {
         const colors = PART_COLORS(scene, hullColor || scene.ownHull);
+        // We must give way: the whole boat takes the alert colour, deck included
+        if (alert) colors.deck = new THREE.Color(hullColor).multiplyScalar(0.8).getStyle();
         const out = {};
         for (const [part, color] of Object.entries(colors)) {
             out[part] = new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0 });
@@ -52,7 +54,7 @@ const RacerBoat = ({ hullColor, windData, trim, showSail = true }) => {
             color: scene.vessel, roughness: 0.9, metalness: 0, transparent: true, opacity: 0.45, depthWrite: false,
         });
         return out;
-    }, [scene, hullColor]);
+    }, [scene, hullColor, alert]);
     useEffect(() => () => Object.values(materials).forEach(m => m.dispose()), [materials]);
 
     const awa = windData?.awa ?? 0.6;
