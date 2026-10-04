@@ -46,7 +46,8 @@ const ThreeDParkAssistBoat = ({ onUpdateInfoPanel }) => {
     const rudder = v['steering.rudderAngle'] ?? 0;
     const speed = Math.abs(v['navigation.speedThroughWater'] ?? v['navigation.speedOverGround'] ?? 0);
     const gear = v['propulsion.0.transmission.gear'] ?? v['propulsion.main.transmission.gear'] ?? v['propulsion.port.transmission.gear'];
-    const reverse = gear === 'reverse';
+    // Signal K: "Forward" / "Neutral" / "Reverse"; some gateways send -1 / 0 / 1
+    const reverse = gear === -1 || (typeof gear === 'string' && gear.trim().toLowerCase().startsWith('rev'));
 
     const heading = v['navigation.headingTrue'] ?? v['navigation.courseOverGroundTrue'];
     const currentData = v['environment.current'];

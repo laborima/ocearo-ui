@@ -93,6 +93,25 @@ const NotificationActions = ({ notification }) => {
 const WARNING_STATES = ['alert', 'warn', 'warning', 'caution'];
 
 
+/**
+ * Gear position for display. Signal K publishes `transmission.gear` as a
+ * string ("Forward", "Neutral", "Reverse", "Fault"); some gateways send a
+ * number (-1 reverse, 0 neutral, n forward gear n).
+ */
+const gearLabel = (gear, t) => {
+  if (gear === null || gear === undefined) return null;
+  if (typeof gear === 'string') {
+    const key = gear.trim().toLowerCase();
+    if (key.startsWith('forw')) return t('motor.forward');
+    if (key.startsWith('neut')) return t('motor.neutral');
+    if (key.startsWith('rev')) return t('motor.reverse');
+    return gear;
+  }
+  if (gear === -1) return t('motor.reverse');
+  if (gear === 0) return t('motor.neutral');
+  return gear > 1 ? `${t('motor.forward')} ${gear}` : t('motor.forward');
+};
+
 const MotorView = () => {
   const { t } = useTranslation();
   const debugMode = configService.get('debugMode');
@@ -608,9 +627,7 @@ const MotorView = () => {
               />
               <CompactDataField
                 label={t('motor.transmissionGear')}
-                value={engineData.gear === -1 ? t('motor.reverse') :
-                       engineData.gear === 0 ? t('motor.neutral') :
-                       engineData.gear ? `${t('motor.forward')} ${engineData.gear}` : null}
+                value={gearLabel(engineData.gear, t)}
                 icon={faCogs}
               />
               <CompactDataField
