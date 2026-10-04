@@ -21,7 +21,7 @@ const Tiller = ({ rudder = 0 }) => {
     const { pivot, length } = RIG.tiller;
     const angle = Math.max(-SWEEP, Math.min(SWEEP, rudder));
     const deg = Math.round(Math.abs(rudder) / DEG);
-    const floorY = RIG.traveller.y - pivot[1] + 0.02;
+    const floorY = RIG.cockpitFloor - pivot[1] + 0.02;
 
     const ticks = [];
     for (let d = -35; d <= 35; d += TICK_EVERY / 2) {
