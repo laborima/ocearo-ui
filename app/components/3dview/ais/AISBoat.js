@@ -1,6 +1,6 @@
 import React from 'react';
 import * as THREE from 'three';
-import { fleetModel, FLEET_LENGTH } from './fleetGeometry';
+import { fleetModel, FLEET_LENGTH, sailingModelCode } from './fleetGeometry';
 
 // Fleet models are FLEET_LENGTH long; AISBoat scales them to the vessel's
 // real length (metres).
@@ -23,12 +23,12 @@ const TARGET_SIZE_PER_METRE = 0.7;
 // AIS ship type (ITU-R M.1371 tens digit) -> fleet model code (see fleetGeometry)
 // Unknown types (0, WIG, 90-99 — very common on class B transponders) are
 // picked by size instead, so a 9 m yacht without a type isn't drawn as a freighter.
-export const determineAisModelCode = (shipType, length) => {
+export const determineAisModelCode = (shipType, length, beam) => {
     const t = Number(shipType);
     if (t === 30) return 30;            // fishing
     if (t >= 31 && t <= 32) return 31;  // towing -> tug
     if (t >= 33 && t <= 35) return 35;  // dredging/diving/military -> military
-    if (t === 36) return 36;            // sailing
+    if (t === 36) return sailingModelCode(length, beam); // sailing, by size / hulls
     if (t === 37) return 37;            // pleasure
     if (t >= 40 && t <= 49) return 40;  // high-speed craft
     if (t >= 50 && t <= 59) return 50;  // pilot / special craft
@@ -52,18 +52,26 @@ export const AIS_MATERIALS = {
     selected: new THREE.MeshStandardMaterial({ color: 0x09bfff, roughness: 0.9, metalness: 0, side: THREE.DoubleSide }),
 };
 
+// Glazing, boot top and funnel tops: dark whatever the state colour
+const DETAIL_MATERIAL = new THREE.MeshStandardMaterial({ color: 0x262c33, roughness: 0.6, metalness: 0 });
+
 // Accept a reported beam only within this fraction of length; anything else is
 // a bad AIS entry (beam and length swapped, zero, 1 m placeholder...).
 const MIN_BEAM_RATIO = 0.08;
 const MAX_BEAM_RATIO = 0.6;
 
-/** Procedural fleet model for the type, stretched to the reported beam */
+/**
+ * Procedural fleet model for the type, stretched to the reported beam. The
+ * detail mesh is marked `fixed` so AISView leaves its material alone.
+ */
 function AISModel({ code, scaleFactor, beamRatio }) {
     const model = fleetModel(code);
     const widthFactor = beamRatio ? beamRatio / model.beamRatio : 1;
     return (
-        <mesh geometry={model.geometry} material={AIS_MATERIALS.normal}
-            scale={[scaleFactor * widthFactor, scaleFactor, scaleFactor]} />
+        <group scale={[scaleFactor * widthFactor, scaleFactor, scaleFactor]}>
+            <mesh geometry={model.body} material={AIS_MATERIALS.normal} />
+            <mesh geometry={model.dark} material={DETAIL_MATERIAL} userData={{ fixed: true }} />
+        </group>
     );
 }
 
@@ -80,7 +88,7 @@ export const aisTargetSceneLength = (lengthMeters) =>
  */
 const AISBoat = ({ boatData, onClick, ref }) => {
     const { length, beam } = boatData;
-    const code = determineAisModelCode(boatData.shipType, length);
+    const code = determineAisModelCode(boatData.shipType, length, beam);
     const scaleFactor = aisTargetSceneLength(length) / BASE_MODEL_LENGTH;
     const ratio = length > 0 && beam > 0 ? beam / length : null;
     const beamRatio = ratio >= MIN_BEAM_RATIO && ratio <= MAX_BEAM_RATIO ? ratio : null;
