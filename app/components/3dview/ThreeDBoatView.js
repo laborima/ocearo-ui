@@ -8,12 +8,13 @@ import ThreeDCompassView from './ThreeDCompassView';
 import LayLines3D from './compass/LayLines3D';
 import { useOcearoContext } from '../context/OcearoContext';
 import PolarProjection from './polar/Polar3D';
-import FsdOcean from './ocean/FsdOcean';
+import FsdOcean, { SkyDome } from './ocean/FsdOcean';
 import WindLayer3D from './meteo/WindLayer3D';
 import Seabed3D from './ocean/Seabed3D';
 import MobMarker3D from '../mob/MobMarker3D';
 import { useReplay } from '../replay/ReplayBar';
 import SceneSetup from './SceneSetup';
+import useTheme from '../theme/useTheme';
 import SeaGround from './fsd/SeaGround';
 import RouteRibbon from './fsd/RouteRibbon';
 import PerformanceWake from './fsd/PerformanceWake';
@@ -27,6 +28,7 @@ import SailTrimSliders from './sail/SailTrimSliders';
 
 const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
     const { states } = useOcearoContext(); // Application state from context
+    const { scene } = useTheme();
     const isCompassLayerVisible = true; // Compass visibility
     const sailBoatRef = useRef();
     const replaying = useReplay().active;
@@ -70,7 +72,8 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
             />
 
             {/* Background, fog and lights; the realistic ocean draws its own sky */}
-            <SceneSetup backdrop={states.oceanMode === 'black' || states.oceanMode === 'water'} fogNear={600} fogFar={4200} />
+            <SceneSetup backdrop={states.oceanMode === 'black' || states.oceanMode === 'water'} fogNear={600} fogFar={4200}
+                fogColor={states.oceanMode === 'water' ? scene.skyHorizon : undefined} />
 
             <group position={[0, -3, 0]} >
                 {/* Sailboat — the map plane (-0.1) sits 0.2 above the water
@@ -96,11 +99,15 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 {/* Water: FSD faceted sea and gradient sky; chart / meteo keep the flat lite water */}
                 {states.oceanMode === 'water' && <FsdOcean />}
                 {(states.oceanMode === 'chart' || states.oceanMode === 'depth' || states.oceanMode === 'meteo') && (
-                    <Ocean3D lite fogDensity={states.oceanMode === 'meteo' ? 0.00003 : undefined} water={states.oceanMode !== 'depth'} />
+                    <>
+                        <SkyDome />
+                        <Ocean3D lite sky={false} horizon={scene.skyHorizon}
+                            fogDensity={states.oceanMode === 'meteo' ? 0.00003 : undefined} water={states.oceanMode !== 'depth'} />
+                    </>
                 )}
                 {/* Bathymetry: seabed relief coloured by depth, the chart laid over it in transparency */}
                 {states.oceanMode === 'depth' && <Seabed3D />}
-                {states.oceanMode === 'depth' && <MapPlane3D mode="chart" opacity={0.35} />}
+                {states.oceanMode === 'depth' && <MapPlane3D mode="chart" opacity={0.2} />}
                 {/* Windy-style forecast wind: colours and streaks over the chart */}
                 {states.oceanMode === 'meteo' && <WindLayer3D />}
                 {states.oceanMode === 'chart' && <MapPlane3D mode="chart" />}

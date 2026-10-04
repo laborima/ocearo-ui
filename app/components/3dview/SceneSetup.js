@@ -11,8 +11,10 @@ import BoatLighting from './BoatLighting';
  * @param {boolean} backdrop - false when another component owns the background
  *        and fog (the realistic ocean draws its own sky)
  * @param {number} fogNear / fogFar - scene units
+ * @param {string} [fogColor] - defaults to the theme background (the ocean
+ *        mode fades distant objects into its horizon haze instead)
  */
-const SceneSetup = ({ backdrop = true, fogNear = 40, fogFar = 420 }) => {
+const SceneSetup = ({ backdrop = true, fogNear = 40, fogFar = 420, fogColor }) => {
     const { scene } = useTheme();
     // A metallic hull needs something to reflect; the matte default doesn't
     const metallic = configService.get('metallicEffect') === true;
@@ -20,7 +22,7 @@ const SceneSetup = ({ backdrop = true, fogNear = 40, fogFar = 420 }) => {
     return (
         <>
             {backdrop && <color attach="background" args={[scene.background]} />}
-            {backdrop && <fog attach="fog" args={[scene.background, fogNear, fogFar]} />}
+            {backdrop && <fog attach="fog" args={[fogColor || scene.background, fogNear, fogFar]} />}
             <BoatLighting />
             {metallic && (
                 <Environment files="./assets/ocearo_env.hdr" background={false} environmentIntensity={0.6} resolution={128} />

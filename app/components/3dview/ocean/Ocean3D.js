@@ -33,7 +33,13 @@ const RAIN_BOX = 240;    // horizontal half-extent around the boat
 const RAIN_HEIGHT = 220; // drops fall from this height
 const _scratchCloudColor = new THREE.Color();
 
-function Ocean3D({ lite = false, fogDensity = 0.00035, water: showWater = true }) {
+/**
+ * @param {boolean} [sky=true] - false when the clean SkyDome draws the sky
+ *        (chart modes): no atmosphere, sun disc, clouds or rain here, and
+ *        the distance fog takes the sky's horizon colour
+ * @param {string} [horizon] - fog colour when `sky` is false
+ */
+function Ocean3D({ lite = false, fogDensity = 0.00035, water: showWater = true, sky: showSky = true, horizon }) {
   const { nightMode } = useOcearoContext();
   const { getWindData, getCurrentWeather } = useWeather();
   
@@ -394,7 +400,8 @@ function Ocean3D({ lite = false, fogDensity = 0.00035, water: showWater = true }
 
   // Set background and fog
   useEffect(() => {
-    const fogColor = nightMode ? new THREE.Color(0x000205) : new THREE.Color(0x001a26);
+    const fogColor = !showSky && horizon ? new THREE.Color(horizon)
+      : nightMode ? new THREE.Color(0x000205) : new THREE.Color(0x001a26);
     scene.background = fogColor;
     scene.fog = new THREE.FogExp2(fogColor, fogDensity);
     gl.outputColorSpace = THREE.SRGBColorSpace;
@@ -403,37 +410,41 @@ function Ocean3D({ lite = false, fogDensity = 0.00035, water: showWater = true }
       scene.background = null;
       scene.fog = null;
     };
-  }, [scene, nightMode, gl, fogDensity]);
+  }, [scene, nightMode, gl, fogDensity, showSky, horizon]);
 
   return (
     <>
-      {nightMode && (
+      {showSky && nightMode && (
         <Stars radius={5000} depth={50} count={1500} factor={4} saturation={0} fade speed={1} />
       )}
 
-      <sky ref={skyRef} scale={450000} />
+      {showSky && <sky ref={skyRef} scale={450000} />}
       
-      {nightMode && (
+      {showSky && nightMode && (
         <mesh ref={moonRef} position={[600, 200, -1500]}>
           <sphereGeometry args={[80, 32, 32]} />
           <meshStandardMaterial map={moonTexture} emissive={0xffffff} emissiveIntensity={0.8} />
         </mesh>
       )}
 
-      <mesh ref={sunMeshRef}>
-        <sphereGeometry args={[200, 32, 32]} />
-        <meshBasicMaterial color={0xffffff} />
-      </mesh>
+      {showSky && (
+        <mesh ref={sunMeshRef}>
+          <sphereGeometry args={[200, 32, 32]} />
+          <meshBasicMaterial color={0xffffff} />
+        </mesh>
+      )}
       
       {/* Cloud layer — sprites drifting slowly, opacity driven by cloud cover */}
-      <group ref={cloudGroupRef} visible={false}>
-        {cloudSprites.map((c, i) => (
-          <sprite key={i} position={c.position} scale={c.scale} material={cloudMaterial} />
-        ))}
-      </group>
+      {showSky && (
+        <group ref={cloudGroupRef} visible={false}>
+          {cloudSprites.map((c, i) => (
+            <sprite key={i} position={c.position} scale={c.scale} material={cloudMaterial} />
+          ))}
+        </group>
+      )}
 
       {/* Rain particles around the boat, visible when forecast reports rain */}
-      <points ref={rainRef} geometry={rainGeometry} material={rainMaterial} visible={false} />
+      {showSky && <points ref={rainRef} geometry={rainGeometry} material={rainMaterial} visible={false} />}
 
       {!showWater ? null : lite ? (
         <mesh
