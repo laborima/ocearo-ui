@@ -114,3 +114,27 @@ export const useSignalKPaths = (paths) => {
 
   return values;
 };
+
+/**
+ * useSignalKPrefix - All values whose path starts with `prefix`, kept live.
+ * For paths that embed an id, e.g. 'notifications.mob.' -> { 'notifications.mob.<id>': value }.
+ *
+ * @param {string} prefix
+ * @returns {Object} Map of full path to value
+ */
+export const useSignalKPrefix = (prefix) => {
+  const { getSignalKValuesByPrefix, subscribePrefix, unsubscribePrefix } = useOcearoContext();
+  const [values, setValues] = useState(() => getSignalKValuesByPrefix(prefix));
+
+  useEffect(() => {
+    const callback = (path, value) => {
+      setValues(prev => (prev[path] === value ? prev : { ...prev, [path]: value }));
+    };
+    subscribePrefix(prefix, callback);
+    // Catch anything that arrived between render and subscription
+    setValues(getSignalKValuesByPrefix(prefix));
+    return () => unsubscribePrefix(callback);
+  }, [prefix, subscribePrefix, unsubscribePrefix, getSignalKValuesByPrefix]);
+
+  return values;
+};

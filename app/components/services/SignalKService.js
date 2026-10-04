@@ -21,6 +21,7 @@ class SignalKService {
         this.client = null;
         this.authToken = null;
         this.weatherApiAvailable = null;
+        this.featuresCache = null;
         this.connectionListeners = [];
         this.isConnected = false;
     }
@@ -262,6 +263,76 @@ class SignalKService {
         return this.apiCall(`/signalk/v2/api/notifications/${encodeURIComponent(notificationId)}/${action}`, {
             method: 'POST',
         });
+    }
+
+    /**
+     * Clear an alarm managed by the Notifications API (state back to `normal`).
+     * Only allowed when the notification's `status.canClear` is true.
+     * @param {string} notificationId - `id` field of the notification value
+     */
+    async clearNotification(notificationId) {
+        if (!notificationId) {
+            throw new Error('Notification id required');
+        }
+        return this.apiCall(`/signalk/v2/api/notifications/${encodeURIComponent(notificationId)}`, {
+            method: 'DELETE',
+        });
+    }
+
+    /**
+     * Raise a Person Overboard alarm. The server stamps the vessel position and
+     * time, and emits it as `notifications.mob.<id>` with state `emergency`, so
+     * every connected display (plotter, Freeboard, phones) sees it.
+     * @param {string} [message] - defaults to the server's "Person Overboard!"
+     * @returns {Promise<string>} id of the new notification
+     */
+    async raiseMob(message) {
+        const result = await this.apiCall('/signalk/v2/api/notifications/mob', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(message ? { message } : {}),
+        });
+        return result?.id;
+    }
+
+    // ==========================================
+    // FEATURES (server capability discovery)
+    // ==========================================
+
+    /**
+     * What the server provides, from `/signalk/v2/features?enabled=1`:
+     * `apis` lists the v2 REST APIs mounted by the server (a mounted API may
+     * still lack a provider, e.g. weather), `plugins` the enabled plugins.
+     *
+     * Cached per server URL. A server that predates the endpoint yields empty
+     * lists (also cached); an unreachable one yields null and is retried on the
+     * next call.
+     * @returns {Promise<{apis: string[], plugins: Array<{id: string, version: string}>}|null>}
+     */
+    async getFeatures() {
+        const baseUrl = this.getBaseUrl();
+        if (this.featuresCache?.baseUrl === baseUrl) {
+            return this.featuresCache.promise;
+        }
+
+        const promise = this.apiCall('/signalk/v2/features?enabled=1')
+            .then((result) => ({
+                apis: Array.isArray(result?.apis) ? result.apis : [],
+                plugins: Array.isArray(result?.plugins) ? result.plugins : [],
+            }))
+            .catch((error) => {
+                if (error.status === 404) {
+                    return { apis: [], plugins: [] };
+                }
+                // Network/auth trouble: don't remember it, the next call retries
+                if (this.featuresCache?.promise === promise) {
+                    this.featuresCache = null;
+                }
+                return null;
+            });
+
+        this.featuresCache = { baseUrl, promise };
+        return promise;
     }
 
     /**

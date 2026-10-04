@@ -699,5 +699,19 @@
   "errors": {
     "errorGeneratingUrl": "Erreur de génération de l'URL de l'application",
     "failedToLoadExternal": "Échec du chargement du contenu externe"
+  },
+  "mob": {
+    "short": "MOB",
+    "buttonLabel": "Homme à la mer : maintenir pour déclencher l'alarme",
+    "holdHint": "Maintenez le bouton MOB 1 seconde pour déclencher l'alarme",
+    "raiseFailed": "Alarme MOB non envoyée : {{error}}",
+    "title": "Homme à la mer",
+    "elapsed": "écoulé",
+    "noPosition": "Pas de position pour le MOB ou le bateau",
+    "acknowledge": "Acquitter",
+    "navigateTo": "Rejoindre le MOB",
+    "clear": "Annuler l'alarme",
+    "confirmClear": "Touchez encore pour annuler",
+    "relativeBearing": "Direction par rapport à l'étrave"
   }
 }

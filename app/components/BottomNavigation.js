@@ -13,6 +13,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import BottomTemperatureWidget from './widgets/BottomTemperatureWidget';
 import BottomEnvironmentalWidget from './widgets/BottomEnvironmentalWidget';
+import MobButton from './mob/MobButton';
 import { useOcearoContext } from './context/OcearoContext';
 import { useTranslation } from 'react-i18next';
 import configService from './settings/ConfigService';
@@ -160,6 +161,7 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
       {/* Left Section */}
       <div className="flex items-center space-x-0.5 sm:space-x-6 flex-shrink-0 sm:flex-1 min-w-0">
         {renderSection('left')}
+        <MobButton />
         <div className="hidden sm:block h-8 w-[1px] bg-hud-muted opacity-20 mx-1 sm:mx-2" />
         <BottomTemperatureWidget />
       </div>

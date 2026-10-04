@@ -111,12 +111,41 @@ export const OcearoContextProvider = ({ children }) => {
         }
     }, []);
 
+    // Prefix subscribers, for paths that embed an id (e.g. notifications.mob.<id>)
+    const prefixSubscribersRef = useRef(new Map()); // callback -> prefix
+
+    /**
+     * Subscribe to every path starting with `prefix`; the callback receives
+     * (path, value). Meant for a handful of listeners, not per-frame data.
+     */
+    const subscribePrefix = useCallback((prefix, callback) => {
+        prefixSubscribersRef.current.set(callback, prefix);
+    }, []);
+
+    const unsubscribePrefix = useCallback((callback) => {
+        prefixSubscribersRef.current.delete(callback);
+    }, []);
+
+    /** Snapshot of all current values whose path starts with `prefix` */
+    const getSignalKValuesByPrefix = useCallback((prefix) => {
+        const out = {};
+        for (const [path, value] of Object.entries(signalkDataRef.current)) {
+            if (path.startsWith(prefix)) out[path] = value;
+        }
+        return out;
+    }, []);
+
     /**
      * Notify subscribers of a data change
      */
     const notifySubscribers = useCallback((path, value) => {
         if (subscribersRef.current[path]) {
             subscribersRef.current[path].forEach(callback => callback(value));
+        }
+        if (prefixSubscribersRef.current.size > 0) {
+            prefixSubscribersRef.current.forEach((prefix, callback) => {
+                if (path.startsWith(prefix)) callback(path, value);
+            });
         }
     }, []);
 
@@ -534,6 +563,9 @@ export const OcearoContextProvider = ({ children }) => {
             getSignalKValue,
             subscribe,
             unsubscribe,
+            subscribePrefix,
+            unsubscribePrefix,
+            getSignalKValuesByPrefix,
             updateSignalKData,
             getBoatRotationAngle,
             convertLatLonToXY,
@@ -546,7 +578,7 @@ export const OcearoContextProvider = ({ children }) => {
             toggleExclusiveMode,
             cycleOceanMode,
         }), [
-            getSignalKValue, subscribe, unsubscribe, updateSignalKData, getBoatRotationAngle, convertLatLonToXY, theme, setTheme, nightMode, setNightMode, states, toggleState, toggleExclusiveMode, cycleOceanMode,
+            getSignalKValue, subscribe, unsubscribe, subscribePrefix, unsubscribePrefix, getSignalKValuesByPrefix, updateSignalKData, getBoatRotationAngle, convertLatLonToXY, theme, setTheme, nightMode, setNightMode, states, toggleState, toggleExclusiveMode, cycleOceanMode,
         ]);
 
         return (
