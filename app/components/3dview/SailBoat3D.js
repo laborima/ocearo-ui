@@ -12,6 +12,10 @@ import Rigging3D from './sail/Rigging3D';
 import useTheme from '../theme/useTheme';
 import useColregs from '../hooks/useColregs';
 import RacerBoat from './boats/racer/RacerBoat';
+import CatamaranBoat from './boats/catamaran/CatamaranBoat';
+
+// Boats generated in code (no glTF to load)
+const PROCEDURAL_BOATS = { racer: RacerBoat, catamaran: CatamaranBoat };
 
 
 const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
@@ -366,7 +370,7 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
             dispose={null}
             onClick={handleInfoPanelToggle}
         >
-            {capabilities.includes('sail') && showSail && selectedBoat.modelPath !== 'racer' && (
+            {capabilities.includes('sail') && showSail && !PROCEDURAL_BOATS[selectedBoat.modelPath] && (
                 <>
                     <Sail3D
                         reefLevel={sailTrimData ? sailTrimData.reefLevel : 0}
@@ -383,13 +387,13 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
                     )}
                 </>
             )}
-            {selectedBoat.modelPath === 'racer' ? (
-                <RacerBoat
-                    hullColor={materialProperties.primaryColor}
-                    windData={sailTrimData?.windData}
-                    trim={sailTrimData}
-                    showSail={showSail}
-                />
+            {PROCEDURAL_BOATS[selectedBoat.modelPath] ? (
+                React.createElement(PROCEDURAL_BOATS[selectedBoat.modelPath], {
+                    hullColor: materialProperties.primaryColor,
+                    windData: sailTrimData?.windData,
+                    trim: sailTrimData,
+                    showSail,
+                })
             ) : (
                 <GltfBoatMeshes modelPath={modelPath} selectedBoat={selectedBoat} materialProperties={materialProperties} rudderRef={rudderRef} boatRef={boatRef} />
             )}
