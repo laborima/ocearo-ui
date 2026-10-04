@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import useTheme from '../../../theme/useTheme';
 import configService from '../../../settings/ConfigService';
 import SailPlan, { boomAngleWithTraveller } from './SailPlan';
-import DeckTrim from './DeckTrim';
+import DeckTrim, { carSheave } from './DeckTrim';
 import { RIG, chooseSails } from './rig';
 import { buildRacerParts, sheerOutline } from './racerGeometry';
 import { Line } from '@react-three/drei';
@@ -23,7 +23,6 @@ const PART_COLORS = (scene, hull) => ({
     glass: DARK,
     ports: scene.rigging,
     rig: scene.rigging,
-    rails: scene.compassDim,
     boom: scene.rigging,
     stripes: DARK,
 });
@@ -61,13 +60,15 @@ const RacerBoat = ({ hullColor, windData, trim, showSail = true }) => {
     const travellerX = ((trim?.trimState?.mainCar ?? 0.5) - 0.5) * 2 * RIG.traveller.halfWidth;
     const boomAngle = boomAngleWithTraveller(awa, travellerX) * leeward;
     const jibCar = trim?.trimState?.jibCar ?? 0.5;
-    const jibCarAt = [leeward * RIG.jibTrack.x, RIG.jibTrack.y + 0.15, RIG.jibTrack.zFwd + (RIG.jibTrack.zAft - RIG.jibTrack.zFwd) * jibCar];
+    const { jibTrack: j, traveller: tr } = RIG;
+    const jibCarAt = carSheave([leeward * j.x, 0, j.zFwd], [leeward * j.x, 0, j.zAft], jibCar);
+    const mainCarAt = carSheave([-tr.halfWidth, 0, tr.z], [tr.halfWidth, 0, tr.z], trim?.trimState?.mainCar ?? 0.5);
     const sails = useMemo(
         () => chooseSails(windData?.tws, windData?.twa, configService.get('sailPlanOverride')),
         [windData?.tws, windData?.twa]
     );
 
-    const parts = ['hull', 'bottom', 'deck', 'roof', 'glass', 'ports', 'stripes', 'rig', 'rails'];
+    const parts = ['hull', 'bottom', 'deck', 'roof', 'glass', 'ports', 'stripes', 'rig'];
     const [gx, gy, gz] = RIG.gooseneck;
     const rudder = useSignalKPath('steering.rudderAngle', 0) || 0;
 
@@ -98,7 +99,7 @@ const RacerBoat = ({ hullColor, windData, trim, showSail = true }) => {
                 );
             })}
             <Tiller rudder={rudder} />
-            {showSail && <SailPlan awa={awa} boomAngle={boomAngle} sails={sails} trim={trim} travellerX={travellerX} jibCarAt={jibCarAt} />}
+            {showSail && <SailPlan awa={awa} boomAngle={boomAngle} sails={sails} trim={trim} mainCarAt={mainCarAt} jibCarAt={jibCarAt} />}
             <DeckTrim mainCar={trim?.trimState?.mainCar} jibCar={jibCar} leeward={leeward} />
         </group>
     );

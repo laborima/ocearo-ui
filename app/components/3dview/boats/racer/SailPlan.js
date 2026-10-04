@@ -234,10 +234,10 @@ const Telltales = ({ geometry, at, states, colors }) => (
  * @param {number} boomAngle - boom angle off the centreline, rad (signed)
  * @param {{headsail: string, reef: number}} sails
  * @param {Object} [trim] - sailTrimData (camber, twist, tensions, trimState)
- * @param {number} travellerX - mainsheet car, m (+ = starboard)
- * @param {number[]} jibCarAt - jib car position [x, y, z] on the leeward track
+ * @param {number[]} mainCarAt - mainsheet car sheave [x, y, z] on the traveller
+ * @param {number[]} jibCarAt - jib car sheave [x, y, z] on the leeward track
  */
-const SailPlan = ({ awa = 0.6, boomAngle, sails, trim, travellerX, jibCarAt }) => {
+const SailPlan = ({ awa = 0.6, boomAngle, sails, trim, mainCarAt, jibCarAt }) => {
     const theme = useTheme();
     const { t } = useTranslation();
     const { scene, accent } = theme;
@@ -322,7 +322,7 @@ const SailPlan = ({ awa = 0.6, boomAngle, sails, trim, travellerX, jibCarAt }) =
     const vangBoom = geometry.gooseneck.clone().lerp(geometry.clew, 0.3);
     // Mainsheet: boom point above the traveller down to the car
     const sheetOnBoom = geometry.gooseneck.clone().add(new THREE.Vector3(0, 0, RIG.mainsheetOnBoom).applyAxisAngle(UP, boom));
-    const traveller = new THREE.Vector3(travellerX ?? 0, RIG.traveller.y + 0.1, RIG.traveller.z);
+    const traveller = mainCarAt ?? [0, RIG.traveller.y + 0.2, RIG.traveller.z];
     const pct = (x) => Math.round(x * 100);
     const isSpi = headsail === 'spi';
 
@@ -341,7 +341,7 @@ const SailPlan = ({ awa = 0.6, boomAngle, sails, trim, travellerX, jibCarAt }) =
             )}
             {/* Vang and mainsheet, coloured by load */}
             <Line points={[vangFoot.toArray(), vangBoom.toArray()]} color={loadColor(trim?.tensions?.vang)} lineWidth={2.5} />
-            <Line points={[sheetOnBoom.toArray(), traveller.toArray()]} color={loadColor(trim?.tensions?.mainSheet)} lineWidth={2.5} />
+            <Line points={[sheetOnBoom.toArray(), traveller]} color={loadColor(trim?.tensions?.mainSheet)} lineWidth={2.5} />
         </group>
     );
 };

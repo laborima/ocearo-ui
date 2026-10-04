@@ -15,12 +15,12 @@ export const RIG = {
     bowsprit: [0, 1.5, -6.5],
     // Deck hardware for the trim indicators: traveller across the cockpit
     // floor, forward of the tiller; jib tracks on the side decks
-    traveller: { z: 2.9, y: 0.72, halfWidth: 1.15 },
+    traveller: { z: 2.3, y: 0.72, halfWidth: 1.15 },
     jibTrack: { x: 1.42, y: 1.43, zFwd: -1.9, zAft: 0.3 },
     // Cockpit floor under the tiller
     cockpitFloor: 0.64,
     // Mainsheet attachment on the boom, metres from the gooseneck (above the traveller)
-    mainsheetOnBoom: 3.5,
+    mainsheetOnBoom: 2.9,
     // Rudder stocks: pivot (top of the blade) and axis (twin rudders are canted out ~7.5°)
     rudders: {
         port: { pivot: [-1.12, 0.05, 4.7], axis: [-0.13, -0.99, 0] },
