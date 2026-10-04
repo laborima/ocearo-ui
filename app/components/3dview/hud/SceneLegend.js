@@ -76,6 +76,7 @@ const SceneLegend = () => {
         { kind: 'chevrons', colors: [scene.route], label: t('legend.route') },
         { kind: 'bands', colors: [scene.wakeGood, scene.wakeFair, scene.wakeBad], label: t('legend.wake') },
         { kind: 'bands', colors: [scene.laylinePort, scene.laylineStarboard], label: t('legend.laylines') },
+        { kind: 'dashed', colors: [scene.compass], label: t('legend.isochrones') },
         { kind: 'hull', colors: [scene.ghost, scene.ghost], label: t('legend.ghost') },
         { kind: 'hull', colors: [scene.vessel, scene.vessel], label: t('legend.vessel') },
         { kind: 'hull', colors: [scene.vesselDanger, scene.vesselDanger], label: t('legend.danger', {

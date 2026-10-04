@@ -831,6 +831,7 @@
     "colregArrow": "Arrow: the vessel that must give way, and to which side",
     "advice": "Suggested course change (advice only)",
     "trim": "Trim cars and tiller (accent colour): positions to read",
-    "loads": "Sheets, vang and backstay: load, green (eased) to red (hard on)"
+    "loads": "Sheets, vang and backstay: load, green (eased) to red (hard on)",
+    "isochrones": "Isochrones: where you will be in 5, 10, 15 min on each heading (polar, wind, current); dot: current heading"
   }
 }
