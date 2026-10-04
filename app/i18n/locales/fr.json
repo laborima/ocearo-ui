@@ -833,5 +833,17 @@
     "trim": "Chariots et barre (couleur d'accent) : positions à lire",
     "loads": "Écoutes, hale-bas et pataras : charge, du vert (choqué) au rouge (étarqué)",
     "isochrones": "Isochrones : où vous serez dans 5, 10, 15 min selon le cap (polaire, vent, courant) ; point : cap actuel"
+  },
+  "replay": {
+    "title": "Rejeu",
+    "play": "Lecture",
+    "pause": "Pause",
+    "timeline": "Frise du rejeu",
+    "close": "Retour au direct",
+    "voyages": "Sorties",
+    "explain": "Sorties enregistrées sur cet écran (toutes les 5 s en route). Rejouez-en une pour la revoir en accéléré dans la vue 3D.",
+    "none": "Aucune sortie enregistrée pour l'instant. Elles apparaîtront ici après une première sortie.",
+    "max": "max",
+    "replay": "Rejouer"
   }
 }

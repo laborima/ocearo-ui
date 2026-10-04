@@ -9,6 +9,8 @@ import { WeatherContextProvider } from './components/context/WeatherContext';
 import { TideContextProvider } from './components/context/TideContext';
 import ErrorBoundary from './ErrorBoundary';
 import I18nProvider from './i18n/I18nProvider';
+import VoyageRecorder from './components/replay/VoyageRecorder';
+import { subscribeReplay } from './components/replay/replayEngine';
 import configService from './components/settings/ConfigService';
 
 // Dynamically import components for code splitting
@@ -141,6 +143,11 @@ export default function Home() {
         configService.setCurrentView(view);
     }, [currentViewMode, toggleViewMode]);
 
+    // A voyage replay plays in the 3D view: bring it on screen
+    useEffect(() => subscribeReplay((replay) => {
+        if (replay.active && currentViewMode === VIEW_MODES.APP) toggleViewMode(VIEW_MODES.SPLIT);
+    }), [currentViewMode, toggleViewMode]);
+
     const previousViewModeRef = useRef(null);
     const previousRightViewRef = useRef(null);
 
@@ -216,6 +223,7 @@ export default function Home() {
             <I18nProvider>
             <OcearoContextProvider>
                 {/* Single shared AIS connection, opened only while an AIS view is shown */}
+                <VoyageRecorder />
                 <AISProvider>
                 <WeatherContextProvider>
                 <TideContextProvider>
