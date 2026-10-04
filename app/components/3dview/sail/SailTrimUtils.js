@@ -75,7 +75,7 @@ export function computeTwist(carPosition, twsMs) {
  * @param {number} sailTrim.tension - General tension slider value (0–1)
  * @param {number} sailTrim.mainCar - Mainsail car position (0–1)
  * @param {number} sailTrim.jibCar - Jib car position (0–1)
- * @param {string} lineType - One of 'mainSheet', 'jibSheet', 'vang', 'cunningham'
+ * @param {string} lineType - One of 'mainSheet', 'jibSheet', 'vang', 'cunningham', 'backstay'
  * @returns {number} Tension value from 0 (no tension) to 1 (maximum)
  */
 export function computeTension(windData, sailTrim, lineType) {
@@ -97,6 +97,12 @@ export function computeTension(windData, sailTrim, lineType) {
         }
         case 'cunningham': {
             return Math.min(1.0, windPressure * 0.4 + baseTension * 0.6);
+        }
+        case 'backstay': {
+            // Loaded upwind (forestay tension, mast bend), eased off the wind
+            const angle = Math.abs(Math.atan2(Math.sin(windData.awa || 0), Math.cos(windData.awa || 0)));
+            const upwind = Math.max(0, 1 - angle / Math.PI);
+            return Math.min(1.0, upwind * windPressure * 0.9 + baseTension * 0.3);
         }
         default:
             return baseTension;
@@ -151,6 +157,7 @@ export function updateSailTrim({ tws = 0, twa = 0, awa = 0, mainCar = 0.5, jibCa
         jibSheet: computeTension(windData, sailTrim, 'jibSheet'),
         vang: computeTension(windData, sailTrim, 'vang'),
         cunningham: computeTension(windData, sailTrim, 'cunningham'),
+        backstay: computeTension(windData, sailTrim, 'backstay'),
     };
 
     const tensionColors = {
@@ -158,6 +165,7 @@ export function updateSailTrim({ tws = 0, twa = 0, awa = 0, mainCar = 0.5, jibCa
         jibSheet: tensionToColor(tensions.jibSheet),
         vang: tensionToColor(tensions.vang),
         cunningham: tensionToColor(tensions.cunningham),
+        backstay: tensionToColor(tensions.backstay),
     };
 
     return {

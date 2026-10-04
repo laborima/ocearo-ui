@@ -13,6 +13,8 @@ export const RIG = {
     forestayTack: [0, 1.5, -4.85],     // stem head (reverse bow)
     innerStayTack: [0, 1.5, -4.3],
     bowsprit: [0, 1.5, -6.5],
+    // Split backstay: masthead -> crane -> bridle -> transom quarters
+    backstay: { split: [0, 3.4, 4.75], ends: [[-1.5, 1.08, 5.3], [1.5, 1.08, 5.3]] },
     // Deck hardware for the trim indicators: traveller across the cockpit
     // floor, forward of the tiller; jib tracks on the side decks
     traveller: { z: 2.3, y: 0.72, halfWidth: 1.15 },

@@ -6,94 +6,13 @@ import useTheme from '../../../theme/useTheme';
 import { tintForTheme } from '../../../theme/themes';
 import { tensionToColor } from '../../sail/SailTrimUtils';
 import { RIG } from './rig';
+import { makeSailGeometry } from './sailGeometry';
+
+export { makeSailGeometry };
 
 const DEG = Math.PI / 180;
 const v3 = (a) => new THREE.Vector3(...a);
 const UP = new THREE.Vector3(0, 1, 0);
-
-/**
- * Cambered sail between a luff (bottom -> top) and a leech (clew -> head),
- * with draft stripes (the chord lines a trimmer reads camber from) and the
- * frame of each stripe for placing telltales.
- *
- * @param {Object} p
- * @param {THREE.Vector3} p.tack / p.head - luff ends
- * @param {THREE.Vector3} p.clew
- * @param {number} p.headWidth - chord at the head (square-top main), m
- * @param {number} p.camber - depth / chord
- * @param {number} p.draft - position of the deepest point along the chord (0..1)
- * @param {number} p.twist - leech opening at the head, rad
- * @param {number} p.leeward - +1 bulges to starboard, -1 to port
- * @param {number[]} p.stripes - heights (0..1 up the luff) of the draft stripes
- */
-export const makeSailGeometry = ({ tack, head, clew, headWidth = 0, camber = 0.1, draft = 0.4, twist = 0.1, leeward = 1, rows = 16, cols = 14, stripes = [] }) => {
-    const footChord = clew.clone().sub(tack);
-    const headDir = footChord.clone().setY(0).normalize();
-    const headClew = head.clone().addScaledVector(headDir, headWidth);
-    // Exponent so that sin(PI * u^k) peaks at u = draft
-    const k = Math.log(0.5) / Math.log(draft);
-    // Depth shrinks towards the head, as on a real sail
-    const depthAt = (v) => camber * (1 - 0.35 * v);
-
-    /** Chord at height v: luff point, chord vector, normal to leeward */
-    const frame = (v) => {
-        const luff = tack.clone().lerp(head, v);
-        const leech = clew.clone().lerp(headClew, v);
-        const chord = leech.clone().sub(luff);
-        // Twist: the leech opens to leeward with height
-        chord.applyAxisAngle(UP, -leeward * twist * v);
-        const normal = new THREE.Vector3().crossVectors(UP, chord).normalize();
-        if (Math.sign(normal.x || 1) !== Math.sign(leeward)) normal.negate();
-        return { luff, chord, normal, len: chord.length() };
-    };
-    const point = (f, u) => f.luff.clone().addScaledVector(f.chord, u)
-        .addScaledVector(f.normal, depthAt(f.v) * f.len * Math.sin(Math.PI * u ** k));
-
-    const positions = [];
-    for (let r = 0; r <= rows; r++) {
-        const f = { ...frame(r / rows), v: r / rows };
-        for (let c = 0; c <= cols; c++) {
-            const p = point(f, c / cols);
-            positions.push(p.x, p.y, p.z);
-        }
-    }
-    const index = [];
-    for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-            const a = r * (cols + 1) + c;
-            const b = a + cols + 1;
-            index.push(a, b, a + 1, a + 1, b, b + 1);
-        }
-    }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    geo.setIndex(index);
-    geo.computeVertexNormals();
-
-    // Outline (foot, leech, luff) so a light sail still reads on a light scene
-    const at = (r, c) => { const i = (r * (cols + 1) + c) * 3; return [positions[i], positions[i + 1], positions[i + 2]]; };
-    const outline = [];
-    for (let c = 0; c <= cols; c++) outline.push(at(0, c));
-    for (let r = 1; r <= rows; r++) outline.push(at(r, cols));
-    for (let c = cols - 1; c >= 0; c--) outline.push(at(rows, c));
-    for (let r = rows - 1; r >= 0; r--) outline.push(at(r, 0));
-    geo.userData.outline = outline;
-
-    // Draft stripes, drawn just off both faces so they read from either side
-    geo.userData.stripes = stripes.map((v) => {
-        const f = { ...frame(v), v };
-        const line = (side) => Array.from({ length: 21 }, (_, i) => point(f, i / 20).addScaledVector(f.normal, side * 0.03).toArray());
-        return {
-            v,
-            frame: f,
-            lee: line(1),
-            windward: line(-1),
-            deepest: point(f, draft).addScaledVector(f.normal, 0.04),
-            point: (u) => point(f, u),
-        };
-    });
-    return geo;
-};
 
 /**
  * Boom angle from the sheet for the apparent wind, eased so the main meets
@@ -212,6 +131,30 @@ const SailMesh = ({ geometry, color, opacity, edge, stripe, accent, label, label
     );
 };
 
+/**
+ * Wordmark printed on the spinnaker, on both faces (each one reads the right
+ * way round from its side).
+ */
+const SailLogo = ({ geometry, color }) => {
+    const placements = useMemo(() => {
+        const { point, normal } = geometry.userData.frameAt(0.62, 0.45);
+        return [1, -1].map((side) => {
+            // Facing out of this face, upright, reading left to right
+            const z = normal.clone().multiplyScalar(side).setY(0).normalize();
+            const y = UP.clone();
+            const x = new THREE.Vector3().crossVectors(y, z).normalize();
+            const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
+            return { position: point.clone().addScaledVector(z, 0.06).toArray(), quaternion: q };
+        });
+    }, [geometry]);
+    return placements.map(({ position, quaternion }, i) => (
+        <Text key={i} position={position} quaternion={quaternion} fontSize={1.8} letterSpacing={0.12}
+            color={color} anchorX="center" anchorY="middle" font="fonts/Roboto-Bold.ttf">
+            OCEARO
+        </Text>
+    ));
+};
+
 /** Telltales on a sail: pairs (windward / leeward faces) at each stripe */
 const Telltales = ({ geometry, at, states, colors }) => (
     <group>
@@ -295,7 +238,11 @@ const SailPlan = ({ awa = 0.6, boomAngle, sails, trim, mainCarAt, jibCarAt, rig 
             const ease = Math.min(1, Math.abs(awa || 0) / Math.PI);
             const sp = rig.spiClew ?? { out: 4.2, y: 2.6, z: 1.8 };
             const spiClew = new THREE.Vector3(leeward * (sp.out + 1.5 * ease), sp.y, sp.z - 1.5 * ease);
-            fore = makeSailGeometry({ tack, head: spiHead, clew: spiClew, camber: 0.24, draft: 0.45, twist: 0.25, leeward, stripes: STRIPES });
+            // A big, full asymmetric: round shoulders, deep, foot curved down
+            fore = makeSailGeometry({
+                tack, head: spiHead, clew: spiClew, headWidth: 0.6, camber: 0.34, draft: 0.45, twist: 0.2, leeward,
+                leechRound: 2.2, footRound: 0.9, rows: 20, cols: 18, stripes: STRIPES,
+            });
         } else {
             const tack = v3(cut.inner ? rig.innerStayTack : rig.forestayTack);
             const top = v3(cut.inner ? rig.innerHounds : rig.hounds);
@@ -330,6 +277,11 @@ const SailPlan = ({ awa = 0.6, boomAngle, sails, trim, mainCarAt, jibCarAt, rig 
     const traveller = mainCarAt ?? [0, rig.traveller.y + 0.2, rig.traveller.z];
     const pct = (x) => Math.round(x * 100);
     const isSpi = headsail === 'spi';
+    // Backstay (split to the quarters when the rig has a bridle), coloured by load
+    const backstay = rig.backstay && [
+        [rig.masthead, rig.backstay.split],
+        ...rig.backstay.ends.map(end => [rig.backstay.split, end]),
+    ];
 
     return (
         <group>
@@ -344,6 +296,10 @@ const SailPlan = ({ awa = 0.6, boomAngle, sails, trim, mainCarAt, jibCarAt, rig 
             {geometry.jibClew && jibCarAt && (
                 <Line points={[geometry.jibClew.toArray(), jibCarAt]} color={loadColor(trim?.tensions?.jibSheet)} lineWidth={2.5} />
             )}
+            {isSpi && <SailLogo geometry={geometry.fore} color={scene.sail} />}
+            {backstay && backstay.map((points, i) => (
+                <Line key={i} points={points} color={loadColor(trim?.tensions?.backstay)} lineWidth={2.5} />
+            ))}
             {/* Vang and mainsheet, coloured by load */}
             <Line points={[vangFoot.toArray(), vangBoom.toArray()]} color={loadColor(trim?.tensions?.vang)} lineWidth={2.5} />
             <Line points={[sheetOnBoom.toArray(), traveller]} color={loadColor(trim?.tensions?.mainSheet)} lineWidth={2.5} />
