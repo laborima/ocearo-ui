@@ -123,7 +123,7 @@ const DARK = {
     grid: '#353d47',
     sea: '#0b1e2b',
     seaScatter: '#16485a',
-    seaFoam: '#5a6772',
+    seaFoam: '#3e4a55',
     skyZenith: '#0b1016',
     skyHorizon: '#222c37',
     markerDim: '#4a525c',
