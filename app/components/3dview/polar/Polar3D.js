@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Billboard, Line, Text } from '@react-three/drei';
+import { Html, Line } from '@react-three/drei';
 import useTheme from '../../theme/useTheme';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import { optimalUpwind, polarSpeed, wrapPi } from '../../utils/Polar';
@@ -128,7 +128,7 @@ function PolarProjection() {
             // Label beside the point the current heading reaches (ahead, away
             // from the camera), or the close-hauled point when pinching
             const anchor = here ?? arc[0];
-            const label = [anchor[0] + 1.2, anchor[1], anchor[2]];
+            const label = [anchor[0], 0.6, anchor[2]];
             return { min, nm, arc, chord: [arc[0], arc[arc.length - 1]], here, label, opacity: 0.8 - i * 0.15 };
         });
         return { fixed, unitArc, outerSeconds };
@@ -151,17 +151,44 @@ function PolarProjection() {
                             <meshBasicMaterial color={accent} />
                         </mesh>
                     )}
-                    <Billboard position={[ring.label[0], 0.6, ring.label[2]]}>
-                        <Text fontSize={1.3} color={scene.compass} anchorX="left" anchorY="bottom"
-                            font="fonts/Roboto-Bold.ttf" outlineWidth={0.12} outlineColor={scene.background}
-                            fillOpacity={ring.opacity + 0.2}>
-                            {ring.nm != null ? `${ring.min} min · ${ring.nm.toFixed(2)} NM` : `${ring.min} min`}
-                        </Text>
-                    </Billboard>
                 </group>
             ))}
+            <RingLabels rings={rings.fixed} />
         </group>
     );
+}
+
+/**
+ * Ring labels at a fixed screen size (they used to grow near the camera),
+ * beside the point each ring reaches. Seen from low, the points line up and
+ * the labels would overlap: a label that touches an inner one is hidden.
+ */
+function RingLabels({ rings }) {
+    const refs = useRef([]);
+    const frame = useRef(0);
+
+    useFrame(() => {
+        // Layout reads are cheap for three chips, but no need every frame
+        if (frame.current++ % 6) return;
+        const shown = [];
+        refs.current.forEach((el) => {
+            if (!el) return;
+            el.style.visibility = 'visible';
+            const r = el.getBoundingClientRect();
+            const hit = shown.some(o => r.left < o.right + 4 && r.right > o.left - 4 && r.top < o.bottom + 2 && r.bottom > o.top - 2);
+            if (hit) el.style.visibility = 'hidden';
+            else shown.push(r);
+        });
+    });
+
+    return rings.map((ring, i) => (
+        <Html key={ring.min} position={ring.label} zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}>
+            <div ref={(el) => { refs.current[i] = el; }}
+                className="ml-2 -translate-y-1/2 whitespace-nowrap px-1.5 py-px rounded-md text-caption font-semibold tabular-nums text-hud-main bg-hud-bg/70 backdrop-blur-sm">
+                {ring.min} min{ring.nm != null && <span className="text-hud-secondary"> · {ring.nm.toFixed(2)} NM</span>}
+            </div>
+        </Html>
+    ));
 }
 
 export default PolarProjection;
