@@ -52,6 +52,23 @@ const chineY = (t) => 0.25 + 0.15 * t * t;
 const BOTTOM = [[0, 0], [0.1, 0.53], [0.25, 0.68], [0.45, 0.77], [0.7, 0.87], [1, 0.95]];
 const WATERLINE = 0.12;
 
+// Reverse bow: the stem head sits aft of the forefoot, IMOCA style. Applied
+// as a warp of the finished bow geometry (nothing changes below the waterline)
+const REVERSE_BOW = 0.45;
+const REVERSE_LENGTH = 0.18;
+const bowSetback = (z, y) => {
+    const t = (z + LOA / 2) / LOA;
+    if (t >= REVERSE_LENGTH) return 0;
+    return REVERSE_BOW * clamp01((y - 0.1) / 1.38) * (1 - t / REVERSE_LENGTH) ** 2;
+};
+const warpBow = (geo) => {
+    const p = geo.attributes.position;
+    for (let i = 0; i < p.count; i++) p.setZ(i, p.getZ(i) + bowSetback(p.getZ(i), p.getY(i)));
+    p.needsUpdate = true;
+    geo.computeVertexNormals();
+    return geo;
+};
+
 /** Starboard half-section from the keel to the sheer: [[x, y], ...] */
 const halfSection = (t) => {
     const hb = halfBeam(t);
@@ -185,7 +202,8 @@ const buildHull = () => {
     const [trBelow] = splitAt(tr, WATERLINE);
     const s1 = sheer(1);
     const hb1 = halfBeam(1);
-    const transomTop = [[hb1, s1], [hb1 - 0.22, s1 - 0.05], [hb1 - 0.32, 0.62], [0, 0.62]];
+    const cx = coamingX(1);
+    const transomTop = [[hb1, s1], [cx + 0.1, s1 + 0.04], [cx, cockpitFloor(1) + 0.04], [0, cockpitFloor(1)]];
     const half = [...tr, ...transomTop.slice(1)];
     const outline = [...half, ...half.slice(0, -1).reverse().map(([x, y]) => [-x, y])];
     const trUnder = [...trBelow, ...trBelow.slice(0, -1).reverse().map(([x, y]) => [-x, y])];
@@ -195,39 +213,36 @@ const buildHull = () => {
     };
 };
 
-// Deck: cambered foredeck and side decks, cockpit with a central footwell,
-// seats and coamings, helm platform open to the transom
-const COCKPIT = { from: 0.695, wellEnd: 0.885, wellHalf: 0.45, seatOut: 1.6, seatY: 1.05, floorY: 0.62, aftFloorHalf: 1.32 };
+// Deck: cambered foredeck and side decks; long open cockpit (one floor out
+// to the open transom), its coamings sweeping down from the coachroof
+const COCKPIT = { from: 0.6 };
+const cockpitFloor = (t) => 0.66 - 0.06 * clamp01((t - COCKPIT.from) / (1 - COCKPIT.from));
+const coamingX = (t) => 1.4 + 0.15 * clamp01((t - COCKPIT.from) / 0.4);
 const deckHalf = (t) => {
     const hb = halfBeam(t) * 0.998;
     const s = sheer(t);
     const camber = (x) => s + 0.06 * (1 - (x / Math.max(hb, 0.01)) ** 2);
-    const c = COCKPIT;
-    if (t < c.from) {
-        // Seven points on the cambered deck
-        return [0, 0.15, 0.3, 0.45, 0.65, 0.85, 1].map(f => [f * hb, camber(f * hb)]);
+    if (t < COCKPIT.from) {
+        // Eight points on the cambered deck
+        return [0, 0.15, 0.3, 0.45, 0.6, 0.75, 0.88, 1].map(f => [f * hb, camber(f * hb)]);
     }
-    const lip = s + 0.09;
-    if (t < c.wellEnd) {
-        return [[0, c.floorY], [c.wellHalf, c.floorY], [c.wellHalf + 0.04, c.seatY], [c.seatOut, c.seatY],
-            [c.seatOut + 0.06, lip], [hb - 0.08, lip], [hb, s]];
-    }
-    // Helm platform, open aft; low side benches
-    return [[0, 0.6], [c.aftFloorHalf * 0.5, 0.6], [c.aftFloorHalf, 0.6], [c.aftFloorHalf + 0.04, 0.95],
-        [c.seatOut + 0.06, 0.97], [hb - 0.08, Math.max(s, 0.98)], [hb, s]];
+    const f = cockpitFloor(t);
+    const cx = coamingX(t);
+    const lip = s + 0.12 + 0.26 * smooth(clamp01((1 - t) / (1 - COCKPIT.from)));
+    return [[0, f], [0.5, f + 0.01], [1.0, f + 0.04], [cx - 0.06, f + 0.1],
+        [cx - 0.02, lip], [cx + 0.08, lip - 0.02], [cx + 0.14, s + 0.04], [hb, s]];
 };
 const buildDeck = () => {
     const ts = [...new Set([...STATIONS.filter(t => t < COCKPIT.from), COCKPIT.from - 0.004, COCKPIT.from,
-        ...STATIONS.filter(t => t > COCKPIT.from && t < COCKPIT.wellEnd), COCKPIT.wellEnd - 0.004, COCKPIT.wellEnd,
-        ...STATIONS.filter(t => t > COCKPIT.wellEnd)])].sort((a, b) => a - b);
+        ...STATIONS.filter(t => t > COCKPIT.from)])].sort((x, y) => x - y);
     const sections = ts.map(t => ({ z: zAt(t), pts: deckHalf(t) }));
     return bothSides(loft(sections, true));
 };
 
 // Coachroof: long raked windscreen, wide flat top, chamfered sides
-const ROOF = { from: 0.3, peak: 0.425, to: 0.69 };
-const roofTop = table([[0.3, 1.47], [0.33, 1.62], [0.36, 1.71], [0.4, 1.83], [0.425, 1.88], [0.5, 1.87], [0.6, 1.83], [0.69, 1.79]]);
-const roofHalf = table([[0.3, 0.9], [0.4, 1.2], [0.5, 1.36], [0.6, 1.42], [0.69, 1.46]]);
+const ROOF = { from: 0.28, to: COCKPIT.from };
+const roofTop = table([[0.28, 1.45], [0.32, 1.58], [0.37, 1.69], [0.43, 1.76], [0.5, 1.77], [0.6, 1.74]]);
+const roofHalf = table([[0.28, 0.85], [0.38, 1.12], [0.48, 1.28], [0.6, 1.4]]);
 const roofHalfSection = (t) => {
     const w = roofHalf(t);
     const base = sheer(t) + 0.03;
@@ -261,12 +276,12 @@ const onRoof = (t, f, lift = 0.012) => {
 // Dark glazing: windscreen across the raked front, side windows on the chamfer,
 // and the long hull window band
 const buildGlass = () => {
-    const screenTs = Array.from({ length: 9 }, (_, i) => 0.318 + (0.415 - 0.318) * (i / 8));
+    const screenTs = Array.from({ length: 9 }, (_, i) => 0.298 + (0.41 - 0.298) * (i / 8));
     const screen = loft(screenTs.map((t) => {
         const fs = [0, 1, 1.8, 2.5];
         return { z: zAt(t), pts: fs.map(f => onRoof(t, f)) };
     }), true);
-    const sideTs = Array.from({ length: 9 }, (_, i) => 0.44 + (0.64 - 0.44) * (i / 8));
+    const sideTs = Array.from({ length: 9 }, (_, i) => 0.42 + (0.585 - 0.42) * (i / 8));
     const side = loft(sideTs.map((t, i) => {
         const taper = Math.min(1, i / 2, (8 - i) / 2) * 0.35;
         return { z: zAt(t), pts: [onRoof(t, 3.5 - taper), onRoof(t, 3.05 + taper * 0.4)] };
@@ -343,7 +358,7 @@ const buildRig = () => {
     }
     // Forestay and bowsprit
     parts.push(tube(RIG.forestayTack, RIG.hounds, 0.012));
-    parts.push(tube([0, 1.47, -4.9], RIG.bowsprit, 0.06, 0.04));
+    parts.push(tube([0, 1.47, -4.2], RIG.bowsprit, 0.06, 0.04));
     return merge(parts);
 };
 
@@ -442,7 +457,10 @@ const buildRudder = ({ pivot, axis }) => {
 
 /** Closed outline along the sheer (deck edge), for a crisp silhouette from above */
 export const sheerOutline = () => {
-    const stbd = STATIONS.map(t => [halfBeam(t) + 0.01, sheer(t) + 0.02, zAt(t)]);
+    const stbd = STATIONS.map((t) => {
+        const y = sheer(t) + 0.02;
+        return [halfBeam(t) + 0.01, y, zAt(t) + bowSetback(zAt(t), y)];
+    });
     const port = stbd.map(([x, y, z]) => [-x, y, z]).reverse();
     return [...stbd, ...port, stbd[0]];
 };
@@ -470,15 +488,15 @@ export const buildRacerParts = () => {
     const geo = (g) => ({ geometry: g });
     const { hull, bottom } = buildHull();
     cache = {
-        hull: geo(hull),
+        hull: geo(warpBow(hull)),
         bottom: geo(bottom),
-        deck: geo(buildDeck()),
+        deck: geo(warpBow(buildDeck())),
         roof: geo(buildRoof()),
         glass: geo(buildGlass()),
         ports: geo(buildPorts()),
-        stripes: geo(buildStripes()),
+        stripes: geo(warpBow(buildStripes())),
         rig: geo(buildRig()),
-        rails: geo(buildRails()),
+        rails: geo(warpBow(buildRails())),
         boom: geo(buildBoom()),
         keel_single_twinrudder: geo(buildKeel()),
         keel_single_twinrudder_rudder_port: geo(buildRudder(RIG.rudders.port)),
