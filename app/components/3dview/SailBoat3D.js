@@ -11,6 +11,7 @@ import TensionLines3D from './sail/TensionLines3D';
 import Rigging3D from './sail/Rigging3D';
 import useTheme from '../theme/useTheme';
 import useColregs from '../hooks/useColregs';
+import RmBoat from './boats/rm1080/RmBoat';
 
 
 const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
@@ -119,7 +120,8 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
             materials.fiberglass.roughness = materialProperties.metallicEffect ? 0.2 : 1.0;
         } 
         // For non-default boats, use findMaterial to locate and update the material
-        else if (boatRef.current) {
+        // The RM 1080 colours its own parts (RmBoat)
+        else if (boatRef.current && selectedBoat.modelPath !== 'rm1080') {
             // Get all scene objects
             boatRef.current.traverse((child) => {
                 if (child.isMesh && child.material) {
@@ -253,13 +255,8 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
             Sailboat: () => (
                 <mesh geometry={nodes.sailboat.geometry} material={materials.texture} position={[0, -1.5, 0]} rotation={[-Math.PI, 0.011, -Math.PI]} scale={0.219} />
             ),
-            RM1080: () => (
-                <>
-                  <mesh geometry={nodes.Body_1.geometry} material={materials.PaletteMaterial003} />
-                  <mesh geometry={nodes.Body_2.geometry} material={materials.PaletteMaterial001} />
-                  <mesh geometry={nodes.Body_3.geometry} material={materials.PaletteMaterial002} />
-                </>  
-                  )
+            // Rendered directly below, so wind updates don't remount it
+            RM1080: () => null
         };
 
         return meshComponents[selectedBoat.name] || meshComponents.Default;
@@ -362,7 +359,7 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
             dispose={null}
             onClick={handleInfoPanelToggle}
         >
-            {capabilities.includes('sail') && showSail && (
+            {capabilities.includes('sail') && showSail && selectedBoat.modelPath !== 'rm1080' && (
                 <>
                     <Sail3D
                         reefLevel={sailTrimData ? sailTrimData.reefLevel : 0}
@@ -379,7 +376,17 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
                     )}
                 </>
             )}
-            <BoatMeshes />
+            {selectedBoat.modelPath === 'rm1080' ? (
+                <RmBoat
+                    nodes={nodes}
+                    hullColor={materialProperties.primaryColor}
+                    windData={sailTrimData?.windData}
+                    trim={sailTrimData}
+                    showSail={showSail}
+                />
+            ) : (
+                <BoatMeshes />
+            )}
         </group>
     );
 };
