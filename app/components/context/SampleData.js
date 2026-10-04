@@ -35,6 +35,12 @@ export const SAMPLE_DATA = {
         'environment.outside.pressure': 102300,
         'environment.inside.relativeHumidity': 0.74,
         'environment.inside.voc': 0.03,
+        'environment.inside.co2': 640,
+        'environment.inside.pm25': 8,
+        'environment.inside.dewPoint': 288.4,
+        'environment.outside.relativeHumidity': 0.68,
+        'environment.outside.uvIndex': 4.2,
+        'environment.outside.visibility': 14800,
     },
     performance: {
         'performance.beatAngle': MathUtils.degToRad(45),

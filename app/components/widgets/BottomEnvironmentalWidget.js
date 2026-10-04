@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { convertPressure } from '../context/OcearoContext';
+import { convertTemperatureUnit, getTemperatureUnitLabel } from '../utils/UnitConversions';
 import { useSignalKPaths } from '../hooks/useSignalK';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCloud, faDroplet, faWind } from '@fortawesome/free-solid-svg-icons';
+import { faCloud, faDroplet, faWind, faLungs, faSmog, faTemperatureLow, faSun, faEye } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 
 const ENVIRONMENTAL_MODES = {
@@ -30,6 +31,55 @@ const ENVIRONMENTAL_MODES = {
     // BME680 reports gas resistance in ohms — higher means cleaner air
     format: (value) => `${Math.round(value)} kΩ`,
     transform: (value) => value / 1000
+  },
+  co2: {
+    key: 'co2',
+    path: 'environment.inside.co2',
+    icon: faLungs,
+    labelKey: 'environmental.co2',
+    format: (value) => `${Math.round(value)} ppm`,
+    transform: (value) => value
+  },
+  pm25: {
+    key: 'pm25',
+    path: 'environment.inside.pm25',
+    icon: faSmog,
+    labelKey: 'environmental.pm25',
+    format: (value) => `${Math.round(value)} µg/m³`,
+    transform: (value) => value
+  },
+  dewPoint: {
+    key: 'dewPoint',
+    path: 'environment.inside.dewPoint',
+    icon: faTemperatureLow,
+    labelKey: 'environmental.dewPoint',
+    format: (value) => `${value.toFixed(1)}${getTemperatureUnitLabel()}`,
+    transform: convertTemperatureUnit
+  },
+  outsideHumidity: {
+    key: 'outsideHumidity',
+    path: 'environment.outside.relativeHumidity',
+    icon: faDroplet,
+    labelKey: 'environmental.outsideHumidity',
+    format: (value) => `${Math.round(value)}%`,
+    transform: (value) => value * 100
+  },
+  uvIndex: {
+    key: 'uvIndex',
+    path: 'environment.outside.uvIndex',
+    icon: faSun,
+    labelKey: 'environmental.uvIndex',
+    format: (value) => value.toFixed(1),
+    transform: (value) => value
+  },
+  visibility: {
+    key: 'visibility',
+    path: 'environment.outside.visibility',
+    icon: faEye,
+    labelKey: 'environmental.visibility',
+    // Metres -> nautical miles
+    format: (value) => `${value >= 10 ? Math.round(value) : value.toFixed(1)} NM`,
+    transform: (value) => value / 1852
   }
 };
 
@@ -68,7 +118,7 @@ const BottomEnvironmentalWidget = () => {
   const environmentalData = useMemo(() => {
     return Object.entries(ENVIRONMENTAL_MODES).reduce((acc, [key, config]) => {
       const value = signalkValues[config.path];
-      acc[key] = value !== null ? config.transform(value) : null;
+      acc[key] = value !== null && value !== undefined ? config.transform(value) : null;
       return acc;
     }, {});
   }, [signalkValues]);

@@ -19,6 +19,7 @@ const PATHS = [
     'environment.wind.angleApparent',
     'environment.depth.belowKeel',
     'environment.depth.belowTransducer',
+    'environment.depth.belowSurface',
     'navigation.courseGreatCircle.nextPoint.distance',
     'navigation.courseGreatCircle.nextPoint.timeToGo',
     'performance.velocityMadeGood',
@@ -64,7 +65,7 @@ const ModeHud = ({ omitDepth = false, maxItems = 4 }) => {
     const mode = hudMode(states);
 
     const items = useMemo(() => {
-        const depth = v['environment.depth.belowKeel'] ?? v['environment.depth.belowTransducer'];
+        const depth = v['environment.depth.belowKeel'] ?? v['environment.depth.belowTransducer'] ?? v['environment.depth.belowSurface'];
         const depthItem = { id: 'depth', label: t('hud.depth'), value: fmt(convertDepthUnit(depth)), unit: getDepthUnitLabel(), warn: Number.isFinite(depth) && depth < 3 };
         const tws = { label: t('hud.tws'), value: fmt(convertSpeedUnit(v['environment.wind.speedTrue'])), unit: getSpeedUnitLabel() };
         const heading = v['navigation.headingTrue'] ?? v['navigation.courseOverGroundTrue'];

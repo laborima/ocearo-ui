@@ -4,12 +4,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSun, faMoon, faTemperatureHalf, faWater, faBatteryHalf, faGauge } from '@fortawesome/free-solid-svg-icons';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import { useWeather } from '../../context/WeatherContext';
-import { computeSunEvents, formatClockTime } from '../../utils/SunUtils';
+import { computeSunEvents, formatClockTime, parseSunTime } from '../../utils/SunUtils';
 import { vesselNow } from '../../utils/VesselClock';
 import { convertTemperatureUnit, getTemperatureUnitLabel, convertPressure } from '../../utils/UnitConversions';
 
 const PATHS = [
     'navigation.position',
+    'environment.sun.sunrise',
+    'environment.sun.sunset',
     'environment.water.temperature',
     'electrical.batteries.1.capacity.stateOfCharge',
     'electrical.batteries.1.voltage',
@@ -46,10 +48,13 @@ const InfoStack = () => {
     }, []);
 
     const position = v['navigation.position'];
-    const sun = computeSunEvents(position?.latitude, position?.longitude, now);
-    const nextSun = sun && [
-        { at: sun.sunrise, rise: true },
-        { at: sun.sunset, rise: false },
+    // Sunrise / sunset from the server when it publishes them, else computed
+    const computed = computeSunEvents(position?.latitude, position?.longitude, now);
+    const sunrise = parseSunTime(v['environment.sun.sunrise'], now) ?? computed?.sunrise;
+    const sunset = parseSunTime(v['environment.sun.sunset'], now) ?? computed?.sunset;
+    const nextSun = [
+        { at: sunrise, rise: true },
+        { at: sunset, rise: false },
     ].filter(e => e.at && e.at > now).sort((a, b) => a.at - b.at)[0];
 
     const weather = getCurrentWeather();
