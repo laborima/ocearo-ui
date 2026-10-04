@@ -5,7 +5,8 @@ import configService from '../../../settings/ConfigService';
 import SailPlan, { boomAngleFor } from './SailPlan';
 import DeckTrim from './DeckTrim';
 import { RIG, chooseSails } from './rig';
-import { buildRacerParts } from './racerGeometry';
+import { buildRacerParts, sheerOutline } from './racerGeometry';
+import { Line } from '@react-three/drei';
 import Tiller from './Tiller';
 import { useSignalKPath } from '../../../hooks/useSignalK';
 
@@ -30,6 +31,7 @@ const PART_COLORS = (scene, hull) => ({
  */
 const RacerBoat = ({ hullColor, windData, trim, showSail = true }) => {
     const nodes = useMemo(() => buildRacerParts(), []);
+    const outline = useMemo(() => sheerOutline(), []);
     const { scene } = useTheme();
     const keel = KEELS.includes(configService.get('rmKeel')) ? configService.get('rmKeel') : KEELS[0];
 
@@ -70,6 +72,8 @@ const RacerBoat = ({ hullColor, windData, trim, showSail = true }) => {
             {parts.map(name => nodes[name] && (
                 <mesh key={name} geometry={nodes[name].geometry} material={materials[name]} />
             ))}
+            {/* Deck edge outline: the white hull stays readable on the light day ground */}
+            <Line points={outline} color={scene.rigging} lineWidth={1.5} />
             {nodes[keel] && <mesh geometry={nodes[keel].geometry} material={materials.underwater} renderOrder={1} />}
             {/* Boom pivots around the gooseneck */}
             {nodes.boom && (

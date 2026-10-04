@@ -45,8 +45,11 @@ const section = (t) => {
     return [...port, ...half];
 };
 
-/** Quad strip between successive sections; `color(y)` per vertex */
-const loft = (sections, color) => {
+/**
+ * Quad strip between successive sections; `color(y)` per vertex. `flip`
+ * reverses the winding (surfaces whose outside faces up: deck, roof).
+ */
+const loft = (sections, color, flip = false) => {
     const pos = [];
     const col = [];
     const rows = sections.length;
@@ -63,7 +66,8 @@ const loft = (sections, color) => {
         for (let c = 0; c < cols - 1; c++) {
             const a = r * cols + c;
             const b = a + cols;
-            idx.push(a, a + 1, b, a + 1, b + 1, b);
+            if (flip) idx.push(a, b, a + 1, a + 1, b, b + 1);
+            else idx.push(a, a + 1, b, a + 1, b + 1, b);
         }
     }
     const geo = new THREE.BufferGeometry();
@@ -111,7 +115,7 @@ const buildDeck = () => {
         xs = [-1, -0.68, -0.64, 0, 0.64, 0.68, 1].map(f => f * hb);
         return { z: zAt(t), pts: xs.map(x => [x, camber(x)]) };
     });
-    return loft(sections);
+    return loft(sections, null, true);
 };
 
 // Coachroof with a sloped front, and its side windows
@@ -128,7 +132,7 @@ const buildRoof = () => {
         const top = base + ROOF.height * smooth(rise);
         sections.push({ z, pts: [[-hw, base], [-(hw - 0.12), top], [0, top + 0.04], [hw - 0.12, top], [hw, base]] });
     }
-    return loft(sections);
+    return loft(sections, null, true);
 };
 const buildWindows = () => {
     const parts = [];
@@ -215,6 +219,13 @@ const buildRudder = ({ pivot, axis }) => {
     blade.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, -1, 0), new THREE.Vector3(...axis).normalize()));
     blade.translate(...pivot);
     return blade;
+};
+
+/** Closed outline along the sheer (deck edge), for a crisp silhouette from above */
+export const sheerOutline = () => {
+    const stbd = ts.map(t => [halfBeam(t) + 0.01, sheer(t) + 0.02, zAt(t)]);
+    const port = stbd.map(([x, y, z]) => [-x, y, z]).reverse();
+    return [...stbd, ...port, stbd[0]];
 };
 
 let cache = null;

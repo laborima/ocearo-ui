@@ -51,7 +51,7 @@ const DAY = {
     markerDim: '#b5bac0',
     water: '#9fb4c2',
     ownHull: '#ffffff',
-    ownDeck: '#e9ecef',
+    ownDeck: '#8f99a4',
     sail: '#f7f8fa',
     rigging: '#5a6068',
     compass: '#2b3036',
