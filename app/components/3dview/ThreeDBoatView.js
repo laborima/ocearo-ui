@@ -10,6 +10,7 @@ import { useOcearoContext } from '../context/OcearoContext';
 import PolarProjection from './polar/Polar3D';
 import FsdOcean from './ocean/FsdOcean';
 import WindLayer3D from './meteo/WindLayer3D';
+import Seabed3D from './ocean/Seabed3D';
 import { useReplay } from '../replay/ReplayBar';
 import SceneSetup from './SceneSetup';
 import SeaGround from './fsd/SeaGround';
@@ -93,10 +94,14 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 {/* The mirrored water renders the scene twice: flat water on a Pi */}
                 {/* Water: FSD faceted sea and gradient sky; chart / meteo keep the flat lite water */}
                 {states.oceanMode === 'water' && <FsdOcean />}
-                {(states.oceanMode === 'chart' || states.oceanMode === 'meteo') && <Ocean3D lite fogDensity={states.oceanMode === 'meteo' ? 0.00003 : undefined} />}
+                {(states.oceanMode === 'chart' || states.oceanMode === 'meteo') && (
+                    <Ocean3D lite fogDensity={states.oceanMode === 'meteo' ? 0.00003 : undefined} water={states.oceanMode !== 'chart'} />
+                )}
+                {/* Chart: seabed relief coloured by depth, the chart laid over it in transparency */}
+                {states.oceanMode === 'chart' && <Seabed3D />}
                 {/* Windy-style forecast wind: colours and streaks over the chart */}
                 {states.oceanMode === 'meteo' && <WindLayer3D />}
-                {states.oceanMode === 'chart' && <MapPlane3D mode="chart" />}
+                {states.oceanMode === 'chart' && <MapPlane3D mode="chart" opacity={0.5} />}
                 {states.oceanMode === 'meteo' && <MapPlane3D mode="meteo" />}
 
                 {/* FSD view: neutral ground with a sea-anchored grid */}

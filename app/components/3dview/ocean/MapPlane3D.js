@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import signalKService from '../../services/SignalKService';
 import configService from '../../settings/ConfigService';
+import useOwnTrack from '../fsd/useOwnTrack';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -165,7 +166,9 @@ async function renderTilesToCanvas(canvas, position, zoom, layers) {
 
 // ── MapPlane3D component ──────────────────────────────────────────────────────
 
-export default function MapPlane3D({ mode = 'chart' }) {
+export default function MapPlane3D({ mode = 'chart', opacity = 1 }) {
+    // North-up layer turned into the boat frame, like the AIS and wind layers
+    const { heading } = useOwnTrack();
     const meshRef = useRef();
     const canvasRef = useRef(null);
     const textureRef = useRef(null);
@@ -362,8 +365,10 @@ export default function MapPlane3D({ mode = 'chart' }) {
 
     const material = useMemo(() => new THREE.MeshBasicMaterial({
         side: THREE.DoubleSide,
-        transparent: false,
-    }), []);
+        transparent: opacity < 1,
+        opacity,
+        depthWrite: opacity >= 1,
+    }), [opacity]);
 
     useEffect(() => () => {
         geometry.dispose();
@@ -375,13 +380,15 @@ export default function MapPlane3D({ mode = 'chart' }) {
     }
 
     return (
-        <mesh
-            ref={meshRef}
-            geometry={geometry}
-            material={material}
-            rotation={[-Math.PI / 2, 0, 0]} // Fixed rotation, North is -Z
-            position={[0, -0.1, 0]}
-            scale={[planeRadius * 2, planeRadius * 2, 1]}
-        />
+        <group rotation={[0, heading, 0]}>
+            <mesh
+                ref={meshRef}
+                geometry={geometry}
+                material={material}
+                rotation={[-Math.PI / 2, 0, 0]} // North is -Z in the north-up layer
+                position={[0, -0.1, 0]}
+                scale={[planeRadius * 2, planeRadius * 2, 1]}
+            />
+        </group>
     );
 }
