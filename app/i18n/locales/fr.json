@@ -831,6 +831,7 @@
     "colregArrow": "Flèche : le navire qui doit manœuvrer, et de quel côté",
     "advice": "Changement de cap suggéré (conseil seulement)",
     "trim": "Chariots et barre (couleur d'accent) : positions à lire",
-    "loads": "Écoutes, hale-bas et pataras : charge, du vert (choqué) au rouge (étarqué)"
+    "loads": "Écoutes, hale-bas et pataras : charge, du vert (choqué) au rouge (étarqué)",
+    "isochrones": "Isochrones : où vous serez dans 5, 10, 15 min selon le cap (polaire, vent, courant) ; point : cap actuel"
   }
 }

@@ -1,343 +1,124 @@
-import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
-import { Line } from '@react-three/drei';
-import { Vector3, CatmullRomCurve3, MathUtils } from 'three';
-import { useFrame } from '@react-three/fiber';
-import polarData from '@/public/boats/default/polar/polar.json';
-
-const POLAR = polarData.vpp;
-import { convertWindSpeed } from '../../context/OcearoContext';
+import React, { useMemo } from 'react';
+import { Billboard, Line, Text } from '@react-three/drei';
 import useTheme from '../../theme/useTheme';
 import { useSignalKPaths } from '../../hooks/useSignalK';
-import configService from '../../settings/ConfigService';
+import { optimalUpwind, polarSpeed, wrapPi } from '../../utils/Polar';
 
-// Constants
-const CONSTANTS = {
-    DEG2RAD: Math.PI / 180,
-    ROTATION_INTERPOLATION_FACTOR: 0.05,
-    ANGLE_INCREMENT: 10,
-    SPHERE_SIZE: 0.4,
-    SPHERE_SEGMENTS: 32,
-    DEFAULT_LINE_WIDTH: 1,
-    PLOTS_COUNT: 5,
-};
+const KN_PER_MS = 1.943844;
+const DEG = Math.PI / 180;
+const STEP = 2 * DEG;
+const MINUTES = [5, 10, 15];
+// The last ring reaches this far (scene units, ~6 hull lengths) on the
+// fastest point of sail: a polar diagram laid around the boat, readable from
+// the default camera. Real distances are written on the rings.
+const OUTER_RADIUS = 45;
+const NM = 1852;
+// Lines sit just above the ground grid
+const LIFT = 0.08;
 
-// Utility functions
-// Polar speeds are knots: distance (m) = kn * 0.514444 m/s * 60 s * minutes,
-// drawn at 0.1 scene unit per metre (was 0.44704, the mph factor: 13% short)
-const KNOTS_TO_MPS = 0.514444;
-const radiusScale = (value, timeInMinute) => value * KNOTS_TO_MPS * 60 * timeInMinute * 0.1;
+const PATHS = [
+    'environment.wind.speedTrue',
+    'environment.wind.angleTrueWater',
+    'environment.current',
+    'navigation.headingTrue',
+];
 
-const calculatePosition = (angleDeg, value, timeInMinute) => {
-    if (!angleDeg || !value) return new Vector3(0, 0, 0);
-    
-    const angleRad = angleDeg * CONSTANTS.DEG2RAD;
-    const radius = radiusScale(value, timeInMinute);
-    return new Vector3(
-        radius * Math.sin(angleRad), 
-        0, 
-        -radius * Math.cos(angleRad)
-    );
-};
-
-const findClosestIndex = (values, target) => {
-    if (!values?.length) return 0;
-    
-    let low = 0, high = values.length - 1;
-    while (low < high) {
-        const mid = Math.floor((low + high) / 2);
-        if (values[mid] < target) {
-            low = mid + 1;
-        } else {
-            high = mid;
-        }
-    }
-    return low;
-};
-
-// Diamond marker component
-const DiamondMarker = ({ position, color }) => {
-    if (!position) return null;
-    
-    return (
-        <mesh position={position}>
-            <sphereGeometry args={[CONSTANTS.SPHERE_SIZE, CONSTANTS.SPHERE_SEGMENTS, CONSTANTS.SPHERE_SEGMENTS]} />
-            <meshBasicMaterial 
-                color={color} 
-                transparent={true} 
-                opacity={0.8} 
-            />
-        </mesh>
-    );
-};
-
-// Polar curve component
-const PolarCurve = ({ points, color }) => {
-    if (!points?.length) return null;
-    
-    return (
-        <Line 
-            points={points} 
-            color={color} 
-            lineWidth={2} 
-            transparent={true} 
-            opacity={0.5} 
-        />
-    );
-};
-
-const PolarPlot = React.memo(({ timeInMinute, windSpeed }) => {
-    const tokens = useTheme();
-
-    const calculateDiamondPosition = useCallback((angles, vmgs, windSpeedIdx, timeInMinute) => {
-        if (!angles?.length || !vmgs?.length || angles.length <= windSpeedIdx || vmgs.length <= windSpeedIdx) {
-            console.warn("Invalid angle or VMG data");
-            return null;
-        }
-        
-        // Get the angle and speed values
-        const angle = angles[windSpeedIdx];
-        const speed = vmgs[windSpeedIdx];
-        
-        // Use exact angle to find proper position on the curve
-        const angleRad = angle * CONSTANTS.DEG2RAD;
-        const radius = radiusScale(speed, timeInMinute);
-        
-        // Match the calculation method used in the curve generation
-        return new Vector3(
-            radius * Math.sin(angleRad),
-            0,
-            -radius * Math.cos(angleRad)
-        );
-    }, []);
-
-    const createRadialCurve = useCallback((windSpeedIdx, timeInMinute) => {
-        const { speeds, angles, beat_angle, beat_vmg, run_angle, run_vmg } = POLAR;
-        
-        if (!speeds?.length || !angles?.length) {
-            console.warn("Invalid polar data");
-            return null;
-        }
-
-        const interpolate = (start, end, ratio) => start + ratio * (end - start);
-        const points = [];
-
-        // Generate points for different angle ranges
-        const generatePoints = (startAngle, endAngle, getSpeed) => {
-            for (let angle = startAngle; angle <= endAngle; angle += CONSTANTS.ANGLE_INCREMENT) {
-                points.push(calculatePosition(angle, getSpeed(angle), timeInMinute));
-            }
-        };
-
-        // 0° to beat_angle (excluding the beat angle itself)
-        generatePoints(0, beat_angle[windSpeedIdx] - CONSTANTS.ANGLE_INCREMENT, 
-            angle => interpolate(0, beat_vmg[windSpeedIdx], angle / beat_angle[windSpeedIdx]));
-            
-        // Add the exact beat angle point (for diamond alignment)
-        const beatAngle = beat_angle[windSpeedIdx];
-        const beatSpeed = beat_vmg[windSpeedIdx];
-        const beatPoint = calculatePosition(beatAngle, beatSpeed, timeInMinute);
-        points.push(beatPoint);
-
-        // beat_angle to run_angle (excluding the run angle itself)
-        angles.forEach(angle => {
-            if (angle > beat_angle[windSpeedIdx] && angle < run_angle[windSpeedIdx]) {
-                const speed = POLAR[Math.floor(angle)]?.[windSpeedIdx] || 0;
-                points.push(calculatePosition(angle, speed, timeInMinute));
-            }
-        });
-        
-        // Add the exact run angle point (for diamond alignment) 
-        const runAngle = run_angle[windSpeedIdx];
-        const runSpeed = run_vmg[windSpeedIdx]; 
-        const runPoint = calculatePosition(runAngle, runSpeed, timeInMinute);
-        points.push(runPoint);
-
-        // run_angle to 180°
-        generatePoints(run_angle[windSpeedIdx] + CONSTANTS.ANGLE_INCREMENT, 180, 
-            () => run_vmg[windSpeedIdx]);
-
-        return new CatmullRomCurve3(points, true);
-    }, []);
-
-    const curveData = useMemo(() => {
-        const polar = POLAR;
-        if (!polar?.speeds?.length) {
-            console.warn("Invalid polar data structure");
-            return { curve: null, beat: null, run: null };
-        }
-
-        const windSpeedIdx = findClosestIndex(polar.speeds, windSpeed);
-        const curve = createRadialCurve(windSpeedIdx, timeInMinute);
-        
-        return {
-            curve,
-            beat: calculateDiamondPosition(polar.beat_angle, polar.beat_vmg, windSpeedIdx, timeInMinute),
-            run: calculateDiamondPosition(polar.run_angle, polar.run_vmg, windSpeedIdx, timeInMinute)
-        };
-    }, [timeInMinute, windSpeed, calculateDiamondPosition, createRadialCurve]);
-
-    const rotations = [0, -Math.PI];
-
-    return (
-        <>
-            {rotations.map((rotation, idx) => (
-                <group key={idx} position={[0,-0.7,0]} rotation={[0, 0, rotation]}>
-                    {curveData.curve && (
-                        <PolarCurve 
-                            points={curveData.curve.getPoints(100)} 
-                            color={tokens.accent} 
-                        />
-                    )}
-                    <DiamondMarker position={curveData.beat} color={tokens.ok} />
-                    <DiamondMarker position={curveData.run} color={tokens.danger} />
-                </group>
-            ))}
-        </>
-    );
-});
-
-// Isochrones every 5 minutes
-const PLOTS = Array.from({ length: CONSTANTS.PLOTS_COUNT }, (_, index) => ({
-    id: index,
-    timeInMinute: 5 * (index + 1),
-}));
-
+/**
+ * Isochrones from the polar: where the boat will be after 5, 10 and 15
+ * minutes for every heading it could steer, at the polar speed for the true
+ * wind angle of that heading and the true wind speed, carried by the
+ * current. Drawn in the boat frame (bow ahead) as a polar diagram around the
+ * boat — the outer ring about six hull lengths out — with the real distance
+ * along the current heading written on each ring.
+ *
+ * The no-go zone either side of the wind (inside the best upwind angle) is
+ * left open: a dashed chord joins the two close-hauled points. The dot on
+ * each ring is where the current heading takes you.
+ */
 function PolarProjection() {
-    const groupRefs = useRef([]);
-    const plots = PLOTS;
-    // Seconds since the curves were (re)drawn — real time, not frames, so the
-    // isochrones age the same at 30 or 60 fps
-    const elapsedSeconds = useRef(0);
-    const previousAngles = useRef(Array(CONSTANTS.PLOTS_COUNT).fill(0));
+    const { scene, accent } = useTheme();
+    const v = useSignalKPaths(PATHS);
 
-    // Read preferred paths from settings — same logic as WindSector3D / useSailTrim
-    const preferredWindSpeed = configService.get('preferredWindSpeedPath') || 'speedTrue';
-    const preferredWindDir = configService.get('preferredWindDirectionPath') || 'angleTrueWater';
+    const twsKn = (v['environment.wind.speedTrue'] ?? 0) * KN_PER_MS;
+    const twa = v['environment.wind.angleTrueWater'];
+    const current = v['environment.current'];
+    const heading = v['navigation.headingTrue'];
 
-    // Subscribe to all candidate wind and heading paths
-    const polarPaths = useMemo(() => [
-        `environment.wind.${preferredWindDir}`,
-        `environment.wind.${preferredWindSpeed}`,
-        'environment.wind.angleTrueWater',
-        'environment.wind.angleTrueGround',
-        'environment.wind.speedTrue',
-        'environment.wind.speedOverGround',
-        'environment.wind.angleApparent',
-        'environment.wind.speedApparent',
-        'navigation.headingTrue',
-        'navigation.courseOverGroundTrue'
-    ], [preferredWindDir, preferredWindSpeed]);
+    const rings = useMemo(() => {
+        if (!(twsKn > 0.5) || !Number.isFinite(twa)) return [];
+        const beat = (optimalUpwind(twsKn)?.twa ?? 42) * DEG;
+        // Fastest point of sail, for picking the ring step
+        let fastest = 0;
+        for (let a = 40; a <= 180; a += 10) fastest = Math.max(fastest, polarSpeed(twsKn, a) ?? 0);
+        const outerSeconds = MINUTES[MINUTES.length - 1] * 60;
+        const scale = OUTER_RADIUS / Math.max(1, (fastest / KN_PER_MS) * outerSeconds);
 
-    const skValues = useSignalKPaths(polarPaths);
-
-    // Alignment angle for rotating the polar diagram.
-    // Priority: apparent wind if available, otherwise true wind.
-    const alignmentAngle = useMemo(() => {
-        const appAngle = skValues['environment.wind.angleApparent'];
-        const appSpeed = skValues['environment.wind.speedApparent'];
-        if (appAngle != null && appSpeed != null && appSpeed > 0) {
-            return -appAngle;
+        // Current drift in the boat frame (x starboard, z astern), m/s
+        let cx = 0;
+        let cz = 0;
+        if (current && Number.isFinite(current.drift) && Number.isFinite(current.setTrue) && Number.isFinite(heading)) {
+            const set = wrapPi(current.setTrue - heading);
+            cx = current.drift * Math.sin(set);
+            cz = -current.drift * Math.cos(set);
         }
 
-        const isAbsolute = preferredWindDir === 'directionTrue';
-        if (isAbsolute) {
-            const dirTrue = skValues['environment.wind.directionTrue'];
-            if (dirTrue != null) {
-                const heading = skValues['navigation.headingTrue']
-                    ?? skValues['navigation.courseOverGroundTrue']
-                    ?? 0;
-                return -(dirTrue - heading);
-            }
-            const rel = skValues['environment.wind.angleTrueGround']
-                ?? skValues['environment.wind.angleTrueWater'];
-            return rel != null ? -rel : 0;
-        }
-
-        const rel = skValues[`environment.wind.${preferredWindDir}`]
-            ?? skValues['environment.wind.angleTrueWater']
-            ?? skValues['environment.wind.angleTrueGround'];
-        return rel != null ? -rel : 0;
-    }, [skValues, preferredWindDir]);
-
-    // True wind speed in knots — polar.speeds are in knots, SignalK values are m/s
-    const trueWindSpeed = useMemo(() => {
-        const raw = skValues[`environment.wind.${preferredWindSpeed}`]
-            ?? skValues['environment.wind.speedTrue']
-            ?? skValues['environment.wind.speedOverGround'];
-        return convertWindSpeed(raw) || 0;
-    }, [skValues, preferredWindSpeed]);
-
-    const prevWindSpeedRef = useRef(trueWindSpeed);
-    const [redrawKey, setRedrawKey] = useState(0);
-    const redrawIntervalRef = useRef(null);
-
-    useEffect(() => {
-        redrawIntervalRef.current = setInterval(() => {
-            setRedrawKey(k => k + 1);
-            elapsedSeconds.current = 0;
-        }, 120000);
-
-        return () => {
-            if (redrawIntervalRef.current) {
-                clearInterval(redrawIntervalRef.current);
-            }
+        /** Scene position after `seconds` steering heading theta (rad, + to starboard of the bow) */
+        const at = (theta, seconds) => {
+            const kn = polarSpeed(twsKn, wrapPi(twa - theta) / DEG) ?? 0;
+            const d = (kn / KN_PER_MS) * seconds;
+            return [
+                (Math.sin(theta) * d + cx * seconds) * scale,
+                LIFT,
+                (-Math.cos(theta) * d + cz * seconds) * scale,
+            ];
         };
-    }, []);
 
-    // Recreate polar curves when wind speed changes significantly (> 5 kn)
-    useEffect(() => {
-        if (Math.abs(prevWindSpeedRef.current - trueWindSpeed) > 5) {
-            setRedrawKey(k => k + 1);
-            elapsedSeconds.current = 0;
-            prevWindSpeedRef.current = trueWindSpeed;
-        }
-    }, [trueWindSpeed]);
-
-    useFrame((_, delta) => {
-        elapsedSeconds.current += delta;
-
-        plots.forEach((plot, index) => {
-            const group = groupRefs.current[index];
-            if (!group) return;
-
-            const remainingTime = plot.timeInMinute - elapsedSeconds.current / 60;
-
-            if (remainingTime > 0) {
-                const prevAngle = previousAngles.current[index];
-                const interpolatedAngle = MathUtils.lerp(
-                    prevAngle,
-                    alignmentAngle,
-                    CONSTANTS.ROTATION_INTERPOLATION_FACTOR
-                );
-
-                group.rotation.set(0, interpolatedAngle, 0);
-                previousAngles.current[index] = interpolatedAngle;
-            }
+        return MINUTES.map((min, i) => {
+            const seconds = min * 60;
+            // Sailable headings: from close-hauled on one tack, round through
+            // downwind, to close-hauled on the other
+            const arc = [];
+            for (let theta = twa + beat; theta <= twa + 2 * Math.PI - beat + 1e-6; theta += STEP) arc.push(at(theta, seconds));
+            arc.push(at(twa + 2 * Math.PI - beat, seconds));
+            const inNoGo = Math.abs(wrapPi(twa)) < beat;
+            const here = inNoGo ? null : at(0, seconds);
+            // Real distance made good along the current heading
+            const nm = inNoGo ? null : (polarSpeed(twsKn, wrapPi(twa) / DEG) ?? 0) / KN_PER_MS * seconds / NM;
+            // Label beside the point the current heading reaches (ahead, away
+            // from the camera), or the close-hauled point when pinching
+            const anchor = here ?? arc[0];
+            const label = [anchor[0] + 1.2, anchor[1], anchor[2]];
+            return { min, nm, arc, chord: [arc[0], arc[arc.length - 1]], here, label, opacity: 0.8 - i * 0.15 };
         });
-    });
+    }, [twsKn, twa, current, heading]);
+
+    if (!rings.length) return null;
 
     return (
-        <>
-            {plots.map((plot, index) => (
-                <group
-                    key={`${plot.id}-${redrawKey}`}
-                    ref={ref => {
-                        if (ref) groupRefs.current[index] = ref;
-                    }}
-                >
-                    <PolarPlot 
-                        key={`plot-${redrawKey}-${index}`}
-                        timeInMinute={plot.timeInMinute} 
-                        windSpeed={trueWindSpeed} 
-                    />
+        <group>
+            {rings.map(ring => (
+                <group key={ring.min}>
+                    <Line points={ring.arc} color={scene.compass} lineWidth={2} transparent opacity={ring.opacity} />
+                    {/* No-go zone: not reachable directly */}
+                    <Line points={ring.chord} color={scene.compassDim} lineWidth={1.5} dashed dashSize={1} gapSize={1}
+                        transparent opacity={ring.opacity * 0.8} />
+                    {ring.here && (
+                        <mesh position={ring.here}>
+                            <sphereGeometry args={[0.5, 16, 12]} />
+                            <meshBasicMaterial color={accent} />
+                        </mesh>
+                    )}
+                    <Billboard position={[ring.label[0], 0.6, ring.label[2]]}>
+                        <Text fontSize={1.3} color={scene.compass} anchorX="left" anchorY="bottom"
+                            font="fonts/Roboto-Bold.ttf" outlineWidth={0.12} outlineColor={scene.background}
+                            fillOpacity={ring.opacity + 0.2}>
+                            {ring.nm != null ? `${ring.min} min · ${ring.nm.toFixed(2)} NM` : `${ring.min} min`}
+                        </Text>
+                    </Billboard>
                 </group>
             ))}
-        </>
+        </group>
     );
 }
-
-// Set display name for debugging purposes
-PolarPlot.displayName = 'PolarPlot';
-
 
 export default PolarProjection;
