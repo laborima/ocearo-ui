@@ -26,17 +26,20 @@ const useOwnTrack = () => {
     const { convertLatLonToXY } = useOcearoContext();
     const values = useSignalKPaths(HEADING_PATHS);
 
-    const heading = values['navigation.headingTrue'] ?? values['navigation.headingMagnetic']
-        ?? values['navigation.courseOverGroundTrue'] ?? values['navigation.courseOverGroundMagnetic'] ?? 0;
+    const rawHeading = values['navigation.headingTrue'] ?? values['navigation.headingMagnetic']
+        ?? values['navigation.courseOverGroundTrue'] ?? values['navigation.courseOverGroundMagnetic'];
+    const hasHeading = Number.isFinite(rawHeading);
+    const heading = hasHeading ? rawHeading : 0;
 
     const position = values['navigation.position'];
+    const hasFix = Number.isFinite(position?.latitude) && Number.isFinite(position?.longitude);
     const offset = useMemo(() => {
-        if (!Number.isFinite(position?.latitude) || !Number.isFinite(position?.longitude)) return { x: 0, y: 0 };
+        if (!hasFix) return { x: 0, y: 0 };
         const here = { lat: position.latitude, lon: position.longitude };
         return convertLatLonToXY(here, originFor(here));
-    }, [position, convertLatLonToXY]);
+    }, [position, hasFix, convertLatLonToXY]);
 
-    return { heading, offset };
+    return { heading, offset, hasFix, hasHeading };
 };
 
 export default useOwnTrack;

@@ -790,5 +790,24 @@
     "standOnFrom_sail": "{{name}} doit s'écarter de vous",
     "standOnFrom_fishing": "{{name}} doit s'écarter de vous",
     "standOnFrom_restricted": "{{name}} doit s'écarter de vous"
+  },
+  "parking": {
+    "type_bow": "Catway avant",
+    "type_stern": "Catway arrière",
+    "type_side": "À couple",
+    "type_buoy": "Coffre",
+    "portSide": "Bâbord au ponton",
+    "starboardSide": "Tribord au ponton",
+    "placeAhead": "Replacer devant",
+    "starboard": "tribord",
+    "port": "bâbord",
+    "moveAcross": "Décalez-vous de {{metres}} m sur {{side}}",
+    "turn": "Venez de {{deg}}° sur {{side}}",
+    "aligned": "Aligné : entrez",
+    "alignedAstern": "Aligné : reculez",
+    "entry": "Entrée à {{metres}} m",
+    "astern": "en marche arrière",
+    "virtual": "catway virtuel",
+    "behind": "Catway derrière vous : faites demi-tour ou replacez-le"
   }
 }
