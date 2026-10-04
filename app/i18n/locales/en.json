@@ -858,5 +858,14 @@
   "manual": {
     "unavailable": "The manuals cannot be loaded.",
     "none": "No manual installed."
+  },
+  "offline": {
+    "title": "Offline data",
+    "explain": "With internet (marina, 4G), download the bathymetry and wind forecast around the boat: the 3D view will use them at sea without a network. Chart tiles already shown are kept as you go; for a complete offline chart, add MBTiles charts to the Signal K server (used automatically).",
+    "download": "Download the area",
+    "clear": "Clear",
+    "used": "{{mb}} MB used",
+    "progress": "{{done}} / {{total}} files",
+    "finished": "{{count}} files ready offline · {{failed}} failed"
   }
 }

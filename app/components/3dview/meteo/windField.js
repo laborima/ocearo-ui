@@ -7,6 +7,8 @@
  * to a uniform field from the boat's own true wind.
  */
 
+import { cachedFetch } from '../../utils/offlineCache';
+
 export const GRID = 9;
 // Half-width of the grid, metres: wide enough to see the weather around the
 // route when the camera is pulled out
@@ -27,14 +29,8 @@ const nodeLatLon = (lat, lon, i, j) => {
     };
 };
 
-/**
- * Forecast field: { origin: {lat, lon}, start (ms, first hour), hours,
- * u, v: Float32Array[hours][GRID*GRID] (m/s, wind blowing towards +east / +north) }
- */
-export const fetchWindField = async (lat, lon) => {
-    // Re-fetch when the boat has moved ~10 km or the data is 30 min old
-    const key = `${lat.toFixed(1)},${lon.toFixed(1)}`;
-    if (cache.field && cache.key === key && Date.now() - cache.at < CACHE_MS) return cache.field;
+/** Open-Meteo request for the grid around a (rounded) position */
+export const windFieldUrl = (lat, lon) => {
     const lats = [];
     const lons = [];
     for (let j = 0; j < GRID; j++) {
@@ -44,9 +40,21 @@ export const fetchWindField = async (lat, lon) => {
             lons.push(p.lon.toFixed(4));
         }
     }
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats.join(',')}&longitude=${lons.join(',')}`
+    return `https://api.open-meteo.com/v1/forecast?latitude=${lats.join(',')}&longitude=${lons.join(',')}`
         + `&hourly=wind_speed_10m,wind_direction_10m&wind_speed_unit=ms&forecast_hours=${HOURS}&timezone=GMT`;
-    const res = await fetch(url);
+};
+
+/**
+ * Forecast field: { origin: {lat, lon}, start (ms, first hour), hours,
+ * u, v: Float32Array[hours][GRID*GRID] (m/s, wind blowing towards +east / +north) }
+ */
+export const fetchWindField = async (lat, lon) => {
+    // Re-fetch when the boat has moved ~10 km or the data is 30 min old
+    const key = `${lat.toFixed(1)},${lon.toFixed(1)}`;
+    if (cache.field && cache.key === key && Date.now() - cache.at < CACHE_MS) return cache.field;
+    const url = windFieldUrl(lat, lon);
+    // Kept for offline use: at sea the last forecast downloaded is shown
+    const res = await cachedFetch(url, { kind: 'forecast' });
     if (!res.ok) throw new Error(`Open-Meteo ${res.status}`);
     const data = await res.json();
     const points = Array.isArray(data) ? data : [data];

@@ -858,5 +858,14 @@
   "manual": {
     "unavailable": "Impossible de charger les manuels.",
     "none": "Aucun manuel installé."
+  },
+  "offline": {
+    "title": "Données hors-ligne",
+    "explain": "Avec internet (port, 4G), téléchargez la bathymétrie et la prévision de vent autour du bateau : la vue 3D les utilisera en mer sans réseau. Les cartes déjà affichées sont gardées au fur et à mesure ; pour une carte complète hors-ligne, ajoutez des cartes MBTiles au serveur Signal K (elles sont utilisées automatiquement).",
+    "download": "Télécharger la zone",
+    "clear": "Vider",
+    "used": "{{mb}} Mo utilisés",
+    "progress": "{{done}} / {{total}} fichiers",
+    "finished": "{{count}} fichiers prêts hors-ligne · {{failed}} échecs"
   }
 }
