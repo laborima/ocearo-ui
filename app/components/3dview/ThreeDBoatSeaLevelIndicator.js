@@ -22,12 +22,13 @@ const ThreeDBoatSeaLevelIndicator = () => {
   // Use specialized hooks for better performance and targeted subscriptions
   const depthKeel = useSignalKPath('environment.depth.belowKeel');
   const depthTransducer = useSignalKPath('environment.depth.belowTransducer');
+  const depthSurface = useSignalKPath('environment.depth.belowSurface');
 
   // Derive depth with fallback logic
   const depth = useMemo(() => {
     // Mirroring getDepthData fallback logic from OcearoContext
-    return depthKeel ?? depthTransducer ?? null;
-  }, [depthKeel, depthTransducer]);
+    return depthKeel ?? depthTransducer ?? depthSurface ?? null;
+  }, [depthKeel, depthTransducer, depthSurface]);
 
   // Handle responsive height
   useEffect(() => {

@@ -5,7 +5,7 @@ import { convertDepthUnit, getDepthUnitLabel } from '../../utils/UnitConversions
 import GlassPanel from './GlassPanel';
 import Sparkline from './Sparkline';
 
-const PATHS = ['environment.depth.belowKeel', 'environment.depth.belowTransducer'];
+const PATHS = ['environment.depth.belowKeel', 'environment.depth.belowTransducer', 'environment.depth.belowSurface'];
 const SAMPLE_MS = 5000;
 const WINDOW_SAMPLES = 120; // 10 minutes
 const SHALLOW_M = 3;
@@ -17,7 +17,7 @@ const SHALLOW_M = 3;
 const DepthPanel = () => {
     const { t } = useTranslation();
     const v = useSignalKPaths(PATHS);
-    const depth = v['environment.depth.belowKeel'] ?? v['environment.depth.belowTransducer'];
+    const depth = v['environment.depth.belowKeel'] ?? v['environment.depth.belowTransducer'] ?? v['environment.depth.belowSurface'];
     const depthRef = useRef(depth);
     const [history, setHistory] = useState([]);
 
