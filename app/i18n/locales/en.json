@@ -790,5 +790,24 @@
     "standOnFrom_sail": "{{name}} must keep clear of you",
     "standOnFrom_fishing": "{{name}} must keep clear of you",
     "standOnFrom_restricted": "{{name}} must keep clear of you"
+  },
+  "parking": {
+    "type_bow": "Bow-in berth",
+    "type_stern": "Stern-in berth",
+    "type_side": "Alongside",
+    "type_buoy": "Mooring buoy",
+    "portSide": "Port side to",
+    "starboardSide": "Starboard side to",
+    "placeAhead": "Place berth ahead",
+    "starboard": "starboard",
+    "port": "port",
+    "moveAcross": "Move {{metres}} m to {{side}}",
+    "turn": "Turn {{deg}}° to {{side}}",
+    "aligned": "Aligned: go in",
+    "alignedAstern": "Aligned: back in",
+    "entry": "Entrance {{metres}} m",
+    "astern": "astern",
+    "virtual": "virtual berth",
+    "behind": "Berth behind you: turn round or place it ahead"
   }
 }

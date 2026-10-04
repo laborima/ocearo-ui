@@ -26,6 +26,7 @@ const ThreeDBoatAttitudeIndicator = dynamic(() => import('./ThreeDBoatAttitudeIn
 const InfoPanel = dynamic(() => import('./InfoPanel'));
 const ModeHud = dynamic(() => import('./ModeHud'));
 const AdvicePanel = dynamic(() => import('./AdvicePanel'));
+const ParkingPanel = dynamic(() => import('./parkassist/ParkingPanel'));
 // Full-screen HUD panels (translucent, Tesla-style)
 const DepthPanel = dynamic(() => import('./hud/DepthPanel'));
 const TidePanel = dynamic(() => import('./hud/TidePanel'));
@@ -148,6 +149,13 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
             {rich && (
                 <div className="absolute right-3 bottom-3 z-20">
                     <TidePanel />
+                </div>
+            )}
+
+            {/* Harbour: berth type, guidance */}
+            {states.parkingMode && (
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-3 z-20 max-w-[calc(100%-9rem)]">
+                    <ParkingPanel />
                 </div>
             )}
 

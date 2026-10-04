@@ -44,7 +44,8 @@ const fragmentShader = `
         float alpha = 0.32 * edge * farFade;
 
         // Chevrons streaming forward near the bow
-        float chevronCoord = along * 0.35 - across * 1.2 - uTime * 1.6;
+        // "+ across": the chevron tips point along the route, towards the waypoint
+        float chevronCoord = along * 0.35 + across * 1.2 - uTime * 1.6;
         float chevron = smoothstep(0.55, 0.62, fract(chevronCoord)) * (1.0 - smoothstep(0.82, 0.9, fract(chevronCoord)));
         float zone = 1.0 - smoothstep(uChevronZone * 0.6, uChevronZone, along);
         vec3 color = mix(uColor, uGlow, chevron * zone);
