@@ -118,7 +118,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
 
                 {/* Sail trim car indicators at compass level */}
                 {/* The RM 1080 shows its cars on deck instead of on the compass ring */}
-                {configService.get('showSailTrimSliders') !== false && configService.getSelectedBoat()?.modelPath !== 'rm1080' && <SailTrimSliders />}
+                {configService.get('showSailTrimSliders') !== false && (configService.getSelectedBoat()?.modelPath ?? 'rm1080') !== 'rm1080' && <SailTrimSliders />}
             </group>
 
             {/* Debug 3D axes */}

@@ -2,7 +2,7 @@ import React from 'react';
 import useTheme from '../../../theme/useTheme';
 import { RIG } from './rig';
 
-const CAR = [0.42, 0.22, 0.5]; // m: large enough to read from the default camera
+const CAR = [0.6, 0.3, 0.7]; // m: large enough to read from the default camera
 
 /**
  * Trim indicators on the deck, where the hardware is: the mainsheet traveller
@@ -21,7 +21,7 @@ const DeckTrim = ({ mainCar = 0.5, jibCar = 0.5, leeward = -1 }) => {
         <group>
             {/* Traveller track and car */}
             <mesh position={[0, t.y, t.z]}>
-                <boxGeometry args={[t.halfWidth * 2, 0.05, 0.12]} />
+                <boxGeometry args={[t.halfWidth * 2, 0.08, 0.2]} />
                 <meshLambertMaterial color={scene.rigging} />
             </mesh>
             <mesh position={[travellerX, t.y + 0.1, t.z]}>
@@ -35,7 +35,7 @@ const DeckTrim = ({ mainCar = 0.5, jibCar = 0.5, leeward = -1 }) => {
                 return (
                     <group key={side}>
                         <mesh position={[side * j.x, j.y, (j.zFwd + j.zAft) / 2]}>
-                            <boxGeometry args={[0.06, 0.05, j.zAft - j.zFwd]} />
+                            <boxGeometry args={[0.1, 0.08, j.zAft - j.zFwd]} />
                             <meshLambertMaterial color={scene.rigging} />
                         </mesh>
                         <mesh position={[side * j.x, j.y + 0.1, jibZ]}>

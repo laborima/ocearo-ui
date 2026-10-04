@@ -232,9 +232,22 @@ for (const node of src.getRoot().listNodes()) {
         if (DROP.has(name)) continue;
         const keel = KEELS[node.getName()];
         if (keel) {
-            const q = copyPrimitive(prim, null, world);
-            q && transformPrimitive(q, TO_APP);
-            add(keel, q, srcMat, 0.08);
+            // Rudders (aft of x = -8.5) become their own parts so they can turn:
+            // <keel>_rudder_port / _starboard (twin) or _rudder_centre (single)
+            const isRudder = (v) => v.every(([x]) => x < -8.5);
+            // Bake the node transform first so the tests run in metres
+            const baked = copyPrimitive(prim, null, world);
+            const hull = copyPrimitive(baked, (v) => !isRudder(v));
+            hull && transformPrimitive(hull, TO_APP);
+            add(keel, hull, srcMat, 0.08);
+            const sides = { port: (z) => z < -0.3, starboard: (z) => z > 0.3, centre: (z) => Math.abs(z) <= 0.3 };
+            for (const [sideName, test] of Object.entries(sides)) {
+                // Source +Z is the app's +X (starboard)
+                const r = copyPrimitive(baked, (v) => isRudder(v) && v.every(([, , z]) => test(z)));
+                if (!r) continue;
+                transformPrimitive(r, TO_APP);
+                add(`${keel}_rudder_${sideName}`, r, srcMat, 0.15);
+            }
             continue;
         }
         const spec = PARTS[name];

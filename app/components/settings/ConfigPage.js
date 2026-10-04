@@ -123,7 +123,7 @@ const ConfigPage = ({ onSave }) => {
         const boatName = e.target.value;
         const boat = boats.find((b) => b.name === boatName);
         setSelectedBoat(boat || null);
-        updateConfig({ selectedBoat: boatName });
+        updateConfig({ selectedBoat: boatName, boatChosen: true });
     };
 
     return (

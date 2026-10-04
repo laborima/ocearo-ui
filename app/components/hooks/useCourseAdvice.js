@@ -18,6 +18,8 @@ const KN_PER_MS = 1.943844;
 // Suggest a VMG change only when it is worth a helm order
 const MIN_VMG_GAIN_KN = 0.15;
 const MIN_VMG_CHANGE = 3 * DEG;
+// Beyond this it is a routing decision (turn round, other side), not a trim tweak
+const MAX_VMG_CHANGE = 60 * DEG;
 // Avoidance search: 5° steps up to 90°, starboard first (COLREG rule 8/14 habit)
 const AVOID_STEP = 5 * DEG;
 const AVOID_MAX = 90 * DEG;
@@ -111,7 +113,7 @@ const useCourseAdvice = () => {
         if (vmc && Number.isFinite(vmc.current) && Number.isFinite(perf.heading)) {
             const change = wrapPi(vmc.best.heading - perf.heading);
             const gainKn = (vmc.best.vmc - vmc.current) * KN_PER_MS;
-            if (gainKn >= MIN_VMG_GAIN_KN && Math.abs(change) >= MIN_VMG_CHANGE) {
+            if (gainKn >= MIN_VMG_GAIN_KN && Math.abs(change) >= MIN_VMG_CHANGE && Math.abs(change) <= MAX_VMG_CHANGE) {
                 return { kind: 'vmg', change, heading: vmc.best.heading, gainKn };
             }
         }
