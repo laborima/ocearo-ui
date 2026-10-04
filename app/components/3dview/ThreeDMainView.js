@@ -27,6 +27,7 @@ const ModeHud = dynamic(() => import('./ModeHud'));
 const AdvicePanel = dynamic(() => import('./AdvicePanel'));
 const ParkingPanel = dynamic(() => import('./parkassist/ParkingPanel'));
 const ReplayBar = dynamic(() => import('../replay/ReplayBar'));
+const MeteoBar = dynamic(() => import('./meteo/MeteoBar'));
 import { useReplay } from '../replay/ReplayBar';
 // Full-screen HUD panels (translucent, Tesla-style)
 const DepthPanel = dynamic(() => import('./hud/DepthPanel'));
@@ -140,6 +141,13 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
             {rich && (
                 <div className="absolute right-3 bottom-3 z-20">
                     <TidePanel />
+                </div>
+            )}
+
+            {/* Meteo: forecast hour and wind legend */}
+            {states.oceanMode === 'meteo' && (
+                <div className="absolute left-1/2 -translate-x-1/2 top-14 z-30 max-w-[calc(100%-12rem)]">
+                    <MeteoBar />
                 </div>
             )}
 

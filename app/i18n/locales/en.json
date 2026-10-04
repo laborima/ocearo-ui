@@ -845,5 +845,9 @@
     "none": "No voyage recorded yet. They appear here after a first outing.",
     "max": "max",
     "replay": "Replay"
+  },
+  "meteo": {
+    "forecast": "Forecast",
+    "now": "Now"
   }
 }
