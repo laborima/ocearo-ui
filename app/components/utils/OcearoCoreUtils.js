@@ -615,6 +615,39 @@ export const getAnchorTrack = async (limit) => {
   return await makeOcearoCoreApiCall(`/navigation/anchor/track${query}`);
 };
 
+// ===== BATHYMETRY (SHOM) =====
+
+/**
+ * URL template of the SHOM elevation tiles served by ocearo-core (Terrarium
+ * encoding, chart datum, transparent where no SHOM model covers), or null
+ * when ocearo-core is disabled.
+ * @returns {string|null}
+ */
+export const bathymetryTileTemplate = () => {
+  const config = getOcearoCoreConfig();
+  if (!config.enabled) return null;
+  return `${config.baseUrl}/plugins/ocearo-core/bathymetry/tiles/{z}/{x}/{y}.png`;
+};
+
+/**
+ * SHOM models on board, downloads in progress and models around the boat
+ * @returns {Promise<Object>} - { regions, jobs, available, sevenZip, autoDownload }
+ */
+export const getBathymetryStatus = async () => {
+  return await makeOcearoCoreApiCall('/bathymetry/status');
+};
+
+/**
+ * Downloads the SHOM coastal models around a position to the boat's server
+ * @returns {Promise<Object>} - { jobs }
+ */
+export const downloadBathymetry = async (lat, lon, radiusNm) => {
+  return await makeOcearoCoreApiCall('/bathymetry/download', {
+    method: 'POST',
+    body: JSON.stringify({ lat, lon, radiusNm })
+  });
+};
+
 // ===== LOGBOOK PROXY FUNCTIONS =====
 
 /**

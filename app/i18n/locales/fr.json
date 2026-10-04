@@ -861,11 +861,23 @@
   },
   "offline": {
     "title": "Données hors-ligne",
-    "explain": "Avec internet (port, 4G), téléchargez la bathymétrie et la prévision de vent autour du bateau : la vue 3D les utilisera en mer sans réseau. Les cartes déjà affichées sont gardées au fur et à mesure ; pour une carte complète hors-ligne, ajoutez des cartes MBTiles au serveur Signal K (elles sont utilisées automatiquement).",
+    "explain": "Avec internet (port, 4G), téléchargez la bathymétrie et la prévision de vent autour du bateau : la vue 3D les utilisera en mer sans réseau. Les relevés SHOM (5 à 20 m) sont gardés par le serveur du bord pour tous les écrans. Les cartes déjà affichées sont gardées au fur et à mesure ; pour une carte complète hors-ligne, ajoutez des cartes MBTiles au serveur Signal K (elles sont utilisées automatiquement).",
     "download": "Télécharger la zone",
     "clear": "Vider",
     "used": "{{mb}} Mo utilisés",
     "progress": "{{done}} / {{total}} fichiers",
-    "finished": "{{count}} fichiers prêts hors-ligne · {{failed}} échecs"
+    "finished": "{{count}} fichiers prêts hors-ligne · {{failed}} échecs",
+    "shomTitle": "Bathymétrie SHOM sur le serveur du bord",
+    "shomNone": "Aucun relevé SHOM autour du bateau.",
+    "shomAvailable": "Disponible",
+    "shomDownloading": "Téléchargement {{pct}} %",
+    "shom_queued": "En attente",
+    "shom_downloading": "Téléchargement",
+    "shom_extracting": "Décompression",
+    "shom_converting": "Conversion",
+    "shom_done": "À bord",
+    "shom_error": "Échec : {{error}}",
+    "shomNo7z": "Installez 7z sur le serveur (apt install p7zip-full) pour décompresser les relevés.",
+    "shomCredit": "Source : SHOM, MNT topo-bathymétriques, Licence Ouverte. Profondeurs par rapport au zéro des cartes."
   }
 }

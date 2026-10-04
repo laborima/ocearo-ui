@@ -861,11 +861,23 @@
   },
   "offline": {
     "title": "Offline data",
-    "explain": "With internet (marina, 4G), download the bathymetry and wind forecast around the boat: the 3D view will use them at sea without a network. Chart tiles already shown are kept as you go; for a complete offline chart, add MBTiles charts to the Signal K server (used automatically).",
+    "explain": "With internet (marina, 4G), download the bathymetry and the wind forecast around the boat: the 3D view will use them at sea without a network. SHOM surveys (5 to 20 m) are kept by the boat's server for every display. Charts already viewed are kept as you go; for a full offline chart, add MBTiles charts to the Signal K server (used automatically).",
     "download": "Download the area",
     "clear": "Clear",
     "used": "{{mb}} MB used",
     "progress": "{{done}} / {{total}} files",
-    "finished": "{{count}} files ready offline · {{failed}} failed"
+    "finished": "{{count}} files ready offline · {{failed}} failed",
+    "shomTitle": "SHOM bathymetry on the boat's server",
+    "shomNone": "No SHOM survey around the boat.",
+    "shomAvailable": "Available",
+    "shomDownloading": "Downloading {{pct}}%",
+    "shom_queued": "Queued",
+    "shom_downloading": "Downloading",
+    "shom_extracting": "Extracting",
+    "shom_converting": "Converting",
+    "shom_done": "On board",
+    "shom_error": "Failed: {{error}}",
+    "shomNo7z": "Install 7z on the server (apt install p7zip-full) to extract the surveys.",
+    "shomCredit": "Source: SHOM digital elevation models, Licence Ouverte. Depths relative to chart datum."
   }
 }
