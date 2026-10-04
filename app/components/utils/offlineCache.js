@@ -9,7 +9,9 @@
  * URLs can then be pointed at it.
  */
 
-const CACHE = 'ocearo-offline-v1';
+// v2: v1 could hold OpenStreetMap's "access blocked" image (see cachedFetch)
+const CACHE = 'ocearo-offline-v2';
+const STALE_CACHES = ['ocearo-offline-v1'];
 // Forecasts go stale: use the cached copy offline only, refresh when online
 const FRESH_MS = { forecast: 30 * 60 * 1000 };
 
@@ -24,15 +26,25 @@ const available = () => typeof caches !== 'undefined';
  * @param {{ kind?: 'tile'|'forecast' }} [options]
  * @returns {Promise<Response>}
  */
+let purged = false;
+
 export const cachedFetch = async (url, { kind = 'tile' } = {}) => {
-    if (!available()) return fetch(url);
+    if (!available()) return fetch(url, { referrerPolicy: 'strict-origin-when-cross-origin' });
+    if (!purged) {
+        purged = true;
+        STALE_CACHES.forEach(name => caches.delete(name).catch(() => {}));
+    }
     const cache = await caches.open(CACHE);
     if (kind === 'tile') {
         const hit = await cache.match(url);
         if (hit) return hit;
     }
     try {
-        const res = await fetch(url, { mode: 'cors' });
+        // Signal K serves the app with `Referrer-Policy: no-referrer`, and the
+        // OpenStreetMap tile servers answer requests without a referrer with an
+        // "access blocked" image (status 200). Send our origin, as their usage
+        // policy asks: it identifies the boat's server, nothing more.
+        const res = await fetch(url, { mode: 'cors', referrerPolicy: 'strict-origin-when-cross-origin' });
         if (res.ok) await cache.put(url, res.clone());
         return res;
     } catch (error) {
