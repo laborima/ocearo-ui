@@ -1,3 +1,27 @@
+## [2.0.0] - 2026-10-05
+
+Ocearo 2: a new 3D view built around what a sailor needs to see — a realistic sea, the seabed, the traffic and the rules of the road — on a calmer, FSD-style interface. Settings from 0.1.x are kept (the old RM 1080 boat choice moves to the Racer 10.8). For the logbook, anchor watch and SHOM bathymetry, update **ocearo-core to 1.2.0**: its anchor API was unreachable on current Signal K servers.
+
+
+### Added
+
+- **A realistic sea for the water mode**, generated from the true wind: a coastal wind sea and a swell (Gerstner wave spectrum on the GPU, short waves in the normals), the sky's reflection and the sun where it really is (from the position and the GPS clock), light through the crests, whitecaps from about 7 knots, and the boat's own wake following the track actually sailed (Kelvin arms, bow wave). The hull is seen through the water below the waterline.
+- **A clean gradient sky** with the real sun for every ocean mode, replacing the cartoon clouds of the chart, bathymetry and weather modes.
+- **Bathymetry as a survey grid**: relief exaggerated, a ground-anchored 50 m / 250 m grid, isobaths, soundings at the current tide (one draw call for all labels), a sounder line from the keel, water too shallow for the draft hatched orange, drying banks green and land sand. Uses the **SHOM 5–20 m surveys served by ocearo-core** (chart datum, tide added) where available, the global Terrarium relief elsewhere.
+- **Offline data**: chart tiles, bathymetry and wind forecasts kept in the browser as they are used, an area download in *Settings → Offline data*, and the list of SHOM surveys on the boat's server with their download progress.
+- **Voyage replay** from the logbook, a **Windy-style wind forecast** layer, the **seabed in 3D**, a **man-overboard** marker with drift prediction, **polar isochrones**, a **3D view legend**, clear **COLREG colours** (red: our move, violet: theirs, orange: close) with a give-way banner and curved manoeuvre arrows.
+- **Procedural boats**: a 10.8 m racer (default) with sails drawn to trim (draft stripes, telltales, sheets to the cars, reefs, asymmetric spinnaker), a 14 m catamaran, and an AIS fleet drawn by ship type and length, dead-reckoned between reports.
+
+### Fixed
+
+- **OpenStreetMap tiles were blocked when the app was served by Signal K.** The server sends `Referrer-Policy: no-referrer`; OSM answers requests without a referrer with an "access blocked" image (status 200), which was then cached as a tile. Tile requests now send the display's origin, as the OSM tile policy asks, and the old cache is purged.
+- Isochrone labels overlapped and grew near the camera: they are now screen-sized and hidden when they would overlap.
+- The sounder line in the bathymetry mode read a path that was never subscribed.
+- The performance wake kept grey patches for minutes where the polar ratio had been momentarily unknown.
+- Engine tiles: long labels ran over their value, which wrapped and was clipped.
+- **Reverse gear was never detected.** Signal K publishes `transmission.gear` as "Forward" / "Neutral" / "Reverse": the parking assist compared it with a lower-case string, so its predicted track went the wrong way astern, and the engine view showed "Fwd Forward".
+- Under the Raspberry Pi render profile the sea shader is lighter (fewer noise octaves, ripples and wake points).
+
 ## [0.1.22] - 2026-08-10
 
 ### Added

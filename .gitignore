@@ -39,3 +39,6 @@ certificates
 # Builder models are licensed: build them locally (models/rm1080/build.mjs), never commit
 public/boats/rm1080/
 /out-test/
+
+# Local test exports
+/out-test/

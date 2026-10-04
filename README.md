@@ -1,232 +1,184 @@
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![npm](https://img.shields.io/npm/v/ocearo-ui.svg)](https://www.npmjs.com/package/ocearo-ui)
+[![Signal K](https://img.shields.io/badge/Signal%20K-webapp-0a7ea4.svg)](https://signalk.org)
 [![GitHub Issues](https://img.shields.io/github/issues/laborima/ocearo-ui.svg)](https://github.com/laborima/ocearo-ui/issues)
-[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![License](https://img.shields.io/badge/License-Apache%202.0-brightgreen.svg)](https://opensource.org/licenses/Apache-2.0)
 
 [Français 🇫🇷](README.fr.md)
 
 # Ocearo UI
 
-**Sailing Made Smarter**
+**The open-source sailing display for Signal K.** A clear, real-time 3D picture of the boat, the sea and the traffic around it — sail trim, rules of the road, man overboard, anchor watch, bathymetry and weather — in a calm interface inspired by Tesla's driving visualisation. It runs as a Signal K webapp on the boat's server (a Raspberry Pi is enough) and in any browser on board: chart-table screen, cockpit tablet or phone.
 
-**Ocean Robot** is set to transform sailing with an intuitive and visually engaging user interface (UI) designed for the OpenPlotter boat project. Powered by the **Signal K** platform, Ocean Robot gathers and stores boat data to provide real-time insights.
+![Under spinnaker leaving La Rochelle: realistic sea from the true wind, sail trim stripes and telltales, compass and tide](docs/screenshots/hero.jpg)
 
-Inspired by Tesla's autopilot UI, this system delivers a futuristic and streamlined experience tailored for sailors.
-
----
-
-## **Latest Updates (v0.1.22)**
-
-- **Swing Track at Anchor**: The anchored view draws the path the boat has actually described around the anchor, with the real alarm radius, the 80 % watch ring and the rode line. A veering shift or a dragging anchor is readable from the shape of the track long before the alarm fires. Recorded server-side by ocearo-core, so it survives a UI reload.
-- **KIP-style Card Compass**: The dashboard navigation tab now carries a rotating-rose compass with a fixed lubber line, COG and apparent-wind index markers, drawn in SVG. It replaces the 3D boat widget, which ran a permanent WebGL renderer to show a heading number.
-- **Raspberry Pi Tab**: Temperature, CPU, memory and disk of the machine running the stack, firmware throttling flags and the heaviest processes — the fastest way to see why the boat computer is slow.
-- **GPS-backed Clock**: With no battery on its RTC, the Pi boots with a wrong date after a power cut and no internet, which silently emptied the tide widget. The UI now takes its wall clock from the GPS `navigation.datetime` whenever the system clock is more than a minute off.
-- **No More `NaN` on the Wind**: Every converter in the unit pipeline now rejects non-finite input instead of forwarding `NaN` to the DOM, and the sites that swallowed `NaN` into a silent zero are gone.
-- **Real AIS CPA**: Collision risk is computed from both vessels' course and speed rather than from range alone, so a moored boat abeam is no longer flagged as a hazard.
-- **Depth in the Logbook**, plus manual entries recorded in the same units as the automatic ones.
-
-> ℹ️ Some features need companion Signal K plugins to have any data to show — see [Signal K prerequisites](#signal-k-prerequisites).
+> Every image on this page is a screenshot of the app, fed with real data for La Rochelle on 4 October 2026: wind from Open-Meteo, tides, the SHOM 20 m bathymetry and scripted AIS traffic.
 
 ---
 
-## **Signal K prerequisites**
+## Contents
 
-The UI reads standard Signal K paths; when a path is not published, the corresponding display is empty rather than broken. On a typical NMEA2000 boat these plugins are what make the paths exist:
+- [Highlights](#highlights)
+- [The 3D view](#the-3d-view)
+- [Traffic and the rules of the road](#traffic-and-the-rules-of-the-road)
+- [Safety: man overboard and anchor watch](#safety-man-overboard-and-anchor-watch)
+- [Instruments and boat systems](#instruments-and-boat-systems)
+- [Offline at sea](#offline-at-sea)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Development](#development)
+- [Data sources and credits](#data-sources-and-credits)
+- [Contributing](#contributing) · [Licence](#licence) · [Disclaimer](#navigation-disclaimer)
+
+---
+
+## Highlights
+
+- **A boat you can trim from the screen.** Main, headsails and asymmetric spinnaker drawn from the wind (camber, twist, reefs, sail changes), with draft stripes, telltales and the traveller and jib cars where they should be.
+- **The sea around you, five ways.** A realistic sea built from the true wind, the live chart with buoyage, the seabed in 3D, the wind forecast, or a clean FSD-style ground for racing.
+- **Traffic you can read at a glance.** AIS targets drawn as real ship types and sizes, moving smoothly between reports, coloured by who must give way under COLREG — with the manoeuvre to make.
+- **Tactics.** Laylines to the waypoint, isochrones from your polars (where you will be in 5, 10 and 15 minutes), VMG advice and a polar-speed ghost boat.
+- **Safety first.** Man-overboard marker with drift prediction, anchor watch with the real swing track, shallow-water warnings against your draft.
+- **Everything else on board.** Dashboard, engine and maintenance, energy, tanks, logbook with voyage replay, autopilot, media and documents — in 12 languages, metric, imperial or nautical units, day, dark and red night themes.
+- **Built for the boat.** Works offline once the area is downloaded, adapts to a Raspberry Pi, reads standard Signal K paths only.
+
+---
+
+## The 3D view
+
+The heart of Ocearo is a live 3D scene centred on your boat. A button cycles between five representations of the world around it.
+
+| | |
+|---|---|
+| ![Live chart with buoyage and AIS](docs/screenshots/chart.jpg) | ![SHOM bathymetry as a survey grid](docs/screenshots/bathymetry.jpg) |
+| **Chart.** OpenStreetMap with OpenSeaMap buoyage and lights, true to scale with your boat and the AIS targets. Uses a Signal K chart provider (MBTiles) when one is installed. | **Bathymetry.** The seabed as a survey grid: relief exaggerated, isobaths, soundings at the current tide, a sounder line from the keel, and water too shallow for your draft hatched in orange. 5–20 m SHOM surveys on the French coast, global relief elsewhere. |
+| ![Wind forecast layer](docs/screenshots/weather.jpg) | ![Isochrones and laylines](docs/screenshots/polars.jpg) |
+| **Weather.** The 48-hour wind forecast around the boat (Open-Meteo) in Windy colours, with a time slider. | **Polars and laylines.** Where the polars put you in 5, 10 and 15 minutes on every heading, the laylines to the waypoint and the VMG to steer. |
+
+The **sea** itself is generated from the true wind: wave height, length and direction of a coastal wind sea plus a swell, whitecaps from about 7 knots, the sky's reflection and the sun where it really is, and your own wake following the track you actually sailed. The sails are drawn from the apparent wind with their trim: draft stripes with the depth and position of maximum camber, telltales on the luff and leech, and the sheet cars on their tracks.
+
+Boats: a 10.8 m racer (default), a 14 m catamaran and simpler models, chosen in the settings.
+
+---
+
+## Traffic and the rules of the road
+
+| | |
+|---|---|
+| ![We must give way to a fishing vessel](docs/screenshots/colregs.jpg) | ![A port-tack yacht must keep clear of us](docs/screenshots/standon.jpg) |
+| **Our move.** A vessel engaged in fishing crosses ahead: under rule 18 the sailing yacht keeps clear. The boat and the banner turn orange-red, the advice names the rule and the alteration (“Avoid: 15° to port”). | **Their move.** A port-tack yacht closing from starboard must keep clear (rule 12): it turns violet with the manoeuvre expected of it. If it does not act, rule 17(b) advice appears. |
+
+Colours mean the same thing everywhere: **red** — risk of collision and it is our move; **violet** — risk of collision and it is theirs; **orange** — close but no collision course; grey — nothing to report. CPA and TCPA come from both vessels' course and speed; thresholds are set in the settings. AIS targets are drawn by type and length (sailing yachts, catamarans, ferries, cargo ships, tugs, fishing vessels, lifeboats…) and dead-reckoned between reports, so they glide instead of jumping.
+
+---
+
+## Safety: man overboard and anchor watch
+
+| | |
+|---|---|
+| ![Man overboard](docs/screenshots/mob.jpg) | ![Anchor watch](docs/screenshots/anchor.jpg) |
+| **Man overboard.** One button (or any Signal K MOB notification) raises the alarm: drop point, the person's estimated position now from current and leeway, the drift line and the bearing and distance to steer. | **Anchor watch.** Alarm radius and 80 % watch ring centred on the anchor, the rode, and the track the boat has actually described around it: a veer or a dragging anchor shows in its shape long before the alarm. Kept by [ocearo-core](https://github.com/laborima/ocearo-core), so it survives a reload. |
+
+![Parking assist](docs/screenshots/parking.jpg)
+
+**Parking assist.** Choose the berth (bow-in, stern-in, alongside, mooring buoy) and follow the predicted track with wind and current.
+
+---
+
+## Instruments and boat systems
+
+| | |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.jpg) | ![Dashboard, dark theme](docs/screenshots/dashboard-dark.jpg) |
+| **Dashboard.** AIS radar, weather, course to the waypoint, tanks… next to the 3D view, in the day theme… | …the dark theme, and a red night theme that keeps your night vision. The theme can follow the sun. |
+| ![Engine](docs/screenshots/engine.jpg) | ![Energy](docs/screenshots/energy.jpg) |
+| **Engine.** Speed, hours, temperatures, pressures, gear and alarms (the 24 NMEA 2000 engine notifications), plus a maintenance schedule. | **Energy.** Batteries, charge and consumption, solar, and the health of the Raspberry Pi running the stack. |
+| ![Logbook](docs/screenshots/logbook.jpg) | ![Settings](docs/screenshots/settings.jpg) |
+| **Logbook.** Automatic and manual entries, mission timeline, and recorded voyages you can replay in the 3D view. | **Settings.** Boat, units, language, themes, 3D quality (including a Raspberry Pi profile), alarm thresholds and offline data. |
+
+---
+
+## Offline at sea
+
+At sea there is rarely internet. Whenever there is (marina Wi-Fi, 4G), Ocearo keeps what it will need:
+
+- **Chart tiles** you have viewed, **wind forecasts** and **bathymetry** are cached in the display's browser; *Settings → Offline data* downloads the bathymetry and forecast for 5, 10 or 20 NM around the boat in one go.
+- With **[ocearo-core](https://github.com/laborima/ocearo-core)** on the server, the **SHOM surveys** (5–20 m digital elevation models of the French coast, open data) are downloaded by the server itself and shared with every screen on board.
+- OpenStreetMap's tile servers do not allow bulk downloads: for complete offline charts, add MBTiles charts to the Signal K server, which Ocearo then uses automatically.
+
+---
+
+## Installation
+
+Ocearo UI is a Signal K **webapp**.
+
+1. On your Signal K server (≥ 2.x), open **Appstore → Available**, search for **ocearo-ui** and install it (or `npm install ocearo-ui` in `~/.signalk`).
+2. Restart the server and open `http://<signalk-server>:3000/ocearo-ui/` on any screen on board.
+3. Recommended: install **[ocearo-core](https://www.npmjs.com/package/ocearo-core)** for the logbook, anchor watch, SHOM bathymetry, system metrics and the AI copilot.
+
+A live demo with simulated data: <https://laborima.github.io/ocearo-ui/>
+
+### Signal K prerequisites
+
+Ocearo reads standard Signal K paths; when a path is missing, its display is empty rather than wrong. On a typical NMEA 2000 boat these plugins publish what it needs:
 
 | Plugin | Provides | Used by |
 |--------|----------|---------|
-| [`signalk-derived-data`](https://www.npmjs.com/package/signalk-derived-data) | True wind and true heading from apparent wind + STW (enable `heading`, `angleTrueWater`, `directionTrue`) | Wind displays, sail trim, polar view, compass |
-| [`@meri-imperiumi/signalk-autostate`](https://www.npmjs.com/package/@meri-imperiumi/signalk-autostate) | `navigation.state` | Sail visibility, alert prioritisation |
-| [`@signalk/set-system-time`](https://www.npmjs.com/package/@signalk/set-system-time) | System clock disciplined from GPS time | Tides, day/night rendering, logbook ordering |
-| [`@signalk/signalk-autopilot`](https://www.npmjs.com/package/@signalk/signalk-autopilot) | Signal K v2 autopilot API | Autopilot view (which now states explicitly when no provider is registered, instead of showing an inert panel) |
-| [`ocearo-core`](https://www.npmjs.com/package/ocearo-core) | Logbook, anchor, system metrics, AI copilot | Logbook, anchor swing track, Raspberry Pi tab |
+| [`signalk-derived-data`](https://www.npmjs.com/package/signalk-derived-data) | True wind and true heading (enable `heading`, `angleTrueWater`, `directionTrue`) | Wind, sail trim, polars, compass |
+| [`@meri-imperiumi/signalk-autostate`](https://www.npmjs.com/package/@meri-imperiumi/signalk-autostate) | `navigation.state` | Sail visibility, alert priorities |
+| [`@signalk/set-system-time`](https://www.npmjs.com/package/@signalk/set-system-time) | System clock from GPS | Tides, day/night, logbook |
+| [`@signalk/signalk-autopilot`](https://www.npmjs.com/package/@signalk/signalk-autopilot) | Signal K v2 autopilot API | Autopilot view |
+| [`ocearo-core`](https://www.npmjs.com/package/ocearo-core) | Logbook, anchor, bathymetry, system metrics, AI copilot | Logbook, anchor watch, bathymetry, Raspberry Pi tab |
+
+Hardware: a Raspberry Pi 4 or 5 runs the server and a display comfortably; select the *Raspberry Pi* 3D quality on the Pi's own screen. Any recent browser works as a remote display.
 
 ---
 
-## **Previous Updates (v0.1.19)**
+## Configuration
 
-- **Engine Maintenance Schedule**: New maintenance tab with manufacturer service intervals (Volvo Penta D1/D2, Yanmar YM, generic diesel), last-done tracking and overdue/due-soon statuses.
-- **Engine Alarms**: The 24 NMEA2000 discrete engine notifications (overheat, oil pressure, coolant level…) are now surfaced with a persistent alarm banner and tab badge, plus configurable temperature zones raising audible SignalK alerts.
-- **Harbor-detail 3D Chart**: Adaptive level-of-detail map plane — pontoons visible at berth (OSM z19 + OpenSeaMap seamarks), wide area when zoomed out, true-to-scale with AIS targets.
-- **Real Weather Map**: Meteo mode combines the base map with the Windy wind overlay and live RainViewer precipitation radar over a ~40 km area.
-- **Living Ocean & Sky**: Wind-driven geometric swell (significant wave height from wind speed), forecast-driven clouds and rain particles, ocean sky shared by all map modes.
-- **Air Quality from VOC**: Dashboard tile driven by the BME680 gas resistance (kΩ) with qualitative scale when no CO₂/PM2.5 sensors are fitted.
-- **Fuel Analytics**: Consumption-range estimation (worst–average), full-tank assumption after refills, engine hours persisted with engine off, complete refill history.
-- **RPi5 Performance**: Chart/meteo modes render a lite ocean without the mirror-reflection pass — the scene is no longer drawn twice per frame.
-- **Previous highlights (v0.1.16)**: full 3D sails with physically-based trim, rigging tensions, sail trim HUD, autopilot view, dashboard, configurable units, Next.js 16 / React 19 / Tailwind v4 stack.
+Everything is set in the app (**Settings**): Signal K server address and authentication, boat model, draft and polars, units, language, theme (manual or following the sun), 3D quality, AIS scale and collision thresholds (CPA, TCPA), and offline data. Settings are stored per display.
+
+To install the app on a tablet or phone as a full-screen app (PWA), serve Signal K over HTTPS on the boat's network: see [docs/ssl.md](docs/ssl.md).
 
 ---
 
-## **Key Features**
+## Development
 
-### **Dynamic 3D Environment**
-- **Physically-based Sails**: Real-time 3D representation of mainsail and jib/genoa with dynamic camber, twist, and reefing based on wind conditions.
-- **Interactive Rigging**: Visualization of rigging lines (backstay, vang, cunningham, outhaul) with tension-based color gradients.
-- **Smart Compass**: Integrated **Sail Trim HUD** showing recommended car positions for optimal performance.
-- **Day/Night Skybox**: Dynamic lighting and ocean environment that synchronizes with vessel time.
+```bash
+git clone https://github.com/laborima/ocearo-ui.git
+cd ocearo-ui
+npm install
+npm run dev        # http://localhost:3000 — point it at your Signal K server in Settings
+npm run lint
+npm run build      # static export in out/
+```
 
-### **Navigation & Awareness**
-- **AIS Radar**: Real-time 3D visualization of nearby vessels with detailed information panels.
-- **Course & Routing**: Dedicated widget for Signal K routes, waypoints, and real-time course calculations.
-- **Environmental Context**: Integrated tide levels, weather forecasts (Signal K Weather API), and depth monitoring with vessel attitude.
-- **Laylines**: High-precision 3D laylines to assist in tactical navigation.
+To try a build on a Signal K server, link it as a webapp: `npm run link` (symlinks `out/` into `~/.signalk/node_modules/ocearo-ui`), then restart the server.
 
-### **Vessel Systems**
-- **Autopilot Control**: Fully integrated autopilot interface for seamless vessel management.
-- **Engine Monitoring**: Comprehensive gauges for temperature, pressure, and fuel consumption with refill tracking.
-- **Tesla-style Indicators**: Modern, high-visibility bars for battery status and tank levels.
-- **Customizable UI**: Support for 12 languages and configurable units (metric, imperial, nautical).
+Stack: Next.js 16 (static export), React 19, Three.js with React Three Fiber, Tailwind CSS 4, i18next. The 3D boats, sails and AIS fleet are procedural (no model files to download); see [AGENTS.md](AGENTS.md) for the project conventions.
+
+Tide tables for offline use live in `public/tides/<harbour>/<MM>_<yyyy>.json`.
 
 ---
 
-## **Core Views**
+## Data sources and credits
 
-### **Cruising View**
-- **3D Visualization**: Provides a dynamic 3D view of the vessel, displaying critical elements such as:
-  - Wind direction with **active laylines**
-  - High-precision 3D Compass
-  - Depth level & vessel attitude
-  - Nearby vessels represented in 3D using AIS data
-  - **Sail Trim HUD**: Real-time arc indicators for mainsail traveller and jib cars at compass level.
-  - Physically-based sail shape (camber & twist) reflecting current wind conditions.
-
-![Cruising View](docs/cruising.png)
-
-### **Anchored View**
-- Simplified 3D representation of the vessel with key at-anchor data, including:
-  - GPS position
-  - Time
-  - Tide levels
-  - Depth
-  - Battery status
-- Anchor alarm circle centred on the recorded drop point, at the configured radius, with the 80 % watch ring and the rode line
-- **Swing track**: the path travelled around the anchor, so veering, sailing at anchor and the first metres of dragging are visible before any alarm
-
-![Anchored View](docs/anchored.png)
-
-### **Park Assist View**
-- Leverages camera and sensor data to simplify docking by:
-  - Displaying trajectory predictions based on wind and rudder angle
-  - Showing speed indications and live feeds from the front camera
-  - Highlighting available berthing spots
-
-*Currently in progress.*
-
-![Anchored View](docs/parking.png)
-
-### **Other Views**
-Additional visuals enhance the system's functionality:
-
-![Other Views](docs/ais.png)  
-![Other Views](docs/ocean.png)
-![Other Views](docs/meteo.png)  
-![Other Views](docs/navigation.png)  
-![Other Views](docs/instruments.png)
-![Other Views](docs/webcam.png)
-![Other Views](docs/battery.png)
-![Other Views](docs/performances.png)
-![Other Views](docs/dashboard1.png)
-![Other Views](docs/dashboard2.png)
-![Other Views](docs/dashboard3.png)
-![Other Views](docs/engine.png)
+- Charts © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL); buoyage © [OpenSeaMap](https://openseamap.org) (CC BY-SA).
+- Bathymetry: [SHOM](https://data.shom.fr) digital elevation models (Licence Ouverte Etalab 2.0), served by ocearo-core; global relief from the [Terrarium tiles](https://registry.opendata.aws/terrain-tiles/) on AWS Open Data (GEBCO, ETOPO, SRTM and others).
+- Wind forecast: [Open-Meteo](https://open-meteo.com) (CC BY 4.0).
+- Sun position: NOAA solar calculator equations.
 
 ---
 
-## **Vision for the Future**
-Ocean Robot's roadmap includes advanced features aimed at enhancing safety and efficiency for sailors:
+## Contributing
 
-- **AI-powered object detection** for floating debris and obstacles
-  - Integration with advanced camera systems (e.g., **see.ai**) to detect floating objects
-- **Future Enhancements**:
-  - Camera-based monitoring of sail indicators (*penons*) for optimal sail trim suggestions
-  - 3D Bathymetry visualization
-  - 3D Start lines visualization
-  
----
-
-Check out the live demo: https://laborima.github.io/ocearo-ui/
-
-Or install it in Signal K using the NPM package: https://www.npmjs.com/package/ocearo-ui
-
----
-
-## **Contributing**
-
-Your support and involvement make Ocearo UI better! Here are some ways you can contribute:
-
-- Report bugs: Help me squash issues by letting me know when something isn't working as expected.
-- Suggest features: Share your ideas for new features or improvements your feedback shapes the project!
-- Contribute code: Submit pull requests to add features, fix bugs, or improve documentation.
-- Support the project: Help fund the purchase of webcams, and sensors by buying me a coffee.
+Bug reports, ideas and pull requests are welcome — see the [issues](https://github.com/laborima/ocearo-ui/issues). Changes are listed in the [CHANGELOG](CHANGELOG.md).
 
 [![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/laborima)
 
----
+## Licence
 
-## **Development and Deployment**
+[Apache 2.0](LICENSE).
 
-### Building
+## Navigation disclaimer
 
-Clone sources:
-
-```bash
-git clone https://github.com/laborima/ocearo-ui.git
-cd ocearo-ui
-```
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Start the development server:
-
-```bash
-npm run dev
-```
-
-Access the UI at [http://localhost:3000](http://localhost:3000) in your browser.
-
-Edit the page by modifying `app/page.js`. Changes update automatically as you save.
-
-### Boat Models
-
-All 3D boat models have a waterline length of 10 meters and are positioned at 0 on the Y-axis. Use Blender to make any adjustments.
-
----
-### Setup Tides Data
-
-Create JSON files and stores tide data under the following path:
-
-`public/tides/${harbor}/${MM}_${yyyy}.json`
-
-A sample script allows downloading tide data for La Rochelle.
-
----
-
-## **Deploying to OpenPlotter**
-
-The recommended way is to use the npm published package.
-If you want to deploy your own build:
-
-```bash
-git clone https://github.com/laborima/ocearo-ui.git
-cd ocearo-ui
-npm install
-NODE_ENV=production npm run build
-scp -r ./out/* pi@openplotter.local:/home/pi/.signalk/node_modules/ocearo-ui
-```
-
----
-
-⚠ Navigation Disclaimer
-
-Use with Caution – Not a Substitute for Official Navigation Systems
-
-Ocearo UI is designed to enhance sailing awareness and provide real-time data visualization. However, this software is not a certified navigation or safety system and should not be relied upon as the sole source of navigational information.
-
-- Always cross-check data with official marine charts, GPS devices, and other navigation aids.
-- Maintain situational awareness and follow maritime safety regulations.
-- The developers of Ocearo UI are not liable for any incidents, accidents, or navigation errors that may arise from using this software.
-
-By using Ocearo UI, you acknowledge and accept the inherent risks of relying on non-certified navigation tools. Always navigate responsibly!
+Ocearo UI improves situational awareness; it is **not a certified navigation or safety system** and must not be the only source of navigational information. Always cross-check with official charts and instruments, keep a proper lookout and follow the rules of the road. The authors accept no liability for incidents arising from its use.
