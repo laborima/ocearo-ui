@@ -18,9 +18,11 @@ const STALE_TARGET_MS = 10 * 60 * 1000;
 
 const EMPTY_LIST = [];
 
-// Dynamic AIS data: the server drops anything faster than this per path, which
-// matters when several AIS receivers report the same target.
-const AIS_DYNAMIC_MIN_PERIOD_MS = 1000;
+// Dynamic AIS data, delivered as it comes. No server-side minPeriod: the
+// server debounces a `vessels.*` row per path across *all* vessels, so with
+// several targets only one position a second got through for the whole
+// fleet and most targets froze (or never appeared). The store below already
+// limits re-renders (PUBLISH_INTERVAL_MS).
 const AIS_DYNAMIC_PATHS = [
     'navigation.position',
     'navigation.speedOverGround',
@@ -43,7 +45,7 @@ const AIS_STATIC_PATHS = [
     'navigation.state',
 ];
 const AIS_SUBSCRIPTION = [
-    ...AIS_DYNAMIC_PATHS.map(path => ({ path, policy: 'ideal', minPeriod: AIS_DYNAMIC_MIN_PERIOD_MS })),
+    ...AIS_DYNAMIC_PATHS.map(path => ({ path, policy: 'instant' })),
     ...AIS_STATIC_PATHS.map(path => ({ path })),
 ];
 
