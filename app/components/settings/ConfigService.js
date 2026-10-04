@@ -10,7 +10,7 @@ class ConfigService {
       useAuthentication: false,
       signalKUrlSet: false,
       debugMode: false,
-      selectedBoat: 'Default',
+      selectedBoat: 'RM1080',
       primaryColor: null,
       metallicEffect: false,
       aisLengthScalingFactor: 0.7, // Default value for AIS boat scaling
@@ -62,7 +62,11 @@ class ConfigService {
       if (storedConfig) {
         try {
           // Merge over defaults so keys added in newer versions get a value
-          return { ...this.defaultConfig, ...JSON.parse(storedConfig) };
+          const merged = { ...this.defaultConfig, ...JSON.parse(storedConfig) };
+          // The RM 1080 replaced the generic hull as the default boat: move
+          // configs that only hold the old default, never an explicit choice
+          if (!merged.boatChosen && merged.selectedBoat === 'Default') merged.selectedBoat = 'RM1080';
+          return merged;
         } catch (error) {
           console.error('Failed to parse stored configuration:', error);
           return { ...this.defaultConfig };

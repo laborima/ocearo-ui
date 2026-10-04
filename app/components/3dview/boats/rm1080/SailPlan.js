@@ -107,7 +107,7 @@ const SailMesh = ({ geometry, color, opacity, edge }) => {
  * @param {{headsail: string, reef: number}} sails
  * @param {Object} [trim] - sailTrimData (camber, twist, tensions)
  */
-const SailPlan = ({ awa = 0.6, sails, trim }) => {
+const SailPlan = ({ awa = 0.6, sails, trim, travellerX }) => {
     const theme = useTheme();
     const { scene } = theme;
     // Wind from starboard -> sails to port
@@ -167,7 +167,9 @@ const SailPlan = ({ awa = 0.6, sails, trim }) => {
     };
     const vangFoot = v3(RIG.mastFoot).add(new THREE.Vector3(0, 0.3, 0.15));
     const vangBoom = geometry.gooseneck.clone().lerp(geometry.clew, 0.3);
-    const traveller = new THREE.Vector3(Math.sin(boomAngle) * 0.9, RIG.traveller.y, RIG.traveller.z);
+    // Mainsheet: boom point above the traveller down to the car
+    const sheetOnBoom = geometry.gooseneck.clone().add(new THREE.Vector3(0, 0, RIG.mainsheetOnBoom).applyAxisAngle(UP, boomAngle));
+    const traveller = new THREE.Vector3(travellerX ?? 0, RIG.traveller.y + 0.1, RIG.traveller.z);
 
     return (
         <group>
@@ -175,7 +177,7 @@ const SailPlan = ({ awa = 0.6, sails, trim }) => {
             <SailMesh geometry={geometry.fore} color={headsail === 'spi' ? scene.route : scene.sail} opacity={headsail === 'spi' ? 0.3 : 0.4} edge={headsail === 'spi' ? scene.route : scene.rigging} />
             {/* Vang and mainsheet, coloured by load */}
             <Line points={[vangFoot.toArray(), vangBoom.toArray()]} color={loadColor(trim?.tensions?.vang)} lineWidth={2.5} />
-            <Line points={[geometry.clew.toArray(), traveller.toArray()]} color={loadColor(trim?.tensions?.mainSheet)} lineWidth={2.5} />
+            <Line points={[sheetOnBoom.toArray(), traveller.toArray()]} color={loadColor(trim?.tensions?.mainSheet)} lineWidth={2.5} />
         </group>
     );
 };

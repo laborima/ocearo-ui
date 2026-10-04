@@ -13,9 +13,20 @@ export const RIG = {
     forestayTack: [0, 1.45, -5.95],
     innerStayTack: [0, 1.5, -4.3],
     bowsprit: [0, 1.5, -6.5],
-    // Deck hardware for the trim indicators
-    traveller: { z: 3.1, y: 0.95, halfWidth: 1.25 },
+    // Deck hardware for the trim indicators: traveller across the cockpit
+    // floor (~0.62 m), forward of the tiller; jib tracks on the side decks
+    traveller: { z: 2.9, y: 0.7, halfWidth: 1.15 },
     jibTrack: { x: 1.38, y: 1.5, zFwd: -1.9, zAft: 0.3 },
+    // Mainsheet attachment on the boom, metres from the gooseneck (above the traveller)
+    mainsheetOnBoom: 3.5,
+    // Rudder stocks: pivot (top of the blade) and axis (twin rudders are toed out ~12°)
+    rudders: {
+        port: { pivot: [-1.06, 0.03, 4.72], axis: [-0.21, -0.98, 0] },
+        starboard: { pivot: [1.06, 0.03, 4.72], axis: [0.21, -0.98, 0] },
+        centre: { pivot: [0, -0.1, 4.26], axis: [0, -1, 0] },
+    },
+    // Tiller: from the rudder linkage at the transom forward over the cockpit
+    tiller: { pivot: [0, 0.95, 4.95], length: 1.75 },
 };
 
 export const HEADSAILS = ['J1', 'J2', 'J3', 'staysail', 'spi'];

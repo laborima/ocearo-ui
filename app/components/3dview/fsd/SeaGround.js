@@ -65,8 +65,8 @@ const SeaGround = ({ y = -0.32 }) => {
         },
         vertexShader,
         fragmentShader,
-        // Opaque ground: hides the keel and rudders like the sea surface would
-        depthWrite: true,
+        // Keel and rudders stay visible below it, drawn as seen through water
+        depthWrite: false,
     }), []);
 
     useEffect(() => {

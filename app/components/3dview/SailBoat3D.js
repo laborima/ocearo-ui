@@ -21,10 +21,11 @@ const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
 const getModelPath = (modelPath = 'default') =>
     `${ASSET_PREFIX}/boats/${modelPath}/assets/scene-transformed.glb`;
 
+// Without a choice in settings: the RM 1080 (the generic "Default" hull stays selectable)
 const defaultBoat = {
-    name: "Default",
-    modelPath: "default",
-    capabilities: ["navigation", "rudder", "sail", "color"]
+    name: "RM1080",
+    modelPath: "rm1080",
+    capabilities: ["navigation", "sail", "color"]
 };
 
 
@@ -393,7 +394,7 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
 
 
 // Preload default model
-useGLTF.preload(getModelPath(), `${ASSET_PREFIX}/draco/`);
+useGLTF.preload(getModelPath(defaultBoat.modelPath), `${ASSET_PREFIX}/draco/`);
 
 
 export default SailBoat3D;
