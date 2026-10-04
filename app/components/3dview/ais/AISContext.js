@@ -84,6 +84,8 @@ const createTarget = (mmsi) => ({
     rotationAngleY: 0,
     visible: false,
     lastUpdate: 0,
+    // Time of the last position report, for dead reckoning between reports
+    positionAt: 0,
 });
 
 // Prefer heading (where the bow points) over COG: a drifting or anchored
@@ -101,6 +103,7 @@ const applyValue = (target, path, value) => {
             if (!value) return false;
             target.latitude = value.latitude;
             target.longitude = value.longitude;
+            target.positionAt = Date.now();
             return true;
         case 'navigation.speedOverGround': target.sog = value; return true;
         case 'navigation.courseOverGroundTrue': target.cog = value; return true;
@@ -131,6 +134,9 @@ export const AISProvider = ({ children }) => {
     const myCog = useSignalKPath('navigation.courseOverGroundTrue');
     const myHeading = useSignalKPath('navigation.headingTrue');
     const ownMotionRef = useRef({ sog: null, cog: null });
+    // Own motion as seen by the 3D layer: velocity (m/s east, north), time of
+    // the own position fix the scene positions are relative to, and the scale
+    const motionRef = useRef({ vx: 0, vy: 0, fixAt: 0, scale: 0.7 });
     // Read once per provider; settings changes apply on reload
     const [thresholds] = useState(getCollisionThresholds);
 
@@ -199,6 +205,13 @@ export const AISProvider = ({ children }) => {
         myPositionRef.current = myPosition;
         // A stopped boat's COG is noise: fall back to the heading
         ownMotionRef.current = { sog: mySog, cog: myCog ?? myHeading };
+        const ownCourse = myCog ?? myHeading;
+        motionRef.current = {
+            vx: Number.isFinite(mySog) && Number.isFinite(ownCourse) ? mySog * Math.sin(ownCourse) : 0,
+            vy: Number.isFinite(mySog) && Number.isFinite(ownCourse) ? mySog * Math.cos(ownCourse) : 0,
+            fixAt: Date.now(),
+            scale: configService.get('aisLengthScalingFactor') || 0.7,
+        };
         Object.values(targetsRef.current).forEach(updateSpatial);
         dirtyRef.current = true;
     }, [myPosition, mySog, myCog, myHeading, updateSpatial]);
@@ -334,6 +347,7 @@ export const AISProvider = ({ children }) => {
     const value = useMemo(() => ({
         ...snapshot,
         targetsRef,
+        motionRef,
         register,
     }), [snapshot, register]);
 
@@ -348,13 +362,42 @@ export const AISProvider = ({ children }) => {
  * - `targets`:   every positioned target, closest first (radar)
  * - `aisData`:   mmsi -> target snapshot
  * - `targetsRef`: live mutable store, for per-frame reads
+ * - `motionRef`:  own velocity and fix time, for dead reckoning (see predictScenePosition)
  *
  * @param {{passive?: boolean}} [options] - passive readers see the targets
  *   while another consumer keeps the connection open, but never open it
  */
+// Dead reckoning horizon: beyond this without a report a target stops (AIS
+// class B can report every 30 s, every 3 min at anchor)
+const MAX_DEAD_RECKONING_S = 180;
+
+/**
+ * Where a target is now in the scene, carried forward from its last report
+ * by its own speed and course, minus our own motion since our last fix (the
+ * AIS layer is centred on us). Smooth motion between AIS messages.
+ *
+ * @param {Object} target - live target from the store
+ * @param {{vx, vy, fixAt, scale}} motion - motionRef.current
+ * @param {number} now - Date.now()
+ * @returns {{x: number, z: number}} scene position (north-up layer)
+ */
+export const predictScenePosition = (target, motion, now) => {
+    const course = target.cog ?? target.cogMagnetic ?? target.heading;
+    const sog = Number.isFinite(target.sog) ? target.sog : 0;
+    const tdt = Math.min(MAX_DEAD_RECKONING_S, Math.max(0, (now - (target.positionAt || now)) / 1000));
+    const odt = Math.min(MAX_DEAD_RECKONING_S, Math.max(0, (now - motion.fixAt) / 1000));
+    let east = -(motion.vx * odt);
+    let north = -(motion.vy * odt);
+    if (Number.isFinite(course) && sog > 0.05) {
+        east += sog * Math.sin(course) * tdt;
+        north += sog * Math.cos(course) * tdt;
+    }
+    return { x: target.sceneX + east * motion.scale, z: target.sceneZ - north * motion.scale };
+};
+
 export const useAIS = ({ passive = false } = {}) => {
     const ctx = useContext(AISContext);
     const register = passive ? null : ctx?.register;
     useEffect(() => register?.(), [register]);
-    return ctx || { aisData: {}, vesselIds: EMPTY_LIST, targets: EMPTY_LIST, targetsRef: { current: {} } };
+    return ctx || { aisData: {}, vesselIds: EMPTY_LIST, targets: EMPTY_LIST, targetsRef: { current: {} }, motionRef: { current: { vx: 0, vy: 0, fixAt: 0, scale: 0.7 } } };
 };
