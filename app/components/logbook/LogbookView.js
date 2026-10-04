@@ -28,7 +28,7 @@ import { useTranslation } from 'react-i18next';
  */
 const LogbookView = () => {
   const { t } = useTranslation();
-  const { nightMode, states, toggleState } = useOcearoContext();
+  const { states, toggleState } = useOcearoContext();
   const racingMode = states?.racing ?? false;
   const [activeTab, setActiveTab] = useState('logbook');
   
@@ -450,14 +450,14 @@ const LogbookView = () => {
   const renderLogbookTable = () => (
     <div className="p-4 flex flex-col h-full overflow-hidden">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-xs font-black text-hud-main uppercase tracking-widest flex items-center">
+        <h3 className="text-caption font-semibold text-hud-main uppercase tracking-widest flex items-center">
           <FontAwesomeIcon icon={faBook} className="mr-2 text-oBlue text-xs" />
           {t('logbook.logbookEntries')}
         </h3>
         <div className="flex space-x-3">
           {ocearoCoreEnabled && (
             <button 
-              className="bg-oGreen/10 text-oGreen hover:bg-oGreen/20 px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft border border-oGreen/20 disabled:opacity-50"
+              className="bg-oGreen/10 text-oGreen hover:bg-oGreen/20 px-3 py-1.5 rounded text-caption font-semibold uppercase transition-all duration-300 flex items-center shadow-soft border border-oGreen/20 disabled:opacity-50"
               onClick={addOcearoCoreEntry}
               disabled={aiEntryLoading || loading}
             >
@@ -466,7 +466,7 @@ const LogbookView = () => {
             </button>
           )}
           <button 
-            className="bg-oBlue hover:bg-oBlue/80 text-hud-main px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft"
+            className="bg-oBlue hover:bg-oBlue/80 text-hud-main px-3 py-1.5 rounded text-caption font-semibold uppercase transition-all duration-300 flex items-center shadow-soft"
             onClick={showAddEntryModal}
             disabled={loading}
           >
@@ -477,13 +477,13 @@ const LogbookView = () => {
       </div>
 
       {error && (
-        <div className="bg-oRed/10 text-oRed p-3 rounded text-xs font-black uppercase mb-4 animate-soft-pulse border border-oRed/20">
+        <div className="bg-oRed/10 text-oRed p-3 rounded text-caption font-semibold uppercase mb-4 animate-soft-pulse border border-oRed/20">
           {error}
         </div>
       )}
 
       <div className="tesla-card flex-1 overflow-auto bg-hud-bg">
-        <table className="w-full text-xs font-black uppercase tracking-tight">
+        <table className="w-full text-caption font-semibold uppercase tracking-tight">
           <thead className="sticky top-0 bg-hud-bg backdrop-blur-md z-10">
             <tr className="text-hud-secondary border-b border-hud">
               <th className="p-3 text-left">{t('logbook.time')}</th>
@@ -520,7 +520,7 @@ const LogbookView = () => {
                 <td className="p-3 text-hud-secondary font-bold lowercase normal-case">{getWeather(entry)}</td>
                 <td className="p-3 gliding-value opacity-60">{fmt(entry.barometer)}</td>
                 <td className="p-3 gliding-value">{fmt(entry.depth, 'm')}</td>
-                <td className="p-3 text-xs text-hud-muted font-mono tracking-tighter">{entry.point ? entry.point.toString() : 'n/a'}</td>
+                <td className="p-3 text-caption text-hud-muted font-mono tracking-tighter">{entry.point ? entry.point.toString() : 'n/a'}</td>
                 <td className="p-3 gliding-value">{fmt(entry.log, 'NM')}</td>
                 <td className="p-3 gliding-value">{fmt(entry.engine?.hours, 'h')}</td>
                 <td className="p-3 text-oBlue opacity-80">{entry.author || 'auto'}</td>
@@ -605,14 +605,14 @@ const LogbookView = () => {
     return (
       <div className="p-4 space-y-6">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xs font-black text-hud-main uppercase tracking-widest flex items-center">
+          <h3 className="text-caption font-semibold text-hud-main uppercase tracking-widest flex items-center">
             <FontAwesomeIcon icon={faTimeline} className="mr-2 text-oGreen text-xs" />
             {t('logbook.cruiseTimeline')}
           </h3>
           <div className="flex space-x-3">
             {ocearoCoreEnabled && (
               <button 
-                className="bg-oGreen/10 text-oGreen hover:bg-oGreen/20 px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft border border-oGreen/20 disabled:opacity-50"
+                className="bg-oGreen/10 text-oGreen hover:bg-oGreen/20 px-3 py-1.5 rounded text-caption font-semibold uppercase transition-all duration-300 flex items-center shadow-soft border border-oGreen/20 disabled:opacity-50"
                 onClick={addOcearoCoreEntry}
                 disabled={aiEntryLoading || loading}
               >
@@ -621,7 +621,7 @@ const LogbookView = () => {
               </button>
             )}
             <button 
-              className="bg-oBlue hover:bg-oBlue/80 text-hud-main px-3 py-1.5 rounded text-xs font-black uppercase transition-all duration-300 flex items-center shadow-soft"
+              className="bg-oBlue hover:bg-oBlue/80 text-hud-main px-3 py-1.5 rounded text-caption font-semibold uppercase transition-all duration-300 flex items-center shadow-soft"
               onClick={showAddEntryModal}
               disabled={loading}
             >
@@ -632,7 +632,7 @@ const LogbookView = () => {
         </div>
 
         {error && (
-          <div className="bg-oRed/10 text-oRed p-3 rounded text-xs font-black uppercase mb-4 animate-soft-pulse border border-oRed/20">
+          <div className="bg-oRed/10 text-oRed p-3 rounded text-caption font-semibold uppercase mb-4 animate-soft-pulse border border-oRed/20">
             {error}
           </div>
         )}
@@ -643,9 +643,9 @@ const LogbookView = () => {
               {/* Day header */}
               <div className="flex items-center mb-3">
                 <div className="w-2 h-2 rounded-full bg-oBlue mr-3" />
-                <span className="text-xs font-black text-hud-main uppercase tracking-widest">{group.day}</span>
+                <span className="text-caption font-semibold text-hud-main uppercase tracking-widest">{group.day}</span>
                 <div className="flex-1 h-px bg-hud-border ml-4 opacity-40" />
-                <span className="text-xs font-black text-hud-muted ml-3">{group.items.length}</span>
+                <span className="text-caption font-semibold text-hud-muted ml-3">{group.items.length}</span>
               </div>
 
               <div className="space-y-2 ml-1 pl-4 border-l border-hud">
@@ -661,33 +661,33 @@ const LogbookView = () => {
                     >
                       <div className="px-4 py-2 flex justify-between items-center border-b border-hud">
                         <div className="flex items-center min-w-0 gap-3">
-                          <span className="text-sm font-black text-hud-main tracking-tight">
+                          <span className="text-label font-semibold text-hud-main tracking-tight">
                             {entry.date.toLocaleTimeString('fr-FR', {
                               hour: '2-digit', minute: '2-digit',
                               timeZone: displayTimeZone,
                             })}
                           </span>
-                          <span className={`px-2 py-0.5 rounded-sm text-xs font-black uppercase tracking-widest border ${style.color} ${style.border} ${style.bg}`}>
+                          <span className={`px-2 py-0.5 rounded-sm text-caption font-semibold uppercase tracking-widest border ${style.color} ${style.border} ${style.bg}`}>
                             {t(`logbook.types.${type}`, { defaultValue: type.replace(/_/g, ' ') })}
                           </span>
                         </div>
-                        <div className="text-xs font-black text-hud-muted uppercase tracking-tighter truncate ml-3">
+                        <div className="text-caption font-semibold text-hud-muted uppercase tracking-tighter truncate ml-3">
                           {entry.author || 'system'}
                         </div>
                       </div>
                       <div className="p-4">
                         {entry.text && (
-                          <div className="text-xs font-bold text-hud-secondary normal-case leading-relaxed mb-3">
+                          <div className="text-caption font-bold text-hud-secondary normal-case leading-relaxed mb-3">
                             {entry.text}
                           </div>
                         )}
 
                         {stats.length > 0 && (
-                          <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs font-black uppercase tracking-tight text-hud-secondary">
+                          <div className="flex flex-wrap gap-x-6 gap-y-2 text-caption font-semibold uppercase tracking-tight text-hud-secondary">
                             {stats.map((stat) => (
                               <div key={stat.label} className="flex items-baseline gap-2">
                                 <span className="text-hud-dim">{stat.label}</span>
-                                <span className={`text-hud-main ${stat.mono ? 'font-mono text-xs' : 'gliding-value'}`}>{stat.value}</span>
+                                <span className={`text-hud-main ${stat.mono ? 'font-mono text-caption' : 'gliding-value'}`}>{stat.value}</span>
                               </div>
                             ))}
                           </div>
@@ -710,16 +710,16 @@ const LogbookView = () => {
   const renderAnalysis = () => (
     <div className="p-4 space-y-6">
       <div className="mb-6">
-        <h3 className="text-xs font-black text-hud-main uppercase tracking-widest flex items-center mb-2">
+        <h3 className="text-caption font-semibold text-hud-main uppercase tracking-widest flex items-center mb-2">
           <FontAwesomeIcon icon={faChartLine} className="mr-2 text-oBlue text-xs" />
           {t('logbook.fleetIntelligence')}
         </h3>
-        <p className="text-hud-secondary text-xs font-black uppercase tracking-tighter">{t('logbook.aiPoweredAnalysis')}</p>
+        <p className="text-hud-secondary text-caption font-semibold uppercase tracking-tighter">{t('logbook.aiPoweredAnalysis')}</p>
       </div>
 
       {ocearoCoreEnabled && (
         <div className="tesla-card p-4 mb-6 bg-hud-bg">
-          <h4 className="text-xs font-black text-hud-secondary mb-4 uppercase tracking-widest">{t('logbook.selectOperation')}</h4>
+          <h4 className="text-caption font-semibold text-hud-secondary mb-4 uppercase tracking-widest">{t('logbook.selectOperation')}</h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {[
               { id: 'logbook', label: 'LOGBOOK', icon: faBook, color: 'bg-oBlue', action: getLogbookAnalysis },
@@ -738,7 +738,7 @@ const LogbookView = () => {
                 <div className={`${opt.color} w-10 h-10 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500`}>
                   <FontAwesomeIcon icon={opt.icon} className="text-hud-main text-sm" />
                 </div>
-                <span className="text-xs font-black text-hud-main tracking-widest">{opt.label}</span>
+                <span className="text-caption font-semibold text-hud-main tracking-widest">{opt.label}</span>
               </button>
             ))}
           </div>
@@ -746,7 +746,7 @@ const LogbookView = () => {
       )}
 
       {error && (
-        <div className="bg-oRed/10 text-oRed p-3 rounded text-xs font-black uppercase mb-4 animate-soft-pulse border border-oRed/20">
+        <div className="bg-oRed/10 text-oRed p-3 rounded text-caption font-semibold uppercase mb-4 animate-soft-pulse border border-oRed/20">
           {error}
         </div>
       )}
@@ -755,11 +755,11 @@ const LogbookView = () => {
       {analysisLoading && (
         <div className="tesla-card p-10 text-center bg-hud-bg">
           <FontAwesomeIcon icon={faRobot} className="text-4xl text-oGreen mb-6 animate-soft-pulse" />
-          <h4 className="text-xs font-black text-hud-main uppercase tracking-widest mb-4">{t('logbook.neuralProcessing')}</h4>
+          <h4 className="text-caption font-semibold text-hud-main uppercase tracking-widest mb-4">{t('logbook.neuralProcessing')}</h4>
           <div className="w-48 mx-auto bg-hud-elevated h-1 rounded-full overflow-hidden">
             <div className="bg-oGreen h-full animate-progress-indefinite rounded-full" style={{ width: '40%' }}></div>
           </div>
-          <p className="text-hud-muted text-xs font-black uppercase mt-4 tracking-tighter italic">{t('logbook.processNode')} {analysisType}</p>
+          <p className="text-hud-muted text-caption font-semibold uppercase mt-4 tracking-tighter italic">{t('logbook.processNode')} {analysisType}</p>
         </div>
       )}
 
@@ -801,15 +801,15 @@ const LogbookView = () => {
           <div className="tesla-card p-6 shadow-xl animate-fade-in">
             <div className="flex items-center mb-6 border-b border-hud pb-4">
               <FontAwesomeIcon icon={faChartLine} className="text-oGreen mr-3 text-sm" />
-              <h4 className="text-xs font-black text-hud-main uppercase tracking-widest">{t('logbook.operationReport')} {analysisType}</h4>
+              <h4 className="text-caption font-semibold text-hud-main uppercase tracking-widest">{t('logbook.operationReport')} {analysisType}</h4>
             </div>
             
             <div className="space-y-6">
               {/* Display main analysis text */}
               {mainText && (
                 <div className="tesla-card bg-hud-bg p-4 border-l-2 border-oBlue/30 shadow-subtle">
-                  <h5 className="text-xs font-black text-oBlue mb-3 uppercase tracking-widest">{t('logbook.executiveSummary')}</h5>
-                  <p className="text-hud-secondary text-xs font-bold leading-relaxed italic normal-case">
+                  <h5 className="text-caption font-semibold text-oBlue mb-3 uppercase tracking-widest">{t('logbook.executiveSummary')}</h5>
+                  <p className="text-hud-secondary text-caption font-bold leading-relaxed italic normal-case">
                     {mainText}
                   </p>
                 </div>
@@ -820,7 +820,7 @@ const LogbookView = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {insights && (
                     <div className="tesla-card bg-hud-bg p-4 shadow-subtle">
-                      <h5 className="text-xs font-black text-oBlue mb-3 uppercase tracking-widest flex items-center">
+                      <h5 className="text-caption font-semibold text-oBlue mb-3 uppercase tracking-widest flex items-center">
                         <FontAwesomeIcon icon={faRobot} className="mr-2 text-xs" />
                         {t('logbook.strategicInsights')}
                       </h5>
@@ -832,7 +832,7 @@ const LogbookView = () => {
                               ? (item.text || item.message || item.insight || JSON.stringify(item))
                               : String(item);
                           return (
-                            <li key={i} className="text-xs font-bold text-hud-secondary normal-case flex items-start">
+                            <li key={i} className="text-caption font-bold text-hud-secondary normal-case flex items-start">
                               <span className="text-oBlue mr-2 opacity-50">›</span>
                               {displayText}
                             </li>
@@ -843,7 +843,7 @@ const LogbookView = () => {
                   )}
                   {recommendations && (
                     <div className="tesla-card bg-hud-bg p-4 shadow-subtle">
-                      <h5 className="text-xs font-black text-oGreen mb-3 uppercase tracking-widest flex items-center">
+                      <h5 className="text-caption font-semibold text-oGreen mb-3 uppercase tracking-widest flex items-center">
                         <FontAwesomeIcon icon={faChartLine} className="mr-2 text-xs" />
                         {t('logbook.operationalAdvice')}
                       </h5>
@@ -867,7 +867,7 @@ const LogbookView = () => {
                             displayText = String(item);
                           }
                           return (
-                            <li key={i} className="text-xs font-bold text-hud-secondary normal-case flex items-start">
+                            <li key={i} className="text-caption font-bold text-hud-secondary normal-case flex items-start">
                               <span className="text-oGreen mr-2 opacity-50">✓</span>
                               {displayText}
                             </li>
@@ -882,19 +882,19 @@ const LogbookView = () => {
               {/* Display speech text if available */}
               {speechText && (
                 <div className="bg-oBlue/5 p-4 rounded-sm border border-oBlue/10 shadow-soft">
-                  <h5 className="text-xs font-black text-oBlue mb-2 uppercase tracking-widest flex items-center">
+                  <h5 className="text-caption font-semibold text-oBlue mb-2 uppercase tracking-widest flex items-center">
                     <FontAwesomeIcon icon={faRobot} className="mr-2 animate-soft-pulse" />
                     {t('logbook.voiceTelemetry')}
                   </h5>
-                  <p className="text-hud-secondary text-xs font-bold leading-relaxed italic normal-case">{speechText}</p>
+                  <p className="text-hud-secondary text-caption font-bold leading-relaxed italic normal-case">{speechText}</p>
                 </div>
               )}
 
               {/* Display technical data */}
               {technicalData && (
                 <div className="tesla-card bg-hud-bg p-4 border border-hud">
-                  <h5 className="text-xs font-black text-hud-secondary mb-3 uppercase tracking-widest">{t('logbook.rawTelemetryData')}</h5>
-                  <pre className="text-oGreen/70 text-xs font-mono overflow-auto max-h-40 font-bold scrollbar-thin">
+                  <h5 className="text-caption font-semibold text-hud-secondary mb-3 uppercase tracking-widest">{t('logbook.rawTelemetryData')}</h5>
+                  <pre className="text-oGreen/70 text-caption font-mono overflow-auto max-h-40 font-bold scrollbar-thin">
                     {JSON.stringify(technicalData, null, 2)}
                   </pre>
                 </div>
@@ -902,7 +902,7 @@ const LogbookView = () => {
 
               {/* Timestamp */}
               {analysisResult.timestamp && (
-                <div className="text-hud-dim text-xs font-black text-right uppercase tracking-tighter">
+                <div className="text-hud-dim text-caption font-semibold text-right uppercase tracking-tighter">
                   {t('logbook.generated')} {new Date(analysisResult.timestamp).toLocaleString()} {'// OCEAROCORE V2.4'}
                 </div>
               )}
@@ -916,8 +916,8 @@ const LogbookView = () => {
         <div className="tesla-card p-12 text-center bg-hud-bg shadow-inner border border-hud">
           <div className="text-hud-muted">
             <FontAwesomeIcon icon={faRobot} size="3x" className="mb-6 opacity-20" />
-            <h4 className="text-xs font-black text-hud-main uppercase tracking-widest mb-3">{t('logbook.diagnosticReady')}</h4>
-            <p className="text-xs font-black uppercase tracking-tight max-w-xs mx-auto leading-relaxed">
+            <h4 className="text-caption font-semibold text-hud-main uppercase tracking-widest mb-3">{t('logbook.diagnosticReady')}</h4>
+            <p className="text-caption font-semibold uppercase tracking-tight max-w-xs mx-auto leading-relaxed">
               {t('logbook.diagnosticReadyDesc')}
             </p>
           </div>
@@ -939,7 +939,7 @@ const LogbookView = () => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-8">
-          <h3 className="text-xl font-black text-hud-main flex items-center tracking-tight">
+          <h3 className="text-value font-semibold text-hud-main flex items-center tracking-tight">
             <FontAwesomeIcon icon={faBook} className="mr-3 text-oBlue" />
             {selectedEntry ? t('logbook.editEntry') : t('logbook.manualEntry')}
           </h3>
@@ -953,7 +953,7 @@ const LogbookView = () => {
 
         <div className="space-y-6">
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
+            <label className="block text-caption font-semibold uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
               <FontAwesomeIcon icon={faUser} className="mr-2 text-oBlue" />
               {t('logbook.author')}
             </label>
@@ -967,7 +967,7 @@ const LogbookView = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
+            <label className="block text-caption font-semibold uppercase tracking-widest text-hud-secondary mb-2 flex items-center">
               <FontAwesomeIcon icon={faStickyNote} className="mr-2 text-oYellow" />
               {t('logbook.note')}
             </label>
@@ -1015,11 +1015,11 @@ const LogbookView = () => {
                 racingMode ? 'text-oYellow animate-soft-pulse' : 'text-hud-muted'
               }`}
             />
-            <span className="text-xs font-black uppercase tracking-widest text-hud-main">
+            <span className="text-caption font-semibold uppercase tracking-widest text-hud-main">
               {racingMode ? t('logbook.racingModeActive') : t('logbook.racingMode')}
             </span>
             {racingMode && (
-              <span className="text-xs font-black uppercase tracking-widest text-oYellow opacity-70">
+              <span className="text-caption font-semibold uppercase tracking-widest text-oYellow opacity-70">
                 — {t('logbook.racingModeAISInfo')}
               </span>
             )}
@@ -1050,7 +1050,7 @@ const LogbookView = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-3 px-2 text-xs font-black uppercase flex items-center justify-center transition-all duration-500 ${
+            className={`flex-1 py-3 px-2 text-caption font-semibold uppercase flex items-center justify-center transition-all duration-500 ${
               activeTab === tab.id
                 ? 'text-oGreen border-b-2 border-oGreen bg-hud-bg'
                 : 'text-hud-secondary hover:text-hud-main tesla-hover'

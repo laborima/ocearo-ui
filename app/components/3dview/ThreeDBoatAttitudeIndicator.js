@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { toDegrees, oBlue, useOcearoContext, oRed, oYellow, oNight, oGray, oGray2 } from '../context/OcearoContext';
+import { toDegrees } from '../context/OcearoContext';
+import useTheme from '../theme/useTheme';
 import { useSignalKPath } from '../hooks/useSignalK';
 import { drawAttitudeInstrument } from '../../lib/AttitudeDrawing';
 import { useTranslation } from 'react-i18next';
 
 export default function ThreeDBoatAttitudeIndicator() {
   const { t } = useTranslation();
-  const { nightMode } = useOcearoContext();
+  const tokens = useTheme();
   const canvasRef = useRef(null);
   const [displayMode, setDisplayMode] = useState('canvas'); // 'canvas' or 'text'
   
@@ -32,10 +33,6 @@ export default function ThreeDBoatAttitudeIndicator() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const w = CANVAS_WIDTH;
-    const h = CANVAS_HEIGHT;
-    const cx = w / 2;
-    const cy = h / 2;
 
     const { roll, pitch, yaw } = attitudeValues;
 
@@ -45,21 +42,17 @@ export default function ThreeDBoatAttitudeIndicator() {
         roll,
         pitch,
         yaw,
-        nightMode,
+        tokens,
         compact: true,
-        colors: {
+        overrides: {
             sky: 'transparent',
-            sea: oGray2,
-            horizon: oBlue,
-            boat: oBlue,
-            pitchMarks: oGray,
-            oBlue,
-            oRed,
-            oYellow,
-            oNight
+            sea: tokens.neutralStrong,
+            horizon: tokens.accent,
+            boat: tokens.accent,
+            pitchMarks: tokens.neutral,
         }
     });
-  }, [attitudeValues, displayMode, nightMode]);
+  }, [attitudeValues, displayMode, tokens]);
 
   const handleToggleClick = () => {
     setDisplayMode(prevMode => (prevMode === 'canvas' ? 'text' : 'canvas'));
@@ -82,26 +75,26 @@ export default function ThreeDBoatAttitudeIndicator() {
             ref={canvasRef}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
-            className={`w-full h-full ${nightMode ? 'brightness-75 contrast-125' : 'drop-shadow-lg'}`}
+            className={`w-full h-full drop-shadow-lg`}
           />
         </div>
       ) : (
-        <div className={`p-3 rounded-xl transition-all duration-300 flex flex-col items-end space-y-2 ${nightMode ? 'text-oNight' : 'text-hud-main'}`}>
+        <div className={`p-3 rounded-xl transition-all duration-300 flex flex-col items-end space-y-2 text-hud-main`}>
           <div className="flex flex-col items-end">
-            <span className={`text-xs font-black uppercase tracking-widest leading-none mb-1 ${nightMode ? 'text-oNight/40' : 'text-hud-dim'}`}>{t('indicators.roll')}</span>
-            <span className={`text-xs font-mono font-bold ${nightMode ? 'text-oNight' : 'text-oRed'}`}>
+            <span className={`text-caption font-semibold uppercase tracking-widest leading-none mb-1 text-hud-dim`}>{t('indicators.roll')}</span>
+            <span className={`text-caption font-mono font-bold text-oRed`}>
               {attitudeValues.roll.toFixed(1)}°
             </span>
           </div>
           <div className="flex flex-col items-end">
-            <span className={`text-xs font-black uppercase tracking-widest leading-none mb-1 ${nightMode ? 'text-oNight/40' : 'text-hud-dim'}`}>{t('indicators.pitch')}</span>
-            <span className={`text-xs font-mono font-bold ${nightMode ? 'text-oNight' : 'text-oBlue'}`}>
+            <span className={`text-caption font-semibold uppercase tracking-widest leading-none mb-1 text-hud-dim`}>{t('indicators.pitch')}</span>
+            <span className={`text-caption font-mono font-bold text-oBlue`}>
               {attitudeValues.pitch.toFixed(1)}°
             </span>
           </div>
           <div className="flex flex-col items-end">
-            <span className={`text-xs font-black uppercase tracking-widest leading-none mb-1 ${nightMode ? 'text-oNight/40' : 'text-hud-dim'}`}>{t('indicators.yaw')}</span>
-            <span className={`text-xs font-mono font-bold ${nightMode ? 'text-oNight' : 'text-oYellow'}`}>
+            <span className={`text-caption font-semibold uppercase tracking-widest leading-none mb-1 text-hud-dim`}>{t('indicators.yaw')}</span>
+            <span className={`text-caption font-mono font-bold text-oYellow`}>
               {attitudeValues.yaw.toFixed(1)}°
             </span>
           </div>

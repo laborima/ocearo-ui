@@ -159,7 +159,7 @@ export default function WeatherWidget() {
       {/* Header Actions */}
       <div className="absolute top-4 right-4 z-10 flex items-center space-x-3">
         {weatherData.dataSource && (
-          <span className={`text-xs px-2 py-0.5 rounded-sm uppercase font-black tracking-widest text-hud-main shadow-soft ${
+          <span className={`text-caption px-2 py-0.5 rounded-sm uppercase font-semibold tracking-widest text-hud-main shadow-soft ${
             weatherData.dataSource === 'sensors' ? 'bg-oGreen/40 border border-oGreen/30' :
             weatherData.dataSource === 'forecast' ? 'bg-oBlue/40 border border-oBlue/30' :
             'bg-hud-elevated border border-hud'
@@ -187,16 +187,16 @@ export default function WeatherWidget() {
         {/* Main weather display - centered */}
         <div className="flex-1 flex flex-col justify-center">
           <div className="text-center mb-6 group">
-            <div className={`text-5xl mb-4 transition-transform duration-700 group-hover:scale-110 ${getWeatherColor(weatherData.condition)}`}>
+            <div className={`text-hero mb-4 transition-transform duration-700 group-hover:scale-110 ${getWeatherColor(weatherData.condition)}`}>
               <FontAwesomeIcon 
                 icon={getWeatherIcon(weatherData.condition)} 
                 className={weatherData.condition !== 'sunny' ? 'animate-soft-pulse' : ''}
               />
             </div>
-            <div className="text-5xl font-black text-hud-main leading-none gliding-value tracking-tighter">
+            <div className="text-hero font-medium text-hud-main leading-none gliding-value tracking-tight">
               {weatherData.temperature !== null ? `${weatherData.temperature}${getTemperatureUnitLabel()}` : t('common.na')}
             </div>
-            <div className="text-xs font-black text-hud-secondary uppercase tracking-[0.3em] mt-3 opacity-60">
+            <div className="text-caption font-semibold text-hud-secondary uppercase tracking-[0.3em] mt-3 opacity-60">
               {weatherData.description || getWeatherDescription(weatherData.condition)}
             </div>
           </div>
@@ -219,19 +219,19 @@ export default function WeatherWidget() {
               return (
                 <div key={idx} className="flex items-center justify-between py-1.5 border-b border-hud/30 last:border-0">
                   <div className="flex items-center space-x-3">
-                    <span className="text-hud-muted text-xs font-black uppercase tracking-widest w-8">{dayName}</span>
+                    <span className="text-hud-muted text-caption font-semibold uppercase tracking-widest w-8">{dayName}</span>
                     <FontAwesomeIcon icon={getWeatherIcon(dayCondition)} className={`text-sm w-5 ${getWeatherColor(dayCondition)}`} />
-                    <span className="text-hud-main text-sm font-black gliding-value w-8">
+                    <span className="text-hud-main text-label font-semibold gliding-value w-8">
                       {day.temperature !== null ? `${Math.round(day.temperature)}°` : '--'}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <FontAwesomeIcon icon={faWind} className="text-oBlue text-xs opacity-50" />
-                    <span className="text-hud-main text-xs font-black gliding-value">
+                    <span className="text-hud-main text-caption font-semibold gliding-value">
                       {dayWindSpeed !== null ? `${dayWindSpeed} ${getSpeedUnitLabel()}` : '--'}
                     </span>
                     {dayWindDir && (
-                      <span className="text-hud-muted text-xs font-black tracking-widest opacity-60">{dayWindDir}</span>
+                      <span className="text-hud-muted text-caption font-semibold tracking-widest opacity-60">{dayWindDir}</span>
                     )}
                   </div>
                 </div>
@@ -244,13 +244,13 @@ export default function WeatherWidget() {
         <div className="flex items-center justify-between shrink-0 mt-2">
           <div className="flex items-center space-x-2">
             <FontAwesomeIcon icon={faWind} className="text-oBlue text-sm opacity-50" />
-            <span className="text-hud-secondary text-xs uppercase font-black tracking-widest">{t('widgets.now')}</span>
+            <span className="text-hud-secondary text-caption uppercase font-semibold tracking-widest">{t('widgets.now')}</span>
           </div>
           <div className="text-right">
-            <span className="text-hud-main text-sm font-black gliding-value tracking-tight">
+            <span className="text-hud-main text-label font-semibold gliding-value tracking-tight">
               {weatherData.windSpeed !== null ? `${weatherData.windSpeed} ${getSpeedUnitLabel()}` : t('common.na')}
             </span>
-            <span className="text-hud-muted text-xs uppercase font-black tracking-widest ml-2 opacity-60">
+            <span className="text-hud-muted text-caption uppercase font-semibold tracking-widest ml-2 opacity-60">
               {weatherData.windDirection !== null ? getWindDirection(weatherData.windDirection) : ''}
             </span>
           </div>

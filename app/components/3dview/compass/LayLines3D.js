@@ -1,7 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Vector3, MathUtils } from 'three';
 import { Sphere } from '@react-three/drei';
-import { oGreen, oRed, oYellow, useOcearoContext } from '../../context/OcearoContext';
+import { useOcearoContext } from '../../context/OcearoContext';
+import useTheme from '../../theme/useTheme';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import signalKService from '../../services/SignalKService';
 import configService from '../../settings/ConfigService';
@@ -118,6 +119,7 @@ const ParallelepipedLine = ({ start, end, color, width = 0.2, height = 0.1, dash
 
 const LayLines3D = ({ outerRadius = 10 }) => {
     const { convertLatLonToXY } = useOcearoContext();
+    const { scene } = useTheme();
     const debugMode = configService.get('debugMode');
     
     // Subscribe to relevant SignalK paths
@@ -231,17 +233,17 @@ const LayLines3D = ({ outerRadius = 10 }) => {
                 <Sphere
                     position={waypointPosition.toArray()}
                     args={[0.5, 16, 16]}
-                    material-color={oYellow}
+                    material-color={scene.target}
                 >
                     {/* Horizontal cross line */}
                     <mesh position={[0, 0, 0]} rotation={[0, Math.PI/2, 0]}>
                         <cylinderGeometry args={[0.05, 0.05, 1, 8]} />
-                        <meshStandardMaterial color="black" />
+                        <meshStandardMaterial color={scene.compass} />
                     </mesh>
                     {/* Vertical cross line */}
                     <mesh position={[0, 0, 0]} rotation={[Math.PI/2, 0, 0]}>
                         <cylinderGeometry args={[0.05, 0.05, 1, 8]} />
-                        <meshStandardMaterial color="black" />
+                        <meshStandardMaterial color={scene.compass} />
                     </mesh>
                 </Sphere>
                 
@@ -250,7 +252,7 @@ const LayLines3D = ({ outerRadius = 10 }) => {
                 <ParallelepipedLine 
                     start={boatPosition} 
                     end={laylineCorners.port} 
-                    color={oGreen} 
+                    color={scene.laylineStarboard} 
                     width={0.2} 
                     height={0.1} 
                 />
@@ -259,7 +261,7 @@ const LayLines3D = ({ outerRadius = 10 }) => {
                 <ParallelepipedLine 
                     start={laylineCorners.port} 
                     end={waypointPosition} 
-                    color={oGreen} 
+                    color={scene.laylineStarboard} 
                     width={0.2} 
                     height={0.1} 
                 />
@@ -269,7 +271,7 @@ const LayLines3D = ({ outerRadius = 10 }) => {
                 <ParallelepipedLine 
                     start={boatPosition} 
                     end={laylineCorners.starboard} 
-                    color={oRed} 
+                    color={scene.laylinePort} 
                     width={0.2} 
                     height={0.1} 
                 />
@@ -278,7 +280,7 @@ const LayLines3D = ({ outerRadius = 10 }) => {
                 <ParallelepipedLine 
                     start={laylineCorners.starboard} 
                     end={waypointPosition} 
-                    color={oRed} 
+                    color={scene.laylinePort} 
                     width={0.2} 
                     height={0.1} 
                 />

@@ -12,6 +12,7 @@
 import React, { useMemo } from 'react';
 import { Sphere, Text } from '@react-three/drei';
 import { MathUtils } from 'three';
+import useTheme from '../../theme/useTheme';
 import { useSignalKPath } from '../../hooks/useSignalK';
 
 const SLIDER_RADIUS = 4.2;
@@ -21,11 +22,8 @@ const MARKER_SIZE = 0.09;
 const CURSOR_MARKER_SIZE = 0.16;
 const LABEL_OFFSET = 0.6;
 
-const COLOR_MAIN = '#09bfff';
-const COLOR_PORT = '#15bd6f';
-const COLOR_STARBOARD = '#bf1515';
-const COLOR_DIM = '#333333';
-const COLOR_DISABLED = '#222222';
+// Colours come from the theme (see themes.js): main = accent, port = green,
+// starboard = red, dim/disabled = neutral tones
 
 /**
  * Slider definitions.
@@ -34,9 +32,9 @@ const COLOR_DISABLED = '#222222';
  * mode 'fill':     markers fill from start to value (jib car: forward/aft)
  */
 const SLIDERS = [
-    { label: 'GV', centerDeg: 180, color: COLOR_MAIN, key: 'mainCar', mode: 'position' },
-    { label: 'FP', centerDeg: 260, color: COLOR_PORT, key: 'jibCar', side: 'port', mode: 'fill' },
-    { label: 'FS', centerDeg: 100, color: COLOR_STARBOARD, key: 'jibCar', side: 'starboard', mode: 'fill' },
+    { label: 'GV', centerDeg: 180, colorKey: 'accent', key: 'mainCar', mode: 'position' },
+    { label: 'FP', centerDeg: 260, colorKey: 'ok', key: 'jibCar', side: 'port', mode: 'fill' },
+    { label: 'FS', centerDeg: 100, colorKey: 'danger', key: 'jibCar', side: 'starboard', mode: 'fill' },
 ];
 
 /**
@@ -63,7 +61,7 @@ function degToXZ(deg, radius) {
  * @param {number} props.centerDeg - Centre compass bearing for the arc
  * @param {string} props.color - Cursor color
  */
-const PositionSlider = ({ label, value, centerDeg, color }) => {
+const PositionSlider = ({ label, value, centerDeg, color, dim }) => {
     const clamped = Math.max(0, Math.min(1, value));
 
     const markers = useMemo(() => {
@@ -80,7 +78,7 @@ const PositionSlider = ({ label, value, centerDeg, color }) => {
             const isNear = dist <= (1.5 / MARKER_COUNT);
             const isCenter = Math.abs(t - 0.5) <= (0.5 / MARKER_COUNT);
 
-            let markerColor = COLOR_DIM;
+            let markerColor = dim;
             let size = MARKER_SIZE;
             let opacity = 0.3;
 
@@ -103,7 +101,7 @@ const PositionSlider = ({ label, value, centerDeg, color }) => {
             );
         }
         return result;
-    }, [clamped, centerDeg, color]);
+    }, [clamped, centerDeg, color, dim]);
 
     const labelAngle = MathUtils.degToRad(centerDeg - 90);
     const labelX = (SLIDER_RADIUS - LABEL_OFFSET) * Math.cos(labelAngle);
@@ -141,7 +139,7 @@ const PositionSlider = ({ label, value, centerDeg, color }) => {
  * @param {string} props.color - Active fill color
  * @param {boolean} props.active - Whether this side is in use
  */
-const FillSlider = ({ label, value, centerDeg, color, active }) => {
+const FillSlider = ({ label, value, centerDeg, color, active, dim, disabled }) => {
     const clamped = Math.max(0, Math.min(1, value));
 
     const markers = useMemo(() => {
@@ -153,7 +151,7 @@ const FillSlider = ({ label, value, centerDeg, color, active }) => {
             const deg = startDeg + ARC_SPAN_DEG * t;
             const [x, z] = degToXZ(deg, SLIDER_RADIUS);
 
-            let markerColor = COLOR_DISABLED;
+            let markerColor = disabled;
             let size = MARKER_SIZE;
             let opacity = 0.15;
 
@@ -169,7 +167,7 @@ const FillSlider = ({ label, value, centerDeg, color, active }) => {
                     markerColor = color;
                     opacity = 0.7;
                 } else {
-                    markerColor = COLOR_DIM;
+                    markerColor = dim;
                     opacity = 0.3;
                 }
             }
@@ -181,7 +179,7 @@ const FillSlider = ({ label, value, centerDeg, color, active }) => {
             );
         }
         return result;
-    }, [clamped, centerDeg, color, active]);
+    }, [clamped, centerDeg, color, active, dim, disabled]);
 
     const labelAngle = MathUtils.degToRad(centerDeg - 90);
     const labelX = (SLIDER_RADIUS - LABEL_OFFSET) * Math.cos(labelAngle);
@@ -192,7 +190,7 @@ const FillSlider = ({ label, value, centerDeg, color, active }) => {
             {markers}
             <Text
                 position={[labelX, -0.4, labelZ]}
-                color={active ? color : COLOR_DISABLED}
+                color={active ? color : disabled}
                 fontSize={0.3}
                 rotation={[-Math.PI / 2, 0, Math.PI / 2 - labelAngle]}
                 font="fonts/Roboto-Bold.ttf"
@@ -244,6 +242,7 @@ function computeRecommendedCars(windAngle, windSpeed) {
  * Car positions are computed dynamically from apparent wind angle and speed.
  */
 const SailTrimSliders = () => {
+    const tokens = useTheme();
     const windAngle = useSignalKPath('environment.wind.angleApparent', 0);
     const windSpeed = useSignalKPath('environment.wind.speedApparent', 0);
 
@@ -274,7 +273,8 @@ const SailTrimSliders = () => {
                             label={slider.label}
                             value={value}
                             centerDeg={slider.centerDeg}
-                            color={slider.color}
+                            color={tokens[slider.colorKey]}
+                            dim={tokens.scene.markerDim}
                         />
                     );
                 }
@@ -285,8 +285,10 @@ const SailTrimSliders = () => {
                         label={slider.label}
                         value={value}
                         centerDeg={slider.centerDeg}
-                        color={slider.color}
+                        color={tokens[slider.colorKey]}
                         active={active}
+                        dim={tokens.scene.markerDim}
+                        disabled={tokens.scene.grid}
                     />
                 );
             })}

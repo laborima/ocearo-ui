@@ -1,4 +1,4 @@
-import { convertSpeedUnit, getSpeedUnitLabel, useOcearoContext } from '../context/OcearoContext';
+import { convertSpeedUnit, getSpeedUnitLabel } from '../context/OcearoContext';
 import { useState, useMemo, useCallback } from 'react';
 import { useSignalKPaths } from '../hooks/useSignalK';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +13,6 @@ const SPEED_CONFIG = {
 
 const ThreeDBoatSpeedIndicator = () => {
     const { t } = useTranslation();
-    const { nightMode } = useOcearoContext();
     const [speedType, setSpeedType] = useState('SOG');
 
     // Subscribe to all relevant speed paths
@@ -52,14 +51,14 @@ const ThreeDBoatSpeedIndicator = () => {
         setSpeedType(nextType);
     }, [availableTypes, currentSpeedType]);
 
-    const speedTextColor = nightMode ? 'text-oNight' : 'text-hud-main';
+    const speedTextColor = 'text-hud-main';
 
     // If no speed data is available at all
     if (availableTypes.length === 0) {
         return (
             <div className="mt-6 ml-2">
-                <div className="text-7xl font-black text-hud-dim tracking-tighter">--</div>
-                <div className="text-xs font-black uppercase tracking-[0.2em] text-hud-muted ml-1">{t('common.na')}</div>
+                <div className="text-hero font-medium text-hud-dim tracking-tight">--</div>
+                <div className="text-caption font-semibold uppercase tracking-[0.2em] text-hud-muted ml-1">{t('common.na')}</div>
             </div>
         );
     }
@@ -67,7 +66,7 @@ const ThreeDBoatSpeedIndicator = () => {
     return (
         <div className="mt-6 ml-2 select-none group">
             <div
-                className={`text-7xl font-black cursor-pointer tracking-tighter drop-shadow-2xl transition-all duration-300 group-hover:scale-105 active:scale-95 ${speedTextColor}`}
+                className={`text-hero font-medium cursor-pointer tracking-tight drop-shadow-2xl transition-all duration-300 group-hover:scale-105 active:scale-95 ${speedTextColor}`}
                 onClick={toggleSpeedType}
                 role="button"
                 tabIndex={0}
@@ -76,11 +75,11 @@ const ThreeDBoatSpeedIndicator = () => {
                 {Number.isFinite(currentSpeed) ? currentSpeed.toFixed(1) : '--'}
             </div>
             <div className="flex items-center space-x-2 ml-1">
-                <div className={`text-xs font-black uppercase tracking-[0.3em] ${nightMode ? 'text-oNight' : 'text-hud-secondary'}`}>
+                <div className={`text-caption font-semibold uppercase tracking-[0.3em] text-hud-secondary`}>
                     {currentSpeedType}
                 </div>
                 <div className="h-[2px] w-4 bg-oBlue/40 rounded-full" />
-                <div className={`text-xs font-bold uppercase tracking-widest ${nightMode ? 'text-oNight/60' : 'text-hud-muted'}`}>
+                <div className={`text-caption font-bold uppercase tracking-widest text-hud-muted`}>
                     {currentSpeedType === 'POL' ? '%' : getSpeedUnitLabel()}
                 </div>
             </div>

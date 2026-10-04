@@ -9,7 +9,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import * as Wind from './Wind';
 import SailShape from './SailShape';
-import { oBlue } from '../../context/OcearoContext';
+import useTheme from '../../theme/useTheme';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import { getReefHeightFactor } from './SailTrimUtils';
 
@@ -72,6 +72,7 @@ const Sail3D = ({
      * Creation of cones to visualize the apparent wind
      * These cones indicate the wind direction and strength at different heights
      */
+    const { accent } = useTheme();
     const createWindCone = useMemo(() => {
         // Create a group to contain all the wind cone elements
         const windcone = new THREE.Group();
@@ -79,7 +80,7 @@ const Sail3D = ({
         // Define the cone geometry and material
         const geometry = new THREE.ConeGeometry(0.08, 0.15, 12);
         const material = new THREE.MeshBasicMaterial({
-            color: new THREE.Color(oBlue),
+            color: new THREE.Color(accent),
             opacity: 0.3,                  // Very translucent for HUD look
             transparent: true,
             depthWrite: false,
@@ -91,7 +92,7 @@ const Sail3D = ({
         windcone.add(mesh);
         
         return windcone;
-    }, []);
+    }, [accent]);
 
     /**
      * Initialization of the apparent wind field at different heights

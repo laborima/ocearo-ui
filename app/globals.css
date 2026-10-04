@@ -32,28 +32,21 @@
 
   --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.3);
   --shadow-subtle: 0 2px 10px rgba(0, 0, 0, 0.2);
+
+  /* Type scale: four levels only (text-hero, text-value, text-label,
+     text-caption). Colours above are the dark-theme defaults for the first
+     paint; the live theme overrides them from app/components/theme/themes.js. */
+  --text-hero: 3.5rem;
+  --text-hero--line-height: 1;
+  --text-value: 1.5rem;
+  --text-value--line-height: 1.15;
+  --text-label: 0.875rem;
+  --text-label--line-height: 1.25;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
 }
 
 @layer base {
-  :root[data-theme='light'] {
-    --background: #f4f4f4;
-    --foreground: #111111;
-    --color-leftPaneBg: #e8e8e8;
-    --color-rightPaneBg: #f4f4f4;
-    
-    --hud-bg: rgba(255, 255, 255, 0.6);
-    --hud-bg-elevated: rgba(0, 0, 0, 0.03);
-    --hud-card-bg: rgba(255, 255, 255, 0.8);
-    --hud-border: rgba(0, 0, 0, 0.06);
-    --hud-text-main: #1a1a1a;
-    --hud-text-secondary: rgba(0, 0, 0, 0.55);
-    --hud-text-muted: rgba(0, 0, 0, 0.35);
-    --hud-text-dim: rgba(0, 0, 0, 0.2);
-
-    --shadow-soft: 0 1px 4px rgba(0, 0, 0, 0.06);
-    --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.04);
-  }
-
   /* Light 3D scene (chart/meteo modes): the 3D pane sets data-scene="light" so
      its HUD overlays flip to dark text over the pale map/sky. Scoped to the
      pane only — the rest of the app keeps the active theme. */
@@ -68,27 +61,6 @@
     --hud-text-dim: rgba(0, 0, 0, 0.25);
   }
 
-  :root[data-night='true'] {
-    --background: #0a0000;
-    --foreground: #ef4444;
-    --color-leftPaneBg: #0a0000;
-    --color-rightPaneBg: #120000;
-
-    --hud-bg: rgba(10, 0, 0, 0.6);
-    --hud-bg-elevated: rgba(239, 68, 68, 0.08);
-    --hud-card-bg: rgba(239, 68, 68, 0.04);
-    --hud-border: rgba(239, 68, 68, 0.12);
-    --hud-text-main: #ef4444;
-    --hud-text-secondary: rgba(239, 68, 68, 0.6);
-    --hud-text-muted: rgba(239, 68, 68, 0.4);
-    --hud-text-dim: rgba(239, 68, 68, 0.25);
-
-    --color-oBlue: #ef4444;
-    --color-oGreen: #ef4444;
-    --color-oYellow: #ef4444;
-    --color-oGray: #7f1d1d;
-    --color-oGray2: #450a0a;
-  }
 }
 
 @layer utilities {
@@ -160,21 +132,16 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #0a0a0a;
+  --foreground: #ffffff;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  /* Fixed-width digits: a value updating from 9.8 to 10.1 must not shift */
+  font-variant-numeric: tabular-nums;
 }
 
 @utility text-balance {

@@ -148,7 +148,7 @@ const AISRadarWidget = React.memo(() => {
         <select 
           value={radarRange} 
           onChange={(e) => setRadarRange(Number(e.target.value))}
-          className="bg-hud-elevated text-hud-secondary text-xs font-black uppercase tracking-widest rounded-sm px-3 py-1 border border-hud shadow-soft focus:outline-none focus:ring-1 focus:ring-oBlue/50 hover:bg-hud-bg hover:text-hud-main transition-all duration-500"
+          className="bg-hud-elevated text-hud-secondary text-caption font-semibold uppercase tracking-widest rounded-sm px-3 py-1 border border-hud shadow-soft focus:outline-none focus:ring-1 focus:ring-oBlue/50 hover:bg-hud-bg hover:text-hud-main transition-all duration-500"
         >
           <option value={1}>1 NM</option>
           <option value={2}>2 NM</option>
@@ -241,7 +241,7 @@ const AISRadarWidget = React.memo(() => {
         </svg>
         
         {/* Range indicators overlay */}
-        <div className="absolute top-2 left-2 text-xs text-hud-muted font-black pointer-events-none uppercase tracking-widest space-y-1">
+        <div className="absolute top-2 left-2 text-caption text-hud-muted font-semibold pointer-events-none uppercase tracking-widest space-y-1">
           <div className="bg-hud-bg/40 px-1.5 py-0.5 rounded-sm">{t('widgets.range')} {radarRange} NM</div>
           <div className="bg-hud-bg/40 px-1.5 py-0.5 rounded-sm">{t('widgets.targets')} {aisData.length}</div>
         </div>
@@ -250,9 +250,9 @@ const AISRadarWidget = React.memo(() => {
       {/* Target List */}
       {aisData.length > 0 && (
         <div className="mt-4 space-y-2">
-          <div className="text-xs text-hud-muted font-black uppercase tracking-[0.2em] px-1">{t('widgets.tacticalAnalysis')}</div>
+          <div className="text-caption text-hud-muted font-semibold uppercase tracking-[0.2em] px-1">{t('widgets.tacticalAnalysis')}</div>
           {aisData.slice(0, 2).map(target => (
-            <div key={target.id} className="flex items-center justify-between text-xs tesla-card bg-hud-bg px-3 py-2 border border-hud tesla-hover">
+            <div key={target.id} className="flex items-center justify-between text-caption tesla-card bg-hud-bg px-3 py-2 border border-hud tesla-hover">
               <div className="flex items-center space-x-3 min-w-0">
                 <FontAwesomeIcon 
                   icon={getTargetIcon(target.type)} 

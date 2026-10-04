@@ -1,14 +1,14 @@
 import React, { Suspense, useRef, useMemo } from 'react';
-import { OrbitControls, PerspectiveCamera, Html, Environment } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera, Html } from '@react-three/drei';
+import SceneSetup from '../SceneSetup';
 import SailBoat3D from '../SailBoat3D';
-import { useOcearoContext, convertWindSpeed } from '../../context/OcearoContext';
+import { convertWindSpeed } from '../../context/OcearoContext';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import WindSector3D from '../compass/WindSector3D';
 import BoatNavigationSystem from './BoatNavigationSystem';
 import Current3D from '../compass/Current3D';
 
 const ThreeDParkAssistBoat = ({ onUpdateInfoPanel }) => {
-  const { nightMode } = useOcearoContext();
   const sailBoatRef = useRef();
   
   // Define paths for subscription
@@ -67,29 +67,7 @@ const ThreeDParkAssistBoat = ({ onUpdateInfoPanel }) => {
         minPolarAngle={Math.PI / 4}
       />
 
-      <Environment files="./assets/ocearo_env.hdr" background={false} intensity={0.6} />
-
-      <ambientLight intensity={0.2} />
-
-      {/* Main directional light */}
-      <directionalLight
-        position={[15, 30, 20]}
-        intensity={1.2}
-        castShadow={false}
-        color={nightMode ? "#b0d8ff" : "#ffffff"}
-      />
-
-      {/* Rim light for silhouette definition */}
-      <spotLight
-        position={[0, 50, 100]}
-        intensity={0.8}
-        angle={0.6}
-        penumbra={1}
-        color={nightMode ? "#4080ff" : "#ffffff"}
-      />
-
-      {/* Fill light */}
-      <pointLight position={[-10, 10, -10]} intensity={0.5} />
+      <SceneSetup />
 
       <group position={[0, -3, 0]}>
         <SailBoat3D

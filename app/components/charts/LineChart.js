@@ -16,8 +16,8 @@ const CustomTooltip = ({ active, payload, label: timeLabel, unit }) => {
   if (active && payload && payload.length && typeof payload[0].value === 'number') {
     return (
       <div className="bg-hud-bg backdrop-blur-md border border-hud p-3 rounded-lg shadow-lg">
-        <p className="text-hud-secondary text-xs uppercase mb-1">{timeLabel}</p>
-        <p className="text-hud-main font-bold text-sm">
+        <p className="text-hud-secondary text-caption uppercase mb-1">{timeLabel}</p>
+        <p className="text-hud-main font-bold text-label">
           {payload[0].value.toFixed(2)}{unit}
         </p>
       </div>
@@ -32,7 +32,7 @@ const LineChart = ({ data, dataKey, color, scale, label, unit, showPoints = fals
 
   if (validValues.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-hud-muted text-sm">
+      <div className="flex items-center justify-center h-full text-hud-muted text-label">
         No data available
       </div>
     );

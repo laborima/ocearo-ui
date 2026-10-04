@@ -75,14 +75,14 @@ const TemperatureWidget = React.memo(() => {
         <div className="flex-1 flex items-center justify-center">
           <div className="grid grid-cols-2 gap-6 w-full">
             <div className="text-center">
-              <div className="text-hud-secondary text-xs uppercase font-black tracking-[0.2em] mb-3 opacity-60">{t('widgets.atmosphereLabel')}</div>
-              <div className="text-5xl font-black text-hud-main leading-none gliding-value tracking-tighter">
+              <div className="text-hud-secondary text-caption uppercase font-semibold tracking-[0.2em] mb-3 opacity-60">{t('widgets.atmosphereLabel')}</div>
+              <div className="text-hero font-medium text-hud-main leading-none gliding-value tracking-tight">
                 {airTemp !== null ? `${airTemp}°` : t('common.na')}
               </div>
             </div>
             <div className="text-center">
-              <div className="text-hud-secondary text-xs uppercase font-black tracking-[0.2em] mb-3 opacity-60">{t('widgets.hydrosphere')}</div>
-              <div className="text-5xl font-black text-hud-main leading-none gliding-value tracking-tighter">
+              <div className="text-hud-secondary text-caption uppercase font-semibold tracking-[0.2em] mb-3 opacity-60">{t('widgets.hydrosphere')}</div>
+              <div className="text-hero font-medium text-hud-main leading-none gliding-value tracking-tight">
                 {seaTemp !== null ? `${seaTemp}°` : t('common.na')}
               </div>
             </div>
@@ -96,7 +96,7 @@ const TemperatureWidget = React.memo(() => {
             { label: t('widgets.seaSystem'), value: seaTemp }
           ].map((item, idx) => (
             <div key={idx} className="space-y-2">
-              <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest text-hud-muted">
+              <div className="flex justify-between items-center text-caption font-semibold uppercase tracking-widest text-hud-muted">
                 <span>{item.label}</span>
                 <span className="text-hud-main opacity-80">{item.value !== null ? `${item.value}${getTemperatureUnitLabel()}` : t('widgets.offline')}</span>
               </div>
@@ -115,10 +115,10 @@ const TemperatureWidget = React.memo(() => {
 
         {/* Status row */}
         <div className="flex justify-between items-center mt-4 shrink-0">
-          <div className={`text-xs font-black uppercase tracking-[0.2em] ${airTemp !== null && seaTemp !== null ? getTemperatureColor((airTemp + seaTemp) / 2) : 'text-hud-muted'}`}>
+          <div className={`text-caption font-semibold uppercase tracking-[0.2em] ${airTemp !== null && seaTemp !== null ? getTemperatureColor((airTemp + seaTemp) / 2) : 'text-hud-muted'}`}>
             {airTemp !== null && seaTemp !== null ? getTemperatureStatus(airTemp, seaTemp) : t('widgets.systemStandby')}
           </div>
-          <div className="text-xs text-hud-secondary uppercase font-black tracking-widest">
+          <div className="text-caption text-hud-secondary uppercase font-semibold tracking-widest">
             {t('widgets.delta')} <span className="text-hud-main gliding-value">{airTemp !== null && seaTemp !== null ? `${Math.abs(airTemp - seaTemp).toFixed(1)}°` : t('common.na')}</span>
           </div>
         </div>

@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useOcearoContext } from '../context/OcearoContext';
 import { useSignalKPath } from '../hooks/useSignalK';
 import { vesselNow } from '../utils/VesselClock';
 
 const ThreeDBoatPositionDateIndicator = () => {
-  const { nightMode } = useOcearoContext();
   const position = useSignalKPath('navigation.position');
   const [dateTime, setDateTime] = useState(() => vesselNow());
 
@@ -50,17 +48,17 @@ const ThreeDBoatPositionDateIndicator = () => {
     }
   };
 
-  const positionTextColor = nightMode ? 'text-oNight' : 'text-hud-main';
+  const positionTextColor = 'text-hud-main';
 
   // Check if position is null or undefined
   if (!position) {
     return (
       <div className="mt-6 ml-2 p-3 transition-all duration-300">
-        <div className={`text-2xl font-black flex gap-4 ${positionTextColor} opacity-10 tracking-tighter mb-2`}>
+        <div className={`text-value font-semibold flex gap-4 ${positionTextColor} opacity-10 tracking-tight mb-2`}>
           <span>--°--&apos;--</span>
           <span>--°--&apos;--</span>
         </div>
-        <div className={`text-xs font-black uppercase tracking-[0.2em] opacity-40 ${nightMode ? 'text-oNight' : 'text-hud-main'}`}>
+        <div className={`text-caption font-semibold uppercase tracking-[0.2em] opacity-40 text-hud-main`}>
           {getCurrentDateTime()}
         </div>
       </div>
@@ -69,20 +67,20 @@ const ThreeDBoatPositionDateIndicator = () => {
 
   return (
     <div className="mt-6 ml-2 group p-4 transition-all duration-300 select-none">
-      <div className={`text-2xl font-black flex gap-4 ${positionTextColor} tracking-tighter drop-shadow-lg mb-3`}>
+      <div className={`text-value font-semibold flex gap-4 ${positionTextColor} tracking-tight drop-shadow-lg mb-3`}>
         <div className="flex flex-col">
-          <span className={`text-xs font-black uppercase tracking-[0.2em] mb-1 ${nightMode ? 'text-oNight/40' : 'text-hud-dim'}`}>LAT</span>
+          <span className={`text-caption font-semibold uppercase tracking-[0.2em] mb-1 text-hud-dim`}>LAT</span>
           <span>{formatCoordinate(position.latitude, true)}</span>
         </div>
         <div className="w-[1px] bg-hud-border self-stretch my-1" />
         <div className="flex flex-col">
-          <span className={`text-xs font-black uppercase tracking-[0.2em] mb-1 ${nightMode ? 'text-oNight/40' : 'text-hud-dim'}`}>LON</span>
+          <span className={`text-caption font-semibold uppercase tracking-[0.2em] mb-1 text-hud-dim`}>LON</span>
           <span>{formatCoordinate(position.longitude, false)}</span>
         </div>
       </div>
       <div className="flex items-center space-x-2">
         <div className="h-[2px] w-4 bg-oBlue/40 rounded-full" />
-        <div className={`text-xs font-black uppercase tracking-[0.3em] ${nightMode ? 'text-oNight/60' : 'text-hud-secondary'}`}>
+        <div className={`text-caption font-semibold uppercase tracking-[0.3em] text-hud-secondary`}>
           {getCurrentDateTime()}
         </div>
       </div>

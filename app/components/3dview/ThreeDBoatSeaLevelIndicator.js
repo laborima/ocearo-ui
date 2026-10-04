@@ -1,4 +1,3 @@
-import { useOcearoContext } from '../context/OcearoContext';
 import { convertDepthUnit, getDepthUnitLabel } from '../utils/UnitConversions';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSignalKPath } from '../hooks/useSignalK';
@@ -16,14 +15,8 @@ const DEPTH_COLORS = {
   SAFE: 'bg-oBlue'
 };
 
-const TEXT_COLORS = {
-  NIGHT: 'text-oNight',
-  DAY: 'text-hud-main'
-};
-
 const ThreeDBoatSeaLevelIndicator = () => {
   const { t } = useTranslation();
-  const { nightMode } = useOcearoContext();
   const [barHeight, setBarHeight] = useState(240); // Default height (equivalent to h-60)
 
   // Use specialized hooks for better performance and targeted subscriptions
@@ -69,7 +62,7 @@ const ThreeDBoatSeaLevelIndicator = () => {
   }, [depth]);
 
   // Get text color based on night mode
-  const textColor = nightMode ? TEXT_COLORS.NIGHT : TEXT_COLORS.DAY;
+  const textColor = 'text-hud-main';
 
   // Format depth display
   const formattedDepth = useCallback((depth) => {
@@ -98,7 +91,7 @@ const ThreeDBoatSeaLevelIndicator = () => {
   return (
     <div className="flex flex-col items-center group p-3 transition-all duration-300">
       {/* Label */}
-      <div className={`text-xs font-black uppercase tracking-[0.2em] mb-4 opacity-40 group-hover:opacity-100 transition-opacity ${textColor}`}>
+      <div className={`text-caption font-semibold uppercase tracking-[0.2em] mb-4 opacity-40 group-hover:opacity-100 transition-opacity ${textColor}`}>
         {t('indicators.depth')}
       </div>
 
@@ -107,7 +100,7 @@ const ThreeDBoatSeaLevelIndicator = () => {
 
       {/* Depth Value */}
       <div
-        className={`text-xs font-black tracking-widest mt-2 ${textColor} ${depth != null && depth < DEPTH_THRESHOLDS.DANGER ? 'text-oRed animate-soft-pulse' : ''}`}
+        className={`text-caption font-semibold tracking-widest mt-2 ${textColor} ${depth != null && depth < DEPTH_THRESHOLDS.DANGER ? 'text-oRed animate-soft-pulse' : ''}`}
       >
         {formattedDepth(depth)}
       </div>

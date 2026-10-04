@@ -70,11 +70,11 @@ export default function HumidityWidget() {
     >
       <div className="flex-1 flex flex-col justify-center py-4 space-y-8">
         <div className="text-center group">
-          <div className={`text-6xl font-black mb-4 leading-none gliding-value tracking-tighter text-hud-main ${parseInt(humidity) > 70 || parseInt(humidity) < 30 ? 'animate-soft-pulse' : ''}`}>
+          <div className={`text-hero font-medium mb-4 leading-none gliding-value tracking-tight text-hud-main ${parseInt(humidity) > 70 || parseInt(humidity) < 30 ? 'animate-soft-pulse' : ''}`}>
             {humidity !== null ? humidity : t('common.na')}
-            <span className="text-xl text-hud-muted ml-2 uppercase font-black tracking-widest">%</span>
+            <span className="text-label text-hud-muted ml-2 uppercase font-semibold tracking-widest">%</span>
           </div>
-          <div className={`text-xs font-black uppercase tracking-[0.3em] mt-4 ${humidity !== null ? getHumidityColor(humidity) : 'text-hud-muted'}`}>
+          <div className={`text-caption font-semibold uppercase tracking-[0.3em] mt-4 ${humidity !== null ? getHumidityColor(humidity) : 'text-hud-muted'}`}>
             {humidity !== null ? getHumidityStatus(humidity) : t('widgets.offline')}
           </div>
         </div>
@@ -88,7 +88,7 @@ export default function HumidityWidget() {
               style={{ width: `${humidityPercentage !== null ? humidityPercentage : 0}%` }}
             />
           </div>
-          <div className="flex justify-between text-xs font-black text-hud-muted mt-4 uppercase tracking-widest px-0.5">
+          <div className="flex justify-between text-caption font-semibold text-hud-muted mt-4 uppercase tracking-widest px-0.5">
             <span>{t('widgets.arid')}</span>
             <span>{t('widgets.balanced')}</span>
             <span>{t('widgets.saturated')}</span>
@@ -99,9 +99,9 @@ export default function HumidityWidget() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <FontAwesomeIcon icon={faThermometerHalf} className="text-oBlue text-xs opacity-50" />
-              <span className="text-hud-secondary text-xs uppercase font-black tracking-widest">{t('widgets.dewPoint')}</span>
+              <span className="text-hud-secondary text-caption uppercase font-semibold tracking-widest">{t('widgets.dewPoint')}</span>
             </div>
-            <div className="text-hud-main font-black text-lg gliding-value">
+            <div className="text-hud-main font-semibold text-value gliding-value">
               {dewPoint != null ? `${dewPoint}${getTemperatureUnitLabel()}` : t('common.na')}
             </div>
           </div>

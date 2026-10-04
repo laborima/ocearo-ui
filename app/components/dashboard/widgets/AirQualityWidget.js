@@ -97,11 +97,11 @@ export default function AirQualityWidget() {
       <div className="flex-1 flex flex-col min-h-0">
         {/* Primary metric - centered */}
         <div className="flex-1 flex flex-col items-center justify-center">
-          <div className={`text-6xl font-black mb-3 leading-none gliding-value tracking-tighter ${airQualityInfo.color} ${primaryAlarm ? 'animate-soft-pulse' : ''}`}>
+          <div className={`text-hero font-medium mb-3 leading-none gliding-value tracking-tight ${airQualityInfo.color} ${primaryAlarm ? 'animate-soft-pulse' : ''}`}>
             {primaryValue !== null ? primaryValue : t('common.na')}
-            {primaryValue !== null && usesVoc && <span className="text-2xl ml-1 align-baseline">kΩ</span>}
+            {primaryValue !== null && usesVoc && <span className="text-value ml-1 align-baseline">kΩ</span>}
           </div>
-          <div className="text-hud-secondary text-xs uppercase font-black tracking-[0.3em] opacity-60">{primaryLabel}</div>
+          <div className="text-hud-secondary text-caption uppercase font-semibold tracking-[0.3em] opacity-60">{primaryLabel}</div>
 
           {/* Progress bar */}
           <div className="w-full bg-hud-elevated rounded-full h-1 mt-4 overflow-hidden shadow-inner">
@@ -113,7 +113,7 @@ export default function AirQualityWidget() {
 
           {/* Status badge */}
           <div className="mt-4">
-            <div className={`inline-block px-4 py-1.5 rounded-sm uppercase text-xs font-black tracking-[0.2em] shadow-soft ${airQualityInfo.bg} border border-hud`}>
+            <div className={`inline-block px-4 py-1.5 rounded-sm uppercase text-caption font-semibold tracking-[0.2em] shadow-soft ${airQualityInfo.bg} border border-hud`}>
               <span className={airQualityInfo.color}>{airQualityInfo.level} {t('widgets.atmosphere')}</span>
             </div>
           </div>
@@ -124,26 +124,26 @@ export default function AirQualityWidget() {
           <div className="tesla-card p-3 text-center tesla-hover bg-hud-bg">
             {pm25 !== null ? (
               <>
-                <div className={`text-2xl font-black mb-1 gliding-value ${pm25 > 25 ? 'text-oRed' : 'text-hud-main'}`}>
+                <div className={`text-value font-semibold mb-1 gliding-value ${pm25 > 25 ? 'text-oRed' : 'text-hud-main'}`}>
                   {pm25}
                 </div>
-                <div className="text-hud-muted text-xs uppercase font-black tracking-widest opacity-60">{t('widgets.pm25Particulate')}</div>
+                <div className="text-hud-muted text-caption uppercase font-semibold tracking-widest opacity-60">{t('widgets.pm25Particulate')}</div>
               </>
             ) : (
               <>
-                <div className="text-2xl font-black mb-1 gliding-value text-hud-main">
+                <div className="text-value font-semibold mb-1 gliding-value text-hud-main">
                   {humidity !== null ? `${humidity}%` : t('common.na')}
                 </div>
-                <div className="text-hud-muted text-xs uppercase font-black tracking-widest opacity-60">{t('environmental.humidity')}</div>
+                <div className="text-hud-muted text-caption uppercase font-semibold tracking-widest opacity-60">{t('environmental.humidity')}</div>
               </>
             )}
           </div>
           <div className="tesla-card p-3 bg-hud-bg tesla-hover flex flex-col justify-center space-y-2">
-            <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest">
+            <div className="flex justify-between items-center text-caption font-semibold uppercase tracking-widest">
               <span className="text-hud-muted">{t('widgets.nominal')}</span>
               <span className="text-oGreen">{usesVoc ? '> 300' : '< 800'}</span>
             </div>
-            <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest">
+            <div className="flex justify-between items-center text-caption font-semibold uppercase tracking-widest">
               <span className="text-hud-muted">{t('widgets.critical')}</span>
               <span className="text-oRed">{usesVoc ? '< 50' : '> 1500'}</span>
             </div>

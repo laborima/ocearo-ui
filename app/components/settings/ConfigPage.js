@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import configService from './ConfigService';
+import { THEME_MODES } from '../theme/themes';
+import { RENDER_QUALITIES } from '../utils/RenderProfile';
 import { useOcearoContext } from '../context/OcearoContext';
 import { SUPPORTED_LANGUAGES } from '../../i18n/i18n';
 
@@ -11,7 +13,7 @@ const SettingsBadge = ({ color }) => (
 
 const ConfigPage = ({ onSave }) => {
     const { t, i18n } = useTranslation();
-    const { theme, setTheme } = useOcearoContext();
+    const { themeMode, setTheme } = useOcearoContext();
     const initialConfig = configService.getAll();
     const computedSignalKUrl = configService.getComputedSignalKUrl();
     const boats = configService.getBoatsData(); // Get full list of boats
@@ -53,7 +55,7 @@ const ConfigPage = ({ onSave }) => {
         const updatedConfig = { ...newConfig };
         
         // Update theme in context if it changed
-        if (updates.theme && updates.theme !== theme) {
+        if (updates.theme && updates.theme !== themeMode) {
             setTheme(updates.theme);
         }
         
@@ -128,16 +130,16 @@ const ConfigPage = ({ onSave }) => {
         <div className="p-8 text-hud-main w-full relative">
             <header className="mb-10 flex justify-between items-start sm:items-center relative min-h-[4rem]">
                 <div>
-                    <h1 className="text-3xl font-black uppercase tracking-tighter mb-1">
+                    <h1 className="text-value font-semibold uppercase tracking-tight mb-1">
                         {t('settings.title')}
                     </h1>
-                    <p className="text-hud-secondary text-sm font-medium uppercase tracking-widest">{t('settings.subtitle')}</p>
+                    <p className="text-hud-secondary text-label font-medium uppercase tracking-widest">{t('settings.subtitle')}</p>
                 </div>
                 {saveIndicator.visible && (
                     <motion.span 
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="absolute right-0 top-0 sm:relative text-xs font-black bg-oGreen/20 text-oGreen border border-oGreen/30 px-4 py-2 rounded-full uppercase tracking-widest whitespace-nowrap"
+                        className="absolute right-0 top-0 sm:relative text-caption font-semibold bg-oGreen/20 text-oGreen border border-oGreen/30 px-4 py-2 rounded-full uppercase tracking-widest whitespace-nowrap"
                     >
                         {saveIndicator.message}
                     </motion.span>
@@ -148,7 +150,7 @@ const ConfigPage = ({ onSave }) => {
             <div className="flex bg-hud-bg p-1 rounded-xl border border-hud mb-8">
                 <button
                     onClick={() => setActiveTab('system')}
-                    className={`flex-1 py-3 px-6 text-xs font-black uppercase tracking-widest transition-all rounded-lg ${
+                    className={`flex-1 py-3 px-6 text-caption font-semibold uppercase tracking-widest transition-all rounded-lg ${
                         activeTab === 'system'
                             ? 'bg-oBlue/15 text-oBlue border border-oBlue/40 shadow-lg shadow-oBlue/10'
                             : 'text-hud-secondary hover:text-hud-main'
@@ -158,7 +160,7 @@ const ConfigPage = ({ onSave }) => {
                 </button>
                 <button
                     onClick={() => setActiveTab('interface')}
-                    className={`flex-1 py-3 px-6 text-xs font-black uppercase tracking-widest transition-all rounded-lg ${
+                    className={`flex-1 py-3 px-6 text-caption font-semibold uppercase tracking-widest transition-all rounded-lg ${
                         activeTab === 'interface'
                             ? 'bg-oBlue/15 text-oBlue border border-oBlue/40 shadow-lg shadow-oBlue/10'
                             : 'text-hud-secondary hover:text-hud-main'
@@ -174,13 +176,13 @@ const ConfigPage = ({ onSave }) => {
                         {/* Connection Settings */}
                         <section className="tesla-card p-6 space-y-6">
                             <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.connection')}</h2>
+                                <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.connection')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="flex items-center justify-between p-4 rounded-xl bg-hud-bg tesla-hover">
-                                    <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary flex items-center">
+                                    <span className="text-label font-bold uppercase tracking-widest text-hud-secondary flex items-center">
                                         {t('settings.signalkServer')}
                                         {!signalKUrlSet && <SettingsBadge color="bg-oBlue" />}
                                     </span>
@@ -200,8 +202,8 @@ const ConfigPage = ({ onSave }) => {
 
                                 {!signalKUrlSet && (
                                     <div className="p-4 rounded-xl bg-hud-bg border border-hud">
-                                        <span className="text-xs font-bold uppercase tracking-widest text-hud-muted block mb-1">{t('settings.detectedUrl')}</span>
-                                        <span className="text-sm font-mono text-oBlue">{computedSignalKUrl}</span>
+                                        <span className="text-caption font-bold uppercase tracking-widest text-hud-muted block mb-1">{t('settings.detectedUrl')}</span>
+                                        <span className="text-label font-mono text-oBlue">{computedSignalKUrl}</span>
                                     </div>
                                 )}
                             </div>
@@ -213,7 +215,7 @@ const ConfigPage = ({ onSave }) => {
                                     className="space-y-6"
                                 >
                                     <div className="space-y-2">
-                                        <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.customEndpoint')}</label>
+                                        <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.customEndpoint')}</label>
                                         <input
                                             type="text"
                                             className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors font-mono"
@@ -224,7 +226,7 @@ const ConfigPage = ({ onSave }) => {
                                     </div>
 
                                     <div className="flex items-center justify-between p-4 rounded-xl bg-hud-bg tesla-hover">
-                                        <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary flex items-center">
+                                        <span className="text-label font-bold uppercase tracking-widest text-hud-secondary flex items-center">
                                             {t('settings.authentication')}
                                             {signalKUrlSet && !useAuthentication && <SettingsBadge color="bg-oBlue" />}
                                         </span>
@@ -245,7 +247,7 @@ const ConfigPage = ({ onSave }) => {
                                     {useAuthentication && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.username')}</label>
+                                                <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.username')}</label>
                                                 <input
                                                     type="text"
                                                     className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors"
@@ -254,7 +256,7 @@ const ConfigPage = ({ onSave }) => {
                                                 />
                                             </div>
                                             <div className="space-y-2">
-                                                <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.password')}</label>
+                                                <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.password')}</label>
                                                 <input
                                                     type="password"
                                                     className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors"
@@ -271,13 +273,13 @@ const ConfigPage = ({ onSave }) => {
                         {/* Vessel Settings */}
                         <section className="tesla-card p-6 space-y-6">
                             <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.vessel')}</h2>
+                                <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.vessel')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                             </div>
 
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.activeProfile')}</label>
+                                    <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.activeProfile')}</label>
                                     <select
                                         className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors appearance-none cursor-pointer"
                                         value={config.selectedBoat || ''}
@@ -294,9 +296,9 @@ const ConfigPage = ({ onSave }) => {
 
                                 {selectedBoat && (
                                     <div className="p-4 rounded-xl bg-oBlue/10 border border-oBlue/20 space-y-1">
-                                        <div className="text-xs font-black uppercase tracking-widest text-oBlue mb-2">{t('settings.specifications')}</div>
-                                        <div className="text-sm font-medium">{t('settings.model')}: <span className="text-hud-main">{selectedBoat.modelPath}</span></div>
-                                        <div className="text-sm font-medium">{t('settings.capabilities')}: <span className="text-hud-main">{selectedBoat.capabilities?.join(', ')}</span></div>
+                                        <div className="text-caption font-semibold uppercase tracking-widest text-oBlue mb-2">{t('settings.specifications')}</div>
+                                        <div className="text-label font-medium">{t('settings.model')}: <span className="text-hud-main">{selectedBoat.modelPath}</span></div>
+                                        <div className="text-label font-medium">{t('settings.capabilities')}: <span className="text-hud-main">{selectedBoat.capabilities?.join(', ')}</span></div>
                                     </div>
                                 )}
                             </div>
@@ -305,18 +307,18 @@ const ConfigPage = ({ onSave }) => {
                         {/* Advanced Settings */}
                         <section className="tesla-card p-6 space-y-6">
                             <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.advanced')}</h2>
+                                <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.advanced')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                             </div>
 
                             <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
                                 <label className="flex items-center justify-between cursor-pointer">
                                     <div className="space-y-1">
-                                        <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary flex items-center">
+                                        <span className="text-label font-bold uppercase tracking-widest text-hud-secondary flex items-center">
                                             {t('settings.debugMode')}
                                             {config.debugMode && <SettingsBadge color="bg-oYellow" />}
                                         </span>
-                                        <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
+                                        <p className="text-caption text-hud-muted font-medium uppercase tracking-wider">
                                             {t('settings.debugModeDesc')}
                                         </p>
                                     </div>
@@ -340,18 +342,18 @@ const ConfigPage = ({ onSave }) => {
                         {/* Danger Zone */}
                         <section className="tesla-card p-6 border-oRed/10">
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-lg font-black uppercase tracking-widest text-oRed/80">{t('settings.critical')}</h2>
+                                <h2 className="text-label font-semibold uppercase tracking-widest text-oRed/80">{t('settings.critical')}</h2>
                                 <div className="h-[1px] flex-grow bg-oRed/5 mx-4" />
                             </div>
                             
                             <div className="flex items-center justify-between p-4 rounded-xl bg-oRed/5 border border-oRed/10">
                                 <div className="space-y-1">
-                                    <span className="text-sm font-bold uppercase tracking-widest text-oRed/80">{t('settings.factoryReset')}</span>
-                                    <p className="text-xs text-oRed/40 font-medium uppercase tracking-wider">{t('settings.factoryResetDesc')}</p>
+                                    <span className="text-label font-bold uppercase tracking-widest text-oRed/80">{t('settings.factoryReset')}</span>
+                                    <p className="text-caption text-oRed/40 font-medium uppercase tracking-wider">{t('settings.factoryResetDesc')}</p>
                                 </div>
                                 <button
                                     onClick={handleReset}
-                                    className="bg-oRed/20 text-oRed border border-oRed/30 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-oRed hover:text-hud-main transition-all duration-300 shadow-lg shadow-oRed/10"
+                                    className="bg-oRed/20 text-oRed border border-oRed/30 px-6 py-2 rounded-xl text-caption font-semibold uppercase tracking-widest hover:bg-oRed hover:text-hud-main transition-all duration-300 shadow-lg shadow-oRed/10"
                                 >
                                     {t('common.reset')}
                                 </button>
@@ -363,35 +365,55 @@ const ConfigPage = ({ onSave }) => {
                         {/* Appearance Settings */}
                         <section className="tesla-card p-6 space-y-6">
                             <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.appearance')}</h2>
+                                <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.appearance')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-4">
-                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.themeMode')}</label>
+                                    <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.themeMode')}</label>
                                     <div className="flex bg-hud-bg p-1 rounded-xl border border-hud">
-                                        {['dark', 'light'].map((themeOption) => (
+                                        {THEME_MODES.map((themeOption) => (
                                             <button
                                                 key={themeOption}
                                                 onClick={() => updateConfig({ theme: themeOption })}
-                                                className={`flex-1 py-3 px-4 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
-                                                    config.theme === themeOption
+                                                className={`flex-1 py-3 px-4 rounded-lg text-caption font-semibold uppercase tracking-widest transition-all ${
+                                                    themeMode === themeOption
                                                         ? 'bg-oBlue/15 text-oBlue border border-oBlue/40 shadow-lg shadow-oBlue/10'
                                                         : 'text-hud-secondary hover:text-hud-main'
                                                 }`}
                                             >
-                                                {themeOption}
+                                                {themeOption === 'auto' ? t('settings.themeAuto') : t(`toolbar.theme_${themeOption}`).replace(/ \(.*\)$/, '')}
                                             </button>
                                         ))}
                                     </div>
                                 </div>
 
                                 <div className="space-y-4">
-                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.uiAccents')}</label>
+                                    <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.renderQuality')}</label>
+                                    <div className="flex bg-hud-bg p-1 rounded-xl border border-hud">
+                                        {RENDER_QUALITIES.map((quality) => (
+                                            <button
+                                                key={quality}
+                                                onClick={() => updateConfig({ renderQuality: quality })}
+                                                className={`flex-1 py-3 px-4 rounded-lg text-caption font-semibold uppercase tracking-widest transition-all ${
+                                                    (config.renderQuality || 'auto') === quality
+                                                        ? 'bg-oBlue/15 text-oBlue border border-oBlue/40'
+                                                        : 'text-hud-secondary hover:text-hud-main'
+                                                }`}
+                                            >
+                                                {t(`settings.renderQuality_${quality}`)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <p className="text-caption text-hud-muted ml-1">{t('settings.renderQualityHint')}</p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.uiAccents')}</label>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="flex items-center justify-between p-4 rounded-xl bg-hud-bg tesla-hover self-end h-[60px]">
-                                            <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.metallic')}</span>
+                                            <span className="text-label font-bold uppercase tracking-widest text-hud-secondary">{t('settings.metallic')}</span>
                                             <label className="relative inline-flex items-center cursor-pointer">
                                                 <input
                                                     type="checkbox"
@@ -409,7 +431,7 @@ const ConfigPage = ({ onSave }) => {
                                                 value={config.primaryColor || '#09bfff'}
                                                 onChange={(e) => updateConfig({ primaryColor: e.target.value })}
                                             />
-                                            <span className="text-xs font-mono uppercase text-hud-main/60">{config.primaryColor || '#09bfff'}</span>
+                                            <span className="text-caption font-mono uppercase text-hud-main/60">{config.primaryColor || '#09bfff'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -419,12 +441,12 @@ const ConfigPage = ({ onSave }) => {
                         {/* Language Settings */}
                         <section className="tesla-card p-6 space-y-6">
                             <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.language')}</h2>
+                                <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.language')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.languageDesc')}</label>
+                                <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.languageDesc')}</label>
                                 <div className="grid grid-cols-3 md:grid-cols-4 gap-1 bg-hud-bg p-1 rounded-xl border border-hud">
                                     {SUPPORTED_LANGUAGES.map((lang) => (
                                         <button
@@ -433,7 +455,7 @@ const ConfigPage = ({ onSave }) => {
                                                 i18n.changeLanguage(lang.code);
                                                 updateConfig({ language: lang.code });
                                             }}
-                                            className={`py-3 px-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center justify-center space-x-2 ${
+                                            className={`py-3 px-2 rounded-lg text-caption font-semibold uppercase tracking-widest transition-all flex items-center justify-center space-x-2 ${
                                                 (config.language || 'en') === lang.code
                                                     ? 'bg-oBlue/15 text-oBlue border border-oBlue/40 shadow-lg shadow-oBlue/10'
                                                     : 'text-hud-secondary hover:text-hud-main'
@@ -450,7 +472,7 @@ const ConfigPage = ({ onSave }) => {
                         {/* Navigation & HUD Settings */}
                         <section className="tesla-card p-6 space-y-6">
                             <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.navigationHud')}</h2>
+                                <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.navigationHud')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                             </div>
 
@@ -458,8 +480,8 @@ const ConfigPage = ({ onSave }) => {
                                 <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
                                     <label className="flex items-center justify-between cursor-pointer">
                                         <div className="space-y-1">
-                                            <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.compassOrientation')}</span>
-                                            <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
+                                            <span className="text-label font-bold uppercase tracking-widest text-hud-secondary">{t('settings.compassOrientation')}</span>
+                                            <p className="text-caption text-hud-muted font-medium uppercase tracking-wider">
                                                 {config.compassNorthUp ? t('settings.northAtTop') : t('settings.northAtBottom')}
                                             </p>
                                         </div>
@@ -475,8 +497,8 @@ const ConfigPage = ({ onSave }) => {
                                 <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
                                     <label className="flex items-center justify-between cursor-pointer">
                                         <div className="space-y-1">
-                                            <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.hide3DCompass')}</span>
-                                            <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
+                                            <span className="text-label font-bold uppercase tracking-widest text-hud-secondary">{t('settings.hide3DCompass')}</span>
+                                            <p className="text-caption text-hud-muted font-medium uppercase tracking-wider">
                                                 {config.hide3DCompass ? t('settings.hidden') : t('settings.visible')}
                                             </p>
                                         </div>
@@ -493,8 +515,8 @@ const ConfigPage = ({ onSave }) => {
                                 <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
                                     <label className="flex items-center justify-between cursor-pointer">
                                         <div className="space-y-1">
-                                            <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.hideTrueWind')}</span>
-                                            <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
+                                            <span className="text-label font-bold uppercase tracking-widest text-hud-secondary">{t('settings.hideTrueWind')}</span>
+                                            <p className="text-caption text-hud-muted font-medium uppercase tracking-wider">
                                                 {config.hideTrueWind ? t('settings.hidden') : t('settings.visible')}
                                             </p>
                                         </div>
@@ -511,8 +533,8 @@ const ConfigPage = ({ onSave }) => {
                                 <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
                                     <label className="flex items-center justify-between cursor-pointer">
                                         <div className="space-y-1">
-                                            <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.attitudeIndicator')}</span>
-                                            <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
+                                            <span className="text-label font-bold uppercase tracking-widest text-hud-secondary">{t('settings.attitudeIndicator')}</span>
+                                            <p className="text-caption text-hud-muted font-medium uppercase tracking-wider">
                                                 {config.showAttitudeIndicator !== false ? t('settings.visible') : t('settings.hidden')}
                                             </p>
                                         </div>
@@ -529,8 +551,8 @@ const ConfigPage = ({ onSave }) => {
                                 <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
                                     <label className="flex items-center justify-between cursor-pointer">
                                         <div className="space-y-1">
-                                            <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.sailTrimSliders')}</span>
-                                            <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
+                                            <span className="text-label font-bold uppercase tracking-widest text-hud-secondary">{t('settings.sailTrimSliders')}</span>
+                                            <p className="text-caption text-hud-muted font-medium uppercase tracking-wider">
                                                 {config.showSailTrimSliders !== false ? t('settings.visible') : t('settings.hidden')}
                                             </p>
                                         </div>
@@ -547,8 +569,8 @@ const ConfigPage = ({ onSave }) => {
                                 <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
                                     <label className="flex items-center justify-between cursor-pointer">
                                         <div className="space-y-1">
-                                            <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.rigging')}</span>
-                                            <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
+                                            <span className="text-label font-bold uppercase tracking-widest text-hud-secondary">{t('settings.rigging')}</span>
+                                            <p className="text-caption text-hud-muted font-medium uppercase tracking-wider">
                                                 {config.showRigging !== false ? t('settings.visible') : t('settings.hidden')}
                                             </p>
                                         </div>
@@ -565,11 +587,11 @@ const ConfigPage = ({ onSave }) => {
 
                             <div className="space-y-4 pt-2">
                                 <div className="flex justify-between items-end">
-                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">
+                                    <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">
                                         {t('settings.aisLengthScaling')}
-                                        <span className="block text-xs text-hud-muted font-medium mt-1 uppercase">{t('settings.mapTargetVisibility')}</span>
+                                        <span className="block text-caption text-hud-muted font-medium mt-1 uppercase">{t('settings.mapTargetVisibility')}</span>
                                     </label>
-                                    <span className="text-xl font-black text-oBlue bg-oBlue/10 px-3 py-1 rounded-lg">
+                                    <span className="text-value font-semibold text-oBlue bg-oBlue/10 px-3 py-1 rounded-lg">
                                         {config.aisLengthScalingFactor || 0.7}
                                     </span>
                                 </div>
@@ -590,13 +612,13 @@ const ConfigPage = ({ onSave }) => {
                         {/* Units & Values Settings */}
                         <section className="tesla-card p-6 space-y-6">
                             <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.unitsValues')}</h2>
+                                <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.unitsValues')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.distanceUnits')}</label>
+                                    <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.distanceUnits')}</label>
                                     <select
                                         className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors appearance-none cursor-pointer"
                                         value={config.distanceUnits || 'nm'}
@@ -609,7 +631,7 @@ const ConfigPage = ({ onSave }) => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.depthUnits')}</label>
+                                    <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.depthUnits')}</label>
                                     <select
                                         className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors appearance-none cursor-pointer"
                                         value={config.depthUnits || 'm'}
@@ -622,7 +644,7 @@ const ConfigPage = ({ onSave }) => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.speedUnits')}</label>
+                                    <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.speedUnits')}</label>
                                     <select
                                         className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors appearance-none cursor-pointer"
                                         value={config.speedUnits || 'kn'}
@@ -638,7 +660,7 @@ const ConfigPage = ({ onSave }) => {
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.temperatureUnits')}</label>
+                                    <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.temperatureUnits')}</label>
                                     <select
                                         className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors appearance-none cursor-pointer"
                                         value={config.temperatureUnits || 'C'}
@@ -650,7 +672,7 @@ const ConfigPage = ({ onSave }) => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.positionFormat')}</label>
+                                    <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.positionFormat')}</label>
                                     <select
                                         className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors appearance-none cursor-pointer"
                                         value={config.positionFormat || 'DD'}
@@ -663,7 +685,7 @@ const ConfigPage = ({ onSave }) => {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.preferTrueValues')}</label>
+                                    <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.preferTrueValues')}</label>
                                     <select
                                         className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors appearance-none cursor-pointer"
                                         value={config.preferTrueValues !== false ? 'true' : 'false'}
@@ -679,13 +701,13 @@ const ConfigPage = ({ onSave }) => {
                         {/* Preferred Paths Settings */}
                         <section className="tesla-card p-6 space-y-6">
                             <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.preferredPaths')}</h2>
+                                <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.preferredPaths')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.trueWindSpeed')}</label>
+                                    <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.trueWindSpeed')}</label>
                                     <div className="space-y-2 p-4 rounded-xl bg-hud-bg border border-hud">
                                         {[{value: 'speedTrue', label: t('settings.pathSpeedTrue')}, {value: 'speedApparent', label: t('settings.pathSpeedApparent')}].map((option) => (
                                             <label key={option.value} className="flex items-center space-x-3 cursor-pointer">
@@ -697,14 +719,14 @@ const ConfigPage = ({ onSave }) => {
                                                     onChange={(e) => updateConfig({ preferredWindSpeedPath: e.target.value })}
                                                     className="w-4 h-4 accent-oBlue"
                                                 />
-                                                <span className="text-sm text-hud-main">{option.label}</span>
+                                                <span className="text-label text-hud-main">{option.label}</span>
                                             </label>
                                         ))}
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.trueWindDirection')}</label>
+                                    <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.trueWindDirection')}</label>
                                     <div className="space-y-2 p-4 rounded-xl bg-hud-bg border border-hud">
                                         {[{value: 'directionTrue', label: t('settings.pathDirectionTrue')}, {value: 'angleApparent', label: t('settings.pathAngleApparent')}, {value: 'angleTrueWater', label: t('settings.pathAngleTrueWater')}].map((option) => (
                                             <label key={option.value} className="flex items-center space-x-3 cursor-pointer">
@@ -716,14 +738,14 @@ const ConfigPage = ({ onSave }) => {
                                                     onChange={(e) => updateConfig({ preferredWindDirectionPath: e.target.value })}
                                                     className="w-4 h-4 accent-oBlue"
                                                 />
-                                                <span className="text-sm text-hud-main">{option.label}</span>
+                                                <span className="text-label text-hud-main">{option.label}</span>
                                             </label>
                                         ))}
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{t('settings.headingCog')}</label>
+                                    <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{t('settings.headingCog')}</label>
                                     <div className="space-y-2 p-4 rounded-xl bg-hud-bg border border-hud">
                                         {[{value: 'courseOverGroundTrue', label: t('settings.pathCourseOverGroundTrue')}, {value: 'headingTrue', label: t('settings.pathHeadingTrue')}, {value: 'courseOverGroundMagnetic', label: t('settings.pathCourseOverGroundMagnetic')}, {value: 'headingMagnetic', label: t('settings.pathHeadingMagnetic')}].map((option) => (
                                             <label key={option.value} className="flex items-center space-x-3 cursor-pointer">
@@ -735,7 +757,7 @@ const ConfigPage = ({ onSave }) => {
                                                     onChange={(e) => updateConfig({ preferredHeadingPath: e.target.value })}
                                                     className="w-4 h-4 accent-oBlue"
                                                 />
-                                                <span className="text-sm text-hud-main">{option.label}</span>
+                                                <span className="text-label text-hud-main">{option.label}</span>
                                             </label>
                                         ))}
                                     </div>
@@ -746,15 +768,15 @@ const ConfigPage = ({ onSave }) => {
                         {/* External Links Settings */}
                         <section className="tesla-card p-6 space-y-6">
                             <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.externalLinks')}</h2>
+                                <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.externalLinks')}</h2>
                                 <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                             </div>
 
                             <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
                                 <label className="flex items-center justify-between cursor-pointer">
                                     <div className="space-y-1">
-                                        <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{t('settings.customToolUrls')}</span>
-                                        <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">
+                                        <span className="text-label font-bold uppercase tracking-widest text-hud-secondary">{t('settings.customToolUrls')}</span>
+                                        <p className="text-caption text-hud-muted font-medium uppercase tracking-wider">
                                             {t('settings.customToolUrlsDesc')}
                                         </p>
                                     </div>
@@ -786,10 +808,10 @@ const ConfigPage = ({ onSave }) => {
                                             { id: 'weather', label: t('settings.urlAtmospheric'), placeholder: "https://windy.com/..." }
                                         ].map((urlConfig) => (
                                             <div key={urlConfig.id} className="space-y-2">
-                                                <label className="text-xs font-black uppercase tracking-widest text-hud-secondary ml-1">{urlConfig.label}</label>
+                                                <label className="text-caption font-semibold uppercase tracking-widest text-hud-secondary ml-1">{urlConfig.label}</label>
                                                 <input
                                                     type="text"
-                                                    className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-sm text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors font-mono"
+                                                    className="w-full bg-hud-bg border border-hud rounded-xl p-4 text-label text-hud-main focus:outline-none focus:border-oBlue/50 transition-colors font-mono"
                                                     placeholder={urlConfig.placeholder}
                                                     value={(config.customExternalUrls?.[urlConfig.id]) || ''}
                                                     onChange={(e) => {

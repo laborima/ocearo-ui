@@ -2,8 +2,8 @@ import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { oGreen, oNight, useOcearoContext } from '../../context/OcearoContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
+import useTheme from '../../theme/useTheme';
 
 // Constants for configuration
 const CURRENT_OFFSET = 0.7;
@@ -18,8 +18,8 @@ const CurrentArrow = ({
   textPosition = [0, 0.8, 0],
   arrowSize = 1,
 }) => {
-  const { nightMode } = useOcearoContext();
-  const finalColor = color || (nightMode ? oNight : "#ffffff");
+  const { scene } = useTheme();
+  const finalColor = color || scene.wind;
   
   return (
   <group position={position} rotation={rotation}>
@@ -99,6 +99,8 @@ const Current3D = ({ outerRadius }) => {
     ];
   }, [outerRadius, currentData.setTrue]);
 
+  const { scene } = useTheme();
+
   // Only render if we have current
   if (!currentData.drift || currentData.drift <= 0) {
     return null;
@@ -110,7 +112,7 @@ const Current3D = ({ outerRadius }) => {
         position={currentPosition}
         rotation={[-Math.PI / 2, 0, -(Math.PI / 2 - (currentData.setTrue || 0))]}
         speed={currentData.drift}
-        color={oGreen}
+        color={scene.current}
         arrowSize={1.2}
       />
     </group>

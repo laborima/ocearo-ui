@@ -57,11 +57,11 @@ export default function DepthWidget() {
       <div className="flex-1 flex flex-col min-h-0">
         {/* Main depth reading */}
         <div className="text-center mb-6">
-          <div className="text-5xl font-black text-hud-main leading-none gliding-value tracking-tighter">
+          <div className="text-hero font-medium text-hud-main leading-none gliding-value tracking-tight">
             {depthData.belowKeel !== null ? depthData.belowKeel : t('common.na')}
-            {depthData.belowKeel !== null && <span className="text-xl text-hud-secondary ml-2 uppercase font-black tracking-widest">{depthData.depthUnitLabel}</span>}
+            {depthData.belowKeel !== null && <span className="text-label text-hud-secondary ml-2 uppercase font-semibold tracking-widest">{depthData.depthUnitLabel}</span>}
           </div>
-          <div className={`text-xs font-black uppercase tracking-[0.3em] mt-3 ${depthData.belowKeel !== null ? getDepthColor(depthData.belowKeel) : 'text-hud-muted'} ${depthData.belowKeel !== null && depthData.belowKeel < 5 ? 'animate-soft-pulse' : ''}`}>
+          <div className={`text-caption font-semibold uppercase tracking-[0.3em] mt-3 ${depthData.belowKeel !== null ? getDepthColor(depthData.belowKeel) : 'text-hud-muted'} ${depthData.belowKeel !== null && depthData.belowKeel < 5 ? 'animate-soft-pulse' : ''}`}>
             {depthData.belowKeel !== null ? getDepthStatus(depthData.belowKeel) : t('widgets.offline')}
           </div>
         </div>
@@ -69,15 +69,15 @@ export default function DepthWidget() {
         {/* Depth readings */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="tesla-card p-3 text-center tesla-hover bg-hud-bg">
-            <div className="text-hud-secondary text-xs uppercase font-black tracking-widest mb-1 opacity-60">{t('widgets.belowKeel')}</div>
-            <div className={`text-xl font-black gliding-value ${depthData.belowKeel !== null ? getDepthColor(depthData.belowKeel) : 'text-hud-muted'}`}>
+            <div className="text-hud-secondary text-caption uppercase font-semibold tracking-widest mb-1 opacity-60">{t('widgets.belowKeel')}</div>
+            <div className={`text-value font-semibold gliding-value ${depthData.belowKeel !== null ? getDepthColor(depthData.belowKeel) : 'text-hud-muted'}`}>
               {depthData.belowKeel !== null ? `${depthData.belowKeel} ${depthData.depthUnitLabel}` : t('common.na')}
             </div>
           </div>
           
           <div className="tesla-card p-3 text-center tesla-hover bg-hud-bg">
-            <div className="text-hud-secondary text-xs uppercase font-black tracking-widest mb-1 opacity-60">{t('widgets.surface')}</div>
-            <div className={`text-xl font-black gliding-value ${depthData.belowSurface !== null ? getDepthColor(depthData.belowSurface) : 'text-hud-muted'}`}>
+            <div className="text-hud-secondary text-caption uppercase font-semibold tracking-widest mb-1 opacity-60">{t('widgets.surface')}</div>
+            <div className={`text-value font-semibold gliding-value ${depthData.belowSurface !== null ? getDepthColor(depthData.belowSurface) : 'text-hud-muted'}`}>
               {depthData.belowSurface !== null ? `${depthData.belowSurface} ${depthData.depthUnitLabel}` : t('common.na')}
             </div>
           </div>
@@ -95,19 +95,19 @@ export default function DepthWidget() {
                 style={{ width: `${depthData.belowKeel !== null ? Math.min(100, (depthData.belowKeel / 50) * 100) : 0}%` }}
               />
             </div>
-            <div className="text-hud-muted text-xs font-black tracking-tighter">50{depthData.depthUnitLabel}</div>
+            <div className="text-hud-muted text-caption font-semibold tracking-tighter">50{depthData.depthUnitLabel}</div>
           </div>
         </div>
 
         {/* Status info */}
         <div className="tesla-card p-3 bg-hud-bg space-y-2">
-          <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest">
+          <div className="flex justify-between items-center text-caption font-semibold uppercase tracking-widest">
             <span className="text-hud-secondary">{t('widgets.hullClearance')}</span>
             <span className={`gliding-value font-mono ${depthData.belowKeel !== null && depthData.belowKeel < 2 ? 'text-oRed' : 'text-hud-main'}`}>
               {depthData.belowKeel !== null ? `${Math.max(0, depthData.belowKeel - convertDepthUnit(1.5)).toFixed(1)} ${depthData.depthUnitLabel}` : t('common.na')}
             </span>
           </div>
-          <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest">
+          <div className="flex justify-between items-center text-caption font-semibold uppercase tracking-widest">
             <span className="text-hud-secondary">{t('widgets.transducerOffset')}</span>
             <span className="text-hud-dim font-mono opacity-60">1.5m</span>
           </div>

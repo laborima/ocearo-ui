@@ -1,6 +1,5 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useOcearoContext } from '../../context/OcearoContext';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import BaseWidget from './BaseWidget';
 import { useTranslation } from 'react-i18next';
@@ -23,8 +22,6 @@ const TimeWidget = React.memo(() => {
     const id = setInterval(() => setCurrentTime(now()), 1000);
     return () => clearInterval(id);
   }, [now]);
-
-  const { nightMode } = useOcearoContext();
   
   // Signal K positions are decimal degrees
   const position = useSignalKPath('navigation.position');
@@ -75,7 +72,7 @@ const TimeWidget = React.memo(() => {
           from the GPS because the system clock is more than a minute off. */}
       {corrected && (
         <div className="absolute top-4 right-4 z-10">
-          <span className="text-xs px-2 py-0.5 rounded-sm uppercase font-black tracking-widest text-hud-main bg-oBlue/40 border border-oBlue/30 flex items-center space-x-1.5">
+          <span className="text-caption px-2 py-0.5 rounded-sm uppercase font-semibold tracking-widest text-hud-main bg-oBlue/40 border border-oBlue/30 flex items-center space-x-1.5">
             <FontAwesomeIcon icon={faSatellite} className="text-xs opacity-70" />
             <span>GPS</span>
           </span>
@@ -86,10 +83,10 @@ const TimeWidget = React.memo(() => {
         {/* Main time display - centered */}
         <div className="flex-1 flex flex-col justify-center">
           <div className="text-center group mb-6">
-            <div className="text-6xl font-black text-hud-main leading-none font-mono tracking-tighter gliding-value">
+            <div className="text-hero font-medium text-hud-main leading-none font-mono tracking-tight gliding-value">
               {formatTime(currentTime)}
             </div>
-            <div className="text-hud-secondary text-xs font-black uppercase tracking-[0.3em] mt-4 opacity-60">
+            <div className="text-hud-secondary text-caption font-semibold uppercase tracking-[0.3em] mt-4 opacity-60">
               {formatDate(currentTime)}
             </div>
           </div>
@@ -99,16 +96,16 @@ const TimeWidget = React.memo(() => {
             <div className="tesla-card p-4 tesla-hover bg-hud-bg">
               <div className="flex items-center space-x-3 mb-2">
                 <FontAwesomeIcon icon={faGlobe} className="text-oBlue text-xs opacity-50" />
-                <span className="text-hud-muted text-xs font-black uppercase tracking-widest">{t('widgets.localSync')}</span>
+                <span className="text-hud-muted text-caption font-semibold uppercase tracking-widest">{t('widgets.localSync')}</span>
               </div>
-              <div className="text-hud-main font-mono font-black text-xl gliding-value">{formatTime(zoneTime, false, 'UTC')}</div>
+              <div className="text-hud-main font-mono font-semibold text-value gliding-value">{formatTime(zoneTime, false, 'UTC')}</div>
             </div>
             <div className="tesla-card p-4 tesla-hover bg-hud-bg">
               <div className="flex items-center space-x-3 mb-2">
                 <FontAwesomeIcon icon={faGlobe} className="text-hud-muted text-xs opacity-50" />
-                <span className="text-hud-muted text-xs font-black uppercase tracking-widest">{t('widgets.utcClock')}</span>
+                <span className="text-hud-muted text-caption font-semibold uppercase tracking-widest">{t('widgets.utcClock')}</span>
               </div>
-              <div className="text-hud-main font-mono font-black text-xl gliding-value">{formatTime(currentTime, false, 'UTC')}</div>
+              <div className="text-hud-main font-mono font-semibold text-value gliding-value">{formatTime(currentTime, false, 'UTC')}</div>
             </div>
           </div>
         </div>
@@ -119,17 +116,17 @@ const TimeWidget = React.memo(() => {
             <div className="flex items-center space-x-3">
               <FontAwesomeIcon 
                 icon={isDaytime ? faSun : faMoon} 
-                className={isDaytime ? 'text-oYellow text-lg' : (nightMode ? 'text-oNight text-lg' : 'text-oBlue text-lg')} 
+                className={isDaytime ? 'text-oYellow text-lg' : 'text-oBlue text-lg'} 
               />
-              <span className="text-hud-main text-xs font-black uppercase tracking-widest">
+              <span className="text-hud-main text-caption font-semibold uppercase tracking-widest">
                 {isDaytime ? t('widgets.diurnalPhase') : t('widgets.nocturnalPhase')}
               </span>
             </div>
-            <span className="text-hud-muted text-xs font-black font-mono opacity-60">
+            <span className="text-hud-muted text-caption font-semibold font-mono opacity-60">
               {isDaytime ? '☀' : '☾'} {nextSunEvent ? formatTime(nextSunEvent, false) : '--:--'}
             </span>
           </div>
-          <div className="flex items-center justify-between text-xs font-black uppercase opacity-60">
+          <div className="flex items-center justify-between text-caption font-semibold uppercase opacity-60">
             <span className="text-hud-muted">
               <span className="tracking-widest">LAT</span> <span className="text-hud-main font-mono">{latDeg}°</span>
             </span>

@@ -64,7 +64,11 @@
     "oceanBlack": "Black (no ocean)",
     "oceanWater": "Ocean (3D water)",
     "oceanChart": "Chart (freeboard-sk)",
-    "oceanMeteo": "Meteo (Windy)"
+    "oceanMeteo": "Meteo (Windy)",
+    "themeAuto": "Theme: automatic ({{theme}})",
+    "theme_day": "Day theme",
+    "theme_dark": "Dark theme",
+    "theme_night": "Night theme (red)"
   },
   "indicators": {
     "depth": "Depth",
@@ -170,7 +174,13 @@
     "unitMs": "m/s",
     "unitMetres": "m",
     "unitFeet": "ft",
-    "unitFathoms": "fa"
+    "unitFathoms": "fa",
+    "themeAuto": "Auto (sun)",
+    "renderQuality": "3D rendering",
+    "renderQuality_auto": "Auto",
+    "renderQuality_high": "Quality",
+    "renderQuality_pi": "Raspberry Pi",
+    "renderQualityHint": "Raspberry Pi: 30 fps, no anti-aliasing, flat water. Applied after reload."
   },
   "dashboard": {
     "environment": "Environment",

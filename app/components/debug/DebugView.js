@@ -15,9 +15,9 @@ const ToggleRow = ({ label, description, checked, onChange }) => (
     <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
         <label className="flex items-center justify-between cursor-pointer">
             <div className="space-y-1">
-                <span className="text-sm font-bold uppercase tracking-widest text-hud-secondary">{label}</span>
+                <span className="text-label font-bold uppercase tracking-widest text-hud-secondary">{label}</span>
                 {description && (
-                    <p className="text-xs text-hud-muted font-medium uppercase tracking-wider">{description}</p>
+                    <p className="text-caption text-hud-muted font-medium uppercase tracking-wider">{description}</p>
                 )}
             </div>
             <input type="checkbox" className="sr-only peer" checked={checked} onChange={(e) => onChange(e.target.checked)} />
@@ -150,15 +150,15 @@ const DebugView = () => {
     return (
         <div className="p-8 text-hud-main w-full overflow-y-auto h-full">
             <header className="mb-8">
-                <h1 className="text-3xl font-black uppercase tracking-tighter mb-1">{t('menu.debug')}</h1>
-                <p className="text-hud-secondary text-sm font-medium uppercase tracking-widest">{t('debug.systemDebug')}</p>
+                <h1 className="text-value font-semibold uppercase tracking-tight mb-1">{t('menu.debug')}</h1>
+                <p className="text-hud-secondary text-label font-medium uppercase tracking-widest">{t('debug.systemDebug')}</p>
             </header>
 
             <div className="space-y-6">
                 {/* 3D Axes Toggle */}
                 <section className="tesla-card p-6 space-y-4">
                     <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">3D</h2>
+                        <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">3D</h2>
                         <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                     </div>
                     <ToggleRow
@@ -172,7 +172,7 @@ const DebugView = () => {
                 {/* Wind Override */}
                 <section className="tesla-card p-6 space-y-4">
                     <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('settings.debugWindOverride')}</h2>
+                        <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('settings.debugWindOverride')}</h2>
                         <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                     </div>
                     <ToggleRow
@@ -185,8 +185,8 @@ const DebugView = () => {
                         <div className="space-y-4 p-4 rounded-xl bg-oYellow/5 border border-oYellow/20">
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs font-black uppercase tracking-widest text-hud-secondary">{t('settings.debugWindSpeed')}</span>
-                                    <span className="text-lg font-black text-oYellow bg-oYellow/10 px-3 py-1 rounded-lg">{overrideSpeed} kn</span>
+                                    <span className="text-caption font-semibold uppercase tracking-widest text-hud-secondary">{t('settings.debugWindSpeed')}</span>
+                                    <span className="text-value font-semibold text-oYellow bg-oYellow/10 px-3 py-1 rounded-lg">{overrideSpeed} kn</span>
                                 </div>
                                 <input
                                     type="range"
@@ -198,8 +198,8 @@ const DebugView = () => {
                             </div>
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs font-black uppercase tracking-widest text-hud-secondary">{t('settings.debugWindDirection')}</span>
-                                    <span className="text-lg font-black text-oYellow bg-oYellow/10 px-3 py-1 rounded-lg">{overrideDirection}°</span>
+                                    <span className="text-caption font-semibold uppercase tracking-widest text-hud-secondary">{t('settings.debugWindDirection')}</span>
+                                    <span className="text-value font-semibold text-oYellow bg-oYellow/10 px-3 py-1 rounded-lg">{overrideDirection}°</span>
                                 </div>
                                 <input
                                     type="range"
@@ -216,7 +216,7 @@ const DebugView = () => {
                 {/* SignalK Debug Data */}
                 <section className="tesla-card p-6 space-y-4">
                     <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('debug.windDynamics')}</h2>
+                        <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('debug.windDynamics')}</h2>
                         <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -229,7 +229,7 @@ const DebugView = () => {
 
                 <section className="tesla-card p-6 space-y-4">
                     <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('debug.performanceMetrics')}</h2>
+                        <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('debug.performanceMetrics')}</h2>
                         <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -250,7 +250,7 @@ const DebugView = () => {
 
                 <section className="tesla-card p-6 space-y-4">
                     <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('debug.navigation')}</h2>
+                        <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('debug.navigation')}</h2>
                         <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -263,7 +263,7 @@ const DebugView = () => {
 
                 <section className="tesla-card p-6 space-y-4">
                     <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('debug.laylineAnalysis')}</h2>
+                        <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('debug.laylineAnalysis')}</h2>
                         <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -276,7 +276,7 @@ const DebugView = () => {
 
                 <section className="tesla-card p-6 space-y-4">
                     <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-lg font-black uppercase tracking-widest text-hud-main/90">{t('debug.regattaStart')}</h2>
+                        <h2 className="text-label font-semibold uppercase tracking-widest text-hud-main/90">{t('debug.regattaStart')}</h2>
                         <div className="h-[1px] flex-grow bg-hud-border mx-4" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -295,8 +295,8 @@ const DebugView = () => {
 
 const DebugRow = ({ label, value, accent = "text-hud-main" }) => (
     <div className="flex flex-col bg-hud-bg p-2 rounded-lg border border-hud">
-        <span className="text-xs font-black uppercase tracking-widest text-hud-muted leading-none mb-1">{label}</span>
-        <span className={`text-xs font-mono font-bold ${accent}`}>{value}</span>
+        <span className="text-caption font-semibold uppercase tracking-widest text-hud-muted leading-none mb-1">{label}</span>
+        <span className={`text-caption font-mono font-bold ${accent}`}>{value}</span>
     </div>
 );
 

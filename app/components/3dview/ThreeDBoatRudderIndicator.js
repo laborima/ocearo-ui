@@ -1,10 +1,8 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { useOcearoContext } from '../context/OcearoContext';
 import { useSignalKPath } from '../hooks/useSignalK';
 
 const ThreeDBoatRudderIndicator = () => {
-    const { nightMode } = useOcearoContext();
     const rudderAngleRadians = useSignalKPath('steering.rudderAngle', 0);
     const rudderAngle = useMemo(() => (rudderAngleRadians * 180) / Math.PI, [rudderAngleRadians]);
 
@@ -24,7 +22,7 @@ const ThreeDBoatRudderIndicator = () => {
                     }}
                 >
                     <span
-                        className={`absolute -top-5 left-1/2 -translate-x-1/2 text-xs font-black uppercase tracking-tighter ${nightMode ? 'text-oNight/40' : 'text-hud-muted'}`}
+                        className={`absolute -top-5 left-1/2 -translate-x-1/2 text-caption font-semibold uppercase tracking-tighter text-hud-muted`}
                     >
                         {Math.abs(i)}
                     </span>

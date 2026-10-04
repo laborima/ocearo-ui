@@ -7,12 +7,13 @@
  */
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { convertSpeedUnit, oBlue, oGreen, oNight, useOcearoContext } from '../../context/OcearoContext';
+import { convertSpeedUnit } from '../../context/OcearoContext';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
 import { Vector3, DoubleSide } from 'three';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
+import useTheme from '../../theme/useTheme';
 
 /**
  * Configuration Constants
@@ -45,8 +46,8 @@ const WindArrow = ({
     textPosition = [0, 0.8, 0],
     arrowSize = 1
 }) => {
-    const { nightMode } = useOcearoContext();
-    const finalColor = color || (nightMode ? oNight : "#ffffff");
+    const { scene } = useTheme();
+    const finalColor = color || scene.wind;
     
     return (
     <group position={position} rotation={rotation}>
@@ -198,6 +199,8 @@ const WindSector3D = ({ outerRadius }) => {
         [outerRadius, appWindAngle]
     );
 
+    const tokens = useTheme();
+
     return (
         <group>
             {/* True wind indicator - only shown when speed > 0 and not hidden by config */}
@@ -206,7 +209,7 @@ const WindSector3D = ({ outerRadius }) => {
                     position={trueWindPosition}
                     rotation={[-Math.PI / 2, 0, -(Math.PI / 2 - trueWindAngle)]}
                     speed={trueWindSpeed}
-                    color={oGreen}
+                    color={tokens.ok}
                     fontSize={FONT_SIZE.TRUE_WIND}
                 />
             )}
@@ -217,7 +220,7 @@ const WindSector3D = ({ outerRadius }) => {
                     position={appWindPosition}
                     rotation={[-Math.PI / 2, 0, -(Math.PI / 2 - appWindAngle)]}
                     speed={appWindSpeed}
-                    color={oBlue}
+                    color={tokens.accent}
                     fontSize={FONT_SIZE.APP_WIND}
                 />
             )}

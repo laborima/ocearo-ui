@@ -1,11 +1,10 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
 
-import { oBlue, oRed, oYellow } from '../../context/OcearoContext';
+import useTheme from '../../theme/useTheme';
 
 const CONSTANTS = {
   MOBILE_TEMPLATE: {
-    COLOR: oYellow, // oYellow equivalent
     WIDTH_FACTOR: 0.8,
     LENGTH_FACTOR: 2.5,
     MAX_LENGTH_MULTIPLIER: 3.5,
@@ -18,12 +17,10 @@ const CONSTANTS = {
     },
   },
   NEUTRAL_TEMPLATE: {
-    COLOR: oBlue, // oBlue equivalent
     WIDTH_FACTOR: 0.7,
     LENGTH_FACTOR: 0.9,
   },
   ANTICOLLISION_TEMPLATE: {
-    COLOR: oRed, // oRed equivalent
     WIDTH_FACTOR: 1.5,
     LENGTH_FACTOR: 0.8,
   },
@@ -41,6 +38,7 @@ const BoatNavigationSystem = ({
   driftFactor = 0,
   maxCurvePoints = 50,
 }) => {
+  const tokens = useTheme();
   const mobileTemplateRef = useRef();
   const neutralTemplateRef = useRef();
   const antiCollisionTemplateRef = useRef();
@@ -201,7 +199,7 @@ const BoatNavigationSystem = ({
       <line ref={mobileTemplateRef}>
         <bufferGeometry />
         <lineBasicMaterial 
-            color={CONSTANTS.MOBILE_TEMPLATE.COLOR} 
+            color={tokens.warn} 
             linewidth={3} 
             transparent={true} 
             opacity={0.8} 
@@ -210,7 +208,7 @@ const BoatNavigationSystem = ({
       <line ref={neutralTemplateRef}>
         <bufferGeometry />
         <lineBasicMaterial 
-            color={CONSTANTS.NEUTRAL_TEMPLATE.COLOR} 
+            color={tokens.accent} 
             linewidth={2} 
             transparent={true} 
             opacity={0.4} 
@@ -219,7 +217,7 @@ const BoatNavigationSystem = ({
       <line ref={antiCollisionTemplateRef}>
         <bufferGeometry />
         <lineBasicMaterial 
-            color={CONSTANTS.ANTICOLLISION_TEMPLATE.COLOR} 
+            color={tokens.danger} 
             linewidth={4} 
             transparent={true} 
             opacity={0.6} 

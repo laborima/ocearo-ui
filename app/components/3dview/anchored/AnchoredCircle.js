@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Line } from '@react-three/drei';
-import { oYellow, oRed, oGray } from '../../context/OcearoContext';
+import useTheme from '../../theme/useTheme';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import { getAnchorTrack } from '../../utils/OcearoCoreUtils';
 
@@ -72,6 +72,7 @@ const project = (pos, ref) => {
  * relative to the current vessel position.
  */
 const AnchoredCircle = () => {
+    const { warn: oYellow, danger: oRed, neutral: oGray } = useTheme();
     const skPosition = useSignalKPath('navigation.position');
     const skAnchorPosition = useSignalKPath('navigation.anchor.position');
     const skMaxRadius = useSignalKPath('navigation.anchor.maxRadius');

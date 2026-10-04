@@ -190,15 +190,15 @@ export default function CourseWidget() {
                 {/* Waypoint List */}
                 {showWaypointList && (
                     <div className="mb-4 max-h-40 overflow-y-auto tesla-card bg-hud-bg p-2 space-y-1">
-                        <div className="text-xs text-hud-muted mb-2 uppercase font-black tracking-[0.2em] px-2 pt-1">{t('widgets.storedWaypoints')}</div>
+                        <div className="text-caption text-hud-muted mb-2 uppercase font-semibold tracking-[0.2em] px-2 pt-1">{t('widgets.storedWaypoints')}</div>
                         {waypointsList.length === 0 ? (
-                            <div className="text-xs text-hud-secondary italic px-2 py-4 text-center font-black uppercase">{t('widgets.noActiveNodes')}</div>
+                            <div className="text-caption text-hud-secondary italic px-2 py-4 text-center font-semibold uppercase">{t('widgets.noActiveNodes')}</div>
                         ) : (
                             waypointsList.map(wp => (
                                 <button
                                     key={wp.id}
                                     onClick={() => handleSelectWaypoint(wp.id)}
-                                    className="w-full text-left p-2 tesla-hover rounded-sm text-xs text-hud-main flex items-center group font-black uppercase tracking-tight"
+                                    className="w-full text-left p-2 tesla-hover rounded-sm text-caption text-hud-main flex items-center group font-semibold uppercase tracking-tight"
                                 >
                                     <FontAwesomeIcon icon={faLocationDot} className="text-oYellow mr-3 text-xs opacity-50 group-hover:opacity-100" />
                                     <span className="truncate">{wp.name}</span>
@@ -211,21 +211,21 @@ export default function CourseWidget() {
                 {/* Route List */}
                 {showRouteList && (
                     <div className="mb-4 max-h-40 overflow-y-auto tesla-card bg-hud-bg p-2 space-y-1">
-                        <div className="text-xs text-hud-muted mb-2 uppercase font-black tracking-[0.2em] px-2 pt-1">{t('widgets.missionRoutes')}</div>
+                        <div className="text-caption text-hud-muted mb-2 uppercase font-semibold tracking-[0.2em] px-2 pt-1">{t('widgets.missionRoutes')}</div>
                         {routesList.length === 0 ? (
-                            <div className="text-xs text-hud-secondary italic px-2 py-4 text-center font-black uppercase">{t('widgets.noRoutesLoaded')}</div>
+                            <div className="text-caption text-hud-secondary italic px-2 py-4 text-center font-semibold uppercase">{t('widgets.noRoutesLoaded')}</div>
                         ) : (
                             routesList.map(route => (
                                 <button
                                     key={route.id}
                                     onClick={() => handleActivateRoute(route.id)}
-                                    className="w-full text-left p-2 tesla-hover rounded-sm text-xs text-hud-main flex items-center justify-between group font-black uppercase tracking-tight"
+                                    className="w-full text-left p-2 tesla-hover rounded-sm text-caption text-hud-main flex items-center justify-between group font-semibold uppercase tracking-tight"
                                 >
                                     <div className="flex items-center">
                                         <FontAwesomeIcon icon={faRoute} className="text-oGreen mr-3 text-xs opacity-50 group-hover:opacity-100" />
                                         <span className="truncate">{route.name}</span>
                                     </div>
-                                    <span className="text-xs text-hud-muted font-black">{route.pointCount} pts</span>
+                                    <span className="text-caption text-hud-muted font-semibold">{route.pointCount} pts</span>
                                 </button>
                             ))
                         )}
@@ -238,7 +238,7 @@ export default function CourseWidget() {
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center space-x-3">
                                 <FontAwesomeIcon icon={faCrosshairs} className="text-oYellow text-sm" />
-                                <span className="text-hud-main text-xs font-black uppercase tracking-widest truncate">
+                                <span className="text-hud-main text-caption font-semibold uppercase tracking-widest truncate">
                                     {getDestinationName()}
                                 </span>
                             </div>
@@ -256,14 +256,14 @@ export default function CourseWidget() {
                             <div className="flex justify-center space-x-3 mt-4">
                                 <button
                                     onClick={goToPreviousWaypoint}
-                                    className="bg-hud-elevated hover:bg-hud-bg text-hud-main px-4 py-1.5 rounded text-xs font-black uppercase tracking-widest transition-all shadow-soft"
+                                    className="bg-hud-elevated hover:bg-hud-bg text-hud-main px-4 py-1.5 rounded text-caption font-semibold uppercase tracking-widest transition-all shadow-soft"
                                 >
                                     <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
                                     {t('widgets.previous')}
                                 </button>
                                 <button
                                     onClick={goToNextWaypoint}
-                                    className="bg-oBlue hover:bg-oBlue/80 text-hud-main px-4 py-1.5 rounded text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-oBlue/20"
+                                    className="bg-oBlue hover:bg-oBlue/80 text-hud-main px-4 py-1.5 rounded text-caption font-semibold uppercase tracking-widest transition-all shadow-lg shadow-oBlue/20"
                                 >
                                     {t('widgets.proceed')}
                                     <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
@@ -278,11 +278,11 @@ export default function CourseWidget() {
                     <div className={`tesla-card px-3 py-2 mb-3 bg-hud-bg flex items-center justify-between ${autopilotState === 'enabled' ? 'border-l-2 border-oGreen/30' : ''}`}>
                         <div className="flex items-center space-x-2">
                             <FontAwesomeIcon icon={faRobot} className={`text-xs ${autopilotState === 'enabled' ? 'text-oGreen' : 'text-hud-muted'}`} />
-                            <span className={`text-xs font-black uppercase capitalize gliding-value ${autopilotState === 'enabled' ? 'text-oGreen' : 'text-hud-secondary'}`}>
+                            <span className={`text-caption font-semibold uppercase capitalize gliding-value ${autopilotState === 'enabled' ? 'text-oGreen' : 'text-hud-secondary'}`}>
                                 {autopilotState}
                             </span>
                         </div>
-                        <div className="flex items-center space-x-4 text-xs font-black uppercase">
+                        <div className="flex items-center space-x-4 text-caption font-semibold uppercase">
                             <span className="text-hud-main capitalize gliding-value">{autopilotMode || '—'}</span>
                             <span className="text-oYellow gliding-value">
                                 {autopilotTarget !== null ? `${Math.round(toDegrees(autopilotTarget))}°` : '—'}
@@ -297,19 +297,19 @@ export default function CourseWidget() {
                         {/* Distance */}
                         <div className="tesla-card p-4 text-center tesla-hover bg-hud-bg">
                             <FontAwesomeIcon icon={faRuler} className="text-oGreen text-xs mb-2 opacity-50" />
-                            <div className="text-hud-main text-2xl font-black gliding-value tracking-tighter">
+                            <div className="text-hud-main text-value font-semibold gliding-value tracking-tight">
                                 {formatDistance(courseData.distance)}
                             </div>
-                            <div className="text-hud-secondary text-xs uppercase font-black mt-2 tracking-[0.2em]">{t('widgets.distance')}</div>
+                            <div className="text-hud-secondary text-caption uppercase font-semibold mt-2 tracking-[0.2em]">{t('widgets.distance')}</div>
                         </div>
 
                         {/* Bearing */}
                         <div className="tesla-card p-4 text-center tesla-hover bg-hud-bg">
                             <FontAwesomeIcon icon={faCompass} className="text-oBlue text-xs mb-2 opacity-50" />
-                            <div className="text-hud-main text-2xl font-black gliding-value tracking-tighter">
+                            <div className="text-hud-main text-value font-semibold gliding-value tracking-tight">
                                 {courseData.bearingTrue !== null ? `${Math.round(toDegrees(courseData.bearingTrue))}°` : t('common.na')}
                             </div>
-                            <div className="text-hud-secondary text-xs uppercase font-black mt-2 tracking-[0.2em]">{t('widgets.bearing')}</div>
+                            <div className="text-hud-secondary text-caption uppercase font-semibold mt-2 tracking-[0.2em]">{t('widgets.bearing')}</div>
                         </div>
 
                         {/* XTE */}
@@ -317,30 +317,30 @@ export default function CourseWidget() {
                             <FontAwesomeIcon icon={faArrowRight} className={`${
                                 courseData.crossTrackError > 50 || courseData.crossTrackError < -50 ? 'text-oRed animate-soft-pulse' : 'text-oGreen opacity-50'
                             } text-xs mb-2`} />
-                            <div className="text-hud-main text-2xl font-black gliding-value tracking-tighter">
+                            <div className="text-hud-main text-value font-semibold gliding-value tracking-tight">
                                 {courseData.crossTrackError !== null ? `${Math.abs(Math.round(courseData.crossTrackError))}m` : t('common.na')}
                             </div>
-                            <div className="text-hud-secondary text-xs uppercase font-black mt-2 tracking-[0.2em]">XTE</div>
+                            <div className="text-hud-secondary text-caption uppercase font-semibold mt-2 tracking-[0.2em]">XTE</div>
                         </div>
 
                         {/* VMG */}
                         <div className="tesla-card p-4 text-center tesla-hover bg-hud-bg">
                             <FontAwesomeIcon icon={faPlay} className="text-oGreen text-xs mb-2 opacity-50" />
-                            <div className="text-hud-main text-2xl font-black gliding-value tracking-tighter">
+                            <div className="text-hud-main text-value font-semibold gliding-value tracking-tight">
                                 {courseData.velocityMadeGood !== null ? `${convertSpeedUnit(courseData.velocityMadeGood)}` : t('common.na')}
-                                <span className="text-xs text-hud-secondary ml-1">{getSpeedUnitLabel()}</span>
+                                <span className="text-caption text-hud-secondary ml-1">{getSpeedUnitLabel()}</span>
                             </div>
-                            <div className="text-hud-secondary text-xs uppercase font-black mt-2 tracking-[0.2em]">VMG</div>
+                            <div className="text-hud-secondary text-caption uppercase font-semibold mt-2 tracking-[0.2em]">VMG</div>
                         </div>
 
                         {/* Time to Go */}
                         {courseData.timeToGo !== null && (
                             <div className="tesla-card p-4 text-center tesla-hover bg-hud-bg">
                                 <FontAwesomeIcon icon={faClock} className="text-oGreen text-xs mb-2 opacity-50" />
-                                <div className="text-hud-main text-2xl font-black gliding-value tracking-tighter">
+                                <div className="text-hud-main text-value font-semibold gliding-value tracking-tight">
                                     {formatTime(courseData.timeToGo)}
                                 </div>
-                                <div className="text-hud-secondary text-xs uppercase font-black mt-2 tracking-[0.2em]">TTG</div>
+                                <div className="text-hud-secondary text-caption uppercase font-semibold mt-2 tracking-[0.2em]">TTG</div>
                             </div>
                         )}
 
@@ -348,10 +348,10 @@ export default function CourseWidget() {
                         {courseData.estimatedTimeOfArrival && (
                             <div className="tesla-card p-4 text-center tesla-hover bg-hud-bg">
                                 <FontAwesomeIcon icon={faClock} className="text-oYellow text-xs mb-2 opacity-50" />
-                                <div className="text-hud-main text-2xl font-black gliding-value tracking-tighter">
+                                <div className="text-hud-main text-value font-semibold gliding-value tracking-tight">
                                     {formatETA(courseData.estimatedTimeOfArrival)}
                                 </div>
-                                <div className="text-hud-secondary text-xs uppercase font-black mt-2 tracking-[0.2em]">ETA</div>
+                                <div className="text-hud-secondary text-caption uppercase font-semibold mt-2 tracking-[0.2em]">ETA</div>
                             </div>
                         )}
                     </div>

@@ -71,11 +71,11 @@ const SpeedWidget = React.memo(() => {
         {/* Main speed display - centered */}
         <div className="flex-1 flex flex-col justify-center">
           <div className="text-center mb-6">
-            <div className="text-5xl font-black text-hud-main leading-none gliding-value tracking-tighter">
+            <div className="text-hero font-medium text-hud-main leading-none gliding-value tracking-tight">
               {speedData.sog !== null ? speedData.sog : t('common.na')}
-              {speedData.sog !== null && <span className="text-xl text-hud-secondary ml-2 uppercase font-black tracking-widest">{speedData.speedUnitLabel}</span>}
+              {speedData.sog !== null && <span className="text-label text-hud-secondary ml-2 uppercase font-semibold tracking-widest">{speedData.speedUnitLabel}</span>}
             </div>
-            <div className={`text-xs font-black uppercase tracking-[0.3em] mt-3 ${speedData.sog !== null ? getSpeedColor(speedData.sog) : 'text-hud-muted'}`}>
+            <div className={`text-caption font-semibold uppercase tracking-[0.3em] mt-3 ${speedData.sog !== null ? getSpeedColor(speedData.sog) : 'text-hud-muted'}`}>
               {speedData.sog !== null ? getSpeedStatus(speedData.sog) : t('widgets.offline')}
             </div>
           </div>
@@ -83,24 +83,24 @@ const SpeedWidget = React.memo(() => {
           {/* SOG / STW / Heading / COG grid */}
           <div className="grid grid-cols-4 gap-3">
             <div className="tesla-card p-2 text-center tesla-hover bg-hud-bg">
-              <div className="text-hud-secondary text-xs uppercase font-black tracking-widest opacity-60">SOG</div>
-              <div className={`text-xl font-black gliding-value ${speedData.sog !== null ? getSpeedColor(speedData.sog) : 'text-hud-muted'}`}>
+              <div className="text-hud-secondary text-caption uppercase font-semibold tracking-widest opacity-60">SOG</div>
+              <div className={`text-value font-semibold gliding-value ${speedData.sog !== null ? getSpeedColor(speedData.sog) : 'text-hud-muted'}`}>
                 {speedData.sog !== null ? speedData.sog : '--'}
               </div>
             </div>
             <div className="tesla-card p-2 text-center tesla-hover bg-hud-bg">
-              <div className="text-hud-secondary text-xs uppercase font-black tracking-widest opacity-60">STW</div>
-              <div className={`text-xl font-black gliding-value ${speedData.stw !== null ? getSpeedColor(speedData.stw) : 'text-hud-muted'}`}>
+              <div className="text-hud-secondary text-caption uppercase font-semibold tracking-widest opacity-60">STW</div>
+              <div className={`text-value font-semibold gliding-value ${speedData.stw !== null ? getSpeedColor(speedData.stw) : 'text-hud-muted'}`}>
                 {speedData.stw !== null ? speedData.stw : '--'}
               </div>
             </div>
             <div className="tesla-card p-2 text-center tesla-hover bg-hud-bg">
-              <div className="text-hud-secondary text-xs uppercase font-black tracking-widest opacity-60">HDG</div>
-              <div className="text-hud-main text-xl font-black gliding-value">{speedData.heading !== null ? `${speedData.heading}°` : '--'}</div>
+              <div className="text-hud-secondary text-caption uppercase font-semibold tracking-widest opacity-60">HDG</div>
+              <div className="text-hud-main text-value font-semibold gliding-value">{speedData.heading !== null ? `${speedData.heading}°` : '--'}</div>
             </div>
             <div className="tesla-card p-2 text-center tesla-hover bg-hud-bg">
-              <div className="text-hud-secondary text-xs uppercase font-black tracking-widest opacity-60">COG</div>
-              <div className="text-hud-main text-xl font-black gliding-value">{speedData.cog !== null ? `${speedData.cog}°` : '--'}</div>
+              <div className="text-hud-secondary text-caption uppercase font-semibold tracking-widest opacity-60">COG</div>
+              <div className="text-hud-main text-value font-semibold gliding-value">{speedData.cog !== null ? `${speedData.cog}°` : '--'}</div>
             </div>
           </div>
         </div>
@@ -108,7 +108,7 @@ const SpeedWidget = React.memo(() => {
         {/* Speed gauge bar */}
         <div className="mb-4 shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="text-hud-muted text-xs font-black tracking-tighter">0</div>
+            <div className="text-hud-muted text-caption font-semibold tracking-tighter">0</div>
             <div className="flex-1 bg-hud-elevated rounded-full h-1 overflow-hidden shadow-inner">
               <div 
                 className={`h-full transition-all duration-1000 ${
@@ -119,13 +119,13 @@ const SpeedWidget = React.memo(() => {
                 style={{ width: `${speedData.sog !== null ? Math.min(100, (speedData.sog / 15) * 100) : 0}%` }}
               />
             </div>
-            <div className="text-hud-muted text-xs font-black tracking-tighter">15+</div>
+            <div className="text-hud-muted text-caption font-semibold tracking-tighter">15+</div>
           </div>
         </div>
 
         {/* Drift + Wind info */}
         <div className="tesla-card p-3 bg-hud-bg tesla-hover shrink-0">
-          <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest">
+          <div className="flex justify-between items-center text-caption font-semibold uppercase tracking-widest">
             <div className="flex items-center space-x-2">
               <span className="text-hud-secondary">{t('widgets.driftEffect')}</span>
               <span className={`gliding-value ${speedData.drift !== null && speedData.drift > 0 ? 'text-oGreen' : speedData.drift !== null && speedData.drift < 0 ? 'text-oRed' : 'text-hud-muted'}`}>

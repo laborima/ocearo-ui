@@ -75,17 +75,17 @@ export default function VisibilityWidget() {
       <div className="flex-1 flex flex-col min-h-0">
         {/* Main display - centered */}
         <div className="flex-1 flex flex-col items-center justify-center">
-          <div className={`text-5xl mb-4 ${getVisibilityColor(visibilityData.distance)}`}>
+          <div className={`text-hero mb-4 ${getVisibilityColor(visibilityData.distance)}`}>
             <FontAwesomeIcon 
               icon={getVisibilityIcon(visibilityData.distance)} 
               className={visibilityData.distance < 10 ? 'animate-soft-pulse' : ''} 
             />
           </div>
-          <div className="text-5xl font-black text-hud-main leading-none gliding-value tracking-tighter">
+          <div className="text-hero font-medium text-hud-main leading-none gliding-value tracking-tight">
             {visibilityData.distance}
-            <span className="text-xl text-hud-secondary ml-2 uppercase font-black tracking-widest">km</span>
+            <span className="text-label text-hud-secondary ml-2 uppercase font-semibold tracking-widest">km</span>
           </div>
-          <div className={`text-xs font-black uppercase tracking-[0.3em] mt-3 ${getVisibilityColor(visibilityData.distance)}`}>
+          <div className={`text-caption font-semibold uppercase tracking-[0.3em] mt-3 ${getVisibilityColor(visibilityData.distance)}`}>
             {getVisibilityStatus(visibilityData.distance)}
           </div>
         </div>
@@ -93,14 +93,14 @@ export default function VisibilityWidget() {
         {/* Metric + Nautical */}
         <div className="grid grid-cols-2 gap-4 mb-4 shrink-0">
           <div className="tesla-card p-3 text-center tesla-hover bg-hud-bg">
-            <div className="text-hud-secondary text-xs uppercase font-black tracking-widest mb-1 opacity-60">{t('widgets.metricRange')}</div>
-            <div className={`text-xl font-black gliding-value ${getVisibilityColor(visibilityData.distance)}`}>
+            <div className="text-hud-secondary text-caption uppercase font-semibold tracking-widest mb-1 opacity-60">{t('widgets.metricRange')}</div>
+            <div className={`text-value font-semibold gliding-value ${getVisibilityColor(visibilityData.distance)}`}>
               {visibilityData.distance} km
             </div>
           </div>
           <div className="tesla-card p-3 text-center tesla-hover bg-hud-bg">
-            <div className="text-hud-secondary text-xs uppercase font-black tracking-widest mb-1 opacity-60">{t('widgets.nauticalRange')}</div>
-            <div className={`text-xl font-black gliding-value ${getVisibilityColor(visibilityData.distance)}`}>
+            <div className="text-hud-secondary text-caption uppercase font-semibold tracking-widest mb-1 opacity-60">{t('widgets.nauticalRange')}</div>
+            <div className={`text-value font-semibold gliding-value ${getVisibilityColor(visibilityData.distance)}`}>
               {visibilityData.distanceNM} NM
             </div>
           </div>
@@ -109,7 +109,7 @@ export default function VisibilityWidget() {
         {/* Progress bar + description */}
         <div className="shrink-0 space-y-2">
           <div className="flex items-center space-x-3">
-            <div className="text-hud-muted text-xs font-black tracking-tighter">0</div>
+            <div className="text-hud-muted text-caption font-semibold tracking-tighter">0</div>
             <div className="flex-1 bg-hud-elevated rounded-full h-1 overflow-hidden shadow-inner">
               <div 
                 className={`h-full transition-all duration-1000 ${
@@ -120,9 +120,9 @@ export default function VisibilityWidget() {
                 style={{ width: `${Math.min(100, (visibilityData.distance / 20) * 100)}%` }}
               />
             </div>
-            <div className="text-hud-muted text-xs font-black tracking-tighter">20k+</div>
+            <div className="text-hud-muted text-caption font-semibold tracking-tighter">20k+</div>
           </div>
-          <div className="text-center text-hud-main font-black text-xs uppercase tracking-widest opacity-60">
+          <div className="text-center text-hud-main font-semibold text-caption uppercase tracking-widest opacity-60">
             {getVisibilityDescription(visibilityData.distance)}
           </div>
         </div>

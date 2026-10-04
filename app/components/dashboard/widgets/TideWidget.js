@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   ReferenceLine
 } from 'recharts';
-import { oBlue, oGreen, useOcearoContext } from '../../context/OcearoContext';
+import useTheme from '../../theme/useTheme';
 import { useTide } from '../../context/TideContext';
 import BaseWidget from './BaseWidget';
 import configService from '../../settings/ConfigService';
@@ -130,7 +130,7 @@ const parseTideTime = (timeValue) => {
 
 export default function TideWidget() {
   const { t } = useTranslation();
-  const { nightMode } = useOcearoContext();
+  const tokens = useTheme();
   const debugMode = configService.get('debugMode');
 
   const tidePaths = useMemo(() => [
@@ -164,6 +164,7 @@ export default function TideWidget() {
     if (!highDate || !lowDate) return false;
     return highDate.getTime() < lowDate.getTime();
   }, [highDate, lowDate]);
+  const tideColor = isRising ? tokens.ok : tokens.accent;
 
   // Generate tide curve data points using Rule of Twelfths
   const chartData = useMemo(() => {
@@ -206,14 +207,14 @@ export default function TideWidget() {
         {/* Header row: level + phase */}
         <div className="flex items-center justify-between mb-3 shrink-0">
           <div className="flex items-baseline space-x-3">
-            <span className="text-4xl font-black text-hud-main leading-none gliding-value tracking-tighter">
-              {(level || 2.1).toFixed(1)}<span className="text-lg text-hud-muted ml-1">m</span>
+            <span className="text-hero font-medium text-hud-main leading-none gliding-value tracking-tight">
+              {(level || 2.1).toFixed(1)}<span className="text-value text-hud-muted ml-1">m</span>
             </span>
-            <span className={`text-xs font-black uppercase tracking-[0.2em] ${isRising ? 'text-oGreen' : 'text-oBlue'}`}>
+            <span className={`text-caption font-semibold uppercase tracking-[0.2em] ${isRising ? 'text-oGreen' : 'text-oBlue'}`}>
               {isRising ? t('widgets.rising') : t('widgets.ebb')}
             </span>
           </div>
-          {coefficient && <span className="text-hud-muted text-xs font-black">C{Math.round(coefficient)}</span>}
+          {coefficient && <span className="text-hud-muted text-caption font-semibold">C{Math.round(coefficient)}</span>}
         </div>
 
         {/* Chart fills remaining space */}
@@ -222,8 +223,8 @@ export default function TideWidget() {
             <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorTide" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={isRising ? (nightMode ? '#ef4444' : oGreen) : (nightMode ? '#ef4444' : oBlue)} stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor={isRising ? (nightMode ? '#ef4444' : oGreen) : (nightMode ? '#ef4444' : oBlue)} stopOpacity={0}/>
+                  <stop offset="5%" stopColor={tideColor} stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor={tideColor} stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--hud-border)" vertical={false} />
@@ -243,12 +244,12 @@ export default function TideWidget() {
               />
               <Tooltip 
                 contentStyle={{ backgroundColor: 'var(--hud-bg)', border: '1px solid var(--hud-border)', borderRadius: '4px', fontSize: '11px', fontWeight: 900, textTransform: 'uppercase' }}
-                itemStyle={{ color: isRising ? (nightMode ? '#ef4444' : oGreen) : (nightMode ? '#ef4444' : oBlue) }}
+                itemStyle={{ color: tideColor }}
               />
               <Area 
                 type="monotone" 
                 dataKey="height" 
-                stroke={isRising ? (nightMode ? '#ef4444' : oGreen) : (nightMode ? '#ef4444' : oBlue)} 
+                stroke={tideColor} 
                 strokeWidth={2}
                 fillOpacity={1} 
                 fill="url(#colorTide)" 
@@ -269,14 +270,14 @@ export default function TideWidget() {
         {/* High/Low inline row */}
         <div className="flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2">
-            <span className="text-hud-muted text-xs font-black uppercase tracking-widest">{t('widgets.high')}</span>
-            <span className="text-hud-main font-black text-sm gliding-value">{formatTideTime(timeHigh) || '--:--'}</span>
-            <span className="text-oGreen text-xs font-black">{(high || 0).toFixed(1)}m</span>
+            <span className="text-hud-muted text-caption font-semibold uppercase tracking-widest">{t('widgets.high')}</span>
+            <span className="text-hud-main font-semibold text-label gliding-value">{formatTideTime(timeHigh) || '--:--'}</span>
+            <span className="text-oGreen text-caption font-semibold">{(high || 0).toFixed(1)}m</span>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-hud-muted text-xs font-black uppercase tracking-widest">{t('widgets.low')}</span>
-            <span className="text-hud-main font-black text-sm gliding-value">{formatTideTime(timeLow) || '--:--'}</span>
-            <span className="text-oBlue text-xs font-black">{(low || 0).toFixed(1)}m</span>
+            <span className="text-hud-muted text-caption font-semibold uppercase tracking-widest">{t('widgets.low')}</span>
+            <span className="text-hud-main font-semibold text-label gliding-value">{formatTideTime(timeLow) || '--:--'}</span>
+            <span className="text-oBlue text-caption font-semibold">{(low || 0).toFixed(1)}m</span>
           </div>
         </div>
       </div>

@@ -74,17 +74,17 @@ export const CircularGauge = ({
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           {icon && <FontAwesomeIcon icon={icon} className="text-hud-muted text-sm mb-1" />}
           {showValue && (
-            <div className={`text-2xl font-black tracking-tighter gliding-value ${hasValue ? 'text-hud-main' : 'text-hud-muted'} ${pulse ? 'animate-soft-pulse' : ''}`}>
+            <div className={`text-value font-semibold tracking-tight gliding-value ${hasValue ? 'text-hud-main' : 'text-hud-muted'} ${pulse ? 'animate-soft-pulse' : ''}`}>
               {displayValue}
             </div>
           )}
           {showValue && hasValue && unit && (
-            <div className="text-xs font-black text-hud-secondary uppercase tracking-widest">{unit}</div>
+            <div className="text-caption font-semibold text-hud-secondary uppercase tracking-widest">{unit}</div>
           )}
         </div>
       </div>
 
-      <div className="text-hud-muted text-xs font-black mt-1 text-center uppercase tracking-widest">{label}</div>
+      <div className="text-hud-muted text-caption font-semibold mt-1 text-center uppercase tracking-widest">{label}</div>
     </div>
   );
 };
@@ -125,11 +125,11 @@ export const BarGauge = ({
   return (
     <div className="tesla-card p-3 tesla-hover">
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center text-hud-muted text-xs font-black uppercase tracking-widest">
+        <div className="flex items-center text-hud-muted text-caption font-semibold uppercase tracking-widest">
           {icon && <FontAwesomeIcon icon={icon} className="mr-2 fa-fw opacity-50" />}
           {label}
         </div>
-        <div className={`font-black text-lg gliding-value ${hasValue ? 'text-hud-main' : 'text-hud-dim'} ${pulse ? 'animate-soft-pulse' : ''}`}>
+        <div className={`font-semibold text-value gliding-value ${hasValue ? 'text-hud-main' : 'text-hud-dim'} ${pulse ? 'animate-soft-pulse' : ''}`}>
           {displayValue}
         </div>
       </div>
@@ -142,7 +142,7 @@ export const BarGauge = ({
       </div>
       
       {showMinMax && (
-        <div className="flex justify-between text-xs font-black text-hud-dim mt-2 uppercase tracking-tighter">
+        <div className="flex justify-between text-caption font-semibold text-hud-dim mt-2 uppercase tracking-tighter">
           <span>{min}</span>
           <span>{max}</span>
         </div>
@@ -181,11 +181,11 @@ export const CompactDataField = ({
   
   return (
     <div className="tesla-card p-3 tesla-hover flex items-center justify-between">
-      <div className="flex items-center text-hud-muted text-xs font-black uppercase tracking-widest">
+      <div className="flex items-center text-hud-muted text-caption font-semibold uppercase tracking-widest">
         {icon && <FontAwesomeIcon icon={icon} className="mr-2 fa-fw opacity-50" />}
         {label}
       </div>
-      <div className={`font-black text-lg gliding-value ${getColor()} ${(criticalThreshold && (reversed ? value <= criticalThreshold : value >= criticalThreshold)) ? 'animate-soft-pulse' : ''}`}>
+      <div className={`font-semibold text-value gliding-value ${getColor()} ${(criticalThreshold && (reversed ? value <= criticalThreshold : value >= criticalThreshold)) ? 'animate-soft-pulse' : ''}`}>
         {displayValue !== 'N/A' ? `${displayValue}${unit ? ` ${unit}` : ''}` : 'N/A'}
       </div>
     </div>
@@ -208,7 +208,7 @@ export const MiniSparkline = ({
         className="flex items-center justify-center bg-hud-elevated rounded-xl" 
         style={{ width, height }}
       >
-        <span className="text-xs text-hud-dim">No data</span>
+        <span className="text-caption text-hud-dim">No data</span>
       </div>
     );
   }
@@ -285,13 +285,13 @@ export const PrimaryGauge = ({
       {icon && (
         <FontAwesomeIcon icon={icon} className="text-lg text-hud-muted mb-2 opacity-50" />
       )}
-      <div className={`text-4xl font-black mb-1 tracking-tighter gliding-value ${getColor()} ${pulse ? 'animate-soft-pulse' : ''}`}>
+      <div className={`text-hero font-medium mb-1 tracking-tight gliding-value ${getColor()} ${pulse ? 'animate-soft-pulse' : ''}`}>
         {displayValue}
       </div>
       {hasValue && unit && (
-        <div className="text-hud-secondary text-xs font-black uppercase tracking-widest mb-2">{unit}</div>
+        <div className="text-hud-secondary text-caption font-semibold uppercase tracking-widest mb-2">{unit}</div>
       )}
-      <div className="text-hud-muted text-xs font-black uppercase tracking-widest mb-3">{label}</div>
+      <div className="text-hud-muted text-caption font-semibold uppercase tracking-widest mb-3">{label}</div>
       
       <div className="w-full bg-hud-elevated rounded-full h-1 overflow-hidden shadow-inner">
         <div

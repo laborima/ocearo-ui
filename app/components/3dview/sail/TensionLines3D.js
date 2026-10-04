@@ -7,6 +7,7 @@
  */
 import React, { useRef, useMemo, useEffect } from 'react';
 import * as THREE from 'three';
+import useTheme from '../../theme/useTheme';
 
 /**
  * GLSL vertex shader - passes position through with standard MVP transform.
@@ -19,15 +20,15 @@ const TENSION_VERTEX_SHADER = `
 
 /**
  * GLSL fragment shader - interpolates color based on tension uniform.
- * 0.0 = green, 0.5 = orange, 1.0 = red.
+ * 0.0 = low colour, 0.5 = mid, 1.0 = high (theme ok / warn / danger).
  */
 const TENSION_FRAGMENT_SHADER = `
     uniform float tension;
+    uniform vec3 green;
+    uniform vec3 orange;
+    uniform vec3 red;
 
     void main() {
-        vec3 green  = vec3(0.06, 0.80, 0.31);
-        vec3 orange = vec3(1.00, 0.75, 0.00);
-        vec3 red    = vec3(0.80, 0.00, 0.03);
 
         vec3 color;
         if (tension <= 0.5) {
@@ -89,10 +90,14 @@ const LINE_DEFINITIONS = {
  */
 const TensionLine = ({ points, tension }) => {
     const lineRef = useRef();
+    const { scene } = useTheme();
 
     const shaderMaterial = useMemo(() => new THREE.ShaderMaterial({
         uniforms: {
             tension: { value: 0.5 },
+            green: { value: new THREE.Color() },
+            orange: { value: new THREE.Color() },
+            red: { value: new THREE.Color() },
         },
         vertexShader: TENSION_VERTEX_SHADER,
         fragmentShader: TENSION_FRAGMENT_SHADER,
@@ -117,6 +122,12 @@ const TensionLine = ({ points, tension }) => {
             shaderMaterial.uniforms.tension.value = tension;
         }
     }, [tension, shaderMaterial]);
+
+    useEffect(() => {
+        shaderMaterial.uniforms.green.value.set(scene.wakeGood);
+        shaderMaterial.uniforms.orange.value.set(scene.wakeFair);
+        shaderMaterial.uniforms.red.value.set(scene.wakeBad);
+    }, [scene, shaderMaterial]);
 
     return (
         <line ref={lineRef} geometry={geometry} material={shaderMaterial} />

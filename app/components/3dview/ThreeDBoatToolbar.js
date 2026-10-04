@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAnchor, faShip, faMoon, faWater, faParking, faSatellite, faCompass, faRulerCombined, faMap, faCloudSunRain } from '@fortawesome/free-solid-svg-icons';
+import { faAnchor, faShip, faMoon, faSun, faEye, faCircleHalfStroke, faWater, faParking, faSatellite, faCompass, faRulerCombined, faMap, faCloudSunRain } from '@fortawesome/free-solid-svg-icons';
+import { THEME_MODES } from '../theme/themes';
 import { useOcearoContext } from '../context/OcearoContext';
 import { useTranslation } from 'react-i18next';
 
@@ -21,13 +22,12 @@ const ToolbarButton = ({ onClick, icon, isActive, activeClass, label }) => (
 
 const ThreeDBoatToolbar = () => {
     const { t } = useTranslation();
-    const { nightMode, setNightMode, states, toggleState, toggleExclusiveMode, cycleOceanMode } = useOcearoContext();
+    const { theme, themeMode, setTheme, states, toggleState, toggleExclusiveMode, cycleOceanMode } = useOcearoContext();
 
     const activeColor = {
         autopilot: 'text-oBlue',
         anchorWatch: 'text-oYellow',
         parkingMode: 'text-oGreen',
-        nightMode: 'text-oNight',
         polar: 'text-oBlue',
         laylines: 'text-oGreen',
         ais: 'text-oGreen'
@@ -38,6 +38,19 @@ const ThreeDBoatToolbar = () => {
         water: { icon: faWater,        color: 'text-oBlue',      label: t('toolbar.oceanWater') },
         chart: { icon: faMap,          color: 'text-oGreen',     label: t('toolbar.oceanChart') },
         meteo: { icon: faCloudSunRain, color: 'text-oYellow',    label: t('toolbar.oceanMeteo') },
+    };
+
+    // auto -> day -> dark -> night -> auto
+    const THEME_BUTTON = {
+        auto: { icon: faCircleHalfStroke, label: t('toolbar.themeAuto', { theme: t(`toolbar.theme_${theme}`) }) },
+        day: { icon: faSun, label: t('toolbar.theme_day') },
+        dark: { icon: faMoon, label: t('toolbar.theme_dark') },
+        night: { icon: faEye, label: t('toolbar.theme_night') },
+    };
+    const themeButton = THEME_BUTTON[themeMode] || THEME_BUTTON.dark;
+    const cycleTheme = () => {
+        const next = THEME_MODES[(THEME_MODES.indexOf(themeMode) + 1) % THEME_MODES.length];
+        setTheme(next);
     };
 
     const currentOceanMode = states.oceanMode || 'black';
@@ -73,11 +86,11 @@ const ThreeDBoatToolbar = () => {
             <div className="h-6 w-[1px] bg-hud-border mx-0.5" />
 
             <ToolbarButton
-                onClick={() => setNightMode(!nightMode)}
-                icon={faMoon}
-                isActive={nightMode}
-                activeClass={activeColor.nightMode}
-                label={t('toolbar.nightMode')}
+                onClick={cycleTheme}
+                icon={themeButton.icon}
+                isActive={themeMode !== 'dark'}
+                activeClass="text-hud-main"
+                label={themeButton.label}
             />
 
             <ToolbarButton

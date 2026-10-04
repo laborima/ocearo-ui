@@ -9,6 +9,7 @@ import { useSignalKPath } from "../../hooks/useSignalK";
 import { useTexture, Stars } from "@react-three/drei";
 import configService from "../../settings/ConfigService";
 import { vesselNow } from '../../utils/VesselClock';
+import { sunPosition } from '../../utils/SunUtils';
 
 // Extend the Water and Sky components for use in JSX
 extend({ Water, Sky });
@@ -33,7 +34,7 @@ const RAIN_HEIGHT = 220; // drops fall from this height
 const _scratchCloudColor = new THREE.Color();
 
 function Ocean3D({ lite = false }) {
-  const { nightMode, setNightMode } = useOcearoContext();
+  const { nightMode } = useOcearoContext();
   const { getWindData, getCurrentWeather } = useWeather();
   
   const ref = useRef();
@@ -239,42 +240,8 @@ function Ocean3D({ lite = false }) {
       timeSource = simulatedNow;
     }
 
-    // 2. Calculate Sun Position (NOAA Algorithm)
-    const startOfYear = new Date(timeSource.getFullYear(), 0, 0);
-    const diff = timeSource - startOfYear + (startOfYear.getTimezoneOffset() - timeSource.getTimezoneOffset()) * 60000;
-    const dayOfYear = diff / 86400000;
-
-    const rad = Math.PI / 180;
-    const deg = 180 / Math.PI;
-
-    const hour = timeSource.getHours();
-    const minute = timeSource.getMinutes();
-    const gamma = 2 * Math.PI / 365 * (dayOfYear - 1 + (hour - 12) / 24);
-
-    const eqTime = 229.18 * (
-      0.000075 + 0.001868 * Math.cos(gamma) - 0.032077 * Math.sin(gamma)
-      - 0.014615 * Math.cos(2 * gamma) - 0.040849 * Math.sin(2 * gamma)
-    );
-
-    const decl = 0.006918 - 0.399912 * Math.cos(gamma) + 0.070257 * Math.sin(gamma)
-      - 0.006758 * Math.cos(2 * gamma) + 0.000907 * Math.sin(2 * gamma)
-      - 0.002697 * Math.cos(3 * gamma) + 0.00148 * Math.sin(3 * gamma);
-
-    const tzOffsetMinutes = -timeSource.getTimezoneOffset();
-    const timeOffset = eqTime + 4 * longitude - tzOffsetMinutes;
-    const trueSolarTimeMinutes = ((hour * 60 + minute) + timeOffset + 1440) % 1440;
-
-    const hourAngleDeg = trueSolarTimeMinutes / 4 - 180;
-    const hourAngleRad = hourAngleDeg * rad;
-    const latRad = latitude * rad;
-
-    const cosZenith = Math.sin(latRad) * Math.sin(decl) + Math.cos(latRad) * Math.cos(decl) * Math.cos(hourAngleRad);
-    const zenithRad = Math.acos(Math.min(Math.max(cosZenith, -1), 1));
-    const elevationDeg = 90 - zenithRad * deg;
-
-    const sinAzimuth = Math.sin(hourAngleRad);
-    const cosAzimuth = Math.cos(hourAngleRad) * Math.sin(latRad) - Math.tan(decl) * Math.cos(latRad);
-    const azimuthDeg = (Math.atan2(sinAzimuth, cosAzimuth) * deg + 360) % 360;
+    // 2. Sun position (shared NOAA implementation)
+    const { elevation: elevationDeg, azimuth: azimuthDeg } = sunPosition(latitude, longitude, timeSource);
 
     // Twilight band for smoother transition (degrees above/below horizon)
     const twilightStart = -10; // fully night below this

@@ -46,20 +46,20 @@ class ErrorBoundary extends React.Component {
             <div className="w-20 h-20 rounded-full bg-oRed/20 flex items-center justify-center mb-8">
               <div className="w-4 h-4 rounded-full bg-oRed animate-soft-pulse" />
             </div>
-            <h1 className="text-3xl font-black uppercase tracking-tighter text-oRed mb-6">
+            <h1 className="text-value font-semibold uppercase tracking-tight text-oRed mb-6">
               System Critical Error
             </h1>
-            <p className="text-lg font-medium text-hud-main/80 mb-8 max-w-md">
-              <span className="text-hud-muted uppercase text-xs font-black tracking-widest block mb-2">Technical Status</span>
+            <p className="text-value font-medium text-hud-main/80 mb-8 max-w-md">
+              <span className="text-hud-muted uppercase text-caption font-semibold tracking-widest block mb-2">Technical Status</span>
               {error ? error.toString() : "Unknown exception detected in UI thread"}
             </p>
             {errorInfo && (
               <details className="w-full whitespace-pre-wrap bg-hud-bg/5 p-6 rounded-2xl mb-10 text-left border border-hud group">
-                <summary className="cursor-pointer text-oBlue text-xs font-black uppercase tracking-widest hover:text-hud-main transition-colors flex items-center justify-between">
+                <summary className="cursor-pointer text-oBlue text-caption font-semibold uppercase tracking-widest hover:text-hud-main transition-colors flex items-center justify-between">
                   <span>Diagnostic Stack Trace</span>
                   <span className="opacity-40 group-open:rotate-180 transition-transform">▼</span>
                 </summary>
-                <pre className="mt-6 text-xs font-mono text-hud-muted overflow-auto max-h-60 custom-scrollbar leading-relaxed">
+                <pre className="mt-6 text-caption font-mono text-hud-muted overflow-auto max-h-60 custom-scrollbar leading-relaxed">
                   {errorInfo.componentStack}
                 </pre>
               </details>
@@ -67,13 +67,13 @@ class ErrorBoundary extends React.Component {
             <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
               <button
                 onClick={this.handleRefresh}
-                className="px-8 py-4 bg-oBlue hover:bg-blue-600 text-hud-main rounded-xl text-xs font-black uppercase tracking-[0.2em] transition-all duration-500 shadow-lg shadow-oBlue/20 active:scale-95"
+                className="px-8 py-4 bg-oBlue hover:bg-blue-600 text-hud-main rounded-xl text-caption font-semibold uppercase tracking-[0.2em] transition-all duration-500 shadow-lg shadow-oBlue/20 active:scale-95"
               >
                 Reboot Session
               </button>
               <button
                 onClick={this.handleExitFullscreen}
-                className="px-8 py-4 bg-hud-elevated hover:bg-hud-bg text-hud-main border border-hud rounded-xl text-xs font-black uppercase tracking-[0.2em] transition-all duration-500 active:scale-95"
+                className="px-8 py-4 bg-hud-elevated hover:bg-hud-bg text-hud-main border border-hud rounded-xl text-caption font-semibold uppercase tracking-[0.2em] transition-all duration-500 active:scale-95"
               >
                 Exit Console
               </button>

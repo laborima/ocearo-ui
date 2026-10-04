@@ -72,19 +72,19 @@ export default function SunriseSunsetWidget() {
         {/* Times display */}
         <div className="grid grid-cols-2 gap-4">
           <div className="text-center tesla-card bg-hud-bg p-4 tesla-hover border border-hud">
-            <div className="text-hud-muted text-xs uppercase mb-3 font-black tracking-widest">{t('widgets.solarIngress')}</div>
-            <div className="text-3xl font-black text-oYellow leading-none gliding-value tracking-tighter">
+            <div className="text-hud-muted text-caption uppercase mb-3 font-semibold tracking-widest">{t('widgets.solarIngress')}</div>
+            <div className="text-value font-semibold text-oYellow leading-none gliding-value tracking-tight">
               {sunrise !== null ? sunrise : t('common.na')}
             </div>
-            <div className="text-hud-muted text-xs uppercase mt-3 font-black tracking-widest opacity-60">{t('widgets.localMeridian')}</div>
+            <div className="text-hud-muted text-caption uppercase mt-3 font-semibold tracking-widest opacity-60">{t('widgets.localMeridian')}</div>
           </div>
           
           <div className="text-center tesla-card bg-hud-bg p-4 tesla-hover border border-hud">
-            <div className="text-hud-muted text-xs uppercase mb-3 font-black tracking-widest">{t('widgets.solarEgress')}</div>
-            <div className="text-3xl font-black text-oYellow leading-none gliding-value tracking-tighter">
+            <div className="text-hud-muted text-caption uppercase mb-3 font-semibold tracking-widest">{t('widgets.solarEgress')}</div>
+            <div className="text-value font-semibold text-oYellow leading-none gliding-value tracking-tight">
               {sunset !== null ? sunset : t('common.na')}
             </div>
-            <div className="text-hud-muted text-xs uppercase mt-3 font-black tracking-widest opacity-60">{t('widgets.localMeridian')}</div>
+            <div className="text-hud-muted text-caption uppercase mt-3 font-semibold tracking-widest opacity-60">{t('widgets.localMeridian')}</div>
           </div>
         </div>
       </div>

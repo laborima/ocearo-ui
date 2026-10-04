@@ -10,13 +10,13 @@ export const drawAttitudeInstrument = (ctx, options) => {
         roll,
         pitch,
         yaw,
-        nightMode = false,
+        tokens,
         showHeading = true,
         showPitchScale = true,
         showRollScale = true,
         showBezel = true,
         compact = false,
-        colors = {}
+        overrides = {},
     } = options;
 
     const cx = w / 2;
@@ -28,18 +28,20 @@ export const drawAttitudeInstrument = (ctx, options) => {
     const sw = (v) => v * s;
     const slw = (v) => Math.max(0.5, v * s);
 
-    // Color theme
+    // Colours from the active theme tokens (see app/components/theme/themes.js)
     const theme = {
-        sky: nightMode ? '#1a0000' : (colors.sky || '#87CEEB'),
-        sea: nightMode ? '#000000' : (colors.sea || colors.oGray2 || '#424242'),
-        horizon: nightMode ? (colors.oNight || '#ef4444') : (colors.oYellow || '#ffbe00'),
-        bezel: nightMode ? '#330000' : (colors.bezel || colors.oGray2 || '#424242'),
-        text: nightMode ? (colors.oNight || '#ef4444') : (colors.text || 'var(--hud-text-main)'),
-        boat: nightMode ? (colors.oNight || '#ef4444') : (colors.boat || colors.oYellow || '#ffbe00'),
-        rollScale: nightMode ? (colors.oNight || '#ef4444') : (colors.rollScale || colors.oRed || '#cc000c'),
-        headingMarks: nightMode ? (colors.oNight || '#ef4444') : (colors.headingMarks || 'var(--hud-text-main)'),
-        pitchMarks: nightMode ? 'rgba(239, 68, 68, 0.6)' : (colors.pitchMarks || 'var(--hud-text-secondary)'),
-        ...colors
+        sky: tokens.instrument.sky,
+        sea: tokens.instrument.sea,
+        horizon: tokens.warn,
+        bezel: tokens.instrument.bezel,
+        text: tokens.textMain,
+        boat: tokens.warn,
+        rollScale: tokens.danger,
+        headingMarks: tokens.textMain,
+        pitchMarks: tokens.textSecondary,
+        minorMarks: tokens.textMuted,
+        boatOutline: tokens.neutral,
+        ...overrides,
     };
 
     ctx.clearRect(0, 0, w, h);
@@ -143,7 +145,7 @@ export const drawAttitudeInstrument = (ctx, options) => {
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
-            ctx.strokeStyle = isMajor ? theme.headingMarks : (nightMode ? 'rgba(239, 68, 68, 0.4)' : theme.pitchMarks);
+            ctx.strokeStyle = isMajor ? theme.headingMarks : theme.minorMarks;
             ctx.lineWidth = isMajor ? slw(1.5) : slw(compact ? 0.5 : 2);
             ctx.stroke();
             
@@ -173,7 +175,7 @@ export const drawAttitudeInstrument = (ctx, options) => {
         ctx.closePath();
         ctx.fillStyle = theme.boat;
         ctx.fill();
-        ctx.strokeStyle = nightMode ? theme.boat : (colors.oGray || '#989898');
+        ctx.strokeStyle = theme.boatOutline;
         ctx.lineWidth = slw(1);
         ctx.stroke();
     } else {

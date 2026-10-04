@@ -5,7 +5,8 @@ import { useFrame } from '@react-three/fiber';
 import polarData from '@/public/boats/default/polar/polar.json';
 
 const POLAR = polarData.vpp;
-import { convertWindSpeed, oBlue, oGreen, oRed } from '../../context/OcearoContext';
+import { convertWindSpeed } from '../../context/OcearoContext';
+import useTheme from '../../theme/useTheme';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
 
@@ -85,6 +86,7 @@ const PolarCurve = ({ points, color }) => {
 };
 
 const PolarPlot = React.memo(({ timeInMinute, windSpeed }) => {
+    const tokens = useTheme();
 
     const calculateDiamondPosition = useCallback((angles, vmgs, windSpeedIdx, timeInMinute) => {
         if (!angles?.length || !vmgs?.length || angles.length <= windSpeedIdx || vmgs.length <= windSpeedIdx) {
@@ -183,11 +185,11 @@ const PolarPlot = React.memo(({ timeInMinute, windSpeed }) => {
                     {curveData.curve && (
                         <PolarCurve 
                             points={curveData.curve.getPoints(100)} 
-                            color={oBlue} 
+                            color={tokens.accent} 
                         />
                     )}
-                    <DiamondMarker position={curveData.beat} color={oGreen} />
-                    <DiamondMarker position={curveData.run} color={oRed} />
+                    <DiamondMarker position={curveData.beat} color={tokens.ok} />
+                    <DiamondMarker position={curveData.run} color={tokens.danger} />
                 </group>
             ))}
         </>

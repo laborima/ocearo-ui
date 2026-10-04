@@ -7,7 +7,7 @@
 import React, { useMemo } from 'react';
 import { Ring, Sphere, Text } from '@react-three/drei';
 import { DoubleSide, MathUtils } from 'three';
-import { oGreen, oRed, oNight, useOcearoContext } from '../../context/OcearoContext';
+import useTheme from '../../theme/useTheme';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import configService from '../../settings/ConfigService';
 
@@ -104,15 +104,15 @@ const StaticRing = React.memo(({ innerRadius, outerRadius, dialColor, opacity = 
 StaticRing.displayName = 'StaticRing';
 
 const CompassDial = ({ outerRadius, innerRadius }) => {
-  // Get context values and night mode setting
-  const { nightMode } = useOcearoContext();
+  const { scene } = useTheme();
 
   // Constants for visual appearance - Tesla UI High Contrast HUD
   const outerDialOpacity = 0.15;
   const innerDialOpacity = 0.1;
-  const markerColorPrimary = nightMode ? oNight : "#ffffff";
-  const markerColorGreen = oGreen;
-  const markerColorRed = oRed;
+  const markerColorPrimary = scene.compass;
+  // Close-hauled sectors: starboard tack green, port tack red
+  const markerColorGreen = scene.laylineStarboard;
+  const markerColorRed = scene.laylinePort;
   
   // Subscribe to relevant SignalK paths for heading
   const headingPaths = useMemo(() => [
@@ -134,7 +134,7 @@ const CompassDial = ({ outerRadius, innerRadius }) => {
     return cog || heading || 0;
   }, [skValues]);
 
-  const dialColor = nightMode ? "#000000" : "#0a0a0a";
+  const dialColor = scene.compassFace;
   
   // Get compass orientation preference from settings
   const isNorthUp = configService.get('compassNorthUp');
