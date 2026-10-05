@@ -879,5 +879,9 @@
     "shom_error": "Failed: {{error}}",
     "shomNo7z": "Install 7z on the server (apt install p7zip-full) to extract the surveys.",
     "shomCredit": "Source: SHOM digital elevation models, Licence Ouverte. Depths relative to chart datum."
+  },
+  "bathymetry": {
+    "chartDepth": "chart {{depth}} m",
+    "levelFromSounder": "level from the sounder"
   }
 }
