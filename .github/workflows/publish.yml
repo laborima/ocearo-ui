@@ -42,7 +42,10 @@ jobs:
       - name: Publish to npm
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          if npm view "ocearo-ui@${VERSION}" version >/dev/null 2>&1; then
+          # Compare the answer: some npm versions print nothing but exit 0 for
+          # a version that does not exist, which skipped the 2.0.1 publish
+          PUBLISHED=$(npm view "ocearo-ui@${VERSION}" version 2>/dev/null || true)
+          if [ "${PUBLISHED}" = "${VERSION}" ]; then
             echo "ocearo-ui@${VERSION} is already on npm, skipping publish"
           else
             cd out
