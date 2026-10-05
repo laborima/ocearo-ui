@@ -66,6 +66,21 @@ Bateaux : un racer de 10,8 m (par défaut), un catamaran de 14 m et des modèles
 |---|---|
 | ![À nous de laisser passer un chalutier en pêche](docs/screenshots/colregs.jpg) | ![Un voilier bâbord amures doit s’écarter](docs/screenshots/standon.jpg) |
 | **À nous de manœuvrer.** Un navire en pêche croise devant : d’après la règle 18, le voilier s’en écarte. Le bateau et le bandeau passent en rouge orangé, le conseil nomme la règle et le changement de cap (« Éviter : 15° sur bâbord »). | **À lui de manœuvrer.** Un voilier bâbord amures qui arrive par tribord doit s’écarter (règle 12) : il passe en violet avec la manœuvre attendue de lui. S’il n’agit pas, le conseil de la règle 17 b) apparaît. |
+| ![Trafic dense : ferry, cargo, chalutier, voiliers et catamaran, chacun avec son rôle](docs/screenshots/traffic.jpg) | ![Au moteur, un cargo sur tribord : règle 15, venir sur tribord](docs/screenshots/crossing.jpg) |
+| **Trafic dense.** Chaque cible porte son rôle et sa règle : le ferry et le cargo doivent s’écarter d’un voilier sous voiles (18), le catamaran est au vent sur les mêmes amures (12 a-ii), le chalutier est prioritaire. Quand aucun changement de cap ne dégage tout le monde, le conseil le dit et propose de ralentir. | **Au moteur.** Moteur en route, le voilier est un navire à propulsion mécanique : un cargo sur tribord est prioritaire (règle 15). Le conseil passe sur son arrière (« Éviter : 75° sur tribord ») et la ligne pointillée marque le point de rapprochement maximal. |
+
+**Les règles appliquées par Ocearo**, d’après le statut AIS et le type de chaque cible, et d’après le nôtre (un voilier moteur en route est un navire à propulsion mécanique) :
+
+| Règle | Situation | Qui s’écarte |
+|-------|-----------|--------------|
+| 13 | Rattrapage — arrivée à plus de 22,5° sur l’arrière du travers | Le navire qui rattrape |
+| 18 | Navires de catégories différentes | Moteur ⟶ voilier ⟶ pêche ⟶ capacité de manœuvre restreinte |
+| 12 | Deux voiliers | Bâbord amures s’écarte de tribord amures ; mêmes amures, le navire au vent |
+| 14 | Routes opposées entre navires à moteur | Les deux viennent sur tribord |
+| 15 | Routes qui se croisent entre navires à moteur | Celui qui voit l’autre sur tribord, en passant sur son arrière |
+| 17 | Nous sommes privilégiés | Maintenir cap et vitesse ; peut manœuvrer si l’autre ne le fait pas, doit manœuvrer quand l’abordage ne peut plus être évité par la seule manœuvre de l’autre |
+
+Chenaux étroits et dispositifs de séparation du trafic (règles 9–10) ne sont pas modélisés : le conseil est une aide à la veille, jamais une décision. Avec **[ocearo-core](https://github.com/laborima/ocearo-core)** sur le serveur, les mêmes règles sont aussi annoncées à voix haute — *« Danger collision : LE PERTUIS à 0,5 milles, CPA 0,1 milles dans 6 minutes. Navire en pêche, à nous de nous écarter, règle 18. Passez derrière lui, en abattant ou en ralentissant. »* — y compris la règle 19 par visibilité réduite, et le bouton de la couche AIS coupe le bandeau et les conseils avec les cibles.
 
 Les couleurs ont partout le même sens : **rouge** — risque de collision et c’est à nous de manœuvrer ; **violet** — risque de collision et c’est à lui ; **orange** — proche mais sans route de collision ; gris — rien à signaler. CPA et TCPA viennent du cap et de la vitesse des deux navires ; les seuils se règlent dans les réglages. Les cibles AIS sont dessinées par type et longueur (voiliers, catamarans, ferries, cargos, remorqueurs, chalutiers, vedettes SNSM…) et estimées entre deux messages, si bien qu’elles glissent au lieu de sauter.
 
@@ -117,7 +132,7 @@ Ocearo UI est une **webapp** Signal K.
 
 1. Sur votre serveur Signal K (≥ 2.x), ouvrez **Appstore → Available**, cherchez **ocearo-ui** et installez-le (ou `npm install ocearo-ui` dans `~/.signalk`).
 2. Redémarrez le serveur et ouvrez `http://<serveur-signalk>:3000/ocearo-ui/` sur n’importe quel écran du bord.
-3. Recommandé : installez **[ocearo-core](https://www.npmjs.com/package/ocearo-core)** pour le journal de bord, la veille au mouillage, la bathymétrie SHOM, les métriques système et le copilote IA.
+3. Recommandé : installez **[ocearo-core](https://github.com/laborima/ocearo-core)** pour le journal de bord, la veille au mouillage, la bathymétrie SHOM, les métriques système et le copilote IA.
 
 Une démo en ligne avec des données simulées : <https://laborima.github.io/ocearo-ui/>
 
@@ -131,7 +146,7 @@ Ocearo lit des chemins Signal K standard ; quand un chemin manque, son affichage
 | [`@meri-imperiumi/signalk-autostate`](https://www.npmjs.com/package/@meri-imperiumi/signalk-autostate) | `navigation.state` | Affichage des voiles, priorité des alertes |
 | [`@signalk/set-system-time`](https://www.npmjs.com/package/@signalk/set-system-time) | Horloge système depuis le GPS | Marées, jour/nuit, journal |
 | [`@signalk/signalk-autopilot`](https://www.npmjs.com/package/@signalk/signalk-autopilot) | API pilote Signal K v2 | Vue pilote |
-| [`ocearo-core`](https://www.npmjs.com/package/ocearo-core) | Journal, mouillage, bathymétrie, métriques système, copilote IA | Journal, veille au mouillage, bathymétrie, onglet Raspberry Pi |
+| [`ocearo-core`](https://github.com/laborima/ocearo-core) | Journal, mouillage, bathymétrie, métriques système, copilote IA | Journal, veille au mouillage, bathymétrie, onglet Raspberry Pi |
 
 Matériel : un Raspberry Pi 4 ou 5 fait tourner sans peine le serveur et un écran ; choisissez la qualité 3D *Raspberry Pi* sur l’écran du Pi. Tout navigateur récent sert d’écran déporté.
 

@@ -66,6 +66,21 @@ Boats: a 10.8 m racer (default), a 14 m catamaran and simpler models, chosen in 
 |---|---|
 | ![We must give way to a fishing vessel](docs/screenshots/colregs.jpg) | ![A port-tack yacht must keep clear of us](docs/screenshots/standon.jpg) |
 | **Our move.** A vessel engaged in fishing crosses ahead: under rule 18 the sailing yacht keeps clear. The boat and the banner turn orange-red, the advice names the rule and the alteration (“Avoid: 15° to port”). | **Their move.** A port-tack yacht closing from starboard must keep clear (rule 12): it turns violet with the manoeuvre expected of it. If it does not act, rule 17(b) advice appears. |
+| ![Busy water: a ferry, a cargo ship, a fishing vessel, yachts and a catamaran, each with its role](docs/screenshots/traffic.jpg) | ![Under engine, a cargo ship on the starboard side: rule 15, alter to starboard](docs/screenshots/crossing.jpg) |
+| **Busy water.** Every target carries its role and the rule: the ferry and the cargo ship must keep clear of a yacht under sail (18), the catamaran is to windward on the same tack (12 a-ii), the fishing vessel has right of way. When no single alteration clears everyone, the advice says so and asks to slow down. | **Under engine.** Motoring, the yacht is a power-driven vessel: a cargo ship on the starboard side has right of way (rule 15). The advice passes astern of her (“Avoid: 75° to starboard”) and the dashed line marks the closest point of approach. |
+
+**The rules Ocearo applies**, from the AIS status and ship type of each target and from our own (a yacht with its engine running is power-driven):
+
+| Rule | Situation | Who keeps clear |
+|------|-----------|-----------------|
+| 13 | Overtaking — coming up from more than 22.5° abaft the beam | The overtaking vessel |
+| 18 | Different kinds of vessel | Power ⟶ sail ⟶ fishing ⟶ restricted in her ability to manoeuvre |
+| 12 | Two sailing vessels | Port tack keeps clear of starboard tack; on the same tack, the windward boat |
+| 14 | Head-on between power-driven vessels | Both alter to starboard |
+| 15 | Crossing between power-driven vessels | The one with the other on her starboard side, passing astern |
+| 17 | We are the stand-on vessel | Hold course and speed; may act when the other does not, must act when the give-way vessel alone can no longer avoid collision |
+
+Narrow channels and traffic separation schemes (rules 9–10) are not modelled: the advice is an aid to the watch, never a decision. With **[ocearo-core](https://github.com/laborima/ocearo-core)** on the server, the same rules are also spoken — *“Collision danger: LE PERTUIS at 0.5 miles, CPA 0.1 miles in 6 minutes. Vessel engaged in fishing, we keep clear, rule 18. Pass astern of her, bearing away or slowing down.”* — including rule 19 in restricted visibility, and the AIS layer button switches the banner and advice off with the targets.
 
 Colours mean the same thing everywhere: **red** — risk of collision and it is our move; **violet** — risk of collision and it is theirs; **orange** — close but no collision course; grey — nothing to report. CPA and TCPA come from both vessels' course and speed; thresholds are set in the settings. AIS targets are drawn by type and length (sailing yachts, catamarans, ferries, cargo ships, tugs, fishing vessels, lifeboats…) and dead-reckoned between reports, so they glide instead of jumping.
 
@@ -117,7 +132,7 @@ Ocearo UI is a Signal K **webapp**.
 
 1. On your Signal K server (≥ 2.x), open **Appstore → Available**, search for **ocearo-ui** and install it (or `npm install ocearo-ui` in `~/.signalk`).
 2. Restart the server and open `http://<signalk-server>:3000/ocearo-ui/` on any screen on board.
-3. Recommended: install **[ocearo-core](https://www.npmjs.com/package/ocearo-core)** for the logbook, anchor watch, SHOM bathymetry, system metrics and the AI copilot.
+3. Recommended: install **[ocearo-core](https://github.com/laborima/ocearo-core)** for the logbook, anchor watch, SHOM bathymetry, system metrics and the AI copilot.
 
 A live demo with simulated data: <https://laborima.github.io/ocearo-ui/>
 
@@ -131,7 +146,7 @@ Ocearo reads standard Signal K paths; when a path is missing, its display is emp
 | [`@meri-imperiumi/signalk-autostate`](https://www.npmjs.com/package/@meri-imperiumi/signalk-autostate) | `navigation.state` | Sail visibility, alert priorities |
 | [`@signalk/set-system-time`](https://www.npmjs.com/package/@signalk/set-system-time) | System clock from GPS | Tides, day/night, logbook |
 | [`@signalk/signalk-autopilot`](https://www.npmjs.com/package/@signalk/signalk-autopilot) | Signal K v2 autopilot API | Autopilot view |
-| [`ocearo-core`](https://www.npmjs.com/package/ocearo-core) | Logbook, anchor, bathymetry, system metrics, AI copilot | Logbook, anchor watch, bathymetry, Raspberry Pi tab |
+| [`ocearo-core`](https://github.com/laborima/ocearo-core) | Logbook, anchor, bathymetry, system metrics, AI copilot | Logbook, anchor watch, bathymetry, Raspberry Pi tab |
 
 Hardware: a Raspberry Pi 4 or 5 runs the server and a display comfortably; select the *Raspberry Pi* 3D quality on the Pi's own screen. Any recent browser works as a remote display.
 
