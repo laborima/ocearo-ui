@@ -64,8 +64,13 @@ const seaVertex = `
     const float WD[NW] = float[NW](0.0, 0.43, -0.37, 0.86, -0.74, 0.18);
     const float WP[NW] = float[NW](0.0, 1.7, 4.1, 2.3, 5.2, 0.9);
 
+    // Grid spacing around this vertex (the grid is warped x' = R·(0.05·u + 0.95·u³)):
+    // a wave shorter than ~4 vertices cannot be drawn, it only shimmers
+    float gSpacing;
+
     void wave(vec2 p, float angle, float L, float a, float steep, float phase,
               inout vec3 disp, inout vec3 dDx, inout vec3 dDy) {
+        a *= 1.0 - smoothstep(0.3, 0.6, gSpacing / L);
         vec2 d = vec2(sin(angle), cos(angle));
         float k = 6.2831853 / L;
         float c = sqrt(9.81 * ${BOAT_SCALE.toFixed(2)} / k);
@@ -85,6 +90,9 @@ const seaVertex = `
         float dist = length(local);
         // Calmer far away (clean horizon) and under the hull, which does not heave
         float fade = (1.0 - smoothstep(900.0, 2200.0, dist)) * mix(0.4, 1.0, smoothstep(3.0, 16.0, dist));
+        vec2 gu = pow(abs(local) / ${(0.95 * RADIUS).toFixed(1)}, vec2(1.0 / 3.0));
+        float gmax = max(gu.x, gu.y);
+        gSpacing = ${(2 * RADIUS / SEGMENTS).toFixed(4)} * (0.05 + 2.85 * gmax * gmax);
         vec3 disp = vec3(0.0);
         vec3 dDx = vec3(0.0);
         vec3 dDy = vec3(0.0);
@@ -218,6 +226,9 @@ const seaFragment = `
         if (uOcclude > 0.5 && inHull > 1.02) discard;
 
         // Short wind waves and ripples, in the normal only, faded with distance
+        // and wherever a pixel spans too much sea to show them (they would
+        // sparkle from one frame to the next near the horizon)
+        float footprint = length(fwidth(vSea));
         float detail = (1.0 - smoothstep(30.0, 260.0, vDist)) * (0.5 + 0.5 * uWind);
         vec2 grad = vec2(0.0);
         for (int i = 0; i < RIPPLES; i++) {
@@ -227,7 +238,7 @@ const seaFragment = `
             float L = uWaveLength * (0.22 - fi * 0.028);
             float k = 6.2831853 / L;
             float f = k * (dot(d, vSea) - sqrt(9.81 * ${BOAT_SCALE.toFixed(2)} / k) * uTime) + fi * 1.9;
-            grad += d * cos(f) * 0.07;
+            grad += d * cos(f) * 0.07 * (1.0 - smoothstep(0.15, 0.4, footprint / L));
         }
         // Capillary texture: soft noise drifting downwind (wide finite
         // differences, so no value-noise cells show in the sun glitter),
@@ -238,7 +249,7 @@ const seaFragment = `
         float e1 = fbm(q);
         float e2 = fbm(q + vec2(0.35, 0.0));
         float e3 = fbm(q + vec2(0.0, 0.35));
-        grad += vec2(e2 - e1, e3 - e1) * 0.45 * (0.3 + 0.7 * uWind) * (1.0 - smoothstep(15.0, 90.0, vDist));
+        grad += vec2(e2 - e1, e3 - e1) * 0.45 * (0.3 + 0.7 * uWind) * (1.0 - smoothstep(15.0, 90.0, vDist)) * (1.0 - smoothstep(0.12, 0.5, footprint));
         vec3 n = normalize(vNormalW - vec3(grad * detail, 0.0));
 
         vec3 v = normalize(uCam - vPos);
