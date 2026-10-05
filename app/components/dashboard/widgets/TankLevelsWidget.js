@@ -12,6 +12,7 @@ export default function TankLevelsWidget() {
     'tanks.fuel.0.currentLevel', 'tanks.fuel.0.capacity', 'tanks.fuel.0.name', 'tanks.fuel.0.type', 'tanks.fuel.0.temperature',
     'tanks.freshWater.0.currentLevel', 'tanks.freshWater.0.capacity', 'tanks.freshWater.0.name', 'tanks.freshWater.0.type', 'tanks.freshWater.0.temperature',
     'tanks.wasteWater.0.currentLevel', 'tanks.wasteWater.0.capacity', 'tanks.wasteWater.0.name', 'tanks.wasteWater.0.type', 'tanks.wasteWater.0.temperature',
+    'tanks.blackWater.0.currentLevel', 'tanks.blackWater.0.capacity', 'tanks.blackWater.0.name', 'tanks.blackWater.0.type', 'tanks.blackWater.0.temperature',
     'tanks.oil.0.currentLevel', 'tanks.oil.0.capacity', 'tanks.oil.0.name', 'tanks.oil.0.type', 'tanks.oil.0.temperature'
   ];
   
@@ -38,6 +39,7 @@ export default function TankLevelsWidget() {
       fuel: getTankInfo('fuel', t('widgets.tankFuel'), faGasPump, 'text-oYellow', 'bg-oYellow'),
       freshWater: getTankInfo('freshWater', t('widgets.tankFreshWater'), faTint, 'text-oBlue', 'bg-oBlue'),
       wasteWater: getTankInfo('wasteWater', t('widgets.tankWasteWater'), faToilet, 'text-hud-secondary', 'bg-hud-elevated'),
+      blackWater: getTankInfo('blackWater', t('widgets.tankBlackWater'), faToilet, 'text-hud-secondary', 'bg-hud-elevated'),
       oil: getTankInfo('oil', t('widgets.tankEngineOil'), faOilCan, 'text-oYellow', 'bg-oYellow')
     };
 
@@ -67,10 +69,12 @@ export default function TankLevelsWidget() {
     >
       <div className="flex-1 flex flex-col justify-center min-h-0 space-y-4">
         {Object.entries(tankData).filter(([key]) => key !== 'hasData').map(([key, tank]) => {
-          if (tank.level === null || tank.capacity === null) return null;
+          if (tank.level === null) return null;
           const percentage = Math.round(tank.level * 100);
-          const liters = Math.round(tank.level * tank.capacity);
-          const isWaste = key === 'wasteWater';
+          // Signal K capacities are in m³; a level-only sensor shows its percentage alone
+          const capacityL = Number.isFinite(tank.capacity) ? Math.round(tank.capacity * 1000) : null;
+          const liters = capacityL !== null ? Math.round(tank.level * capacityL) : null;
+          const isWaste = key === 'wasteWater' || key === 'blackWater';
           const isCritical = isWaste ? tank.level > 0.8 : tank.level < 0.1;
           
           return (
@@ -83,7 +87,9 @@ export default function TankLevelsWidget() {
                   <span className="text-hud-main text-caption font-semibold uppercase tracking-widest">{tank.displayName}</span>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <span className="text-hud-secondary text-caption font-semibold opacity-60">{liters}/{tank.capacity}L</span>
+                  {capacityL !== null && (
+                    <span className="text-hud-secondary text-caption font-semibold opacity-60 tabular-nums">{liters}/{capacityL} L</span>
+                  )}
                   <span className={`text-label font-semibold ${getTankColor(tank.level, isWaste)} ${isCritical ? 'animate-soft-pulse' : ''}`}>
                     {percentage}%
                   </span>

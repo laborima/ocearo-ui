@@ -246,7 +246,8 @@ const MotorView = () => {
       
       // Fuel Tank Data
       fuelLevel: MotorUtils.ratioToPercent(getSKValue('tanks.fuel.0.currentLevel')),
-      fuelCapacity: getSKValue('tanks.fuel.0.capacity'),
+      // Signal K capacities are in m³: litres here, as everywhere on this page
+      fuelCapacity: Number.isFinite(getSKValue('tanks.fuel.0.capacity')) ? getSKValue('tanks.fuel.0.capacity') * 1000 : null,
     };
   }, [selectedEngine, getEngineValue, getSKValue]);
   

@@ -510,10 +510,10 @@ export const estimateTankLevel = (fuelEntries, currentEngineHours, tankCapacity,
 
   const remainingFrom = (used) => {
     let remaining;
-    if (currentTankLevel !== null && tankCapacity) {
-      remaining = (currentTankLevel * tankCapacity) - used;
-    } else if (tankCapacity) {
-      // A refill means a fill-up: the tank starts full, then drains with usage
+    // From the log alone, independent of the gauge (shown next to it): a
+    // refill means a fill-up, the tank then drains with the engine hours. The
+    // gauge already includes that usage; subtracting it again counted it twice
+    if (tankCapacity) {
       remaining = tankCapacity - used;
     } else if (stats.lastRefill.liters) {
       remaining = stats.lastRefill.liters - used;

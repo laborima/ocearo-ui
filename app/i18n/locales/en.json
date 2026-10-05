@@ -435,6 +435,7 @@
     "tankFuel": "Fuel",
     "tankFreshWater": "Fresh Water",
     "tankWasteWater": "Waste Water",
+    "tankBlackWater": "Black Water",
     "tankEngineOil": "Engine Oil",
     "tankEmpty": "Empty",
     "tankLow": "Low",

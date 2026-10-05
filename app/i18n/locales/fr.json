@@ -435,6 +435,7 @@
     "tankFuel": "Carburant",
     "tankFreshWater": "Eau douce",
     "tankWasteWater": "Eaux usées",
+    "tankBlackWater": "Eaux noires",
     "tankEngineOil": "Huile moteur",
     "tankEmpty": "Vide",
     "tankLow": "Bas",
