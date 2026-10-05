@@ -19,7 +19,6 @@ const DAY_WATER_COLOR = new THREE.Color(0x004466);
 const NIGHT_WATER_COLOR = new THREE.Color(0x000205);
 // Lite (chart/meteo) water must match the dimmed OSM sea tone so the plane
 // beyond the map edge reads as a continuation of the chart, not a dark band.
-const LITE_DAY_WATER_COLOR = new THREE.Color(0xb4cbd1);
 const _scratchWaterColor = new THREE.Color();
 
 // The astronomical sun position and sky atmosphere barely change over a second.
@@ -39,7 +38,7 @@ const _scratchCloudColor = new THREE.Color();
  *        the distance fog takes the sky's horizon colour
  * @param {string} [horizon] - fog colour when `sky` is false
  */
-function Ocean3D({ lite = false, fogDensity = 0.00035, water: showWater = true, sky: showSky = true, horizon }) {
+function Ocean3D({ lite = false, fogDensity = 0.00035, water: showWater = true, sky: showSky = true, horizon, liteColor = 0xb4cbd1 }) {
   const { nightMode } = useOcearoContext();
   const { getWindData, getCurrentWeather } = useWeather();
   
@@ -80,7 +79,12 @@ function Ocean3D({ lite = false, fogDensity = 0.00035, water: showWater = true, 
 
   // Lite mode (chart/meteo): flat tinted water, no mirror pass — the Water
   // reflection renders the whole scene twice and is the main RPi5 cost.
-  const liteWaterMaterial = useMemo(() => new THREE.MeshBasicMaterial({ color: 0xb4cbd1 }), []);
+  // The lite water lies under the chart: drawn first and without depth, so the
+  // two planes 0.2 apart never fight in the depth buffer (bands far out on a
+  // 16-bit depth buffer, flicker when the camera moves)
+  const liteWaterMaterial = useMemo(() => new THREE.MeshBasicMaterial({ color: 0xb4cbd1, depthWrite: false }), []);
+  // Theme colour (dark sea in the dark and night themes), darkened by night
+  const liteDayColor = useMemo(() => new THREE.Color(liteColor), [liteColor]);
 
   // Uniforms driving the swell displacement, shared with the patched shader
   const waveUniformsRef = useRef({ waveAmp: { value: 0 }, waveTime: { value: 0 } });
@@ -307,7 +311,7 @@ function Ocean3D({ lite = false, fogDensity = 0.00035, water: showWater = true, 
     }
 
     if (lite) {
-      _scratchWaterColor.copy(LITE_DAY_WATER_COLOR).lerp(NIGHT_WATER_COLOR, nightFactor);
+      _scratchWaterColor.copy(liteDayColor).lerp(NIGHT_WATER_COLOR, nightFactor);
       liteWaterMaterial.color.copy(_scratchWaterColor);
     }
 
@@ -452,6 +456,7 @@ function Ocean3D({ lite = false, fogDensity = 0.00035, water: showWater = true, 
           material={liteWaterMaterial}
           rotation-x={-Math.PI / 2}
           position={[0, -0.3, 0]}
+          renderOrder={-1}
         />
       ) : (
         <primitive

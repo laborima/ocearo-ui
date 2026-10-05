@@ -96,8 +96,14 @@ const WindLayer3D = ({ y = 0.05 }) => {
         if (field && Number.isFinite(lat)) boatRef.current = offsetM(field.origin, { latitude: lat, longitude: lon });
     }, [field, lat, lon]);
 
+    // Close to the boat the chart matters more than the colours: lighter sheet
+    const sheetRef = useRef();
     useFrame(({ camera }, delta) => {
         if (!field) return;
+        if (sheetRef.current) {
+            const distM = camera.position.length() / scale;
+            sheetRef.current.opacity = THREE.MathUtils.clamp(0.3 + (distM - 300) / 3000 * 0.3, 0.3, 0.6);
+        }
         const dt = Math.min(delta, 0.1);
         // Streaks cover what the camera sees: a few times its distance
         const radiusM = Math.min(HALF_EXTENT_M, Math.max(800, camera.position.length() / scale * 2.5));
@@ -136,7 +142,7 @@ const WindLayer3D = ({ y = 0.05 }) => {
             <group rotation={[-Math.PI / 2, 0, 0]}>
                 <mesh position={[-be * scale, -bn * scale, 0]} renderOrder={1}>
                     <planeGeometry args={[size, size]} />
-                    <meshBasicMaterial map={texture} transparent opacity={0.62} depthWrite={false} toneMapped={false} />
+                    <meshBasicMaterial ref={sheetRef} map={texture} transparent opacity={0.6} depthWrite={false} toneMapped={false} />
                 </mesh>
                 <lineSegments geometry={particles.geo} material={lineMaterial} renderOrder={2} frustumCulled={false} />
             </group>

@@ -6,6 +6,7 @@ import signalKService from '../../services/SignalKService';
 import configService from '../../settings/ConfigService';
 import useOwnTrack from '../fsd/useOwnTrack';
 import { cachedImage } from '../../utils/offlineCache';
+import useTheme from '../../theme/useTheme';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -19,16 +20,29 @@ const RAINVIEWER_INDEX = 'https://api.rainviewer.com/public/weather-maps.json';
 const OSM_MAX_ZOOM = 19;     // OSM serves up to z19 — pontoons/piers appear from z17
 const CUSTOM_MAX_ZOOM = 18;  // safe cap for SignalK-provided charts (unknown max)
 const SEAMARK_MAX_ZOOM = 18; // OpenSeaMap seamark overlay (buoys, lights, marks)
-const RAIN_MAX_ZOOM = 12;    // rainviewer radar tiles
+// RainViewer's free tiles stop at z7: above, every tile is a "Zoom Level Not
+// Supported" banner that was drawn all over the meteo map
+const RAIN_MAX_ZOOM = 7;
+const RAIN_MAX_BASE_ZOOM = 12; // closer in, a z7 radar pixel is a blurred blob
 
-// Meteo is a weather map, not a harbor chart: keep a wide fixed coverage so the
-// low-zoom wind/rain overlays actually show gradients.
-const METEO_MAX_ZOOM = 11;
-const METEO_MIN_COVERAGE = 40000; // meters
+// Meteo: the base map follows the camera like the chart, a little coarser
+// (the wind sheet covers it); a fixed 40 km coverage left a blurred map
+// under the boat when zoomed in. The rain radar stays capped at its zoom.
+const METEO_MAX_ZOOM = 15;
+const METEO_MIN_COVERAGE = 3000; // meters
 const CHART_MIN_COVERAGE = 500;   // meters — z18, pontoons still visible
 
-// Tone down the bright OSM palette so the plane fits the dark HUD
-const BASE_MAP_FILTER = 'brightness(0.72) saturate(1.15) contrast(1.05)';
+// Tone the OSM palette to the theme: a softened light map by day, and by
+// night a dark map (inverted, Tesla-style), red at night: a bright chart under
+// a dark sky blinded the helmsman and made the HUD unreadable
+const BASE_MAP_FILTERS = {
+    day: 'brightness(0.72) saturate(1.15) contrast(1.05)',
+    dark: 'invert(1) hue-rotate(180deg) brightness(0.82) saturate(0.7) contrast(0.92)',
+    night: 'invert(1) brightness(0.55) sepia(1) hue-rotate(-38deg) saturate(2.4) contrast(0.95)',
+};
+// Server charts are real nautical charts: only dimmed, never inverted
+const CHART_FILTERS = { day: 'none', dark: 'brightness(0.62)', night: 'brightness(0.4) sepia(1) hue-rotate(-38deg) saturate(2)' };
+const SEAMARK_FILTERS = { day: 'none', dark: 'brightness(0.9)', night: 'sepia(1) hue-rotate(-38deg) saturate(2.4) brightness(0.7)' };
 
 // The scene is linear "meters × aisLengthScalingFactor" (see AISContext), the
 // camera far plane is 500 units, so only ~700 m around the boat is ever visible.
@@ -101,10 +115,24 @@ async function loadTileWithFallback(template, z, x, y) {
  * is then drawn scaled up (pixelScale = 2^(baseZoom - layerZoom)) so that every
  * layer covers the same geographic area on the canvas.
  */
+// Scratch canvas: a filtered layer is drawn unfiltered here, then filtered
+// once onto the plane — per-tile filters cost ~2.5× the pixels (tiles overlap
+// the canvas edges), a lot for a Pi drawing the dark chart in software
+let scratchCanvas = null;
+
 async function drawTileLayer(ctx, position, layerZoom, tileTemplate, pixelScale = 1, filter = 'none') {
     const { latitude: lat, longitude: lon } = position;
     const effTile = TILE_SIZE * pixelScale;
-    ctx.filter = filter;
+    const filtered = filter && filter !== 'none';
+    const target = ctx;
+    if (filtered) {
+        if (!scratchCanvas) {
+            scratchCanvas = document.createElement('canvas');
+            scratchCanvas.width = CANVAS_SIZE;
+            scratchCanvas.height = CANVAS_SIZE;
+        }
+        ctx = scratchCanvas.getContext('2d');
+    }
 
     const ftx = lonToTileF(lon, layerZoom);
     const fty = latToTileF(lat, layerZoom);
@@ -137,13 +165,19 @@ async function drawTileLayer(ctx, position, layerZoom, tileTemplate, pixelScale 
         tilesToDraw.map((t) => loadTileWithFallback(tileTemplate, t.z, t.x, t.y))
     );
 
+    // From here on synchronous: two planes never interleave in the scratch canvas
+    if (filtered) ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     for (let i = 0; i < tilesToDraw.length; i++) {
         const src = sources[i];
         if (!src) continue;
         const { screenLeft, screenTop } = tilesToDraw[i];
         ctx.drawImage(src.img, src.sx, src.sy, src.sSize, src.sSize, screenLeft, screenTop, effTile, effTile);
     }
-    ctx.filter = 'none';
+    if (filtered) {
+        target.filter = filter;
+        target.drawImage(scratchCanvas, 0, 0);
+        target.filter = 'none';
+    }
 }
 
 // Render an ordered list of tile layers (base map first, overlays on top).
@@ -154,6 +188,7 @@ async function renderTilesToCanvas(canvas, position, zoom, layers) {
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     for (const layer of layers) {
         if (!layer?.template) continue;
+        if (layer.maxBaseZoom != null && zoom > layer.maxBaseZoom) continue;
         const layerZoom = Math.min(zoom, layer.maxZoom ?? zoom);
         const pixelScale = Math.pow(2, zoom - layerZoom);
         await drawTileLayer(ctx, position, layerZoom, layer.template, pixelScale, layer.filter || 'none');
@@ -171,17 +206,13 @@ export default function MapPlane3D({ mode = 'chart', opacity = 1 }) {
     const renderPendingRef = useRef(false);
     const lastRenderRef = useRef({ position: null, zoom: null });
     const frameCountRef = useRef(0);
-    // Ordered tile layers: base map first, optional overlays on top
-    const layersRef = useRef(
-        mode === 'meteo'
-            ? [
-                { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: BASE_MAP_FILTER },
-              ]
-            : [
-                { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: BASE_MAP_FILTER },
-                { template: SEAMARK_TEMPLATE, maxZoom: SEAMARK_MAX_ZOOM },
-              ]
-    );
+    // A translucent overlay (over the seabed) keeps the day colours: inverted,
+    // the tidal-flat hatching turns into orange stripes over the relief
+    const { id: currentTheme } = useTheme();
+    const themeId = opacity < 1 ? 'day' : currentTheme;
+    const baseFilter = BASE_MAP_FILTERS[themeId] || BASE_MAP_FILTERS.day;
+    // Ordered tile layers (base map first, overlays on top), set per mode and theme below
+    const layersRef = useRef([]);
     const { gl } = useThree();
 
     // Same meters → scene-units factor as the AIS layer, so the map is to scale
@@ -294,33 +325,41 @@ export default function MapPlane3D({ mode = 'chart', opacity = 1 }) {
     }, [gl]);
 
     // ── Resolve tile layers (SignalK charts for chart mode, OSM fallback) ────
+    // Once per mode: depending on the zoom-bound redraw callback re-fetched
+    // the chart list (and in meteo dropped then re-added the rain radar,
+    // a visible flash) at every LOD step while zooming
     useEffect(() => {
+        let cancelled = false;
+        const redraw = () => { if (!cancelled) scheduleRedrawRef.current?.(true); };
+        // OSM (and seamarks) in the theme's colours until a server chart is found
+        const defaults = [
+            { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: baseFilter },
+            ...(mode === 'meteo' ? [] : [{ template: SEAMARK_TEMPLATE, maxZoom: SEAMARK_MAX_ZOOM, filter: SEAMARK_FILTERS[themeId] }]),
+        ];
+        layersRef.current = defaults;
         if (mode === 'meteo') {
-            layersRef.current = [
-                { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: BASE_MAP_FILTER },
-            ];
-            scheduleRedraw(true);
+            redraw();
             // Add the latest rain radar frame (free, no API key)
             fetch(RAINVIEWER_INDEX)
                 .then((r) => r.json())
                 .then((data) => {
                     const frames = data?.radar?.past;
                     const path = frames?.[frames.length - 1]?.path;
-                    if (!path) return;
+                    if (!path || cancelled) return;
                     layersRef.current = [
                         ...layersRef.current,
-                        { template: `https://tilecache.rainviewer.com${path}/256/{z}/{x}/{y}/2/1_1.png`, maxZoom: RAIN_MAX_ZOOM },
+                        { template: `https://tilecache.rainviewer.com${path}/256/{z}/{x}/{y}/2/1_1.png`, maxZoom: RAIN_MAX_ZOOM, maxBaseZoom: RAIN_MAX_BASE_ZOOM },
                     ];
-                    scheduleRedraw(true);
+                    redraw();
                 })
                 .catch(() => { /* no radar overlay */ });
-            return;
+            return () => { cancelled = true; };
         }
 
         // Through the service: authenticated servers and request timeout
         signalKService.apiCall('/signalk/v1/api/resources/charts')
             .then((data) => {
-                if (!data || typeof data !== 'object') return;
+                if (cancelled || !data || typeof data !== 'object') return;
                 const entries = Object.values(data);
                 const chart =
                     entries.find((c) => c.identifier !== 'openstreetmap' && c.tilemapUrl) ||
@@ -329,18 +368,17 @@ export default function MapPlane3D({ mode = 'chart', opacity = 1 }) {
                     const url = chart.tilemapUrl.includes('{z}')
                         ? chart.tilemapUrl
                         : `${chart.tilemapUrl}/{z}/{x}/{y}.png`;
-                    layersRef.current = [{ template: url, maxZoom: CUSTOM_MAX_ZOOM }];
+                    layersRef.current = [{ template: url, maxZoom: CUSTOM_MAX_ZOOM, filter: CHART_FILTERS[themeId] }];
                 }
-                scheduleRedraw(true);
+                redraw();
             })
             .catch(() => {
-                layersRef.current = [
-                    { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: BASE_MAP_FILTER },
-                    { template: SEAMARK_TEMPLATE, maxZoom: SEAMARK_MAX_ZOOM },
-                ];
-                scheduleRedraw(true);
+                if (cancelled) return;
+                layersRef.current = defaults;
+                redraw();
             });
-    }, [mode, scheduleRedraw]);
+        return () => { cancelled = true; };
+    }, [mode, themeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Redraw when position moves past threshold or the LOD zoom changes
     useEffect(() => {
@@ -359,11 +397,17 @@ export default function MapPlane3D({ mode = 'chart', opacity = 1 }) {
     // no longer allocates (and leaks) a new geometry. UVs map 1:1 to the canvas.
     const geometry = useMemo(() => new THREE.PlaneGeometry(1, 1), []);
 
+    // Pushed back in depth by a few depth-buffer steps: the wind sheet, the
+    // wake and the route lie only centimetres above the chart, less than the
+    // depth precision far from the camera, and would flicker through it
     const material = useMemo(() => new THREE.MeshBasicMaterial({
         side: THREE.DoubleSide,
         transparent: opacity < 1,
         opacity,
         depthWrite: opacity >= 1,
+        polygonOffset: true,
+        polygonOffsetFactor: 2,
+        polygonOffsetUnits: 8,
     }), [opacity]);
 
     useEffect(() => () => {

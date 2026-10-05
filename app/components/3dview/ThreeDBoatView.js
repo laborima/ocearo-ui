@@ -14,6 +14,7 @@ import Seabed3D from './ocean/Seabed3D';
 import MobMarker3D from '../mob/MobMarker3D';
 import { useReplay } from '../replay/ReplayBar';
 import SceneSetup from './SceneSetup';
+import DepthRange from './DepthRange';
 import useTheme from '../theme/useTheme';
 import SeaGround from './fsd/SeaGround';
 import RouteRibbon from './fsd/RouteRibbon';
@@ -28,7 +29,7 @@ import SailTrimSliders from './sail/SailTrimSliders';
 
 const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
     const { states } = useOcearoContext(); // Application state from context
-    const { scene } = useTheme();
+    const { scene, id: themeId } = useTheme();
     const isCompassLayerVisible = true; // Compass visibility
     const sailBoatRef = useRef();
     const replaying = useReplay().active;
@@ -60,6 +61,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 far={states.oceanMode === 'meteo' ? 60000 : 6000}
                 position={[0, 5, 20]}
             />
+            <DepthRange />
             {/* Orbit controls */}
             <OrbitControls
                 enableZoom={true}
@@ -101,7 +103,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 {(states.oceanMode === 'chart' || states.oceanMode === 'depth' || states.oceanMode === 'meteo') && (
                     <>
                         <SkyDome />
-                        <Ocean3D lite sky={false} horizon={scene.skyHorizon}
+                        <Ocean3D lite sky={false} horizon={scene.skyHorizon} liteColor={themeId === 'day' ? 0xb4cbd1 : scene.sea}
                             fogDensity={states.oceanMode === 'meteo' ? 0.00003 : undefined} water={states.oceanMode !== 'depth'} />
                     </>
                 )}
