@@ -161,7 +161,8 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
         {renderSection('left')}
         <MobButton />
         <div className="hidden sm:block h-8 w-[1px] bg-hud-muted opacity-20 mx-1 sm:mx-2" />
-        <BottomTemperatureWidget />
+        {/* Phones: the buttons first, the readings would push the bar into a scroll */}
+        <div className="hidden sm:flex"><BottomTemperatureWidget /></div>
       </div>
 
       {/* Center Section */}
@@ -170,7 +171,7 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
       </div>
 
       {/* Right Section */}
-      <div className="flex items-center justify-end space-x-0.5 sm:space-x-6 flex-shrink-0 sm:flex-1 min-w-0">
+      <div className="hidden sm:flex items-center justify-end space-x-0.5 sm:space-x-6 flex-shrink-0 sm:flex-1 min-w-0">
         <BottomEnvironmentalWidget />
       </div>
     </div>

@@ -104,7 +104,8 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
 
             <div className="absolute top-2 left-2 right-2 z-20 flex items-center justify-between">
                 <ThreeDBoatToolbar />
-                <div className="flex items-center space-x-4 min-w-0 shrink-0">
+                {/* Phones: the toolbar takes the whole width */}
+                <div className="hidden sm:flex items-center space-x-4 min-w-0 shrink-0">
                     {/* Split view: only the time, sun and UV need the full width */}
                     <SkyClock compact={!fullscreen} />
                     <ThreeDBoatThanksIndicator />
@@ -135,8 +136,9 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                 </div>
             )}
 
+            {/* Phones: depth stacked above the tide, side by side they overlap */}
             {rich && (
-                <div className="absolute left-3 bottom-3 z-20">
+                <div className="absolute left-3 bottom-44 sm:bottom-3 z-20">
                     <DepthPanel />
                 </div>
             )}

@@ -48,13 +48,26 @@ const isLargeScreen = () => {
     return window.innerWidth >= fifteenInchPixelWidth;
 };
 
+// Below this width the split view squeezes both panes into unusable strips
+const SPLIT_MIN_WIDTH = 768;
+const isNarrowScreen = () => typeof window !== 'undefined' && window.innerWidth < SPLIT_MIN_WIDTH;
+
 export default function Home() {
     // Use refs for values that don't need to trigger re-renders
     const initialRenderComplete = useRef(false);
     const nodeRef = useRef(null);
     
     // State management
-    const [currentViewMode, setCurrentViewMode] = useState(null);
+    const [storedViewMode, setCurrentViewMode] = useState(null);
+    // Phones: a split layout (saved on a bigger screen) shows the boat instead
+    const [narrow, setNarrow] = useState(false);
+    useEffect(() => {
+        const update = () => setNarrow(isNarrowScreen());
+        update();
+        window.addEventListener('resize', update);
+        return () => window.removeEventListener('resize', update);
+    }, []);
+    const currentViewMode = storedViewMode === VIEW_MODES.SPLIT && narrow ? VIEW_MODES.BOAT : storedViewMode;
     const [rightView, setRightView] = useState(() => configService.getCurrentView() || 'navigation');
     const [showAppMenu, setShowAppMenu] = useState(false);
     const [isSettingsView, setIsSettingsView] = useState(false);
@@ -120,7 +133,7 @@ export default function Home() {
             toggleViewMode(VIEW_MODES.BOAT);
         } else if (x < -threshold) {
             toggleViewMode(VIEW_MODES.APP);
-        } else {
+        } else if (!isNarrowScreen()) {
             toggleViewMode(VIEW_MODES.SPLIT);
         }
     }, { axis: 'x' });
@@ -227,7 +240,9 @@ export default function Home() {
                 <AISProvider>
                 <WeatherContextProvider>
                 <TideContextProvider>
-                    <div className="h-[100dvh] flex flex-col bg-hud-bg relative overflow-hidden">
+                    {/* Safe-area insets: notch, rounded corners and home indicator of an
+                        iPhone running Ocearo from the home screen (0 everywhere else) */}
+                    <div className="h-[100dvh] flex flex-col bg-hud-bg relative overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
                         <div className="flex flex-1 min-h-0">
                             <div className={layoutClasses.leftPane}>
                                 {/* Pause the 3D render loop when the boat view is hidden (APP mode)
@@ -261,6 +276,7 @@ export default function Home() {
                         {showAppMenu && (
                             <AppMenu
                                 currentViewMode={currentViewMode}
+                                canSplit={!narrow}
                                 toggleViewMode={toggleViewMode}
                                 handleSetRightView={handleSetRightView}
                                 toggleSettings={toggleSettings}

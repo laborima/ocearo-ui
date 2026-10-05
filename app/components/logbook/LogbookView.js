@@ -1047,7 +1047,7 @@ const LogbookView = () => {
       )}
 
       {/* Tab Navigation - Tesla style */}
-      <div className="flex border-b border-hud bg-hud-bg">
+      <div className="flex border-b border-hud bg-hud-bg overflow-x-auto scrollbar-hide">
         {[
           { id: 'timeline', label: t('logbook.missionTimeline'), icon: faTimeline },
           { id: 'logbook', label: t('logbook.tacticalLog'), icon: faBook },
@@ -1057,7 +1057,7 @@ const LogbookView = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-3 px-2 text-caption font-semibold uppercase flex items-center justify-center transition-all duration-500 ${
+            className={`flex-1 py-3 px-3 whitespace-nowrap text-caption font-semibold uppercase flex items-center justify-center transition-all duration-500 ${
               activeTab === tab.id
                 ? 'text-oGreen border-b-2 border-oGreen bg-hud-bg'
                 : 'text-hud-secondary hover:text-hud-main tesla-hover'

@@ -191,3 +191,10 @@ body {
 @utility text-balance {
   text-wrap: balance;
 }
+/* Horizontal strips (tab bars, bottom bar) that scroll without a visible scrollbar */
+.scrollbar-hide {
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

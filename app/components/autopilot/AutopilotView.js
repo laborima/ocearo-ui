@@ -687,7 +687,7 @@ export default function AutopilotView() {
     return (
         <div className="flex flex-col h-full bg-rightPaneBg overflow-hidden">
             {/* Tab Navigation - Tesla Style */}
-            <div className="flex border-b border-hud bg-hud-bg">
+            <div className="flex border-b border-hud bg-hud-bg overflow-x-auto scrollbar-hide">
                 {[
                     { id: 'control', label: t('autopilot.control'), icon: faCompass },
                     { id: 'controller', label: t('autopilot.controller'), icon: faGamepad }
@@ -695,7 +695,7 @@ export default function AutopilotView() {
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex-1 py-3 px-2 text-caption font-semibold uppercase flex items-center justify-center transition-all duration-500 ${
+                        className={`flex-1 py-3 px-3 whitespace-nowrap text-caption font-semibold uppercase flex items-center justify-center transition-all duration-500 ${
                             activeTab === tab.id
                                 ? 'text-oGreen border-b-2 border-oGreen bg-hud-bg'
                                 : 'text-hud-secondary hover:text-hud-main tesla-hover'

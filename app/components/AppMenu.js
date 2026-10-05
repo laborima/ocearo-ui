@@ -30,17 +30,19 @@ const MenuButton = ({ icon, label, onClick, onClose }) => (
             onClick();
             onClose();
         }}
-        className="flex items-center text-hud-main px-2 py-2 sm:px-4 sm:py-3 rounded-xl tesla-hover transition-all duration-200 group bg-hud-bg shadow-soft border border-hud"
+        className="flex items-center min-w-0 text-hud-main px-2 py-2 sm:px-4 sm:py-3 rounded-xl tesla-hover transition-all duration-200 group bg-hud-bg shadow-soft border border-hud"
     >
         <div className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-hud-elevated rounded-lg mr-2 sm:mr-3 group-hover:scale-110 transition-transform shrink-0">
             <FontAwesomeIcon icon={icon} className="text-sm sm:text-base text-hud-muted group-hover:text-hud-main transition-colors" />
         </div>
-        <span className="hidden sm:block text-caption sm:text-label font-bold uppercase tracking-widest truncate">{label}</span>
+        {/* Labels on phones too: an icon alone on a wide tile reads as a broken menu */}
+        <span className="block min-w-0 text-caption sm:text-label font-bold uppercase tracking-wide sm:tracking-widest truncate">{label}</span>
     </button>
 );
 
 const AppMenu = ({
     currentViewMode,
+    canSplit = true,
     toggleViewMode,
     handleSetRightView,
     toggleSettings,
@@ -59,10 +61,10 @@ const AppMenu = ({
                 animate={{ y: 0, x: '-50%', opacity: 1, scale: 1 }}
                 exit={{ y: 20, x: '-50%', opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                className="fixed bottom-20 left-1/2 bg-hud-bg backdrop-blur-xl p-3 sm:p-6 rounded-3xl shadow-2xl z-50 w-[95vw] sm:w-full max-w-lg border border-hud ocearo-appmenu-scroll"
+                className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-1/2 bg-hud-bg backdrop-blur-xl p-3 sm:p-6 rounded-3xl shadow-2xl z-50 w-[95vw] sm:w-full max-w-lg border border-hud ocearo-appmenu-scroll"
             >
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                {currentViewMode !== VIEW_MODES.SPLIT && (
+                {canSplit && currentViewMode !== VIEW_MODES.SPLIT && (
                     <MenuButton onClose={closeMenu} icon={faExpand} label={t('menu.splitView')} onClick={() => toggleViewMode(VIEW_MODES.SPLIT)} />
                 )}
                 {currentViewMode !== VIEW_MODES.APP && (

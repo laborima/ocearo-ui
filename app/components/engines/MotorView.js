@@ -378,7 +378,7 @@ const MotorView = () => {
   return (
     <div className="flex flex-col h-full bg-rightPaneBg overflow-hidden">
       {/* Tab Navigation - Tesla Style */}
-      <div className="flex border-b border-hud bg-hud-bg">
+      <div className="flex border-b border-hud bg-hud-bg overflow-x-auto scrollbar-hide">
         {[
           { id: 'engine', label: t('motor.engine'), icon: faCar },
           { id: 'maintenance', label: t('motor.maintenance'), icon: faWrench },
@@ -389,7 +389,7 @@ const MotorView = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-3 px-2 text-caption font-semibold uppercase flex items-center justify-center transition-all duration-500 ${
+            className={`flex-1 py-3 px-3 whitespace-nowrap text-caption font-semibold uppercase flex items-center justify-center transition-all duration-500 ${
               activeTab === tab.id
                 ? 'text-oGreen border-b-2 border-oGreen bg-hud-bg'
                 : 'text-hud-secondary hover:text-hud-main tesla-hover'
@@ -769,8 +769,8 @@ const MotorView = () => {
               </div>
             )}
 
-            {/* Fuel Consumption Gauges */}
-            <div className="grid grid-cols-3 gap-3">
+            {/* Fuel Consumption Gauges (stacked on phones: three side by side overflow) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <CircularGauge
                 label={t('motor.consumptionRate')}
                 value={engineData.fuelRate}
@@ -914,7 +914,7 @@ const MotorView = () => {
                   <div className="w-1.5 h-1.5 rounded-full bg-hud-muted mr-3" />
                   {t('motor.logHistory')}
                 </h3>
-                <div className="tesla-card overflow-hidden transition-all duration-500 ">
+                <div className="tesla-card overflow-x-auto transition-all duration-500 ">
                   <table className="w-full text-caption font-semibold uppercase tracking-widest">
                     <thead className="bg-hud-elevated">
                       <tr>
