@@ -319,6 +319,11 @@ export const OcearoContextProvider = ({ children }) => {
                     if (isOcearoCoreEnabled()) {
                         await updateOcearoCoreMode('moored');
                     }
+                } else if (isOcearoCoreEnabled()) {
+                    // Leaving the berth: back to sailing or motoring
+                    const data = signalkDataRef.current;
+                    const engineState = data['propulsion.main.state'] || data['propulsion.main.revolutions'];
+                    await updateOcearoCoreMode((engineState === 'running' || (typeof engineState === 'number' && engineState > 0)) ? 'motoring' : 'sailing');
                 }
             } catch (error) {
                 if (error.name === 'NetworkError') {
@@ -394,10 +399,14 @@ export const OcearoContextProvider = ({ children }) => {
                     console.warn(`Failed to update OcearoCore mode for ${key}:`, handleOcearoCoreError(error));
                 }
             }
-        } else {
-            // If we're turning it OFF, we just toggle it
+        } else if (key !== 'autopilot') {
+            // Leaving the anchor watch or the harbour returns to navigation:
+            // with every mode off the boat view lost its laylines / AIS
+            // buttons until the helm button was pressed again
+            setStates((prevState) => ({ ...prevState, autopilot: true }));
             return toggleState(key, false);
         }
+        // Navigation is the default view: pressing it again keeps it on
     }, [states, toggleState]);
 
     // Use useRef to persist client between renders
