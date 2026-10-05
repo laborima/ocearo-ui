@@ -879,5 +879,9 @@
     "shom_error": "Échec : {{error}}",
     "shomNo7z": "Installez 7z sur le serveur (apt install p7zip-full) pour décompresser les relevés.",
     "shomCredit": "Source : SHOM, MNT topo-bathymétriques, Licence Ouverte. Profondeurs par rapport au zéro des cartes."
+  },
+  "bathymetry": {
+    "chartDepth": "carte {{depth}} m",
+    "levelFromSounder": "niveau d'après le sondeur"
   }
 }

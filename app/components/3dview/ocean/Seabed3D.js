@@ -7,6 +7,7 @@ import { useSignalKPaths } from '../../hooks/useSignalK';
 import useOwnTrack from '../fsd/useOwnTrack';
 import { cachedImage } from '../../utils/offlineCache';
 import { bathymetryTileTemplate } from '../../utils/OcearoCoreUtils';
+import { useTranslation } from 'react-i18next';
 
 /**
  * 3D seabed for the bathymetry mode: the bottom as a deformed grid under the
@@ -50,8 +51,18 @@ const SOUNDING_RADIUS = 1500;
 const DRYING_LIMIT_CD = 6.5;
 const SAFETY_MARGIN = 1.0;  // metres under the keel
 const DEFAULT_DRAFT = 2.0;
+// Ground above the water now (banks uncovered by the tide, land) rises less
+// than the seabed sinks, and is capped: a relief, not cliffs over the chart
+const EXAGGERATION_ABOVE = 3;
+const ABOVE_CAP = 4;        // metres
+// Water level steps: the mesh is rebuilt when the level moves by this much
+const LEVEL_STEP = 0.1;
+const SOUNDER_LEVEL_STEP = 0.5;
+// Sounder and chart disagree beyond this: show both depths
+const GAP_SHOWN = 0.3;
 
-const PATHS = ['navigation.position', 'design.draft', 'environment.tide.heightNow', 'environment.tide.heightHigh', 'environment.tide.heightLow', 'environment.depth.belowSurface'];
+const PATHS = ['navigation.position', 'design.draft', 'environment.tide.heightNow', 'environment.tide.heightHigh',
+    'environment.tide.heightLow', 'environment.depth.belowSurface', 'environment.depth.belowKeel'];
 
 const tileXY = (lat, lon, z) => {
     const n = 2 ** z;
@@ -230,9 +241,9 @@ const fragmentShader = `
 
 // Palette by theme: paper chart by day, FSD navy and cyan at night
 const PALETTES = {
-    light: { shallow: '#b5e0f2', mid: '#5fa8d8', deep: '#1c4f86', land: '#e2d6b8', drying: '#c7d3a6', line: '#0f3557', danger: '#e8873a', fade: '#e8eef3', text: '#0f2f4f', halo: '#ffffff' },
-    dark: { shallow: '#3a8fbc', mid: '#1d5f8c', deep: '#0b2238', land: '#4a4434', drying: '#34472e', line: '#8fdcff', danger: '#f0a060', fade: '#16191e', text: '#e6f4ff', halo: '#101216' },
-    night: { shallow: '#7a2a1e', mid: '#4f1a12', deep: '#24100c', land: '#3a1a10', drying: '#3a2410', line: '#ff8a72', danger: '#ffad80', fade: '#120807', text: '#ffb3a3', halo: '#0f0706' },
+    light: { water: '#8fd3ff', waterOpacity: 0.18, shallow: '#b5e0f2', mid: '#5fa8d8', deep: '#1c4f86', land: '#e2d6b8', drying: '#c7d3a6', line: '#0f3557', danger: '#e8873a', fade: '#e8eef3', text: '#0f2f4f', halo: '#ffffff' },
+    dark: { water: '#7cc8f2', waterOpacity: 0.12, shallow: '#3a8fbc', mid: '#1d5f8c', deep: '#0b2238', land: '#4a4434', drying: '#34472e', line: '#8fdcff', danger: '#f0a060', fade: '#16191e', text: '#e6f4ff', halo: '#101216' },
+    night: { water: '#c0503c', waterOpacity: 0.1, shallow: '#7a2a1e', mid: '#4f1a12', deep: '#24100c', land: '#3a1a10', drying: '#3a2410', line: '#ff8a72', danger: '#ffad80', fade: '#120807', text: '#ffb3a3', halo: '#0f0706' },
 };
 
 /** Metres east / north between two positions (local tangent plane) */
@@ -331,8 +342,37 @@ const Soundings = ({ items, palette }) => {
 
 const formatDepth = (d) => (d < 10 ? d.toFixed(1) : String(Math.round(d)));
 
-const Seabed3D = ({ y = -0.4 }) => {
+/**
+ * Where the water surface is, in the reference of each dataset: chart datum
+ * for the SHOM survey, mean sea level for the global relief.
+ *
+ * The tide (tables or Signal K) comes first. Without it, the sounder gives the
+ * level at the boat: water depth measured + elevation of the bottom on the
+ * chart. With both, the sounder only checks the chart: their gap is shown.
+ *
+ * @returns {{ cd: number, msl: number, source: 'tide'|'sounder'|'datum' }}
+ */
+export const waterLevel = ({ tideNow, tideHigh, tideLow, measured, surveyHere, globalHere }) => {
+    const round = (x, step = LEVEL_STEP) => Math.round(x / step) * step;
+    if (Number.isFinite(tideNow)) {
+        // Mean sea level ≈ mid-tide of today's high and low
+        const msl = Number.isFinite(tideHigh) && Number.isFinite(tideLow) ? tideNow - (tideHigh + tideLow) / 2 : 0;
+        return { cd: round(tideNow), msl: round(msl), source: 'tide' };
+    }
+    if (Number.isFinite(measured) && (Number.isFinite(surveyHere) || Number.isFinite(globalHere))) {
+        const cd = Number.isFinite(surveyHere) ? measured + surveyHere : 0;
+        const msl = Number.isFinite(globalHere) ? measured + globalHere : 0;
+        // Coarse steps: the estimate moves with every swell and survey cell
+        return { cd: round(cd, SOUNDER_LEVEL_STEP), msl: round(msl, SOUNDER_LEVEL_STEP), source: 'sounder' };
+    }
+    // Nothing known: chart datum, the cautious case (least water)
+    return { cd: 0, msl: 0, source: 'datum' };
+};
+
+// The seabed's sea level sits at the hull's waterline in the map modes
+const Seabed3D = ({ y = -0.1 }) => {
     const v = useSignalKPaths(PATHS);
+    const { t } = useTranslation();
     const { id: themeId } = useTheme();
     const position = v['navigation.position'];
     const { heading } = useOwnTrack();
@@ -340,16 +380,11 @@ const Seabed3D = ({ y = -0.4 }) => {
     const scale = configService.get('aisLengthScalingFactor') || 0.7;
     const draft = Number.isFinite(v['design.draft']?.maximum) ? v['design.draft'].maximum
         : Number(configService.get('boatDraft')) || DEFAULT_DRAFT;
-    // Tide heights are above chart datum. Terrarium is relative to mean sea
-    // level: use the height above mid-tide (≈ MSL) of today's high and low.
-    // The SHOM survey is relative to chart datum, like the tide: add it as is
-    // (none known: chart datum, the cautious case).
-    const hNow = v['environment.tide.heightNow'];
-    const hHigh = v['environment.tide.heightHigh'];
-    const hLow = v['environment.tide.heightLow'];
-    const tide = Number.isFinite(hNow) && Number.isFinite(hHigh) && Number.isFinite(hLow) ? hNow - (hHigh + hLow) / 2 : 0;
-    const tideChartDatum = Number.isFinite(hNow) ? hNow : 0;
-    const sounder = v['environment.depth.belowSurface'];
+    // Water depth under the boat from the sounder (surface, or keel + draft)
+    const belowSurface = v['environment.depth.belowSurface'];
+    const belowKeel = v['environment.depth.belowKeel'];
+    const measured = Number.isFinite(belowSurface) ? belowSurface
+        : Number.isFinite(belowKeel) ? belowKeel + draft : null;
     const palette = PALETTES[themeId] || PALETTES.light;
 
     const lat = position?.latitude;
@@ -364,17 +399,37 @@ const Seabed3D = ({ y = -0.4 }) => {
         return () => { cancelled = true; };
     }, [tileKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Chart elevation of the bottom under the boat, per dataset (survey: chart
+    // datum, global: mean sea level), refreshed every ~20 m
+    const latKey = Number.isFinite(lat) ? Math.round(lat * 5000) : null;
+    const lonKey = Number.isFinite(lon) ? Math.round(lon * 5000) : null;
+    const bottomHere = useMemo(() => {
+        if (!data || latKey === null) return {};
+        return {
+            survey: data.shom ? heightAt(data.shom, lat, lon) : NaN,
+            global: data.global ? heightAt(data.global, lat, lon) : NaN,
+        };
+    }, [data, latKey, lonKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // The sounder only sets the level when there is no tide
+    const level = waterLevel({
+        tideNow: v['environment.tide.heightNow'], tideHigh: v['environment.tide.heightHigh'], tideLow: v['environment.tide.heightLow'],
+        measured, surveyHere: bottomHere.survey, globalHere: bottomHere.global,
+    });
+    const levelCd = level.cd;
+    const levelMsl = level.msl;
+
     /** Elevation (m) now, i.e. above the water surface (tide included), and whether it dries */
     const sample = useMemo(() => {
         if (!data) return null;
         return (pLat, pLon) => {
             const survey = data.shom ? heightAt(data.shom, pLat, pLon) : NaN;
-            if (Number.isFinite(survey)) return { h: survey - tideChartDatum, drying: survey < DRYING_LIMIT_CD };
+            if (Number.isFinite(survey)) return { h: survey - levelCd, drying: survey < DRYING_LIMIT_CD };
             const global = data.global ? heightAt(data.global, pLat, pLon) : NaN;
-            if (Number.isFinite(global)) return { h: global - tide, drying: global < DRYING_LIMIT_CD - 3.5 };
+            if (Number.isFinite(global)) return { h: global - levelMsl, drying: global < DRYING_LIMIT_CD - 3.5 };
             return null;
         };
-    }, [data, tide, tideChartDatum]);
+    }, [data, levelCd, levelMsl]);
 
     // Mesh around the boat: ±HALF metres, north-up local (x east, y north)
     const built = useMemo(() => {
@@ -399,9 +454,9 @@ const Seabed3D = ({ y = -0.4 }) => {
             drying[i] = s?.drying ? 1 : 0;
             ground[i * 2] = ref.east + east;
             ground[i * 2 + 1] = ref.north + north;
-            // Below the sea surface the seabed sinks (exaggerated); land and
-            // drying banks stay flat at sea level under the chart
-            p.setZ(i, h < 0 ? h * exaggeration * scale : 0);
+            // Below the water the seabed sinks (exaggerated); banks the tide
+            // has uncovered and the land rise through the water sheet, gently
+            p.setZ(i, h < 0 ? h * exaggeration * scale : (0.15 + Math.min(h, ABOVE_CAP) * EXAGGERATION_ABOVE) * scale);
         }
         g.setAttribute('aDepth', new THREE.BufferAttribute(depth, 1));
         g.setAttribute('aDrying', new THREE.BufferAttribute(drying, 1));
@@ -431,7 +486,7 @@ const Seabed3D = ({ y = -0.4 }) => {
             }
         }
         const here = sample(lat, lon);
-        return { geometry: g, items, bottom: here && here.h < 0 ? here.h * exaggeration * scale : null, depthHere: here ? -here.h : null };
+        return { geometry: g, items, exaggeration, bottom: here && here.h < 0 ? here.h * exaggeration * scale : null, depthHere: here ? -here.h : null };
         // Rebuilt when the tile data changes or the boat has moved ~200 m
     }, [sample, scale, draft, lat && Math.round(lat * 500), lon && Math.round(lon * 500)]); // eslint-disable-line react-hooks/exhaustive-deps
     useEffect(() => () => built?.geometry.dispose(), [built]);
@@ -467,25 +522,81 @@ const Seabed3D = ({ y = -0.4 }) => {
     }, [material, draft, palette]);
     useEffect(() => () => material.dispose(), [material]);
 
+    // The water surface: a barely tinted sheet at the hull's waterline,
+    // fading out with the seabed
+    const waterMaterial = useMemo(() => new THREE.ShaderMaterial({
+        uniforms: { uColor: { value: new THREE.Color() }, uOpacity: { value: 0.16 } },
+        vertexShader: `
+            varying float vDist;
+            void main() {
+                vDist = length(position.xy);
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }`,
+        fragmentShader: `
+            uniform vec3 uColor;
+            uniform float uOpacity;
+            varying float vDist;
+            void main() {
+                gl_FragColor = vec4(uColor, uOpacity * (1.0 - smoothstep(1500.0, 2100.0, vDist)));
+                #include <colorspace_fragment>
+            }`,
+        transparent: true,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+    }), []);
+    useEffect(() => {
+        const u = waterMaterial.uniforms;
+        u.uColor.value.set(palette.water);
+        u.uOpacity.value = palette.waterOpacity; // eslint-disable-line react-hooks/immutability
+    }, [waterMaterial, palette]);
+    useEffect(() => () => waterMaterial.dispose(), [waterMaterial]);
+
     if (!built || !Number.isFinite(lat)) return null;
-    const depthLabel = Number.isFinite(sounder) ? sounder : built.depthHere;
+    // The sounder line goes to the measured bottom; when the chart (at this
+    // water level) disagrees, its bottom gets a second ring and both depths show
+    const chartDepth = built.depthHere;
+    const gap = Number.isFinite(measured) && Number.isFinite(chartDepth) && level.source === 'tide' ? measured - chartDepth : null;
+    const measuredBottom = Number.isFinite(measured) ? -measured * built.exaggeration * scale : null;
+    const sounderBottom = measuredBottom ?? built.bottom;
+    const showGap = gap !== null && Math.abs(gap) >= GAP_SHOWN;
+    const depthLabel = Number.isFinite(measured) ? measured : chartDepth;
+    const keel = -draft * scale;
     // The mesh was built around the position at build time; place it relative to the current one
     return (
         <group rotation={[0, heading, 0]} position={[0, y, 0]}>
             <mesh rotation={[-Math.PI / 2, 0, 0]} geometry={built.geometry} material={material} renderOrder={-2} />
+            {/* Sea level now (tide, or the sounder without tide) */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} material={waterMaterial} renderOrder={1}>
+                <circleGeometry args={[HALF * scale, 96]} />
+            </mesh>
             <Soundings items={built.items} palette={palette} />
-            {/* Sounder: from the keel straight down to the bottom */}
-            {built.bottom !== null && (
+            {/* Sounder: from the keel straight down to the bottom it measures */}
+            {sounderBottom !== null && sounderBottom < keel && (
                 <group>
-                    <Line points={[[0, -1.6, 0], [0, built.bottom, 0]]} color={palette.line} lineWidth={2} dashed dashSize={1.2} gapSize={0.8} />
-                    <mesh position={[0, built.bottom, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                    <Line points={[[0, keel, 0], [0, sounderBottom, 0]]} color={palette.line} lineWidth={2} dashed dashSize={1.2} gapSize={0.8} />
+                    <mesh position={[0, sounderBottom, 0]} rotation={[-Math.PI / 2, 0, 0]}>
                         <ringGeometry args={[1.2, 1.8, 32]} />
                         <meshBasicMaterial color={palette.line} transparent opacity={0.8} side={THREE.DoubleSide} />
                     </mesh>
+                    {showGap && built.bottom !== null && (
+                        <mesh position={[0, built.bottom, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                            <ringGeometry args={[1.0, 1.4, 32]} />
+                            <meshBasicMaterial color={palette.danger} transparent opacity={0.8} side={THREE.DoubleSide} />
+                        </mesh>
+                    )}
                     {Number.isFinite(depthLabel) && (
-                        <Html position={[0, built.bottom / 2, 0]} zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}>
+                        <Html position={[0, sounderBottom / 2, 0]} zIndexRange={[5, 0]} style={{ pointerEvents: 'none' }}>
                             <div className="ml-3 -translate-y-1/2 whitespace-nowrap px-1.5 py-px rounded-md text-caption font-semibold tabular-nums text-hud-main bg-hud-bg/70 backdrop-blur-sm">
                                 {formatDepth(depthLabel)} m
+                                {showGap && (
+                                    <span className="ml-1.5 font-normal text-hud-muted">
+                                        {t('bathymetry.chartDepth', { depth: formatDepth(chartDepth) })}
+                                        {' '}({gap > 0 ? '+' : '−'}{Math.abs(gap).toFixed(1)})
+                                    </span>
+                                )}
+                                {level.source === 'sounder' && (
+                                    <span className="ml-1.5 font-normal text-hud-muted">{t('bathymetry.levelFromSounder')}</span>
+                                )}
                             </div>
                         </Html>
                     )}
