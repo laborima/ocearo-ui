@@ -31,6 +31,9 @@ Ocearo 2: a new 3D view built around what a sailor needs to see — a realistic 
 - **Rain radar "Zoom Level Not Supported" banners over the meteo map**: RainViewer now serves zoom 7 at most. The meteo base map also follows the zoom instead of a fixed, blurred 40 km.
 - The realistic sea shimmered towards the horizon (waves shorter than the mesh could draw).
 - Dark and night themes: the chart is drawn dark (red at night) instead of a bright map under a dark sky that made the HUD unreadable.
+- **Tank volumes were 1000 times too small**: Signal K capacities are in m³, shown as litres (“0/0.06L”, total capacity 0 L on the engine page). Tanks with a level but no capacity are now shown, and the black water tank is listed.
+- The fuel estimate from the refill log subtracted the fuel used twice when a tank gauge was present.
+- Logbook: the position of entries written from the app showed “n/a”.
 
 ## [0.1.22] - 2026-08-10
 
