@@ -33,7 +33,7 @@ const PATHS = ['navigation.speedOverGround', 'navigation.courseOverGroundTrue'];
 export const findAvoidance = ({ targets, sog, cog, scale, thresholds, preferSide = 0 }) => {
     const relevant = targets.filter(t => t.distanceMeters !== null && t.sceneX !== null
         && Number.isFinite(t.sog) && Number.isFinite(t.cog ?? t.cogMagnetic));
-    const clear = (course) => relevant.every((t) => {
+    const clear = (course, cpaMeters = thresholds.cpaMeters) => relevant.every((t) => {
         const a = closestApproach({
             rx: t.sceneX / scale,
             ry: -t.sceneZ / scale,
@@ -43,17 +43,22 @@ export const findAvoidance = ({ targets, sog, cog, scale, thresholds, preferSide
             targetCog: t.cog ?? t.cogMagnetic,
         });
         // Not closing (diverging or keeping station): no course change can matter
-        return !a || a.tcpa <= 0 || a.tcpa > thresholds.tcpaSeconds || a.cpa >= thresholds.cpaMeters;
+        return !a || a.tcpa <= 0 || a.tcpa > thresholds.tcpaSeconds || a.cpa >= cpaMeters;
     });
     // The preferred side first (pass astern / starboard), all the way, then the other
     const sides = preferSide < 0 ? [-1, 1] : [1, -1];
-    const sweep = (side) => {
+    const sweep = (side, cpaMeters) => {
         for (let change = AVOID_STEP; change <= AVOID_MAX + 1e-9; change += AVOID_STEP) {
-            if (clear(cog + side * change)) return side * change;
+            if (clear(cog + side * change, cpaMeters)) return side * change;
         }
         return null;
     };
-    if (preferSide !== 0) return sweep(sides[0]) ?? sweep(sides[1]);
+    // Already inside the CPA limit, no course clears it on the side that
+    // passes astern, and the other side "clears" only by running away across
+    // the other vessel's bow: keep to the right side with half the margin
+    if (preferSide !== 0) {
+        return sweep(sides[0]) ?? sweep(sides[0], thresholds.cpaMeters / 2) ?? sweep(sides[1]);
+    }
     for (let change = AVOID_STEP; change <= AVOID_MAX + 1e-9; change += AVOID_STEP) {
         if (clear(cog + change)) return change;
         if (clear(cog - change)) return -change;

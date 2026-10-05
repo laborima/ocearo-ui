@@ -5,6 +5,9 @@ import { useSignalKPaths, useSignalKPrefix } from './useSignalK';
 import usePolarPerformance from './usePolarPerformance';
 import { rightOfWay, targetCategory } from '../utils/Colregs';
 import configService from '../settings/ConfigService';
+import { useOcearoContext } from '../context/OcearoContext';
+
+const NO_TARGETS = [];
 
 const PATHS = ['navigation.speedOverGround', 'navigation.courseOverGroundTrue'];
 
@@ -28,15 +31,23 @@ const useOwnCategory = () => {
 /**
  * COLREG roles for every AIS target on a collision course.
  *
+ * The boat view only advises while its AIS layer is on: with AIS hidden,
+ * no "keep clear" banner, orange hull or avoidance course either. The
+ * dashboard radar shows the targets itself and passes `always`.
+ *
+ * @param {{ always?: boolean }} [options]
  * @returns {{ ownCategory: string, encounters: Array<{ target, role }>,
  *             statuses: { [mmsi]: 'giveWay'|'yields'|'close' },
  *             giveWay: boolean, giveWayTo, primary: null|{ target, role } }}
  *   encounters sorted by time to CPA; giveWay: we must keep clear of at least
  *   one of them; primary: the most urgent encounter
  */
-const useColregs = () => {
+const useColregs = ({ always = false } = {}) => {
     // Passive: only while the AIS layer keeps the connection open
-    const { targets } = useAIS({ passive: true });
+    const { targets: aisTargets } = useAIS({ passive: true });
+    const { states } = useOcearoContext();
+    const enabled = always || states.ais;
+    const targets = enabled ? aisTargets : NO_TARGETS;
     const { twd, heading } = usePolarPerformance();
     const v = useSignalKPaths(PATHS);
     const ownCategory = useOwnCategory();
