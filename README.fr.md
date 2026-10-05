@@ -32,6 +32,7 @@
 - [Sécurité : homme à la mer et mouillage](#sécurité--homme-à-la-mer-et-mouillage)
 - [Instruments et systèmes du bord](#instruments-et-systèmes-du-bord)
 - [Hors-ligne en mer](#hors-ligne-en-mer)
+- [À bord](#à-bord)
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Développement](#développement)
@@ -132,6 +133,21 @@ En mer, internet est rare. Dès qu’il y en a (Wi-Fi du port, 4G), Ocearo garde
 - Les **tuiles de carte** déjà affichées, les **prévisions de vent** et la **bathymétrie** sont gardées dans le navigateur de l’écran ; *Réglages → Données hors-ligne* télécharge d’un coup la bathymétrie et la prévision sur 5, 10 ou 20 NM autour du bateau.
 - Avec **[ocearo-core](https://github.com/laborima/ocearo-core)** sur le serveur, les **relevés SHOM** (modèles numériques de terrain de 5 à 20 m des côtes françaises, données ouvertes) sont téléchargés par le serveur lui-même et partagés avec tous les écrans du bord.
 - Les serveurs de tuiles OpenStreetMap interdisent le téléchargement en masse : pour une carte complète hors-ligne, ajoutez des cartes MBTiles au serveur Signal K, qu’Ocearo utilise alors automatiquement.
+
+---
+
+## À bord
+
+L’installation sur laquelle Ocearo est développé : derrière un panneau de la table à cartes, un Raspberry Pi équipé d’une carte MacArthur HAT (interface NMEA 0183 et NMEA 2000) fait tourner Signal K, et un écran tactile encastré au-dessus du tableau électrique affiche la vue 3D. Tablettes et téléphones se connectent au même serveur par le Wi-Fi du bord.
+
+| | |
+|---|---|
+| ![Le Raspberry Pi et sa carte MacArthur HAT, câblés derrière le panneau de la table à cartes](docs/screenshots/onboard-1.jpg) | ![L’écran tactile encastré au-dessus du tableau électrique et de la VHF](docs/screenshots/onboard-2.jpg) |
+| **Derrière le panneau.** Le Raspberry Pi, sa carte MacArthur HAT et le câblage vers les instruments, à l’abri mais facile d’accès. | **À la table à cartes.** L’écran est encastré dans le panneau, au-dessus du tableau électrique et de la VHF. |
+
+![Ocearo sur l’écran de la table à cartes](docs/screenshots/onboard-3.jpg)
+
+*Photos prises avec une version antérieure d’Ocearo.*
 
 ---
 
