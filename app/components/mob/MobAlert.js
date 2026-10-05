@@ -140,7 +140,7 @@ const MobBanner = ({ mobs, canNavigate }) => {
   return (
     <div
       role="alert"
-      className="absolute top-3 left-1/2 -translate-x-1/2 z-40 w-[min(32rem,calc(100%-2rem))] max-h-[70%] overflow-y-auto bg-oRed text-white rounded-2xl shadow-2xl border-2 border-white/60 p-4 flex flex-col gap-4 divide-y divide-white/30"
+      className="absolute top-[calc(0.75rem+env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-40 w-[min(32rem,calc(100%-2rem))] max-h-[70%] overflow-y-auto bg-oRed text-white rounded-2xl shadow-2xl border-2 border-white/60 p-4 flex flex-col gap-4 divide-y divide-white/30"
     >
       {mobs.map((mob) => (
         <div key={mob.path} className="pt-4 first:pt-0">

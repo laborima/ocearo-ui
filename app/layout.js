@@ -39,10 +39,14 @@ export const metadata = {
 
 
 export const viewport = {
+    // Status bar / browser chrome in the app's own background colours
     themeColor: [
-        { media: '(prefers-color-scheme: light)', color: '#4bbcd8' }, 
-        { media: '(prefers-color-scheme: dark)', color: '#0a2e3d' }, 
+        { media: '(prefers-color-scheme: light)', color: '#f7f8f9' },
+        { media: '(prefers-color-scheme: dark)', color: '#101216' },
     ],
+    // iPhone home-screen app: draw under the notch and the home indicator,
+    // the page pads itself with the safe-area insets
+    viewportFit: 'cover',
 
     width: 'device-width',
     initialScale: 1,
@@ -55,6 +59,9 @@ export default function RootLayout({ children }) {
     return (
         <html lang="en">
             <head>
+                {/* Next emits mobile-web-app-capable only; iOS before 16.4 needs the Apple name
+                    to open the home-screen app without the Safari bars */}
+                <meta name="apple-mobile-web-app-capable" content="yes" />
                 <meta
                     name="description"
                     content="Sailing made smarter with Ocearo: touchscreen-first sailing dashboard with navigation, weather, and instrumentation."
