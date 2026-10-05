@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ocearo — l’afficheur de navigation 3D open source pour Signal K</title>
+<meta name="description" content="Voyez votre bateau, la mer et le trafic en 3D, en direct. Réglage des voiles, règles de barre, homme à la mer, veille au mouillage, bathymétrie et météo sur tous les écrans du bord. Open source, tourne sur un Raspberry Pi.">
+<link rel="canonical" href="https://laborima.github.io/ocearo-ui/fr/">
+<link rel="alternate" hreflang="en" href="https://laborima.github.io/ocearo-ui/">
+<link rel="alternate" hreflang="fr" href="https://laborima.github.io/ocearo-ui/fr/">
+<link rel="alternate" hreflang="x-default" href="https://laborima.github.io/ocearo-ui/">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="color-scheme" content="dark">
+<meta name="author" content="Matthieu Laborie">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ocearo">
+<meta property="og:title" content="Ocearo — l’afficheur de navigation 3D open source pour Signal K">
+<meta property="og:description" content="Voyez votre bateau, la mer et le trafic en 3D, en direct. Réglage des voiles, règles de barre, homme à la mer, veille au mouillage, bathymétrie et météo sur tous les écrans du bord. Open source, tourne sur un Raspberry Pi.">
+<meta property="og:url" content="https://laborima.github.io/ocearo-ui/fr/">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:image" content="https://laborima.github.io/ocearo-ui/assets/img/og-fr.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Ocearo : un voilier sous spi dans la vue 3D en direct, avec compas, marée et profondeur">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ocearo — l’afficheur de navigation 3D open source pour Signal K">
+<meta name="twitter:description" content="Voyez votre bateau, la mer et le trafic en 3D, en direct. Réglage des voiles, règles de barre, homme à la mer, veille au mouillage, bathymétrie et météo sur tous les écrans du bord. Open source, tourne sur un Raspberry Pi.">
+<meta name="twitter:image" content="https://laborima.github.io/ocearo-ui/assets/img/og-fr.jpg">
+<link rel="icon" href="/ocearo-ui/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/ocearo-ui/favicon-96x96.png" sizes="96x96" type="image/png">
+<link rel="icon" href="/ocearo-ui/favicon.ico" sizes="48x48">
+<link rel="apple-touch-icon" href="/ocearo-ui/apple-touch-icon.png">
+<link rel="preload" href="/ocearo-ui/assets/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/ocearo-ui/assets/css/site.css?v=2.0.0">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Ocearo","alternateName":"Ocearo UI","description":"Voyez votre bateau, la mer et le trafic en 3D, en direct. Réglage des voiles, règles de barre, homme à la mer, veille au mouillage, bathymétrie et météo sur tous les écrans du bord. Open source, tourne sur un Raspberry Pi.","url":"https://laborima.github.io/ocearo-ui/fr/","applicationCategory":"TravelApplication","applicationSubCategory":"Marine navigation display","operatingSystem":"Signal K server (Linux, Raspberry Pi), any web browser","softwareVersion":"2.0.0","license":"https://www.apache.org/licenses/LICENSE-2.0","image":"https://laborima.github.io/ocearo-ui/assets/shots/hero.jpg","screenshot":["https://laborima.github.io/ocearo-ui/assets/shots/hero.jpg","https://laborima.github.io/ocearo-ui/assets/shots/colregs.jpg","https://laborima.github.io/ocearo-ui/assets/shots/bathymetry.jpg","https://laborima.github.io/ocearo-ui/assets/shots/dashboard-dark.jpg"],"downloadUrl":"https://www.npmjs.com/package/ocearo-ui","codeRepository":"https://github.com/laborima/ocearo-ui","inLanguage":["en","fr","de","es","it","nl","pt","da","sv","fi","pl","el"],"author":{"@type":"Person","name":"Matthieu Laborie"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Ocearo est-il open source ?","acceptedAnswer":{"@type":"Answer","text":"Oui, sous licence Apache 2.0. Le code d’Ocearo UI et d’Ocearo Core est sur GitHub : vous pouvez le lire, l’adapter à votre bateau et contribuer."}},{"@type":"Question","name":"De quel matériel ai-je besoin ?","acceptedAnswer":{"@type":"Answer","text":"D’un serveur Signal K, qu’un Raspberry Pi 4 ou 5 fait tourner sans peine, relié à vos instruments (NMEA 2000 ou 0183). N’importe quel navigateur récent sur tablette, téléphone ou écran de table à cartes sert d’affichage."}},{"@type":"Question","name":"Fonctionne-t-il sans internet ?","acceptedAnswer":{"@type":"Answer","text":"Oui. Vos instruments, l’AIS et la vue 3D n’ont pas besoin d’internet. Les cartes, prévisions de vent et la bathymétrie sont gardées à bord dès que vous avez une connexion, et peuvent être téléchargées pour la zone avant de partir."}},{"@type":"Question","name":"Est-ce un système de navigation certifié ?","acceptedAnswer":{"@type":"Answer","text":"Non. Ocearo est une aide à la veille, une seconde paire d’yeux. Gardez une veille attentive et utilisez les cartes officielles ; le skipper reste responsable du bateau."}},{"@type":"Question","name":"Quels bateaux sont pris en charge ?","acceptedAnswer":{"@type":"Answer","text":"Tout bateau qui publie des données Signal K standard : voiliers, catamarans et bateaux à moteur. La vue 3D propose un racer de 10,8 m, un catamaran de 14 m et des modèles plus simples."}},{"@type":"Question","name":"Quelles langues sont disponibles ?","acceptedAnswer":{"@type":"Answer","text":"Douze : français, anglais, allemand, espagnol, italien, néerlandais, portugais, danois, suédois, finnois, polonais et grec, en unités métriques, impériales ou nautiques."}}]},{"@type":"WebSite","name":"Ocearo","url":"https://laborima.github.io/ocearo-ui/fr/","inLanguage":"fr"}]}</script>
+
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="/ocearo-ui/fr/" aria-label="Accueil Ocearo"><img src="/ocearo-ui/assets/logo/ocearo-logo-dark.svg" alt="Ocearo" width="190" height="34"></a>
+    <ul class="nav-links" id="menu">
+      <li><a href="/ocearo-ui/fr/#features">Fonctions</a></li>
+      <li><a href="/ocearo-ui/fr/#safety">Sécurité</a></li>
+      <li><a href="/ocearo-ui/fr/#video">Vidéo</a></li>
+      <li><a href="/ocearo-ui/fr/#vision">Ocean Robot</a></li>
+      <li><a href="/ocearo-ui/fr/#install">Installer</a></li>
+      <li><a href="/ocearo-ui/fr/demo/">Démo</a></li>
+    </ul>
+    <div class="nav-end">
+      <nav class="lang" aria-label="Langue">
+        <a href="/ocearo-ui/" hreflang="en" lang="en" aria-current="false">EN</a>
+        <a href="/ocearo-ui/fr/" hreflang="fr" lang="fr" aria-current="true">FR</a>
+      </nav>
+      <a class="btn btn-ghost btn-s btn-gh" href="https://github.com/laborima/ocearo-ui" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
+        GitHub
+      </a>
+      <a class="btn btn-primary btn-s" href="/ocearo-ui/fr/demo/">Essayer</a>
+      <button class="menu-btn" type="button" aria-controls="menu" aria-expanded="false" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-grid" aria-hidden="true"></div>
+    <div class="wrap">
+      <div class="hero-copy">
+        <div class="chips">
+          <span class="chip"><i></i>Ocearo 2 est disponible</span>
+          <span class="chip">Signal K</span>
+          <span class="chip">Raspberry Pi</span>
+          <span class="chip">Apache 2.0</span>
+        </div>
+        <h1>Votre bateau, la mer et le trafic, <span class="grad">en 3D, en direct.</span></h1>
+        <p class="lead">Ocearo transforme les données de votre bateau en une image calme, lisible d’un coup d’œil — réglage des voiles, règles de barre, homme à la mer et veille au mouillage compris. Open source, sur tous les écrans du bord.</p>
+        <div class="cta">
+          <a class="btn btn-primary" href="/ocearo-ui/fr/demo/">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>Essayer la démo
+          </a>
+          <a class="btn btn-ghost" href="#install">Installer sur Signal K</a>
+        </div>
+      </div>
+      <div class="screen">
+        <video autoplay muted loop playsinline preload="metadata" poster="/ocearo-ui/assets/shots/hero.jpg" width="1600" height="900" aria-label="Vue 3D d’Ocearo : un voilier sous spi en sortant de La Rochelle">
+          <source src="/ocearo-ui/assets/video/s2-spinnaker-fr.mp4" type="video/mp4">
+        </video>
+        <span class="live"><i></i>3D en direct</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Proof -->
+  <section class="proof" aria-label="Ocearo en chiffres">
+    <div class="wrap">
+      <ul>
+        <li><b>3</b><span>thèmes : jour, sombre, et nuit rouge pour préserver la vision nocturne.</span></li><li><b>5</b><span>façons de voir le monde autour du bateau : mer, carte, fonds, météo, régate.</span></li><li><b>6</b><span>règles du RIPAM calculées en direct pour chaque cible AIS, avec la manœuvre à faire.</span></li><li><b>12</b><span>langues, en unités métriques, impériales ou nautiques.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="section" id="features">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Pensé pour les marins</span>
+        <h2>Tout ce qu’il faut savoir, d’un coup d’œil.</h2>
+        <p class="lead">Un traceur montre des traits sur une carte. Ocearo montre ce qui se passe vraiment autour du bateau, comme une voiture autonome montre la route : votre bateau, le vent, l’état de la mer, les autres navires et ce que chacun doit faire.</p>
+      </div>
+
+      <article class="feature reveal">
+        <div class="feature-copy">
+          <span class="eyebrow">La vue 3D</span>
+          <h2>Le bateau, la mer et les fonds, en direct.</h2>
+          <p class="lead">Une scène 3D temps réel centrée sur votre bateau, construite à partir de vos propres instruments. Un bouton fait défiler cinq représentations du monde autour.</p>
+          <ul class="ticks"><li><span><b>Une mer issue du vent réel.</b> Mer du vent et houle, moutons dès 7 nœuds, le soleil là où il est vraiment et votre propre sillage.</span></li><li><span><b>Carte et balisage en direct.</b> OpenStreetMap et les feux et marques d’OpenSeaMap, à l’échelle avec les cibles AIS.</span></li><li><span><b>Les fonds en 3D.</b> Relevés SHOM 5–20 m sur la côte française, sondes à la marée du moment, petits fonds hachurés en orange selon votre tirant d’eau.</span></li></ul>
+        </div>
+        <div>
+          <div class="media"><video data-autoplay muted loop playsinline preload="none" poster="/ocearo-ui/assets/shots/chart.jpg" width="1280" height="720" aria-label="Vue bathymétrie : les fonds en grille de relevé sous le bateau"><source src="/ocearo-ui/assets/video/s6-bathymetry-fr.mp4" type="video/mp4"></video></div>
+          <div class="pair">
+            <div class="media"><img src="/ocearo-ui/assets/shots/chart.jpg" alt="Carte en direct avec balisage et cibles AIS en 3D" width="1600" height="900" loading="lazy"><span class="tag">Carte et balisage</span></div>
+            <div class="media"><img src="/ocearo-ui/assets/shots/bathymetry.jpg" alt="Bathymétrie SHOM en grille de relevé avec isobathes et sondes" width="1600" height="900" loading="lazy"><span class="tag">Bathymétrie SHOM</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="feature flip reveal" id="traffic">
+        <div class="feature-copy">
+          <span class="eyebrow">Trafic et règles de barre</span>
+          <h2>Qui doit s’écarter ? Ocearo vous le dit.</h2>
+          <p class="lead">Chaque cible AIS est dessinée selon son vrai type et sa taille, glisse entre deux positions et prend la couleur de celui qui doit manœuvrer — avec la règle et le changement de cap à faire.</p>
+          <ul class="ticks"><li><span><b>Règles 12 à 18 appliquées en direct,</b> d’après le statut et le type AIS de chaque cible et le vôtre : sous voiles ou au moteur, un voilier n’est pas le même navire.</span></li><li><span><b>Des consignes claires :</b> « Éviter : 15° sur bâbord », le point de rapprochement maximal en pointillés, et une alerte quand aucun changement de cap ne dégage tout le monde.</span></li><li><span><b>Veille parlée avec Ocearo Core :</b> « Danger de collision : LE PERTUIS à 0,5 mille… passer sur son arrière. »</span></li></ul>
+          <div class="legend">
+            <span><i style="background:var(--red)"></i>À nous de manœuvrer</span>
+            <span><i style="background:var(--violet)"></i>À eux de manœuvrer</span>
+            <span><i style="background:#ff9a1f"></i>Proche, sans risque</span>
+          </div>
+        </div>
+        <div>
+          <div class="media"><video data-autoplay muted loop playsinline preload="none" poster="/ocearo-ui/assets/shots/colregs.jpg" width="1280" height="720" aria-label="Un chalutier croise devant : règle 18, le voilier s’écarte"><source src="/ocearo-ui/assets/video/s3-fishing-fr.mp4" type="video/mp4"></video></div>
+          <div class="pair">
+            <div class="media"><img src="/ocearo-ui/assets/shots/traffic.jpg" alt="Trafic dense : ferry, cargo, chalutier et voiliers, chacun avec son rôle" width="1600" height="900" loading="lazy"><span class="tag">Trafic dense</span></div>
+            <div class="media"><img src="/ocearo-ui/assets/shots/standon.jpg" alt="Un voilier bâbord amures doit s’écarter de notre route, règle 12" width="1600" height="900" loading="lazy"><span class="tag">Privilégié, règle 12</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="feature reveal" id="tactics">
+        <div class="feature-copy">
+          <span class="eyebrow">Tactique et météo</span>
+          <h2>Allez plus vite, réglez mieux.</h2>
+          <p class="lead">Ocearo dessine vos voiles d’après le vent apparent et montre où vos polaires vous emmènent. En régate comme en croisière, vous voyez le coup d’après.</p>
+          <ul class="ticks"><li><span><b>Des voiles que l’on règle à l’écran :</b> bandes de creux, penons, chariots d’écoute, ris et spi asymétrique.</span></li><li><span><b>Laylines et isochrones :</b> où vous serez dans 5, 10 et 15 minutes à chaque cap, conseil de VMG et bateau fantôme des polaires.</span></li><li><span><b>Prévision de vent sur 48 heures</b> autour du bateau aux couleurs de Windy, gardée à bord pour naviguer hors ligne.</span></li></ul>
+        </div>
+        <div>
+          <div class="media"><video data-autoplay muted loop playsinline preload="none" poster="/ocearo-ui/assets/shots/polars.jpg" width="1280" height="720" aria-label="Retour au près sur les laylines avec les isochrones"><source src="/ocearo-ui/assets/video/s8-beat-fr.mp4" type="video/mp4"></video></div>
+          <div class="pair">
+            <div class="media"><img src="/ocearo-ui/assets/shots/weather.jpg" alt="Prévision de vent autour du bateau aux couleurs de Windy" width="1600" height="900" loading="lazy"><span class="tag">Prévision de vent</span></div>
+            <div class="media"><img src="/ocearo-ui/assets/shots/hero.jpg" alt="Bandes de creux et penons sous spi" width="1600" height="900" loading="lazy"><span class="tag">Réglage des voiles</span></div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Safety -->
+  <section class="section" id="safety" style="padding-top:0">
+    <div class="wrap">
+      <article class="feature flip reveal">
+        <div class="feature-copy">
+          <span class="eyebrow">Sécurité</span>
+          <h2>Quand ça compte vraiment, un seul bouton.</h2>
+          <p class="lead">Les moments auxquels on s’entraîne en espérant ne jamais les vivre. Ocearo les rend simples, visibles et sonores.</p>
+          <ul class="ticks"><li><span><b>Homme à la mer :</b> point de chute, position estimée de la personne d’après le courant et la dérive, ligne de dérive et cap à suivre.</span></li><li><span><b>Veille au mouillage :</b> rayon d’alarme, la chaîne et l’évitage réel — une ancre qui chasse se voit bien avant l’alarme.</span></li><li><span><b>Petits fonds et aide à l’amarrage :</b> la profondeur comparée au tirant d’eau, et la trajectoire prévue jusqu’à la place avec le vent et le courant.</span></li></ul>
+        </div>
+        <div>
+          <div class="media"><video data-autoplay muted loop playsinline preload="none" poster="/ocearo-ui/assets/shots/mob.jpg" width="1280" height="720" aria-label="Homme à la mer : point de chute, dérive et position estimée"><source src="/ocearo-ui/assets/video/s4-mob-fr.mp4" type="video/mp4"></video></div>
+          <div class="pair">
+            <div class="media"><img src="/ocearo-ui/assets/shots/anchor.jpg" alt="Veille au mouillage avec cercle d’alarme et évitage" width="1600" height="900" loading="lazy"><span class="tag">Veille au mouillage</span></div>
+            <div class="media"><img src="/ocearo-ui/assets/shots/parking.jpg" alt="Aide à l’amarrage avec la trajectoire prévue jusqu’à la place" width="1600" height="900" loading="lazy"><span class="tag">Aide à l’amarrage</span></div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Themes -->
+  <section class="section themes" id="themes">
+    <div class="wrap" data-themes>
+      <div class="section-head center reveal">
+        <span class="eyebrow">Jour, sombre et nuit</span>
+        <h2>Reposant pour les yeux, de jour comme de nuit.</h2>
+        <p class="lead">Un thème sombre et calme, un thème jour lumineux et un thème nuit rouge qui préserve la vision nocturne. Il peut suivre le soleil tout seul.</p>
+        <div class="seg" role="tablist" aria-label="Jour, sombre et nuit">
+          <button type="button" role="tab" aria-selected="true" data-theme="dark">Sombre</button>
+          <button type="button" role="tab" aria-selected="false" data-theme="day">Jour</button>
+          <button type="button" role="tab" aria-selected="false" data-theme="night">Nuit</button>
+        </div>
+      </div>
+      <div class="screen theme-stage reveal" style="--tilt:0deg;--zoom:1">
+        <img class="on" data-theme="dark" src="/ocearo-ui/assets/shots/dashboard-dark.jpg" alt="Tableau de bord en thème sombre : radar AIS, météo et route" width="1600" height="900" loading="lazy">
+        <img data-theme="day" src="/ocearo-ui/assets/shots/dashboard.jpg" alt="Tableau de bord en thème jour" width="1600" height="900" loading="lazy">
+        <img data-theme="night" src="/ocearo-ui/assets/shots/dashboard-night.jpg" alt="Tableau de bord en thème nuit rouge" width="1600" height="900" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section class="section" id="boat" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Tout le bateau</span>
+        <h2>Un seul écran pour tout le bord.</h2>
+        <p class="lead">Moteur, énergie, réservoirs, journal de bord, pilote, médias et documents : chaque système à côté de la vue 3D, à partir des données Signal K standard.</p>
+      </div>
+      <div class="gallery reveal">
+        <figure><button type="button" data-zoom data-caption="Radar AIS, météo, route vers le waypoint et réservoirs à côté de la vue 3D." data-close="Fermer"><img src="/ocearo-ui/assets/shots/dashboard-dark.jpg" alt="Tableau de bord Ocearo avec radar AIS et météo" width="1600" height="900" loading="lazy"></button><figcaption><b>Tableau de bord.</b> Radar AIS, météo, route vers le waypoint et réservoirs à côté de la vue 3D.</figcaption></figure><figure><button type="button" data-zoom data-caption="Régime, heures, températures, pressions, inverseur, les 24 alarmes NMEA 2000 et le plan d’entretien." data-close="Fermer"><img src="/ocearo-ui/assets/shots/engine.jpg" alt="Vue moteur avec cadrans et alarmes" width="1600" height="900" loading="lazy"></button><figcaption><b>Moteur.</b> Régime, heures, températures, pressions, inverseur, les 24 alarmes NMEA 2000 et le plan d’entretien.</figcaption></figure><figure><button type="button" data-zoom data-caption="Batteries, charge, solaire, consommation et santé du Raspberry Pi." data-close="Fermer"><img src="/ocearo-ui/assets/shots/energy.jpg" alt="Vue énergie avec batteries et solaire" width="1600" height="900" loading="lazy"></button><figcaption><b>Énergie.</b> Batteries, charge, solaire, consommation et santé du Raspberry Pi.</figcaption></figure><figure><button type="button" data-zoom data-caption="Entrées automatiques et manuelles, et navigations rejouables en 3D." data-close="Fermer"><img src="/ocearo-ui/assets/shots/logbook.jpg" alt="Journal de bord avec entrées et frise de navigation" width="1600" height="900" loading="lazy"></button><figcaption><b>Journal de bord.</b> Entrées automatiques et manuelles, et navigations rejouables en 3D.</figcaption></figure><figure><button type="button" data-zoom data-caption="Un cargo sur tribord : règle 15, passer sur son arrière." data-close="Fermer"><img src="/ocearo-ui/assets/shots/crossing.jpg" alt="Croisement au moteur avec un cargo" width="1600" height="900" loading="lazy"></button><figcaption><b>Au moteur.</b> Un cargo sur tribord : règle 15, passer sur son arrière.</figcaption></figure><figure><button type="button" data-zoom data-caption="Bateau, unités, langue, thèmes, qualité 3D Raspberry Pi, alarmes et données hors ligne." data-close="Fermer"><img src="/ocearo-ui/assets/shots/settings.jpg" alt="Page des réglages" width="1600" height="900" loading="lazy"></button><figcaption><b>Réglages.</b> Bateau, unités, langue, thèmes, qualité 3D Raspberry Pi, alarmes et données hors ligne.</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- Video -->
+  <section class="section" id="video" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <span class="eyebrow">La visite en vidéo</span>
+        <h2>Deux minutes et demie au large de La Rochelle.</h2>
+        <p class="lead">Filmé dans l’application avec des données réelles : vent Open-Meteo, marées, bathymétrie SHOM et trafic AIS scénarisé.</p>
+      </div>
+      <div class="player reveal" data-youtube="GkLjk23Sz8k" data-title="Deux minutes et demie au large de La Rochelle.">
+        <img src="/ocearo-ui/assets/shots/hero.jpg" alt="" width="1600" height="900" loading="lazy">
+        <button class="play" type="button" aria-label="Lire la vidéo"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg></button>
+      </div>
+      <ol class="chapters"><li><a href="https://youtu.be/GkLjk23Sz8k?t=4" data-start="4" rel="noopener"><time>0:04</time><span>Sortie des Minimes, La Rochelle</span></a></li><li><a href="https://youtu.be/GkLjk23Sz8k?t=18" data-start="18" rel="noopener"><time>0:18</time><span>Sous spi : la mer et le réglage des voiles</span></a></li><li><a href="https://youtu.be/GkLjk23Sz8k?t=28" data-start="28" rel="noopener"><time>0:28</time><span>Règles de barre, calculées en direct</span></a></li><li><a href="https://youtu.be/GkLjk23Sz8k?t=41" data-start="41" rel="noopener"><time>0:41</time><span>Homme à la mer</span></a></li><li><a href="https://youtu.be/GkLjk23Sz8k?t=59" data-start="59" rel="noopener"><time>0:59</time><span>Navire privilégié, règle 12</span></a></li><li><a href="https://youtu.be/GkLjk23Sz8k?t=72" data-start="72" rel="noopener"><time>1:12</time><span>Votre bateau : catamaran, racer et d’autres</span></a></li><li><a href="https://youtu.be/GkLjk23Sz8k?t=80" data-start="80" rel="noopener"><time>1:20</time><span>Prévision de vent autour du bateau</span></a></li><li><a href="https://youtu.be/GkLjk23Sz8k?t=87" data-start="87" rel="noopener"><time>1:27</time><span>Retour au près sur les laylines</span></a></li><li><a href="https://youtu.be/GkLjk23Sz8k?t=103" data-start="103" rel="noopener"><time>1:43</time><span>Carte et balisage en direct</span></a></li><li><a href="https://youtu.be/GkLjk23Sz8k?t=113" data-start="113" rel="noopener"><time>1:53</time><span>Tableau de bord, moteur, carburant et journal</span></a></li><li><a href="https://youtu.be/GkLjk23Sz8k?t=134" data-start="134" rel="noopener"><time>2:14</time><span>Thème sombre</span></a></li><li><a href="https://youtu.be/GkLjk23Sz8k?t=141" data-start="141" rel="noopener"><time>2:21</time><span>Thème nuit</span></a></li></ol>
+      <p class="watch"><a href="https://youtu.be/GkLjk23Sz8k" rel="noopener">Voir sur YouTube ↗</a></p>
+    </div>
+  </section>
+
+  <!-- Vision -->
+  <section class="section vision" id="vision">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Ocean Robot</span>
+        <h2>Aujourd’hui une seconde paire d’yeux. Demain, le pilote.</h2>
+        <p class="lead">Ocearo veut dire Ocean Robot. Comme une voiture autonome apprend à voir la route, Ocearo apprend à voir la mer — et, pas à pas, à naviguer avec vous.</p>
+      </div>
+      <ol class="road reveal">
+        <li class="now"><span class="when">Aujourd’hui</span><h3>Une aide à la veille</h3><p>Une image en direct du bateau et du trafic, les règles de barre calculées pour chaque cible, des alertes parlées, la veille au mouillage et l’homme à la mer.</p></li><li class="next"><span class="when">Ensuite</span><h3>Voir avec des caméras</h3><p>Ocearo Vision, en développement, utilise des caméras de bord pour repérer ce que l’AIS ne montre pas — petits bateaux, bouées, objets flottants —, lire le réglage des voiles et guider jusqu’à la place de port.</p></li><li class="goal"><span class="when">L’objectif</span><h3>Le pilote par la vision</h3><p>Un pilote qui assure la veille, applique les règles de barre et barre via le pilote automatique Signal K — le skipper gardant toujours la main.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Install -->
+  <section class="section" id="install">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Bien démarrer</span>
+        <h2>Opérationnel en cinq minutes.</h2>
+        <p class="lead">Ocearo est une webapp Signal K. Si votre bateau tourne déjà sous Signal K, vous êtes à un clic.</p>
+      </div>
+      <ol class="steps reveal">
+        <li><h3>Installer</h3><p>Serveur Signal K ≥ 2 : Appstore → Available → ocearo-ui, ou en ligne de commande.</p><div class="code"><span>npm install ocearo-ui</span><button type="button" data-copy="npm install ocearo-ui" data-done="Copié">Copier</button></div></li>
+        <li><h3>Ouvrir</h3><p>Redémarrez le serveur et ouvrez Ocearo sur n’importe quel écran du bord : table à cartes, tablette ou téléphone.</p><div class="code"><span>http://&lt;signalk-server&gt;:3000/ocearo-ui/</span></div></li>
+        <li><h3>Aller plus loin</h3><p>Ajoutez Ocearo Core pour le journal de bord, la veille au mouillage, la bathymétrie SHOM, les alertes vocales et le copilote IA.</p><div class="code"><span>npm install ocearo-core</span><button type="button" data-copy="npm install ocearo-core" data-done="Copié">Copier</button></div></li>
+      </ol>
+      <div class="stack reveal">
+        <a href="https://github.com/laborima/ocearo-ui" rel="noopener"><em>Affichage</em><b>Ocearo UI</b><span>L’affichage 3D, le tableau de bord et toutes les vues. Tourne dans le navigateur.</span></a>
+        <a href="https://github.com/laborima/ocearo-core" rel="noopener"><em>Serveur</em><b>Ocearo Core</b><span>Voix, veille anti-collision, mouillage, bathymétrie et journal sur le serveur Signal K.</span></a>
+        <a href="https://signalk.org" rel="noopener"><em>Standard ouvert</em><b>Signal K</b><span>Le serveur de données marines ouvert qui relie NMEA 0183, NMEA 2000 et plus.</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <span class="eyebrow">FAQ</span>
+        <h2>Les questions des marins</h2>
+      </div>
+      <div class="faq">
+        <details><summary>Ocearo est-il open source ?</summary><p>Oui, sous licence Apache 2.0. Le code d’Ocearo UI et d’Ocearo Core est sur GitHub : vous pouvez le lire, l’adapter à votre bateau et contribuer.</p></details><details><summary>De quel matériel ai-je besoin ?</summary><p>D’un serveur Signal K, qu’un Raspberry Pi 4 ou 5 fait tourner sans peine, relié à vos instruments (NMEA 2000 ou 0183). N’importe quel navigateur récent sur tablette, téléphone ou écran de table à cartes sert d’affichage.</p></details><details><summary>Fonctionne-t-il sans internet ?</summary><p>Oui. Vos instruments, l’AIS et la vue 3D n’ont pas besoin d’internet. Les cartes, prévisions de vent et la bathymétrie sont gardées à bord dès que vous avez une connexion, et peuvent être téléchargées pour la zone avant de partir.</p></details><details><summary>Est-ce un système de navigation certifié ?</summary><p>Non. Ocearo est une aide à la veille, une seconde paire d’yeux. Gardez une veille attentive et utilisez les cartes officielles ; le skipper reste responsable du bateau.</p></details><details><summary>Quels bateaux sont pris en charge ?</summary><p>Tout bateau qui publie des données Signal K standard : voiliers, catamarans et bateaux à moteur. La vue 3D propose un racer de 10,8 m, un catamaran de 14 m et des modèles plus simples.</p></details><details><summary>Quelles langues sont disponibles ?</summary><p>Douze : français, anglais, allemand, espagnol, italien, néerlandais, portugais, danois, suédois, finnois, polonais et grec, en unités métriques, impériales ou nautiques.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="final reveal">
+    <img class="bg" src="/ocearo-ui/assets/shots/bathymetry.jpg" alt="" width="1600" height="900" loading="lazy">
+    <div class="inner">
+      <h2>Prêt à voir la mer autrement ?</h2>
+      <p class="lead">Ouvrez la démo dans votre navigateur, ou installez Ocearo dès aujourd’hui sur le serveur Signal K de votre bateau.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="/ocearo-ui/fr/demo/">Essayer la démo</a>
+        <a class="btn btn-ghost" href="https://github.com/laborima/ocearo-ui" rel="noopener">Étoile sur GitHub</a>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <img class="logo" src="/ocearo-ui/assets/logo/ocearo-logo-dark.svg" alt="Ocearo" width="190" height="34" loading="lazy">
+        <p>L’afficheur de navigation 3D open source pour Signal K. Fait par des marins, pour les marins, à La Rochelle.</p>
+      </div>
+      <div>
+        <h4>Produit</h4>
+        <ul>
+          <li><a href="/ocearo-ui/fr/#features">Fonctions</a></li>
+          <li><a href="/ocearo-ui/fr/demo/">Démo</a></li>
+          <li><a href="/ocearo-ui/fr/#install">Installer</a></li>
+          <li><a href="/ocearo-ui/fr/#vision">Ocean Robot</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Open source</h4>
+        <ul>
+          <li><a href="https://github.com/laborima/ocearo-ui" rel="noopener">Ocearo UI</a></li>
+          <li><a href="https://github.com/laborima/ocearo-core" rel="noopener">Ocearo Core</a></li>
+          <li><a href="https://www.npmjs.com/package/ocearo-ui" rel="noopener">npm</a></li>
+          <li><a href="https://signalk.org" rel="noopener">Signal K</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Plus</h4>
+        <ul>
+          <li><a href="/ocearo-ui/fr/charte-graphique/">Charte graphique</a></li>
+          <li><a href="https://github.com/laborima/ocearo-ui/issues" rel="noopener">Signaler un problème</a></li>
+          <li><a href="https://github.com/laborima/ocearo-ui/blob/main/CHANGELOG.md" rel="noopener">Nouveautés</a></li>
+          <li><a href="https://www.buymeacoffee.com/laborima" rel="noopener">Offrir un café</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Ocearo · Apache 2.0 · Fait à La Rochelle</span>
+      <span>Pas un système de navigation certifié : une aide à la veille.</span>
+    </div>
+  </div>
+</footer>
+<script src="/ocearo-ui/assets/js/site.js?v=2.0.0" defer></script>
+
+</body>
+</html>
