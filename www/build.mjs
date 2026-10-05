@@ -43,9 +43,12 @@ const partials = Object.fromEntries(
 const prefix = (lang) => (lang === 'en' ? '/' : `/${lang}/`);
 const pageUrl = (page, lang) => `${prefix(lang)}${page.slug[lang]}`;
 
+/** BCP 47 tag of a language, for <html lang> and hreflang (the pt pages are pt-BR). */
+const tag = (code) => i18n[code].html_lang || code;
+
 /** Language switcher and hreflang entries for one page, the current language marked. */
 const langNav = (page, current) => LANGS.map((code) => ({
-  code,
+  code: tag(code),
   label: code.toUpperCase(),
   path: pageUrl(page, code),
   url: `${SITE}${pageUrl(page, code)}`,
@@ -103,7 +106,7 @@ function jsonLd(page, lang, url) {
       '@type': 'FAQPage',
       mainEntity: t.faq.items.map((q) => ({ '@type': 'Question', name: q.q, acceptedAnswer: { '@type': 'Answer', text: q.a } })),
     });
-    graph.push({ '@type': 'WebSite', name: 'Ocearo', url: `${SITE}${prefix(lang)}`, inLanguage: lang });
+    graph.push({ '@type': 'WebSite', name: 'Ocearo', url: `${SITE}${prefix(lang)}`, inLanguage: tag(lang) });
   } else {
     graph.push({
       '@type': 'BreadcrumbList',
@@ -199,7 +202,7 @@ const sitemap = [
       `    <loc>${SITE}${pageUrl(page, lang)}</loc>`,
       `    <lastmod>${today}</lastmod>`,
       `    <priority>${page.priority}</priority>`,
-      ...LANGS.map((l) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${SITE}${pageUrl(page, l)}"/>`),
+      ...LANGS.map((l) => `    <xhtml:link rel="alternate" hreflang="${tag(l)}" href="${SITE}${pageUrl(page, l)}"/>`),
       `    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE}${pageUrl(page, 'en')}"/>`,
       '  </url>',
     ].join('\n')),

@@ -1,6 +1,6 @@
 # Ocearo website
 
-The public site at <https://laborima.github.io/ocearo-ui/>: plain HTML, CSS and JavaScript, English at `/`, French at `/fr/` and Portuguese (Portugal) at `/pt/`, with the live demo (the app itself) served under `app/`.
+The public site at <https://laborima.github.io/ocearo-ui/>: plain HTML, CSS and JavaScript, English at `/`, French at `/fr/` and Brazilian Portuguese at `/pt/` (declared as `pt-BR` through `html_lang`), with the live demo (the app itself) served under `app/`.
 
 ```sh
 node www/build.mjs                 # writes www/dist
