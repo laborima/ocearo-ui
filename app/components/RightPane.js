@@ -82,7 +82,7 @@ const RightPane = ({ view }) => {
     const [myPosition, setMyPosition] = useState(DEFAULT_POSITION);
     const [error, setError] = useState(null);
     const config = configService.getAll();
-    const { signalkUrl } = config;
+    const signalkUrl = configService.getSignalKUrl();
 
     // Use subscription model for position updates
     const skPosition = useSignalKPath('navigation.position');

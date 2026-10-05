@@ -20,6 +20,7 @@ Ocearo 2: a new 3D view built around what a sailor needs to see — a realistic 
 - The sounder line in the bathymetry mode read a path that was never subscribed.
 - The performance wake kept grey patches for minutes where the polar ratio had been momentarily unknown.
 - Engine tiles: long labels ran over their value, which wrapped and was clipped.
+- **A new display connected to `localhost:3000` instead of its Signal K server.** Until an address was entered in the settings, a tablet or phone opening the app from the boat's server showed no data at all. The app now connects to the server it is served from, and an address without a port uses the scheme's default (80 / 443) rather than 3000.
 - **Local tide tables were never found when the app is served by Signal K**: they were fetched from the site root instead of next to the app (`/ocearo-ui/`).
 - **Reverse gear was never detected.** Signal K publishes `transmission.gear` as "Forward" / "Neutral" / "Reverse": the parking assist compared it with a lower-case string, so its predicted track went the wrong way astern, and the engine view showed "Fwd Forward".
 - Under the Raspberry Pi render profile the sea shader is lighter (fewer noise octaves, ripples and wake points).

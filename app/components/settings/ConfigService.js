@@ -134,6 +134,16 @@ class ConfigService {
    }
    
   /**
+   * Signal K server to connect to: the address entered in the settings, or,
+   * until one is, the server this page is served from (Signal K serves the
+   * app under /ocearo-ui/, so a tablet on board connects with no set-up).
+   */
+  getSignalKUrl() {
+    if (this.config.signalKUrlSet && this.config.signalkUrl) return this.config.signalkUrl;
+    return this.getComputedSignalKUrl();
+  }
+
+  /**
    * Returns the computed SignalK URL based on the current debug mode.
    *
    * - If debugMode is on, returns 'https://demo.signalk.org:443'
