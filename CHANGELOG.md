@@ -38,6 +38,7 @@ Ocearo 2: a new 3D view built around what a sailor needs to see — a realistic 
 - **Phones**: the app menu showed icons without labels, the bottom bar scrolled sideways (MOB cut off), depth and tide panels overlapped, tab bars dragged the whole page sideways, and the split view was unusable; all fixed, and a split layout falls back to the boat view below 768 px.
 - **iPhone home-screen app**: the toolbar ran under the notch and the bottom bar under the home indicator (safe-area insets now applied), the manifest forced landscape, and older iOS opened it with the Safari bars.
 - Battery endurance was computed from the current alone (1421.9 h at 6.4 A); it now uses the energy left over the power drawn.
+- **Translations**: 285 texts were missing in every language but English and French (rules of the road, man overboard, HUD, legend, bathymetry, offline data, maintenance, parking, replay…) and showed in English; Danish, German, Greek, Spanish, Finnish, Italian, Dutch, Polish, Portuguese and Swedish are now complete, with the seamanship terms of each language.
 
 ## [0.1.22] - 2026-08-10
 
