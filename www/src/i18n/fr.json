@@ -368,6 +368,10 @@
       {
         "q": "Quelles langues sont disponibles ?",
         "a": "Douze : français, anglais, allemand, espagnol, italien, néerlandais, portugais, danois, suédois, finnois, polonais et grec, en unités métriques, impériales ou nautiques."
+      },
+      {
+        "q": "Comment Ocearo est-il développé ?",
+        "a": "En grande partie avec des assistants de programmation IA, par souci de transparence. L’auteur, développeur et plaisancier, décide de ce que fait l’application, relit les changements et la teste sur son propre bateau. Les relectures de code et les retours de bugs sur GitHub sont particulièrement bienvenus."
       }
     ]
   },

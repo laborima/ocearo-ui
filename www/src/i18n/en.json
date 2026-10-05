@@ -368,6 +368,10 @@
       {
         "q": "Which languages are available?",
         "a": "Twelve: English, French, German, Spanish, Italian, Dutch, Portuguese, Danish, Swedish, Finnish, Polish and Greek, with metric, imperial or nautical units."
+      },
+      {
+        "q": "How is Ocearo built?",
+        "a": "Mostly with AI coding assistants, in the interest of transparency. The author, a developer and sailor, decides what the app does, reviews the changes and tests it on board, on the boat it is developed on. Code reviews and bug reports on GitHub are especially welcome."
       }
     ]
   },

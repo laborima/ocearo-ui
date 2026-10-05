@@ -217,6 +217,8 @@ Les tables de marée pour le hors-ligne sont dans `public/tides/<port>/<MM>_<aaa
 
 Rapports de bugs, idées et pull requests sont bienvenus — voir les [issues](https://github.com/laborima/ocearo-ui/issues). Les changements sont listés dans le [CHANGELOG](CHANGELOG.md).
 
+**Comment Ocearo est fait.** Par souci de transparence : la plus grande partie du code a été écrite avec des assistants de programmation IA (« vibe coding »). Je suis développeur et plaisancier ; je décide de ce que fait l’application, je relis les changements et je la teste sur mon bateau, mais elle n’est pas écrite ligne à ligne à la main. Les relectures de code sont particulièrement bienvenues.
+
 [![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/laborima)
 
 ## Licence

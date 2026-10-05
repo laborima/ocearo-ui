@@ -217,6 +217,8 @@ Tide tables for offline use live in `public/tides/<harbour>/<MM>_<yyyy>.json`.
 
 Bug reports, ideas and pull requests are welcome — see the [issues](https://github.com/laborima/ocearo-ui/issues). Changes are listed in the [CHANGELOG](CHANGELOG.md).
 
+**How Ocearo is built.** In the interest of transparency: most of the code was written with AI coding assistants ("vibe coding"). I'm a developer and a sailor; I decide what the app does, review the changes and test it on my own boat, but it is not hand-written line by line. Code reviews are especially welcome.
+
 [![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/laborima)
 
 ## Licence
