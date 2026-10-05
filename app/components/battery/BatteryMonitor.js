@@ -230,7 +230,7 @@ const BatteryMonitor = () => {
   return (
     <div className="flex flex-col h-full bg-rightPaneBg overflow-hidden">
       {/* Tab Navigation - Tesla Style */}
-      <div className="flex border-b border-hud bg-hud-bg">
+      <div className="flex border-b border-hud bg-hud-bg overflow-x-auto scrollbar-hide">
         {[
           { id: 'battery', label: t('battery.energy'), icon: faLeaf },
           { id: 'graph', label: t('battery.usage'), icon: faChartLine },
@@ -240,7 +240,7 @@ const BatteryMonitor = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-3 px-2 text-caption font-semibold uppercase flex items-center justify-center transition-all duration-500 ${
+            className={`flex-1 py-3 px-3 whitespace-nowrap text-caption font-semibold uppercase flex items-center justify-center transition-all duration-500 ${
               activeTab === tab.id
                 ? 'text-oGreen border-b-2 border-oGreen bg-hud-bg'
                 : 'text-hud-secondary hover:text-hud-main tesla-hover'
@@ -374,8 +374,8 @@ const BatteryMonitor = () => {
                       <div className="mt-8 text-value font-semibold text-hud-main gliding-value tracking-tight">{currentBatteryData.stateOfCharge.toFixed(0)}%</div>
                     </div>
                     
-                    <div className="flex justify-between mt-12 text-caption font-semibold uppercase tracking-[0.2em]">
-                      <div className="text-oRed opacity-40">{t('battery.criticalNode')}</div>
+                    <div className="flex justify-center sm:justify-between items-center mt-14 text-caption font-semibold uppercase tracking-[0.2em]">
+                      <div className="hidden sm:block text-oRed opacity-40">{t('battery.criticalNode')}</div>
                       <div className="text-hud-main bg-hud-elevated px-4 py-1.5 rounded-sm flex items-center shadow-soft border border-hud">
                         <FontAwesomeIcon icon={isCharging ? faChargingStation : faClock} className="mr-3 text-xs text-oBlue opacity-60" />
                         <span className="gliding-value opacity-80 tracking-widest">
@@ -383,12 +383,14 @@ const BatteryMonitor = () => {
                             ? t('battery.acquiringFullCharge') 
                             : currentBatteryData.timeRemaining 
                               ? t('battery.depletionIn', { hours: (currentBatteryData.timeRemaining / 3600).toFixed(1) }) 
-                              : (currentBatteryData.voltage > 0 && Math.abs(currentBatteryData.current) > 0)
-                                ? t('battery.endurance', { hours: (currentBatteryData.stateOfCharge / (Math.abs(currentBatteryData.current) / 100)).toFixed(1) })
+                              // Energy left (nominal capacity in J × state of charge) over the power drawn
+                              : (currentBatteryData.nominalCapacity > 0 && currentBatteryData.voltage > 0 && Math.abs(currentBatteryData.current) > 0)
+                                ? t('battery.endurance', { hours: ((currentBatteryData.nominalCapacity * currentBatteryData.stateOfCharge / 100)
+                                    / (currentBatteryData.voltage * Math.abs(currentBatteryData.current)) / 3600).toFixed(1) })
                                 : t('common.na')}
                         </span>
                       </div>
-                      <div className="text-oGreen opacity-40">{t('battery.nominalGrid')}</div>
+                      <div className="hidden sm:block text-oGreen opacity-40">{t('battery.nominalGrid')}</div>
                     </div>
                   </div>
                 </div>
