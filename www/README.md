@@ -1,6 +1,6 @@
 # Ocearo website
 
-The public site at <https://laborima.github.io/ocearo-ui/>: plain HTML, CSS and JavaScript, English at `/` and French at `/fr/`, with the live demo (the app itself) served under `app/`.
+The public site at <https://laborima.github.io/ocearo-ui/>: plain HTML, CSS and JavaScript, English at `/`, French at `/fr/` and Portuguese (Portugal) at `/pt/`, with the live demo (the app itself) served under `app/`.
 
 ```sh
 node www/build.mjs                 # writes www/dist
@@ -11,10 +11,11 @@ For a local preview, build with `SITE_URL=http://localhost:8765 node www/build.m
 
 - `src/pages/` — page templates, rendered once per language.
 - `src/partials/` — head, navigation and footer.
-- `src/i18n/en.json`, `src/i18n/fr.json` — every text of the site, titles and descriptions for search engines included. Keep the two files in step.
+- `src/i18n/<lang>.json` — every text of the site, titles and descriptions for search engines included. Keep the files in step. `media_lang` picks the language of the feature clips (`en` where no dubbed clip exists).
+- A new language: add its file, its code to `LANGS` and its slugs in `build.mjs`, and a 1200×630 `assets/img/og-<lang>.jpg`; the switcher, hreflang links and sitemap follow.
 - `assets/` — stylesheet, script, fonts (Geist, SIL OFL), short feature clips and the social-sharing images.
 - Screenshots come from `docs/screenshots/`, the logo from `docs/logo/` and the favicons from `public/`: update them there and the site follows.
 
-**YouTube.** Once the tour is published, put the video id (the part after `v=`) in `video.youtube_id` of `en.json` and `fr.json`. Until then the player shows “Coming soon on YouTube”.
+**YouTube.** Once the tour is published, put the video id (the part after `v=`) in `video.youtube_id` of each language file. Until then the player shows “Coming soon on YouTube”.
 
 **Domain.** `SITE_URL` (default `https://laborima.github.io/ocearo-ui`) sets canonical links, the sitemap and the path the pages are served under. To move to a domain of your own, set `SITE_URL=https://your.domain` in the workflow (a `CNAME` file is then written), add a DNS `CNAME` record to `laborima.github.io`, and serve the app's `_next` from `/ocearo-ui/_next` (or rebuild the app with a matching assetPrefix).

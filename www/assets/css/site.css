@@ -144,7 +144,7 @@ code, kbd { font-family: var(--mono); font-size: 0.9em; }
 }
 .menu-btn svg { width: 20px; height: 20px; }
 
-@media (max-width: 920px) {
+@media (max-width: 1080px) {
   .nav-links, .nav-end .btn-gh { display: none; }
   .menu-btn { display: inline-flex; }
   .nav.open .nav-links {
@@ -476,3 +476,11 @@ section { position: relative; }
   .nav-end .btn-primary { display: none; }
 }
 .swatch i { box-shadow: inset 0 0 0 1px var(--line); }
+
+/* Three languages in the switcher: keep the menu on one line */
+.nav-links a { white-space: nowrap; }
+@media (max-width: 1240px) {
+  .nav .wrap { gap: 18px; }
+  .nav-links a { padding-inline: 10px; }
+  .nav-end .btn-gh { display: none; }
+}

@@ -3,9 +3,8 @@
 <title>{{meta.title}}</title>
 <meta name="description" content="{{meta.description}}">
 <link rel="canonical" href="{{url}}">
-<link rel="alternate" hreflang="en" href="{{alt.en}}">
-<link rel="alternate" hreflang="fr" href="{{alt.fr}}">
-<link rel="alternate" hreflang="x-default" href="{{alt.en}}">
+{{#each langs}}<link rel="alternate" hreflang="{{.code}}" href="{{.url}}">
+{{/each}}<link rel="alternate" hreflang="x-default" href="{{alt.en}}">
 <meta name="theme-color" content="#0a0a0a">
 <meta name="color-scheme" content="dark">
 <meta name="author" content="Matthieu Laborie">

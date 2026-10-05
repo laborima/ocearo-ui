@@ -24,14 +24,14 @@ const DIST = path.join(ROOT, process.env.OUT_DIR || 'dist');
 const SITE = (process.env.SITE_URL || 'https://laborima.github.io/ocearo-ui').replace(/\/$/, '');
 /** Path the site is served under ('/ocearo-ui' on GitHub project pages, '' on its own domain). */
 const BASE = new URL(SITE).pathname.replace(/\/$/, '');
-const LANGS = ['en', 'fr'];
+const LANGS = ['en', 'fr', 'pt'];
 const PKG = JSON.parse(fs.readFileSync(path.join(REPO, 'package.json'), 'utf8'));
 
 /** Pages and their slug in each language. */
 const PAGES = [
-  { tpl: 'index', slug: { en: '', fr: '' }, priority: '1.0' },
-  { tpl: 'demo', slug: { en: 'demo/', fr: 'demo/' }, priority: '0.8' },
-  { tpl: 'brand', slug: { en: 'brand/', fr: 'charte-graphique/' }, priority: '0.4' },
+  { tpl: 'index', slug: { en: '', fr: '', pt: '' }, priority: '1.0' },
+  { tpl: 'demo', slug: { en: 'demo/', fr: 'demo/', pt: 'demo/' }, priority: '0.8' },
+  { tpl: 'brand', slug: { en: 'brand/', fr: 'charte-graphique/', pt: 'marca/' }, priority: '0.4' },
 ];
 
 const read = (p) => fs.readFileSync(p, 'utf8');
@@ -42,6 +42,15 @@ const partials = Object.fromEntries(
 
 const prefix = (lang) => (lang === 'en' ? '/' : `/${lang}/`);
 const pageUrl = (page, lang) => `${prefix(lang)}${page.slug[lang]}`;
+
+/** Language switcher and hreflang entries for one page, the current language marked. */
+const langNav = (page, current) => LANGS.map((code) => ({
+  code,
+  label: code.toUpperCase(),
+  path: pageUrl(page, code),
+  url: `${SITE}${pageUrl(page, code)}`,
+  current: String(code === current),
+}));
 
 function lookup(obj, key) {
   return key.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
@@ -149,6 +158,7 @@ for (const page of PAGES) {
       page: page.tpl,
       alt,
       altPath,
+      langs: langNav(page, lang),
       links,
       year: new Date().getFullYear(),
       version: PKG.version,
@@ -165,7 +175,7 @@ fs.writeFileSync(
   path.join(DIST, '404.html'),
   withBase(render(read(path.join(SRC, 'pages', '404.html')), {
     t: i18n.en, tfr: i18n.fr, meta: i18n.en.pages['404'], jsonld: '', version: PKG.version, lang: 'en', base: '/', site: SITE, url: `${SITE}/404.html`, path: '/404.html', page: '404',
-    alt: { en: SITE + '/', fr: SITE + '/fr/' }, altPath: { en: '/', fr: '/fr/' }, links: { index: '/', demo: '/demo/', brand: '/brand/' }, year: new Date().getFullYear(),
+    alt: { en: SITE + '/', fr: SITE + '/fr/' }, altPath: { en: '/', fr: '/fr/' }, langs: langNav(PAGES[0], 'en'), links: { index: '/', demo: '/demo/', brand: '/brand/' }, year: new Date().getFullYear(),
   })),
 );
 
