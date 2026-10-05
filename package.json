@@ -5,6 +5,7 @@
   "description": "Ocean Robot UI: 3D visualization dashboard for signalk",
   "license": "Apache-2.0",
   "author": "Matthieu Laborie",
+  "homepage": "https://laborima.github.io/ocearo-ui/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/laborima/ocearo-ui.git"

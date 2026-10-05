@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="{{lang}}">
+<head>
+{{> head}}
+</head>
+<body>
+{{> nav}}
+<main id="main">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-grid" aria-hidden="true"></div>
+    <div class="wrap">
+      <div class="hero-copy">
+        <div class="chips">
+          <span class="chip"><i></i>{{t.hero.badge}}</span>
+          <span class="chip">Signal K</span>
+          <span class="chip">Raspberry Pi</span>
+          <span class="chip">Apache 2.0</span>
+        </div>
+        <h1>{{t.hero.title_a}} <span class="grad">{{t.hero.title_b}}</span></h1>
+        <p class="lead">{{t.hero.lead}}</p>
+        <div class="cta">
+          <a class="btn btn-primary" href="{{links.demo}}">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>{{t.hero.cta_demo}}
+          </a>
+          <a class="btn btn-ghost" href="#install">{{t.hero.cta_install}}</a>
+        </div>
+      </div>
+      <div class="screen">
+        <video autoplay muted loop playsinline preload="metadata" poster="/assets/shots/hero.jpg" width="1600" height="900" aria-label="{{t.hero.video_alt}}">
+          <source src="/assets/video/s2-spinnaker-{{lang}}.mp4" type="video/mp4">
+        </video>
+        <span class="live"><i></i>{{t.hero.live}}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Proof -->
+  <section class="proof" aria-label="{{t.proof.label}}">
+    <div class="wrap">
+      <ul>
+        {{#each t.proof.items}}<li><b>{{.value}}</b><span>{{.text}}</span></li>{{/each}}
+      </ul>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="section" id="features">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">{{t.features.eyebrow}}</span>
+        <h2>{{t.features.title}}</h2>
+        <p class="lead">{{t.features.lead}}</p>
+      </div>
+
+      <article class="feature reveal">
+        <div class="feature-copy">
+          <span class="eyebrow">{{t.f3d.eyebrow}}</span>
+          <h2>{{t.f3d.title}}</h2>
+          <p class="lead">{{t.f3d.lead}}</p>
+          <ul class="ticks">{{#each t.f3d.ticks}}<li><span><b>{{.b}}</b> {{.text}}</span></li>{{/each}}</ul>
+        </div>
+        <div>
+          <div class="media"><video data-autoplay muted loop playsinline preload="none" poster="/assets/shots/chart.jpg" width="1280" height="720" aria-label="{{t.f3d.video_alt}}"><source src="/assets/video/s6-bathymetry-{{lang}}.mp4" type="video/mp4"></video></div>
+          <div class="pair">
+            <div class="media"><img src="/assets/shots/chart.jpg" alt="{{t.f3d.alt_chart}}" width="1600" height="900" loading="lazy"><span class="tag">{{t.f3d.tag_chart}}</span></div>
+            <div class="media"><img src="/assets/shots/bathymetry.jpg" alt="{{t.f3d.alt_bathy}}" width="1600" height="900" loading="lazy"><span class="tag">{{t.f3d.tag_bathy}}</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="feature flip reveal" id="traffic">
+        <div class="feature-copy">
+          <span class="eyebrow">{{t.colreg.eyebrow}}</span>
+          <h2>{{t.colreg.title}}</h2>
+          <p class="lead">{{t.colreg.lead}}</p>
+          <ul class="ticks">{{#each t.colreg.ticks}}<li><span><b>{{.b}}</b> {{.text}}</span></li>{{/each}}</ul>
+          <div class="legend">
+            <span><i style="background:var(--red)"></i>{{t.colreg.red}}</span>
+            <span><i style="background:var(--violet)"></i>{{t.colreg.violet}}</span>
+            <span><i style="background:#ff9a1f"></i>{{t.colreg.orange}}</span>
+          </div>
+        </div>
+        <div>
+          <div class="media"><video data-autoplay muted loop playsinline preload="none" poster="/assets/shots/colregs.jpg" width="1280" height="720" aria-label="{{t.colreg.video_alt}}"><source src="/assets/video/s3-fishing-{{lang}}.mp4" type="video/mp4"></video></div>
+          <div class="pair">
+            <div class="media"><img src="/assets/shots/traffic.jpg" alt="{{t.colreg.alt_traffic}}" width="1600" height="900" loading="lazy"><span class="tag">{{t.colreg.tag_traffic}}</span></div>
+            <div class="media"><img src="/assets/shots/standon.jpg" alt="{{t.colreg.alt_standon}}" width="1600" height="900" loading="lazy"><span class="tag">{{t.colreg.tag_standon}}</span></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="feature reveal" id="tactics">
+        <div class="feature-copy">
+          <span class="eyebrow">{{t.tactics.eyebrow}}</span>
+          <h2>{{t.tactics.title}}</h2>
+          <p class="lead">{{t.tactics.lead}}</p>
+          <ul class="ticks">{{#each t.tactics.ticks}}<li><span><b>{{.b}}</b> {{.text}}</span></li>{{/each}}</ul>
+        </div>
+        <div>
+          <div class="media"><video data-autoplay muted loop playsinline preload="none" poster="/assets/shots/polars.jpg" width="1280" height="720" aria-label="{{t.tactics.video_alt}}"><source src="/assets/video/s8-beat-{{lang}}.mp4" type="video/mp4"></video></div>
+          <div class="pair">
+            <div class="media"><img src="/assets/shots/weather.jpg" alt="{{t.tactics.alt_weather}}" width="1600" height="900" loading="lazy"><span class="tag">{{t.tactics.tag_weather}}</span></div>
+            <div class="media"><img src="/assets/shots/hero.jpg" alt="{{t.tactics.alt_trim}}" width="1600" height="900" loading="lazy"><span class="tag">{{t.tactics.tag_trim}}</span></div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Safety -->
+  <section class="section" id="safety" style="padding-top:0">
+    <div class="wrap">
+      <article class="feature flip reveal">
+        <div class="feature-copy">
+          <span class="eyebrow">{{t.safety.eyebrow}}</span>
+          <h2>{{t.safety.title}}</h2>
+          <p class="lead">{{t.safety.lead}}</p>
+          <ul class="ticks">{{#each t.safety.ticks}}<li><span><b>{{.b}}</b> {{.text}}</span></li>{{/each}}</ul>
+        </div>
+        <div>
+          <div class="media"><video data-autoplay muted loop playsinline preload="none" poster="/assets/shots/mob.jpg" width="1280" height="720" aria-label="{{t.safety.video_alt}}"><source src="/assets/video/s4-mob-{{lang}}.mp4" type="video/mp4"></video></div>
+          <div class="pair">
+            <div class="media"><img src="/assets/shots/anchor.jpg" alt="{{t.safety.alt_anchor}}" width="1600" height="900" loading="lazy"><span class="tag">{{t.safety.tag_anchor}}</span></div>
+            <div class="media"><img src="/assets/shots/parking.jpg" alt="{{t.safety.alt_parking}}" width="1600" height="900" loading="lazy"><span class="tag">{{t.safety.tag_parking}}</span></div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Themes -->
+  <section class="section themes" id="themes">
+    <div class="wrap" data-themes>
+      <div class="section-head center reveal">
+        <span class="eyebrow">{{t.themes.eyebrow}}</span>
+        <h2>{{t.themes.title}}</h2>
+        <p class="lead">{{t.themes.lead}}</p>
+        <div class="seg" role="tablist" aria-label="{{t.themes.eyebrow}}">
+          <button type="button" role="tab" aria-selected="true" data-theme="dark">{{t.themes.dark}}</button>
+          <button type="button" role="tab" aria-selected="false" data-theme="day">{{t.themes.day}}</button>
+          <button type="button" role="tab" aria-selected="false" data-theme="night">{{t.themes.night}}</button>
+        </div>
+      </div>
+      <div class="screen theme-stage reveal" style="--tilt:0deg;--zoom:1">
+        <img class="on" data-theme="dark" src="/assets/shots/dashboard-dark.jpg" alt="{{t.themes.alt_dark}}" width="1600" height="900" loading="lazy">
+        <img data-theme="day" src="/assets/shots/dashboard.jpg" alt="{{t.themes.alt_day}}" width="1600" height="900" loading="lazy">
+        <img data-theme="night" src="/assets/shots/dashboard-night.jpg" alt="{{t.themes.alt_night}}" width="1600" height="900" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section class="section" id="boat" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">{{t.gallery.eyebrow}}</span>
+        <h2>{{t.gallery.title}}</h2>
+        <p class="lead">{{t.gallery.lead}}</p>
+      </div>
+      <div class="gallery reveal">
+        {{#each t.gallery.items}}<figure><button type="button" data-zoom data-caption="{{.caption}}" data-close="{{t.close}}"><img src="/assets/shots/{{.img}}.jpg" alt="{{.alt}}" width="1600" height="900" loading="lazy"></button><figcaption><b>{{.title}}.</b> {{.caption}}</figcaption></figure>{{/each}}
+      </div>
+    </div>
+  </section>
+
+  <!-- Video -->
+  <section class="section" id="video" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <span class="eyebrow">{{t.video.eyebrow}}</span>
+        <h2>{{t.video.title}}</h2>
+        <p class="lead">{{t.video.lead}}</p>
+      </div>
+      <div class="player reveal" data-youtube="{{t.video.youtube_id}}" data-title="{{t.video.title}}">
+        <img src="/assets/shots/hero.jpg" alt="" width="1600" height="900" loading="lazy">
+        <button class="play" type="button" aria-label="{{t.video.play}}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg></button>
+      </div>
+      <ol class="chapters">{{#each t.video.chapters}}<li><a href="https://youtu.be/{{t.video.youtube_id}}?t={{.s}}" data-start="{{.s}}" rel="noopener"><time>{{.t}}</time><span>{{.text}}</span></a></li>{{/each}}</ol>
+      <p class="watch"><a href="https://youtu.be/{{t.video.youtube_id}}" rel="noopener">{{t.video.watch}} ↗</a></p>
+    </div>
+  </section>
+
+  <!-- Vision -->
+  <section class="section vision" id="vision">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">{{t.vision.eyebrow}}</span>
+        <h2>{{t.vision.title}}</h2>
+        <p class="lead">{{t.vision.lead}}</p>
+      </div>
+      <ol class="road reveal">
+        {{#each t.vision.steps}}<li class="{{.cls}}"><span class="when">{{.when}}</span><h3>{{.title}}</h3><p>{{.text}}</p></li>{{/each}}
+      </ol>
+    </div>
+  </section>
+
+  <!-- Install -->
+  <section class="section" id="install">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">{{t.install.eyebrow}}</span>
+        <h2>{{t.install.title}}</h2>
+        <p class="lead">{{t.install.lead}}</p>
+      </div>
+      <ol class="steps reveal">
+        <li><h3>{{t.install.s1_title}}</h3><p>{{t.install.s1}}</p><div class="code"><span>npm install ocearo-ui</span><button type="button" data-copy="npm install ocearo-ui" data-done="{{t.copied}}">{{t.copy}}</button></div></li>
+        <li><h3>{{t.install.s2_title}}</h3><p>{{t.install.s2}}</p><div class="code"><span>http://&lt;signalk-server&gt;:3000/ocearo-ui/</span></div></li>
+        <li><h3>{{t.install.s3_title}}</h3><p>{{t.install.s3}}</p><div class="code"><span>npm install ocearo-core</span><button type="button" data-copy="npm install ocearo-core" data-done="{{t.copied}}">{{t.copy}}</button></div></li>
+      </ol>
+      <div class="stack reveal">
+        <a href="https://github.com/laborima/ocearo-ui" rel="noopener"><em>{{t.install.ui_tag}}</em><b>Ocearo UI</b><span>{{t.install.ui}}</span></a>
+        <a href="https://github.com/laborima/ocearo-core" rel="noopener"><em>{{t.install.core_tag}}</em><b>Ocearo Core</b><span>{{t.install.core}}</span></a>
+        <a href="https://signalk.org" rel="noopener"><em>{{t.install.sk_tag}}</em><b>Signal K</b><span>{{t.install.sk}}</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq" style="padding-top:0">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <span class="eyebrow">FAQ</span>
+        <h2>{{t.faq.title}}</h2>
+      </div>
+      <div class="faq">
+        {{#each t.faq.items}}<details><summary>{{.q}}</summary><p>{{.a}}</p></details>{{/each}}
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="final reveal">
+    <img class="bg" src="/assets/shots/bathymetry.jpg" alt="" width="1600" height="900" loading="lazy">
+    <div class="inner">
+      <h2>{{t.final.title}}</h2>
+      <p class="lead">{{t.final.lead}}</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="{{links.demo}}">{{t.hero.cta_demo}}</a>
+        <a class="btn btn-ghost" href="https://github.com/laborima/ocearo-ui" rel="noopener">{{t.final.github}}</a>
+      </div>
+    </div>
+  </section>
+</main>
+{{> footer}}
+</body>
+</html>

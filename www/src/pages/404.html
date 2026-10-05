@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+{{> head}}
+<meta name="robots" content="noindex">
+</head>
+<body>
+{{> nav}}
+<main id="main" class="demo-page">
+  <div class="wrap" style="min-height:60vh;display:flex;flex-direction:column;justify-content:center;gap:22px;padding-block:80px">
+    <span class="eyebrow">404</span>
+    <h1>{{t.notfound.title}}</h1>
+    <p class="lead">{{t.notfound.text}}</p>
+    <p class="lead" lang="fr">{{tfr.notfound.text}}</p>
+    <div class="cta" style="justify-content:flex-start">
+      <a class="btn btn-primary" href="/">{{t.notfound.home}}</a>
+      <a class="btn btn-ghost" href="/fr/" lang="fr">{{tfr.notfound.home}}</a>
+    </div>
+  </div>
+</main>
+{{> footer}}
+</body>
+</html>

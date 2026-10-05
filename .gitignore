@@ -42,3 +42,6 @@ public/boats/rm1080/
 
 # Local test exports
 /out-test/
+
+# website build
+/www/dist/

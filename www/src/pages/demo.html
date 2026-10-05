@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="{{lang}}">
+<head>
+{{> head}}
+</head>
+<body>
+{{> nav}}
+<main id="main" class="demo-page">
+  <div class="wrap">
+    <div class="demo-head">
+      <div>
+        <span class="eyebrow">{{t.demo.eyebrow}}</span>
+        <h1>{{t.demo.title}}</h1>
+      </div>
+      <div class="cta">
+        <button class="btn btn-ghost btn-s" type="button" data-fullscreen hidden>{{t.demo.fullscreen}}</button>
+        <a class="btn btn-ghost btn-s" href="/app/" target="_blank" rel="noopener">{{t.demo.newtab}}</a>
+      </div>
+    </div>
+    <div class="demo-frame" data-demo="/app/" data-title="{{t.demo.title}}" style="--poster:url('/assets/shots/hero.jpg')">
+      <div class="cover">
+        <div>
+          <h2 style="font-size:clamp(26px,3vw,40px)">{{t.demo.cover_title}}</h2>
+          <p class="muted">{{t.demo.cover_text}}</p>
+          <button class="btn btn-primary" type="button" data-start>
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>{{t.demo.start}}
+          </button>
+        </div>
+      </div>
+      <noscript><p style="padding:24px"><a href="/app/">{{t.demo.newtab}}</a></p></noscript>
+    </div>
+    <div class="demo-notes">
+      {{#each t.demo.notes}}<div><b>{{.title}}</b><p>{{.text}}</p></div>{{/each}}
+    </div>
+  </div>
+</main>
+{{> footer}}
+</body>
+</html>

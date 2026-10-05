@@ -1,0 +1,605 @@
+{
+  "locale": "fr_FR",
+  "is_en": "false",
+  "is_fr": "true",
+  "og_alt": "Ocearo : un voilier sous spi dans la vue 3D en direct, avec compas, marée et profondeur",
+  "copy": "Copier",
+  "copied": "Copié",
+  "close": "Fermer",
+  "pages": {
+    "index": {
+      "title": "Ocearo — l’afficheur de navigation 3D open source pour Signal K",
+      "description": "Voyez votre bateau, la mer et le trafic en 3D, en direct. Réglage des voiles, règles de barre, homme à la mer, veille au mouillage, bathymétrie et météo sur tous les écrans du bord. Open source, tourne sur un Raspberry Pi.",
+      "crumb": "Accueil"
+    },
+    "demo": {
+      "title": "Démo en ligne — essayez Ocearo dans votre navigateur",
+      "description": "Ouvrez la vraie application Ocearo dans votre navigateur, alimentée par des données Signal K simulées : vue 3D, trafic AIS, tableau de bord et réglages. Rien à installer.",
+      "crumb": "Démo en ligne"
+    },
+    "brand": {
+      "title": "Charte graphique — logo, couleurs et typographie d’Ocearo",
+      "description": "Comment utiliser le logo Ocearo, le compas et le A en étrave, la palette de couleurs, la police Geist et le ton du produit.",
+      "crumb": "Charte graphique"
+    },
+    "404": {
+      "title": "Page introuvable — Ocearo",
+      "description": "Cette page n’existe pas.",
+      "crumb": "404"
+    }
+  },
+  "nav": {
+    "skip": "Aller au contenu",
+    "home": "Accueil Ocearo",
+    "features": "Fonctions",
+    "safety": "Sécurité",
+    "video": "Vidéo",
+    "vision": "Ocean Robot",
+    "install": "Installer",
+    "demo": "Démo",
+    "try": "Essayer",
+    "menu": "Menu",
+    "language": "Langue"
+  },
+  "hero": {
+    "badge": "Ocearo 2 est disponible",
+    "title_a": "Votre bateau, la mer et le trafic,",
+    "title_b": "en 3D, en direct.",
+    "lead": "Ocearo transforme les données de votre bateau en une image calme, lisible d’un coup d’œil — réglage des voiles, règles de barre, homme à la mer et veille au mouillage compris. Open source, sur tous les écrans du bord.",
+    "cta_demo": "Essayer la démo",
+    "cta_install": "Installer sur Signal K",
+    "live": "3D en direct",
+    "video_alt": "Vue 3D d’Ocearo : un voilier sous spi en sortant de La Rochelle"
+  },
+  "proof": {
+    "label": "Ocearo en chiffres",
+    "items": [
+      {
+        "value": "3",
+        "text": "thèmes : jour, sombre, et nuit rouge pour préserver la vision nocturne."
+      },
+      {
+        "value": "5",
+        "text": "façons de voir le monde autour du bateau : mer, carte, fonds, météo, régate."
+      },
+      {
+        "value": "6",
+        "text": "règles du RIPAM calculées en direct pour chaque cible AIS, avec la manœuvre à faire."
+      },
+      {
+        "value": "12",
+        "text": "langues, en unités métriques, impériales ou nautiques."
+      }
+    ]
+  },
+  "features": {
+    "eyebrow": "Pensé pour les marins",
+    "title": "Tout ce qu’il faut savoir, d’un coup d’œil.",
+    "lead": "Un traceur montre des traits sur une carte. Ocearo montre ce qui se passe vraiment autour du bateau, comme une voiture autonome montre la route : votre bateau, le vent, l’état de la mer, les autres navires et ce que chacun doit faire."
+  },
+  "f3d": {
+    "eyebrow": "La vue 3D",
+    "title": "Le bateau, la mer et les fonds, en direct.",
+    "lead": "Une scène 3D temps réel centrée sur votre bateau, construite à partir de vos propres instruments. Un bouton fait défiler cinq représentations du monde autour.",
+    "ticks": [
+      {
+        "b": "Une mer issue du vent réel.",
+        "text": "Mer du vent et houle, moutons dès 7 nœuds, le soleil là où il est vraiment et votre propre sillage."
+      },
+      {
+        "b": "Carte et balisage en direct.",
+        "text": "OpenStreetMap et les feux et marques d’OpenSeaMap, à l’échelle avec les cibles AIS."
+      },
+      {
+        "b": "Les fonds en 3D.",
+        "text": "Relevés SHOM 5–20 m sur la côte française, sondes à la marée du moment, petits fonds hachurés en orange selon votre tirant d’eau."
+      }
+    ],
+    "video_alt": "Vue bathymétrie : les fonds en grille de relevé sous le bateau",
+    "alt_chart": "Carte en direct avec balisage et cibles AIS en 3D",
+    "alt_bathy": "Bathymétrie SHOM en grille de relevé avec isobathes et sondes",
+    "tag_chart": "Carte et balisage",
+    "tag_bathy": "Bathymétrie SHOM"
+  },
+  "colreg": {
+    "eyebrow": "Trafic et règles de barre",
+    "title": "Qui doit s’écarter ? Ocearo vous le dit.",
+    "lead": "Chaque cible AIS est dessinée selon son vrai type et sa taille, glisse entre deux positions et prend la couleur de celui qui doit manœuvrer — avec la règle et le changement de cap à faire.",
+    "ticks": [
+      {
+        "b": "Règles 12 à 18 appliquées en direct,",
+        "text": "d’après le statut et le type AIS de chaque cible et le vôtre : sous voiles ou au moteur, un voilier n’est pas le même navire."
+      },
+      {
+        "b": "Des consignes claires :",
+        "text": "« Éviter : 15° sur bâbord », le point de rapprochement maximal en pointillés, et une alerte quand aucun changement de cap ne dégage tout le monde."
+      },
+      {
+        "b": "Veille parlée avec Ocearo Core :",
+        "text": "« Danger de collision : LE PERTUIS à 0,5 mille… passer sur son arrière. »"
+      }
+    ],
+    "red": "À nous de manœuvrer",
+    "violet": "À eux de manœuvrer",
+    "orange": "Proche, sans risque",
+    "video_alt": "Un chalutier croise devant : règle 18, le voilier s’écarte",
+    "alt_traffic": "Trafic dense : ferry, cargo, chalutier et voiliers, chacun avec son rôle",
+    "alt_standon": "Un voilier bâbord amures doit s’écarter de notre route, règle 12",
+    "tag_traffic": "Trafic dense",
+    "tag_standon": "Privilégié, règle 12"
+  },
+  "tactics": {
+    "eyebrow": "Tactique et météo",
+    "title": "Allez plus vite, réglez mieux.",
+    "lead": "Ocearo dessine vos voiles d’après le vent apparent et montre où vos polaires vous emmènent. En régate comme en croisière, vous voyez le coup d’après.",
+    "ticks": [
+      {
+        "b": "Des voiles que l’on règle à l’écran :",
+        "text": "bandes de creux, penons, chariots d’écoute, ris et spi asymétrique."
+      },
+      {
+        "b": "Laylines et isochrones :",
+        "text": "où vous serez dans 5, 10 et 15 minutes à chaque cap, conseil de VMG et bateau fantôme des polaires."
+      },
+      {
+        "b": "Prévision de vent sur 48 heures",
+        "text": "autour du bateau aux couleurs de Windy, gardée à bord pour naviguer hors ligne."
+      }
+    ],
+    "video_alt": "Retour au près sur les laylines avec les isochrones",
+    "alt_weather": "Prévision de vent autour du bateau aux couleurs de Windy",
+    "alt_trim": "Bandes de creux et penons sous spi",
+    "tag_weather": "Prévision de vent",
+    "tag_trim": "Réglage des voiles"
+  },
+  "safety": {
+    "eyebrow": "Sécurité",
+    "title": "Quand ça compte vraiment, un seul bouton.",
+    "lead": "Les moments auxquels on s’entraîne en espérant ne jamais les vivre. Ocearo les rend simples, visibles et sonores.",
+    "ticks": [
+      {
+        "b": "Homme à la mer :",
+        "text": "point de chute, position estimée de la personne d’après le courant et la dérive, ligne de dérive et cap à suivre."
+      },
+      {
+        "b": "Veille au mouillage :",
+        "text": "rayon d’alarme, la chaîne et l’évitage réel — une ancre qui chasse se voit bien avant l’alarme."
+      },
+      {
+        "b": "Petits fonds et aide à l’amarrage :",
+        "text": "la profondeur comparée au tirant d’eau, et la trajectoire prévue jusqu’à la place avec le vent et le courant."
+      }
+    ],
+    "video_alt": "Homme à la mer : point de chute, dérive et position estimée",
+    "alt_anchor": "Veille au mouillage avec cercle d’alarme et évitage",
+    "alt_parking": "Aide à l’amarrage avec la trajectoire prévue jusqu’à la place",
+    "tag_anchor": "Veille au mouillage",
+    "tag_parking": "Aide à l’amarrage"
+  },
+  "themes": {
+    "eyebrow": "Jour, sombre et nuit",
+    "title": "Reposant pour les yeux, de jour comme de nuit.",
+    "lead": "Un thème sombre et calme, un thème jour lumineux et un thème nuit rouge qui préserve la vision nocturne. Il peut suivre le soleil tout seul.",
+    "dark": "Sombre",
+    "day": "Jour",
+    "night": "Nuit",
+    "alt_dark": "Tableau de bord en thème sombre : radar AIS, météo et route",
+    "alt_day": "Tableau de bord en thème jour",
+    "alt_night": "Tableau de bord en thème nuit rouge"
+  },
+  "gallery": {
+    "eyebrow": "Tout le bateau",
+    "title": "Un seul écran pour tout le bord.",
+    "lead": "Moteur, énergie, réservoirs, journal de bord, pilote, médias et documents : chaque système à côté de la vue 3D, à partir des données Signal K standard.",
+    "items": [
+      {
+        "img": "dashboard-dark",
+        "title": "Tableau de bord",
+        "caption": "Radar AIS, météo, route vers le waypoint et réservoirs à côté de la vue 3D.",
+        "alt": "Tableau de bord Ocearo avec radar AIS et météo"
+      },
+      {
+        "img": "engine",
+        "title": "Moteur",
+        "caption": "Régime, heures, températures, pressions, inverseur, les 24 alarmes NMEA 2000 et le plan d’entretien.",
+        "alt": "Vue moteur avec cadrans et alarmes"
+      },
+      {
+        "img": "energy",
+        "title": "Énergie",
+        "caption": "Batteries, charge, solaire, consommation et santé du Raspberry Pi.",
+        "alt": "Vue énergie avec batteries et solaire"
+      },
+      {
+        "img": "logbook",
+        "title": "Journal de bord",
+        "caption": "Entrées automatiques et manuelles, et navigations rejouables en 3D.",
+        "alt": "Journal de bord avec entrées et frise de navigation"
+      },
+      {
+        "img": "crossing",
+        "title": "Au moteur",
+        "caption": "Un cargo sur tribord : règle 15, passer sur son arrière.",
+        "alt": "Croisement au moteur avec un cargo"
+      },
+      {
+        "img": "settings",
+        "title": "Réglages",
+        "caption": "Bateau, unités, langue, thèmes, qualité 3D Raspberry Pi, alarmes et données hors ligne.",
+        "alt": "Page des réglages"
+      }
+    ]
+  },
+  "video": {
+    "eyebrow": "La visite en vidéo",
+    "title": "Deux minutes et demie au large de La Rochelle.",
+    "lead": "Filmé dans l’application avec des données réelles : vent Open-Meteo, marées, bathymétrie SHOM et trafic AIS scénarisé.",
+    "youtube_id": "GkLjk23Sz8k",
+    "play": "Lire la vidéo",
+    "chapters": [
+      {
+        "t": "0:04",
+        "text": "Sortie des Minimes, La Rochelle",
+        "s": "4"
+      },
+      {
+        "t": "0:18",
+        "text": "Sous spi : la mer et le réglage des voiles",
+        "s": "18"
+      },
+      {
+        "t": "0:28",
+        "text": "Règles de barre, calculées en direct",
+        "s": "28"
+      },
+      {
+        "t": "0:41",
+        "text": "Homme à la mer",
+        "s": "41"
+      },
+      {
+        "t": "0:59",
+        "text": "Navire privilégié, règle 12",
+        "s": "59"
+      },
+      {
+        "t": "1:12",
+        "text": "Votre bateau : catamaran, racer et d’autres",
+        "s": "72"
+      },
+      {
+        "t": "1:20",
+        "text": "Prévision de vent autour du bateau",
+        "s": "80"
+      },
+      {
+        "t": "1:27",
+        "text": "Retour au près sur les laylines",
+        "s": "87"
+      },
+      {
+        "t": "1:43",
+        "text": "Carte et balisage en direct",
+        "s": "103"
+      },
+      {
+        "t": "1:53",
+        "text": "Tableau de bord, moteur, carburant et journal",
+        "s": "113"
+      },
+      {
+        "t": "2:14",
+        "text": "Thème sombre",
+        "s": "134"
+      },
+      {
+        "t": "2:21",
+        "text": "Thème nuit",
+        "s": "141"
+      }
+    ],
+    "watch": "Voir sur YouTube"
+  },
+  "vision": {
+    "eyebrow": "Ocean Robot",
+    "title": "Aujourd’hui une seconde paire d’yeux. Demain, le pilote.",
+    "lead": "Ocearo veut dire Ocean Robot. Comme une voiture autonome apprend à voir la route, Ocearo apprend à voir la mer — et, pas à pas, à naviguer avec vous.",
+    "steps": [
+      {
+        "cls": "now",
+        "when": "Aujourd’hui",
+        "title": "Une aide à la veille",
+        "text": "Une image en direct du bateau et du trafic, les règles de barre calculées pour chaque cible, des alertes parlées, la veille au mouillage et l’homme à la mer."
+      },
+      {
+        "cls": "next",
+        "when": "Ensuite",
+        "title": "Voir avec des caméras",
+        "text": "Ocearo Vision, en développement, utilise des caméras de bord pour repérer ce que l’AIS ne montre pas — petits bateaux, bouées, objets flottants —, lire le réglage des voiles et guider jusqu’à la place de port."
+      },
+      {
+        "cls": "goal",
+        "when": "L’objectif",
+        "title": "Le pilote par la vision",
+        "text": "Un pilote qui assure la veille, applique les règles de barre et barre via le pilote automatique Signal K — le skipper gardant toujours la main."
+      }
+    ]
+  },
+  "install": {
+    "eyebrow": "Bien démarrer",
+    "title": "Opérationnel en cinq minutes.",
+    "lead": "Ocearo est une webapp Signal K. Si votre bateau tourne déjà sous Signal K, vous êtes à un clic.",
+    "s1_title": "Installer",
+    "s1": "Serveur Signal K ≥ 2 : Appstore → Available → ocearo-ui, ou en ligne de commande.",
+    "s2_title": "Ouvrir",
+    "s2": "Redémarrez le serveur et ouvrez Ocearo sur n’importe quel écran du bord : table à cartes, tablette ou téléphone.",
+    "s3_title": "Aller plus loin",
+    "s3": "Ajoutez Ocearo Core pour le journal de bord, la veille au mouillage, la bathymétrie SHOM, les alertes vocales et le copilote IA.",
+    "ui_tag": "Affichage",
+    "ui": "L’affichage 3D, le tableau de bord et toutes les vues. Tourne dans le navigateur.",
+    "core_tag": "Serveur",
+    "core": "Voix, veille anti-collision, mouillage, bathymétrie et journal sur le serveur Signal K.",
+    "sk_tag": "Standard ouvert",
+    "sk": "Le serveur de données marines ouvert qui relie NMEA 0183, NMEA 2000 et plus."
+  },
+  "faq": {
+    "title": "Les questions des marins",
+    "items": [
+      {
+        "q": "Ocearo est-il open source ?",
+        "a": "Oui, sous licence Apache 2.0. Le code d’Ocearo UI et d’Ocearo Core est sur GitHub : vous pouvez le lire, l’adapter à votre bateau et contribuer."
+      },
+      {
+        "q": "De quel matériel ai-je besoin ?",
+        "a": "D’un serveur Signal K, qu’un Raspberry Pi 4 ou 5 fait tourner sans peine, relié à vos instruments (NMEA 2000 ou 0183). N’importe quel navigateur récent sur tablette, téléphone ou écran de table à cartes sert d’affichage."
+      },
+      {
+        "q": "Fonctionne-t-il sans internet ?",
+        "a": "Oui. Vos instruments, l’AIS et la vue 3D n’ont pas besoin d’internet. Les cartes, prévisions de vent et la bathymétrie sont gardées à bord dès que vous avez une connexion, et peuvent être téléchargées pour la zone avant de partir."
+      },
+      {
+        "q": "Est-ce un système de navigation certifié ?",
+        "a": "Non. Ocearo est une aide à la veille, une seconde paire d’yeux. Gardez une veille attentive et utilisez les cartes officielles ; le skipper reste responsable du bateau."
+      },
+      {
+        "q": "Quels bateaux sont pris en charge ?",
+        "a": "Tout bateau qui publie des données Signal K standard : voiliers, catamarans et bateaux à moteur. La vue 3D propose un racer de 10,8 m, un catamaran de 14 m et des modèles plus simples."
+      },
+      {
+        "q": "Quelles langues sont disponibles ?",
+        "a": "Douze : français, anglais, allemand, espagnol, italien, néerlandais, portugais, danois, suédois, finnois, polonais et grec, en unités métriques, impériales ou nautiques."
+      }
+    ]
+  },
+  "final": {
+    "title": "Prêt à voir la mer autrement ?",
+    "lead": "Ouvrez la démo dans votre navigateur, ou installez Ocearo dès aujourd’hui sur le serveur Signal K de votre bateau.",
+    "github": "Étoile sur GitHub"
+  },
+  "demo": {
+    "eyebrow": "Démo en ligne",
+    "title": "Ocearo, directement dans votre navigateur.",
+    "fullscreen": "Plein écran",
+    "newtab": "Ouvrir dans un nouvel onglet",
+    "cover_title": "La vraie application, des données simulées.",
+    "cover_text": "C’est le même Ocearo que celui installé à bord, relié au serveur de démonstration public de Signal K. Idéal sur grand écran.",
+    "start": "Lancer la démo",
+    "notes": [
+      {
+        "title": "Données simulées",
+        "text": "Position, vent et AIS viennent du serveur de démonstration public de Signal K : le bateau peut être n’importe où dans le monde."
+      },
+      {
+        "title": "Se repérer",
+        "text": "Les boutons en haut à gauche changent la vue 3D, la barre du bas ouvre le tableau de bord, la météo et les applis, la roue dentée les réglages."
+      },
+      {
+        "title": "Sur votre bateau",
+        "text": "Installé sur votre serveur Signal K, Ocearo affiche vos propres instruments, l’AIS et les cartes — et fonctionne hors ligne."
+      }
+    ]
+  },
+  "brand": {
+    "eyebrow": "Charte graphique",
+    "title": "La marque Ocearo.",
+    "lead": "Comment sont construits le nom, l’emblème et les couleurs d’Ocearo, et comment les utiliser. Pour les articles, les vidéos, les partenaires et les contributeurs.",
+    "dl_dark": "Logo pour fond sombre (SVG)",
+    "dl_light": "Logo pour fond clair (SVG)",
+    "dl_mark": "Emblème compas (SVG)",
+    "dl_icon": "Icône d’application (PNG)",
+    "logo_title": "Logo",
+    "logo_text": "Le logo est le mot OCEARO dont le O est le compas de la vue 3D et le A une étrave qui fend l’horizon. Version sombre sur fond sombre, version claire sur fond clair.",
+    "alt_dark": "Logo Ocearo sur fond sombre",
+    "alt_light": "Logo Ocearo sur fond clair",
+    "alt_mark": "Emblème compas d’Ocearo",
+    "alt_icon": "Icône d’application Ocearo",
+    "on_dark": "logo · fonds sombres",
+    "on_light": "logo · fonds clairs",
+    "mark": "emblème compas",
+    "icon": "icône d’application",
+    "build_title": "Construction",
+    "build_text": "Chaque élément du logo vient de l’application elle-même.",
+    "build": [
+      {
+        "b": "Le O est le compas",
+        "text": "de la vue 3D, incliné à 60° en perspective comme l’anneau qui flotte autour du bateau, avec sa lunette, ses douze graduations qui s’estompent vers l’arrière et le bateau au centre."
+      },
+      {
+        "b": "Le bateau",
+        "text": "fait cap au 045, vers la suite du nom : foc blanc, grand-voile bleu Ocearo, dans le plan de son axe."
+      },
+      {
+        "b": "Le A est l’étrave :",
+        "text": "deux lames qui se rejoignent à l’étrave, la ligne d’horizon bleu Ocearo passant derrière et coupée à leur contact."
+      },
+      {
+        "b": "Les lettres",
+        "text": "sont en Geist Regular capitales, interlettrage 0,34 em, comme les étiquettes des instruments (SOG, HEADING, TWS)."
+      },
+      {
+        "b": "Petites tailles :",
+        "text": "à 48 px et moins, le compas est vu à plat, de face, avec les deux voiles, pour rester net."
+      }
+    ],
+    "space_title": "Zone de protection et tailles",
+    "space_text": "Gardez autour du logo un espace libre au moins égal à la largeur de la lettre C. Ne le rapprochez jamais davantage d’un bord ou d’un autre élément.",
+    "th_use": "Usage",
+    "th_min": "Taille minimale",
+    "th_version": "Version",
+    "sizes": [
+      {
+        "use": "Logo complet, écran",
+        "min": "120 px de large",
+        "version": "Logo, sombre ou clair"
+      },
+      {
+        "use": "Logo complet, impression",
+        "min": "30 mm de large",
+        "version": "Logo, sombre ou clair"
+      },
+      {
+        "use": "Icône d’application",
+        "min": "64 px",
+        "version": "Compas incliné sur tuile noire"
+      },
+      {
+        "use": "Favicon",
+        "min": "16 px",
+        "version": "Compas à plat avec voiles"
+      }
+    ],
+    "color_title": "Couleurs",
+    "color_text": "Un fond presque noir et un seul bleu lumineux. Le rouge, le vert, le violet et le jaune sont réservés au sens — danger, tribord, à eux de manœuvrer, prudence — et jamais décoratifs.",
+    "colors": [
+      {
+        "name": "Bleu Ocearo",
+        "hex": "#09BFFF",
+        "token": "oBlue",
+        "use": "Accent de marque, bateau, actions"
+      },
+      {
+        "name": "Noir nuit",
+        "hex": "#0A0A0A",
+        "token": "background",
+        "use": "Fond principal"
+      },
+      {
+        "name": "Blanc",
+        "hex": "#FFFFFF",
+        "token": "foreground",
+        "use": "Texte et logo sur fond sombre"
+      },
+      {
+        "name": "Encre",
+        "hex": "#0D1114",
+        "token": "ink",
+        "use": "Logo et texte sur fond clair"
+      },
+      {
+        "name": "Bleu sur clair",
+        "hex": "#0090C8",
+        "token": "blue-deep",
+        "use": "Accent sur fond clair"
+      },
+      {
+        "name": "Rouge bâbord",
+        "hex": "#CC000C",
+        "token": "oRed",
+        "use": "Danger, à nous de manœuvrer, HLM"
+      },
+      {
+        "name": "Vert tribord",
+        "hex": "#0FCD4F",
+        "token": "oGreen",
+        "use": "OK, tribord, route"
+      },
+      {
+        "name": "Jaune prudence",
+        "hex": "#FFBE00",
+        "token": "oYellow",
+        "use": "Avertissements"
+      },
+      {
+        "name": "Gris panneau",
+        "hex": "#424242",
+        "token": "oGray2",
+        "use": "Panneaux et bordures"
+      }
+    ],
+    "type_title": "Typographie",
+    "type_text": "Geist, de Vercel, sous licence SIL Open Font. Une seule famille pour tout ; Geist Mono pour les coordonnées et les données.",
+    "type_display": "Votre bateau, la mer et le trafic, en 3D.",
+    "type_body": "Ocearo transforme les données du bord en une image calme et en direct du bateau, de la mer et du trafic autour.",
+    "ui_title": "Principes d’interface",
+    "ui_text": "L’allure de l’application et de tout ce qui l’entoure.",
+    "ui": [
+      {
+        "b": "Le calme d’abord.",
+        "text": "Un écran sombre et sobre ; seul ce qui demande de l’attention s’allume."
+      },
+      {
+        "b": "Un seul accent.",
+        "text": "Le bleu Ocearo marque le bateau et les actions. Tout le reste est blanc ou gris."
+      },
+      {
+        "b": "La couleur a un sens.",
+        "text": "Rouge, violet, orange et vert suivent le RIPAM et les feux de navigation, partout."
+      },
+      {
+        "b": "Des chiffres lisibles de loin.",
+        "text": "Grandes valeurs, petites étiquettes espacées, chiffres tabulaires."
+      },
+      {
+        "b": "Seulement des images réelles.",
+        "text": "Captures et vidéos viennent de l’application avec des données réelles, jamais de maquettes ni de photos de banque d’images."
+      }
+    ],
+    "rules_title": "À faire, à éviter",
+    "rules_text": "Le logo s’utilise toujours tel qu’il est fourni.",
+    "r_ok": "Tel quel, sur un fond uni",
+    "r_stretch": "Ne pas étirer ni écraser",
+    "r_color": "Ne pas recolorer",
+    "r_rotate": "Ne pas faire pivoter",
+    "r_effects": "Pas d’ombre, de halo ni de contour",
+    "r_busy": "Pas sur une image chargée",
+    "voice_title": "Ton",
+    "voice_text": "Ocearo parle comme un bon équipier : court, factuel, calme. Des mots de marin, pas d’informaticien.",
+    "th_say": "Dire",
+    "th_avoid": "Éviter",
+    "voice": [
+      {
+        "say": "Éviter : 15° sur bâbord. Règle 18, nous nous écartons.",
+        "avoid": "Sortie de l’algorithme de collision"
+      },
+      {
+        "say": "Une aide à la veille.",
+        "avoid": "Navigation entièrement autonome"
+      },
+      {
+        "say": "Veille au mouillage, homme à la mer, laylines.",
+        "avoid": "Géorepérage, module d’urgence, moteur de routage"
+      },
+      {
+        "say": "Fonctionne hors ligne une fois la zone téléchargée.",
+        "avoid": "Propulsé par le cloud"
+      }
+    ]
+  },
+  "notfound": {
+    "title": "Perdu en mer.",
+    "text": "Cette page n’existe pas, ou a changé d’adresse.",
+    "home": "Retour à l’accueil"
+  },
+  "footer": {
+    "about": "L’afficheur de navigation 3D open source pour Signal K. Fait par des marins, pour les marins, à La Rochelle.",
+    "product": "Produit",
+    "open": "Open source",
+    "more": "Plus",
+    "brand": "Charte graphique",
+    "issues": "Signaler un problème",
+    "changelog": "Nouveautés",
+    "sponsor": "Offrir un café",
+    "made": "Fait à La Rochelle",
+    "disclaimer": "Pas un système de navigation certifié : une aide à la veille."
+  }
+}

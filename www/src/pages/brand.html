@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="{{lang}}">
+<head>
+{{> head}}
+</head>
+<body>
+{{> nav}}
+<main id="main" class="brand-page">
+  <div class="wrap">
+    <div class="section-head" style="margin-bottom:48px">
+      <span class="eyebrow">{{t.brand.eyebrow}}</span>
+      <h1 style="font-size:clamp(40px,5.4vw,72px)">{{t.brand.title}}</h1>
+      <p class="lead">{{t.brand.lead}}</p>
+      <div class="dl">
+        <a class="btn btn-primary btn-s" href="/assets/logo/ocearo-logo-dark.svg" download>{{t.brand.dl_dark}}</a>
+        <a class="btn btn-ghost btn-s" href="/assets/logo/ocearo-logo-light.svg" download>{{t.brand.dl_light}}</a>
+        <a class="btn btn-ghost btn-s" href="/assets/logo/ocearo-mark-dark.svg" download>{{t.brand.dl_mark}}</a>
+        <a class="btn btn-ghost btn-s" href="/icons/icon-512x512.png" download>{{t.brand.dl_icon}}</a>
+      </div>
+    </div>
+
+    <section class="bsec">
+      <header><span class="eyebrow">01</span><h2>{{t.brand.logo_title}}</h2><p>{{t.brand.logo_text}}</p></header>
+      <div class="body">
+        <div class="tiles">
+          <div class="tile dark"><img src="/assets/logo/ocearo-logo-dark.svg" alt="{{t.brand.alt_dark}}" width="380" height="68"><small>{{t.brand.on_dark}}</small></div>
+          <div class="tile light"><img src="/assets/logo/ocearo-logo-light.svg" alt="{{t.brand.alt_light}}" width="380" height="68"><small>{{t.brand.on_light}}</small></div>
+          <div class="tile blue icon"><img src="/assets/logo/ocearo-mark-dark.svg" alt="{{t.brand.alt_mark}}" width="120" height="120"><small>{{t.brand.mark}}</small></div>
+          <div class="tile dark icon"><img src="/icons/icon-512x512.png" alt="{{t.brand.alt_icon}}" width="120" height="120" style="border-radius:26px"><small>{{t.brand.icon}}</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bsec">
+      <header><span class="eyebrow">02</span><h2>{{t.brand.build_title}}</h2><p>{{t.brand.build_text}}</p></header>
+      <div class="body">
+        <ul class="ticks">{{#each t.brand.build}}<li><span><b>{{.b}}</b> {{.text}}</span></li>{{/each}}</ul>
+      </div>
+    </section>
+
+    <section class="bsec">
+      <header><span class="eyebrow">03</span><h2>{{t.brand.space_title}}</h2><p>{{t.brand.space_text}}</p></header>
+      <div class="body scroll-x">
+        <table class="table">
+          <thead><tr><th>{{t.brand.th_use}}</th><th>{{t.brand.th_min}}</th><th>{{t.brand.th_version}}</th></tr></thead>
+          <tbody>{{#each t.brand.sizes}}<tr><td>{{.use}}</td><td>{{.min}}</td><td>{{.version}}</td></tr>{{/each}}</tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="bsec">
+      <header><span class="eyebrow">04</span><h2>{{t.brand.color_title}}</h2><p>{{t.brand.color_text}}</p></header>
+      <div class="body">
+        <div class="swatches">{{#each t.brand.colors}}<div class="swatch"><i style="background:{{.hex}}"></i><div><b>{{.name}}</b><code>{{.hex}} · {{.token}}</code><span>{{.use}}</span></div></div>{{/each}}</div>
+      </div>
+    </section>
+
+    <section class="bsec">
+      <header><span class="eyebrow">05</span><h2>{{t.brand.type_title}}</h2><p>{{t.brand.type_text}}</p></header>
+      <div class="body">
+        <div class="specimen">
+          <div class="big">Geist</div>
+          <div class="row"><span>Display · 300</span><span style="font-size:34px;font-weight:300;letter-spacing:-.02em">{{t.brand.type_display}}</span></div>
+          <div class="row"><span>Label · 500 · 0.22em</span><span style="font-size:13px;font-weight:500;letter-spacing:.22em;text-transform:uppercase">SOG — HEADING — TWS — AWA</span></div>
+          <div class="row"><span>Value · 400</span><span style="font-size:44px;font-variant-numeric:tabular-nums">6.0 <small style="font-size:14px;letter-spacing:.2em;color:var(--fg-3)">KN</small></span></div>
+          <div class="row"><span>Body · 400</span><span class="muted">{{t.brand.type_body}}</span></div>
+          <div class="row"><span>Geist Mono · data</span><span style="font-family:var(--mono)">46°09.2′N 001°09.8′W · CPA 0.4 NM</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bsec">
+      <header><span class="eyebrow">06</span><h2>{{t.brand.ui_title}}</h2><p>{{t.brand.ui_text}}</p></header>
+      <div class="body">
+        <ul class="ticks">{{#each t.brand.ui}}<li><span><b>{{.b}}</b> {{.text}}</span></li>{{/each}}</ul>
+      </div>
+    </section>
+
+    <section class="bsec">
+      <header><span class="eyebrow">07</span><h2>{{t.brand.rules_title}}</h2><p>{{t.brand.rules_text}}</p></header>
+      <div class="body">
+        <div class="rules">
+          <figure class="yes"><div class="pic"><img src="/assets/logo/ocearo-logo-dark.svg" alt=""></div><figcaption><b>✓</b>{{t.brand.r_ok}}</figcaption></figure>
+          <figure class="no"><div class="pic"><img src="/assets/logo/ocearo-logo-dark.svg" alt="" style="transform:scaleX(1.5)"></div><figcaption><b>✕</b>{{t.brand.r_stretch}}</figcaption></figure>
+          <figure class="no"><div class="pic"><img src="/assets/logo/ocearo-logo-dark.svg" alt="" style="filter:hue-rotate(140deg) saturate(3)"></div><figcaption><b>✕</b>{{t.brand.r_color}}</figcaption></figure>
+          <figure class="no"><div class="pic"><img src="/assets/logo/ocearo-logo-dark.svg" alt="" style="transform:rotate(-12deg)"></div><figcaption><b>✕</b>{{t.brand.r_rotate}}</figcaption></figure>
+          <figure class="no"><div class="pic"><img src="/assets/logo/ocearo-logo-dark.svg" alt="" style="filter:drop-shadow(0 0 8px #ff00e6) drop-shadow(4px 4px 0 #ffbe00)"></div><figcaption><b>✕</b>{{t.brand.r_effects}}</figcaption></figure>
+          <figure class="no"><div class="pic" style="background:url('/assets/shots/traffic.jpg') center/cover"><img src="/assets/logo/ocearo-logo-light.svg" alt=""></div><figcaption><b>✕</b>{{t.brand.r_busy}}</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="bsec">
+      <header><span class="eyebrow">08</span><h2>{{t.brand.voice_title}}</h2><p>{{t.brand.voice_text}}</p></header>
+      <div class="body scroll-x">
+        <table class="table">
+          <thead><tr><th>{{t.brand.th_say}}</th><th>{{t.brand.th_avoid}}</th></tr></thead>
+          <tbody>{{#each t.brand.voice}}<tr><td style="white-space:normal">{{.say}}</td><td>{{.avoid}}</td></tr>{{/each}}</tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+{{> footer}}
+</body>
+</html>

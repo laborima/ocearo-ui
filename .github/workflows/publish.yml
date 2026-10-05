@@ -1,4 +1,4 @@
-name: Publish to npm
+name: Publish to npm and GitHub Pages
 
 on:
   push:
@@ -38,13 +38,33 @@ jobs:
           cp README.md out/
           cp README.fr.md out/
 
+      # A push without a version bump must not stop the site from deploying
       - name: Publish to npm
         run: |
-          cd out
-          npm publish --access public --provenance
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "ocearo-ui@${VERSION}" version >/dev/null 2>&1; then
+            echo "ocearo-ui@${VERSION} is already on npm, skipping publish"
+          else
+            cd out
+            npm publish --access public --provenance
+          fi
+
+      # laborima.github.io/ocearo-ui/: the website at the root, the app (live demo)
+      # under app/. The app loads its scripts from /ocearo-ui/_next (its production
+      # assetPrefix), so _next goes to the root; everything else it loads is relative.
+      - name: Build website
+        run: node www/build.mjs
+
+      - name: Assemble GitHub Pages
+        run: |
+          mkdir -p pages/app
+          cp -r www/dist/. pages/
+          cp -r out/. pages/app/
+          mv pages/app/_next pages/_next
+          rm -f pages/app/package.json pages/app/README.md pages/app/README.fr.md
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./out
+          publish_dir: ./pages
