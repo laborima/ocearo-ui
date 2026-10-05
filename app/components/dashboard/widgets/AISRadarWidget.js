@@ -17,7 +17,7 @@ const AISRadarWidget = React.memo(() => {
   // Every positioned target (not only the ones close enough for the 3D view),
   // so the 10 and 20 NM ranges actually show something
   const { targets } = useAIS();
-  const { statuses } = useColregs();
+  const { statuses } = useColregs({ always: true });
   const { scene } = useTheme();
   const [radarRange, setRadarRange] = useState(5); // nautical miles
   const debugMode = configService.get('debugMode');
