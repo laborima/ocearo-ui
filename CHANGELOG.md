@@ -1,3 +1,22 @@
+## [2.0.1] - 2026-10-05
+
+Fixes found since 2.0.0 on phones, in the translations and in the boat-system pages, and the new Ocearo identity. Nothing to change in the settings.
+
+### Added
+
+- **A new logo**: the O of Ocearo is the compass of the 3D view, tilted in perspective with the own boat under sail at its centre (flat at favicon sizes), and the A is a bow splitting the horizon. Vector masters in `docs/logo/`; favicons, app icons and the Signal K app icon regenerated from it.
+- **A website** at [laborima.github.io/ocearo-ui](https://laborima.github.io/ocearo-ui/), in English and French: features, screenshots, the video tour ([English](https://youtu.be/YGQM3UipcvU), [French](https://youtu.be/GkLjk23Sz8k)), the live demo (now at [/demo/](https://laborima.github.io/ocearo-ui/demo/)) and the brand guidelines.
+
+### Fixed
+
+- **Tank volumes were 1000 times too small**: Signal K capacities are in m³, shown as litres (“0/0.06L”, total capacity 0 L on the engine page). Tanks with a level but no capacity are now shown, and the black water tank is listed.
+- The fuel estimate from the refill log subtracted the fuel used twice when a tank gauge was present.
+- Logbook: the position of entries written from the app showed “n/a”.
+- **Phones**: the app menu showed icons without labels, the bottom bar scrolled sideways (MOB cut off), depth and tide panels overlapped, tab bars dragged the whole page sideways, and the split view was unusable; all fixed, and a split layout falls back to the boat view below 768 px.
+- **iPhone home-screen app**: the toolbar ran under the notch and the bottom bar under the home indicator (safe-area insets now applied), the manifest forced landscape, and older iOS opened it with the Safari bars.
+- Battery endurance was computed from the current alone (1421.9 h at 6.4 A); it now uses the energy left over the power drawn.
+- **Translations**: 285 texts were missing in every language but English and French (rules of the road, man overboard, HUD, legend, bathymetry, offline data, maintenance, parking, replay…) and showed in English; Danish, German, Greek, Spanish, Finnish, Italian, Dutch, Polish, Portuguese and Swedish are now complete, with the seamanship terms of each language.
+
 ## [2.0.0] - 2026-10-05
 
 Ocearo 2: a new 3D view built around what a sailor needs to see — a realistic sea, the seabed, the traffic and the rules of the road — on a calmer, FSD-style interface. Settings from 0.1.x are kept (the old RM 1080 boat choice moves to the Racer 10.8). For the logbook, anchor watch and SHOM bathymetry, update **ocearo-core to 1.2.0**: its anchor API was unreachable on current Signal K servers.
@@ -12,7 +31,6 @@ Ocearo 2: a new 3D view built around what a sailor needs to see — a realistic 
 - **Offline data**: chart tiles, bathymetry and wind forecasts kept in the browser as they are used, an area download in *Settings → Offline data*, and the list of SHOM surveys on the boat's server with their download progress.
 - **Voyage replay** from the logbook, a **Windy-style wind forecast** layer, the **seabed in 3D**, a **man-overboard** marker with drift prediction, **polar isochrones**, a **3D view legend**, clear **COLREG colours** (red: our move, violet: theirs, orange: close) with a give-way banner and curved manoeuvre arrows.
 - **Procedural boats**: a 10.8 m racer (default) with sails drawn to trim (draft stripes, telltales, sheets to the cars, reefs, asymmetric spinnaker), a 14 m catamaran, and an AIS fleet drawn by ship type and length, dead-reckoned between reports.
-- **A new logo**: the O of Ocearo is the compass of the 3D view, tilted in perspective with the own boat under sail at its centre (flat at favicon sizes), and the A is a bow splitting the horizon. Vector masters in `docs/logo/`; favicons, app icons and the Signal K app icon regenerated from it.
 
 ### Fixed
 
@@ -32,13 +50,6 @@ Ocearo 2: a new 3D view built around what a sailor needs to see — a realistic 
 - **Rain radar "Zoom Level Not Supported" banners over the meteo map**: RainViewer now serves zoom 7 at most. The meteo base map also follows the zoom instead of a fixed, blurred 40 km.
 - The realistic sea shimmered towards the horizon (waves shorter than the mesh could draw).
 - Dark and night themes: the chart is drawn dark (red at night) instead of a bright map under a dark sky that made the HUD unreadable.
-- **Tank volumes were 1000 times too small**: Signal K capacities are in m³, shown as litres (“0/0.06L”, total capacity 0 L on the engine page). Tanks with a level but no capacity are now shown, and the black water tank is listed.
-- The fuel estimate from the refill log subtracted the fuel used twice when a tank gauge was present.
-- Logbook: the position of entries written from the app showed “n/a”.
-- **Phones**: the app menu showed icons without labels, the bottom bar scrolled sideways (MOB cut off), depth and tide panels overlapped, tab bars dragged the whole page sideways, and the split view was unusable; all fixed, and a split layout falls back to the boat view below 768 px.
-- **iPhone home-screen app**: the toolbar ran under the notch and the bottom bar under the home indicator (safe-area insets now applied), the manifest forced landscape, and older iOS opened it with the Safari bars.
-- Battery endurance was computed from the current alone (1421.9 h at 6.4 A); it now uses the energy left over the power drawn.
-- **Translations**: 285 texts were missing in every language but English and French (rules of the road, man overboard, HUD, legend, bathymetry, offline data, maintenance, parking, replay…) and showed in English; Danish, German, Greek, Spanish, Finnish, Italian, Dutch, Polish, Portuguese and Swedish are now complete, with the seamanship terms of each language.
 
 ## [0.1.22] - 2026-08-10
 
