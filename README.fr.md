@@ -5,6 +5,13 @@
 
 [English 🇬🇧](README.md)
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo/ocearo-logo-dark.svg">
+    <img src="docs/logo/ocearo-logo-light.svg" alt="Ocearo" width="360">
+  </picture>
+</p>
+
 # Ocearo UI
 
 **L’affichage de navigation open source pour Signal K.** Une image 3D claire et en temps réel du bateau, de la mer et du trafic autour — réglage des voiles, règles de barre, homme à la mer, veille au mouillage, bathymétrie et météo — dans une interface sobre inspirée de la visualisation de conduite Tesla. Il tourne comme webapp Signal K sur le serveur du bord (un Raspberry Pi suffit) et dans n’importe quel navigateur à bord : écran de table à cartes, tablette de cockpit ou téléphone.

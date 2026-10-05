@@ -5,6 +5,13 @@
 
 [Français 🇫🇷](README.fr.md)
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/logo/ocearo-logo-dark.svg">
+    <img src="docs/logo/ocearo-logo-light.svg" alt="Ocearo" width="360">
+  </picture>
+</p>
+
 # Ocearo UI
 
 **The open-source sailing display for Signal K.** A clear, real-time 3D picture of the boat, the sea and the traffic around it — sail trim, rules of the road, man overboard, anchor watch, bathymetry and weather — in a calm interface inspired by Tesla's driving visualisation. It runs as a Signal K webapp on the boat's server (a Raspberry Pi is enough) and in any browser on board: chart-table screen, cockpit tablet or phone.

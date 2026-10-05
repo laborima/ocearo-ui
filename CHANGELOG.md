@@ -12,6 +12,7 @@ Ocearo 2: a new 3D view built around what a sailor needs to see — a realistic 
 - **Offline data**: chart tiles, bathymetry and wind forecasts kept in the browser as they are used, an area download in *Settings → Offline data*, and the list of SHOM surveys on the boat's server with their download progress.
 - **Voyage replay** from the logbook, a **Windy-style wind forecast** layer, the **seabed in 3D**, a **man-overboard** marker with drift prediction, **polar isochrones**, a **3D view legend**, clear **COLREG colours** (red: our move, violet: theirs, orange: close) with a give-way banner and curved manoeuvre arrows.
 - **Procedural boats**: a 10.8 m racer (default) with sails drawn to trim (draft stripes, telltales, sheets to the cars, reefs, asymmetric spinnaker), a 14 m catamaran, and an AIS fleet drawn by ship type and length, dead-reckoned between reports.
+- **A new logo**: the O of Ocearo is the compass of the 3D view, tilted in perspective with the own boat under sail at its centre (flat at favicon sizes), and the A is a bow splitting the horizon. Vector masters in `docs/logo/`; favicons, app icons and the Signal K app icon regenerated from it.
 
 ### Fixed
 
