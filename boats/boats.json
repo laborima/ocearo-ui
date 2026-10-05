@@ -3,27 +3,62 @@
     {
       "name": "Default",
       "modelPath": "default",
-      "capabilities": ["navigation","rudder","sail","color"]
+      "capabilities": [
+        "navigation",
+        "rudder",
+        "sail",
+        "color"
+      ]
+    },
+    {
+      "name": "Racer 10.8",
+      "modelPath": "racer",
+      "capabilities": [
+        "navigation",
+        "sail",
+        "color"
+      ]
+    },
+    {
+      "name": "Catamaran 14",
+      "modelPath": "catamaran",
+      "capabilities": [
+        "navigation",
+        "sail",
+        "color"
+      ]
     },
     {
       "name": "Optimist",
       "modelPath": "optimist",
-      "capabilities": ["navigation","ais"]
+      "capabilities": [
+        "navigation",
+        "ais"
+      ]
     },
     {
       "name": "Sailboat",
       "modelPath": "sailboat",
-      "capabilities": ["navigation","ais"]
+      "capabilities": [
+        "navigation",
+        "ais"
+      ]
     },
     {
       "name": "Ship",
       "modelPath": "ship",
-      "capabilities": ["navigation","ais"]
+      "capabilities": [
+        "navigation",
+        "ais"
+      ]
     },
     {
       "name": "Windsurf",
       "modelPath": "windsurf",
-      "capabilities": ["navigation","ais"]
+      "capabilities": [
+        "navigation",
+        "ais"
+      ]
     }
   ]
 }
