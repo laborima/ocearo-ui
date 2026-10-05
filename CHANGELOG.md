@@ -35,6 +35,9 @@ Ocearo 2: a new 3D view built around what a sailor needs to see — a realistic 
 - **Tank volumes were 1000 times too small**: Signal K capacities are in m³, shown as litres (“0/0.06L”, total capacity 0 L on the engine page). Tanks with a level but no capacity are now shown, and the black water tank is listed.
 - The fuel estimate from the refill log subtracted the fuel used twice when a tank gauge was present.
 - Logbook: the position of entries written from the app showed “n/a”.
+- **Phones**: the app menu showed icons without labels, the bottom bar scrolled sideways (MOB cut off), depth and tide panels overlapped, tab bars dragged the whole page sideways, and the split view was unusable; all fixed, and a split layout falls back to the boat view below 768 px.
+- **iPhone home-screen app**: the toolbar ran under the notch and the bottom bar under the home indicator (safe-area insets now applied), the manifest forced landscape, and older iOS opened it with the Safari bars.
+- Battery endurance was computed from the current alone (1421.9 h at 6.4 A); it now uses the energy left over the power drawn.
 
 ## [0.1.22] - 2026-08-10
 
