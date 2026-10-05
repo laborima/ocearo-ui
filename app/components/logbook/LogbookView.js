@@ -83,19 +83,24 @@ const LogbookView = () => {
       const rawEntries = await fetchLogbookEntries();
       
       // Transform entries to ensure correct data types (Date objects, etc.)
-      const transformedEntries = rawEntries.map(entry => ({
-        ...entry,
-        date: new Date(entry.datetime || entry.date),
-        point: entry.point ? {
-          ...entry.point,
-          toString: () => {
-            if (typeof entry.point.latitude === 'number' && typeof entry.point.longitude === 'number') {
-              return `${entry.point.latitude.toFixed(6)}, ${entry.point.longitude.toFixed(6)}`;
+      // signalk-logbook entries carry `point`; the ones written from this
+      // page (and the local store) carry `position`
+      const transformedEntries = rawEntries.map(entry => {
+        const point = entry.point || (typeof entry.position?.latitude === 'number' ? entry.position : null);
+        return {
+          ...entry,
+          date: new Date(entry.datetime || entry.date),
+          point: point ? {
+            ...point,
+            toString: () => {
+              if (typeof point.latitude === 'number' && typeof point.longitude === 'number') {
+                return `${point.latitude.toFixed(6)}, ${point.longitude.toFixed(6)}`;
+              }
+              return 'Invalid coordinates';
             }
-            return 'Invalid coordinates';
-          }
-        } : null
-      }));
+          } : null
+        };
+      });
 
       setEntries(transformedEntries);
     } catch (err) {
