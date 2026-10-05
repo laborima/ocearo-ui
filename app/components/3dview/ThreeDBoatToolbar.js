@@ -122,15 +122,14 @@ const ThreeDBoatToolbar = () => {
                 />
             )}
 
-            {states.autopilot && (
-                <ToolbarButton
-                    onClick={() => toggleState('ais')}
-                    icon={faSatellite}
-                    isActive={states.ais}
-                    activeClass={activeColor.ais}
-                    label={t('toolbar.aisRadar')}
-                />
-            )}
+            {/* AIS matters at anchor and in the harbour too */}
+            <ToolbarButton
+                onClick={() => toggleState('ais')}
+                icon={faSatellite}
+                isActive={states.ais}
+                activeClass={activeColor.ais}
+                label={t('toolbar.aisRadar')}
+            />
         </div>
     );
 };
