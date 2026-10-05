@@ -6,6 +6,7 @@
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://laborima.github.io/ocearo-ui/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://laborima.github.io/ocearo-ui/fr/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://laborima.github.io/ocearo-ui/pt/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://laborima.github.io/ocearo-ui/"/>
   </url>
   <url>
@@ -14,6 +15,16 @@
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://laborima.github.io/ocearo-ui/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://laborima.github.io/ocearo-ui/fr/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://laborima.github.io/ocearo-ui/pt/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://laborima.github.io/ocearo-ui/"/>
+  </url>
+  <url>
+    <loc>https://laborima.github.io/ocearo-ui/pt/</loc>
+    <lastmod>2026-10-05</lastmod>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://laborima.github.io/ocearo-ui/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://laborima.github.io/ocearo-ui/fr/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://laborima.github.io/ocearo-ui/pt/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://laborima.github.io/ocearo-ui/"/>
   </url>
   <url>
@@ -22,6 +33,7 @@
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://laborima.github.io/ocearo-ui/demo/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://laborima.github.io/ocearo-ui/fr/demo/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://laborima.github.io/ocearo-ui/pt/demo/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://laborima.github.io/ocearo-ui/demo/"/>
   </url>
   <url>
@@ -30,6 +42,16 @@
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://laborima.github.io/ocearo-ui/demo/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://laborima.github.io/ocearo-ui/fr/demo/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://laborima.github.io/ocearo-ui/pt/demo/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://laborima.github.io/ocearo-ui/demo/"/>
+  </url>
+  <url>
+    <loc>https://laborima.github.io/ocearo-ui/pt/demo/</loc>
+    <lastmod>2026-10-05</lastmod>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://laborima.github.io/ocearo-ui/demo/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://laborima.github.io/ocearo-ui/fr/demo/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://laborima.github.io/ocearo-ui/pt/demo/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://laborima.github.io/ocearo-ui/demo/"/>
   </url>
   <url>
@@ -38,6 +60,7 @@
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://laborima.github.io/ocearo-ui/brand/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://laborima.github.io/ocearo-ui/fr/charte-graphique/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://laborima.github.io/ocearo-ui/pt/marca/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://laborima.github.io/ocearo-ui/brand/"/>
   </url>
   <url>
@@ -46,6 +69,16 @@
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://laborima.github.io/ocearo-ui/brand/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://laborima.github.io/ocearo-ui/fr/charte-graphique/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://laborima.github.io/ocearo-ui/pt/marca/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://laborima.github.io/ocearo-ui/brand/"/>
+  </url>
+  <url>
+    <loc>https://laborima.github.io/ocearo-ui/pt/marca/</loc>
+    <lastmod>2026-10-05</lastmod>
+    <priority>0.4</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://laborima.github.io/ocearo-ui/brand/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://laborima.github.io/ocearo-ui/fr/charte-graphique/"/>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://laborima.github.io/ocearo-ui/pt/marca/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://laborima.github.io/ocearo-ui/brand/"/>
   </url>
 </urlset>

@@ -123,7 +123,7 @@
         const cfg = JSON.parse(localStorage.getItem(key) || '{}');
         if (!cfg.signalKUrlSet) {
           cfg.debugMode = true;
-          if (!cfg.language) cfg.language = doc.lang;
+          if (!cfg.language) cfg.language = doc.lang.slice(0, 2); // the app's language codes have no region
           localStorage.setItem(key, JSON.stringify(cfg));
         }
       } catch { /* storage blocked: the app falls back to its own defaults */ }
