@@ -20,7 +20,7 @@
 
 > Every image on this page is a screenshot of the app, fed with real data for La Rochelle on 4 October 2026: wind from Open-Meteo, tides, the SHOM 20 m bathymetry and scripted AIS traffic.
 
-▶ **Video tour (2:33):** [in English](https://youtu.be/YGQM3UipcvU) · [en français](https://youtu.be/GkLjk23Sz8k) — leaving La Rochelle, the rules of the road, man overboard, bathymetry, weather, engine and logbook.
+▶ **Video tour (2:33):** [in English](https://youtu.be/ZDUoifu3cdI) · [en français](https://youtu.be/gu08pE906Ms) — leaving La Rochelle, the rules of the road, man overboard, bathymetry, weather, engine and logbook.
 
 ---
 

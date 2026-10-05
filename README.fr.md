@@ -20,7 +20,7 @@
 
 > Toutes les images de cette page sont des captures de l’application, alimentée par des données réelles de La Rochelle du 4 octobre 2026 : vent Open-Meteo, marée, bathymétrie SHOM 20 m et trafic AIS scénarisé.
 
-▶ **Visite en vidéo (2:33) :** [en français](https://youtu.be/GkLjk23Sz8k) · [in English](https://youtu.be/YGQM3UipcvU) — sortie de La Rochelle, règles de barre, homme à la mer, bathymétrie, météo, moteur et journal de bord.
+▶ **Visite en vidéo (2:33) :** [en français](https://youtu.be/gu08pE906Ms) · [in English](https://youtu.be/ZDUoifu3cdI) — sortie de La Rochelle, règles de barre, homme à la mer, bathymétrie, météo, moteur et journal de bord.
 
 ---
 

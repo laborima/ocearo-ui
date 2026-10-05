@@ -13,7 +13,7 @@ Fixes found since 2.0.0 on phones, in the translations and in the boat-system pa
 ### Added
 
 - **A new logo**: the O of Ocearo is the compass of the 3D view, tilted in perspective with the own boat under sail at its centre (flat at favicon sizes), and the A is a bow splitting the horizon. Vector masters in `docs/logo/`; favicons, app icons and the Signal K app icon regenerated from it.
-- **A website** at [laborima.github.io/ocearo-ui](https://laborima.github.io/ocearo-ui/), in English and French: features, screenshots, the video tour ([English](https://youtu.be/YGQM3UipcvU), [French](https://youtu.be/GkLjk23Sz8k)), the live demo (now at [/demo/](https://laborima.github.io/ocearo-ui/demo/)) and the brand guidelines.
+- **A website** at [laborima.github.io/ocearo-ui](https://laborima.github.io/ocearo-ui/), in English and French: features, screenshots, the video tour ([English](https://youtu.be/ZDUoifu3cdI), [French](https://youtu.be/gu08pE906Ms)), the live demo (now at [/demo/](https://laborima.github.io/ocearo-ui/demo/)) and the brand guidelines.
 
 ### Fixed
 
