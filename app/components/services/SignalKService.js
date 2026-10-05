@@ -32,13 +32,15 @@ class SignalKService {
      */
     getClientConfig() {
         const config = configService.getAll();
-        const signalkUrl = config.signalkUrl || configService.getComputedSignalKUrl();
-        const [hostname, port] = signalkUrl.replace(/https?:\/\//, '').split(':');
+        const signalkUrl = configService.getSignalKUrl();
+        const [hostname, port] = signalkUrl.replace(/https?:\/\//, '').replace(/\/.*$/, '').split(':');
+        const useTLS = signalkUrl.startsWith('https');
 
         return {
             hostname: hostname || 'localhost',
-            port: parseInt(port) || 3000,
-            useTLS: signalkUrl.startsWith('https'),
+            // No port in the URL: the scheme's default (behind a proxy on 80 / 443)
+            port: parseInt(port) || (useTLS ? 443 : 80),
+            useTLS,
             useAuthentication: config.useAuthentication || false,
             username: config.username || null,
             password: config.password || null,
@@ -122,13 +124,12 @@ class SignalKService {
      * @returns {string} Base URL
      */
     getBaseUrl() {
-        const config = configService.getAll();
-        return config.signalkUrl || configService.getComputedSignalKUrl();
+        return configService.getSignalKUrl();
     }
 
     isDemoSignalK() {
         const config = configService.getAll();
-        const baseUrl = config.signalkUrl || '';
+        const baseUrl = configService.getSignalKUrl() || '';
         return config.debugMode || baseUrl.includes('demo.signalk.org');
     }
 

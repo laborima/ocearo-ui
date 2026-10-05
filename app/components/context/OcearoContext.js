@@ -415,7 +415,8 @@ export const OcearoContextProvider = ({ children }) => {
         const connectSignalKClient = async () => {
          
             const config = configService.getAll(); // Load config from the service
-            const { signalkUrl, debugMode } = config;
+            const { debugMode } = config;
+            const signalkUrl = configService.getSignalKUrl();
             
             // Setup debug data interval function - extracted to be reusable
             const setupDebugDataInterval = () => {
