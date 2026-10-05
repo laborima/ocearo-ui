@@ -21,7 +21,7 @@
     "lint": "eslint .",
     "link": "ln -s $PWD/out $HOME/.signalk/node_modules/ocearo-ui"
   },
-  "dependencies": {
+  "devDependencies": {
     "@fortawesome/free-solid-svg-icons": "^7.3.0",
     "@fortawesome/react-fontawesome": "^3.3.1",
     "@react-three/drei": "^10.7.9",
@@ -29,6 +29,8 @@
     "@signalk/client": "^2.4.0",
     "@tailwindcss/postcss": "^4.3.1",
     "@use-gesture/react": "^10.3.1",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.8",
     "framer-motion": "^14.0.0",
     "i18next": "^26.4.2",
     "i18next-browser-languagedetector": "^8.2.0",
@@ -38,12 +40,8 @@
     "react-dom": "^19.3.0",
     "react-i18next": "^17.0.15",
     "recharts": "^3.10.1",
+    "tailwindcss": "^4.3.1",
     "three": "^0.186.1"
-  },
-  "devDependencies": {
-    "eslint": "^9.39.5",
-    "eslint-config-next": "^16.3.8",
-    "tailwindcss": "^4.3.1"
   },
   "overrides": {
     "minimatch": "^10.2.1",

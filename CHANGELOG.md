@@ -1,3 +1,9 @@
+## [Unreleased]
+
+### Fixed
+
+- **Installing Ocearo on a Signal K server downloaded the whole build toolchain** (Next.js, React, three.js and their dependencies, hundreds of megabytes on a Raspberry Pi) although the published package is already built. They are now development dependencies only.
+
 ## [2.0.1] - 2026-10-05
 
 Fixes found since 2.0.0 on phones, in the translations and in the boat-system pages, and the new Ocearo identity. Nothing to change in the settings.
