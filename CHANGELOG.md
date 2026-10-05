@@ -1,4 +1,6 @@
-## [Unreleased]
+## [2.0.2] - 2026-10-05
+
+A lighter install on the boat's server. Nothing to change in the settings.
 
 ### Fixed
 
