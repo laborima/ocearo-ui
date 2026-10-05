@@ -24,6 +24,13 @@ Ocearo 2: a new 3D view built around what a sailor needs to see — a realistic 
 - **Local tide tables were never found when the app is served by Signal K**: they were fetched from the site root instead of next to the app (`/ocearo-ui/`).
 - **Reverse gear was never detected.** Signal K publishes `transmission.gear` as "Forward" / "Neutral" / "Reverse": the parking assist compared it with a lower-case string, so its predicted track went the wrong way astern, and the engine view showed "Fwd Forward".
 - Under the Raspberry Pi render profile the sea shader is lighter (fewer noise octaves, ripples and wake points).
+- **The laylines and AIS buttons disappeared after leaving the anchor watch** (or the harbour) and never came back: leaving those modes now returns to navigation. The AIS button is available in every mode.
+- **Collision advice with AIS off.** The keep-clear banner, the orange hull and the avoidance course followed the AIS targets even with the AIS layer switched off; they now follow the AIS button.
+- **Avoidance crossing ahead of the other vessel.** With the target already inside the CPA limit, the advice could turn away across its bow; it now keeps to the side passing astern.
+- **Chart and meteo views flickered** in bands when zoomed out (layers fighting in the depth buffer) and redrew their layers at every zoom step.
+- **Rain radar "Zoom Level Not Supported" banners over the meteo map**: RainViewer now serves zoom 7 at most. The meteo base map also follows the zoom instead of a fixed, blurred 40 km.
+- The realistic sea shimmered towards the horizon (waves shorter than the mesh could draw).
+- Dark and night themes: the chart is drawn dark (red at night) instead of a bright map under a dark sky that made the HUD unreadable.
 
 ## [0.1.22] - 2026-08-10
 
