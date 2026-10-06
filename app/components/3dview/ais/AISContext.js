@@ -55,6 +55,10 @@ const renderSignature = (list) => list.map(t => `${t.mmsi}|${t.shipType}|${t.len
 
 const getPath = (source, path) => path.split('.').reduce((acc, part) => acc?.[part], source);
 
+// A vessel name is usually a plain string; sent as a value it arrives wrapped
+// ({ value, meta, $source… }) and must not reach the UI as an object
+const nameOf = (name) => (typeof name === 'string' ? name : typeof name?.value === 'string' ? name.value : null);
+
 const stripVesselsPrefix = (context) => (context || '').replace(/^vessels\./, '');
 
 const createTarget = (mmsi) => ({
@@ -98,7 +102,7 @@ const getTargetRotationAngle = (target) =>
  */
 const applyValue = (target, path, value) => {
     switch (path) {
-        case 'name': target.name = value; return false;
+        case 'name': target.name = nameOf(value) ?? target.name; return false;
         case 'navigation.position':
             if (!value) return false;
             target.latitude = value.latitude;
@@ -292,7 +296,8 @@ export const AISProvider = ({ children }) => {
                     const value = getPath(data, path);
                     if (value !== undefined) target[key] = value;
                 };
-                set('name', 'name');
+                const name = nameOf(data.name);
+                if (name) target.name = name;
                 set('latitude', 'navigation.position.value.latitude');
                 set('longitude', 'navigation.position.value.longitude');
                 set('sog', 'navigation.speedOverGround.value');

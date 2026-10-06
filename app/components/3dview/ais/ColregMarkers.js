@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import * as THREE from 'three';
 import { Html } from '@react-three/drei';
-import { useTranslation } from 'react-i18next';
 import useTheme from '../../theme/useTheme';
 import useColregs from '../../hooks/useColregs';
+import useHudClearance from '../hud/useHudClearance';
 
 import { Line } from '@react-three/drei';
 
@@ -42,34 +42,40 @@ const TurnArrow = ({ x, z, course, turn, color }) => {
     );
 };
 
+/** The vessel's name over it, hidden while it would sit on the HUD */
+const NameTag = ({ name, color }) => {
+    const ref = useRef(null);
+    useHudClearance(ref);
+    return (
+        <div ref={ref} className="whitespace-nowrap max-w-[9rem] truncate px-2 py-0.5 rounded-full text-caption font-semibold text-white backdrop-blur-sm"
+            style={{ background: `color-mix(in srgb, ${color} 72%, transparent)` }}>
+            {name}
+        </div>
+    );
+};
+
 /**
  * Right of way on every collision course, in the north-up AIS layer: a label
  * over the other vessel (it must keep clear / it has right of way) and, when
  * it is the one to give way, an arrow showing the alteration expected from it.
  */
 const ColregMarkers = () => {
-    const { t } = useTranslation();
     const { scene } = useTheme();
     const { encounters } = useColregs();
 
     return encounters.slice(0, 5).map(({ target, role }) => {
         const targetGivesWay = role.ownRole === 'stand-on' || role.ownRole === 'both';
         const course = target.cog ?? target.cogMagnetic ?? target.heading ?? 0;
-        const label = role.ownRole === 'both'
-            ? t('colregs.labelBoth')
-            : targetGivesWay ? t('colregs.labelGiveWay') : t('colregs.labelStandOn');
         // Same colours as the targets: violet it keeps clear, red we keep clear
         const color = targetGivesWay ? scene.vesselYields : scene.vesselDanger;
         const turn = role.targetTurn || 1;
 
         return (
             <group key={target.mmsi}>
-                {/* Screen-sized label: readable at any range */}
+                {/* Screen-sized name tag, coloured by role: the role and the rule
+                    are in the banner, the advice and the vessel's card. */}
                 <Html position={[target.sceneX, 12, target.sceneZ]} center zIndexRange={[15, 10]} style={{ pointerEvents: 'none' }}>
-                    <div className="whitespace-nowrap px-2 py-0.5 rounded-full text-caption font-semibold text-white backdrop-blur-sm"
-                        style={{ background: `color-mix(in srgb, ${color} 72%, transparent)` }}>
-                        {target.name} · {label} · {t('colregs.rule', { rule: role.rule })}
-                    </div>
+                    <NameTag name={target.name} color={color} />
                 </Html>
                 {targetGivesWay && (
                     <TurnArrow x={target.sceneX} z={target.sceneZ} course={course} turn={turn} color={color} />

@@ -83,6 +83,10 @@ function AISModel({ code, scaleFactor, beamRatio }) {
 export const aisTargetSceneLength = (lengthMeters) =>
     Math.max(lengthMeters || BASE_MODEL_LENGTH, MIN_BOAT_LENGTH) * TARGET_SIZE_PER_METRE;
 
+// The tap zone: rendered but writes neither colour nor depth
+const HIT_MATERIAL = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
+const MIN_HIT_SIZE = 8; // scene units
+
 /**
  * AISBoat — renders one AIS vessel as its procedural fleet model.
  * The outer group is the ref the parent moves every frame; position and
@@ -94,6 +98,8 @@ const AISBoat = ({ boatData, onClick, ref }) => {
     const scaleFactor = aisTargetSceneLength(length) / BASE_MODEL_LENGTH;
     const ratio = length > 0 && beam > 0 ? beam / length : null;
     const beamRatio = ratio >= MIN_BEAM_RATIO && ratio <= MAX_BEAM_RATIO ? ratio : null;
+    // Square around the hull whatever its heading, never smaller than a few metres
+    const hit = Math.max(aisTargetSceneLength(length) * 1.2, MIN_HIT_SIZE);
 
     return (
         <group
@@ -104,6 +110,11 @@ const AISBoat = ({ boatData, onClick, ref }) => {
             }}
         >
             <AISModel code={code} scaleFactor={scaleFactor} beamRatio={beamRatio} />
+            {/* Invisible tap zone, larger than the hull: a small or distant
+                vessel must be easy to select with a finger. Draws nothing. */}
+            <mesh position={[0, hit / 4, 0]} material={HIT_MATERIAL} userData={{ fixed: true }}>
+                <boxGeometry args={[hit, hit / 2, hit]} />
+            </mesh>
         </group>
     );
 };

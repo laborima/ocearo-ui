@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 /**
  * Minimal SVG line chart: values left (oldest) to right, area fill under the
  * line. `marker` (0..1) draws a solid "now" line with a dot on the curve;
  * `endDot` marks the latest value at the right end.
  */
-const Sparkline = ({ values, width = 240, height = 60, color = 'var(--color-oBlue)', marker = null, endDot = false, invert = false }) => {
+const FixedSparkline = ({ values, width = 240, height = 60, color = 'var(--color-oBlue)', marker = null, endDot = false, invert = false }) => {
     const points = values.filter(Number.isFinite);
     if (points.length < 2) return <svg width={width} height={height} />;
     const min = Math.min(...points);
@@ -44,5 +44,25 @@ const Sparkline = ({ values, width = 240, height = 60, color = 'var(--color-oBlu
         </svg>
     );
 };
+
+/** As wide as its container (compact HUD cards): measured, so dots stay round */
+const FluidSparkline = (props) => {
+    const ref = useRef(null);
+    const [width, setWidth] = useState(0);
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return undefined;
+        const observer = new ResizeObserver(([entry]) => setWidth(Math.floor(entry.contentRect.width)));
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+    return (
+        <div ref={ref} className="w-full" style={{ height: props.height }}>
+            {width > 0 && <FixedSparkline {...props} width={width} />}
+        </div>
+    );
+};
+
+const Sparkline = ({ fluid = false, ...props }) => (fluid ? <FluidSparkline {...props} /> : <FixedSparkline {...props} />);
 
 export default Sparkline;

@@ -117,13 +117,8 @@ const BottomTemperatureWidget = () => {
     setDisplayMode(availableModes[nextIndex]);
   }, [availableModes, displayMode]);
 
-  if (availableModes.length === 0) {
-    return (
-      <div className={`px-3 py-1.5 text-hud-muted`}>
-        <span className="text-label font-semibold uppercase tracking-widest">N/A</span>
-      </div>
-    );
-  }
+  // No sensor reports it: no chip, rather than an "N/A" in the bar
+  if (availableModes.length === 0) return null;
 
   return (
     <div

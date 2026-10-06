@@ -1233,5 +1233,37 @@
       "title": "Légende",
       "intro": "Ce que veulent dire les couleurs, rubans et bandes de la vue 3D."
     }
+  },
+  "infoPanel": {
+    "ownBoat": "Notre bateau",
+    "heading": "Cap",
+    "range": "Dist.",
+    "callsign": "Indicatif",
+    "beam": "Largeur",
+    "state": "Statut",
+    "latitude": "Lat",
+    "longitude": "Lon",
+    "status": {
+      "giveWay": "Risque de collision",
+      "yields": "C'est à lui de s'écarter",
+      "close": "Proche, sans risque de collision"
+    },
+    "category": {
+      "power": "Navire à moteur",
+      "sail": "Voilier",
+      "fishing": "En pêche",
+      "restricted": "Manœuvre restreinte"
+    },
+    "navState": {
+      "motoring": "Au moteur",
+      "sailing": "À la voile",
+      "fishing": "En pêche",
+      "anchored": "Au mouillage",
+      "moored": "Amarré",
+      "aground": "Échoué",
+      "notUnderCommand": "Non maître de sa manœuvre",
+      "restrictedManouverability": "Capacité de manœuvre restreinte",
+      "constrainedByDraft": "Handicapé par son tirant d'eau"
+    }
   }
 }

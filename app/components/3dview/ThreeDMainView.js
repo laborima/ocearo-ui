@@ -82,7 +82,8 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
     const limited = renderProfile.fps < 60;
     const { states, theme } = useOcearoContext(); // Access global context
     const replaying = useReplay().active;
-    const [infoPanelContent, setInfoPanelContent] = useState(null);
+    // The tapped vessel: null, { kind: 'own' } or { kind: 'ais', mmsi }
+    const [selection, setSelection] = useState(null);
     const [showAttitudeIndicator, setShowAttitudeIndicator] = useState(true);
     // 'minimal' (FSD-like: speed + four values per mode) or 'classic' gauges
     const [hudStyle] = useState(() => configService.get('hudStyle') || 'minimal');
@@ -93,6 +94,10 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
     const rich = fullscreen && !classic && roomy;
     // Phone on its side: the HUD values fill the left edge down to the bar
     const short = useMediaQuery('(max-height: 500px)');
+    // Phones and the split view: the bottom panels stack in one column, so
+    // they can never overlap one another
+    const compact = !rich && !classic;
+    const showAdvice = !states.anchorWatch && !states.parkingMode && !replaying;
 
     // Get configuration directly using the configService
     useEffect(() => {
@@ -107,7 +112,7 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
     return (
         <div className="w-full h-full relative overflow-hidden" data-scene={isLightScene ? 'light' : undefined}>
 
-            <div className="absolute top-2 left-2 right-2 z-20 flex items-center justify-between">
+            <div className="absolute top-2 left-2 right-2 z-20 flex items-center justify-between" data-hud-solid>
                 <ThreeDBoatToolbar />
                 {/* Phones: the toolbar takes the whole width */}
                 <div className="hidden sm:flex items-center space-x-4 min-w-0 shrink-0">
@@ -117,7 +122,7 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                 </div>
             </div>
 
-            <div className="absolute top-14 left-2 z-30">
+            <div className="absolute top-14 left-2 z-30" data-hud-solid>
                 {!states.anchorWatch && <ThreeDBoatSpeedIndicator />}
                 {states.anchorWatch && <ThreeDBoatPositionDateIndicator/> }
                 {/* Depth lives in its gauge (split view) or its panel (full screen) */}
@@ -134,20 +139,20 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                 </div>
             )}
 
-            {/* Floating vessel info panel - top left, below speed indicator */}
-            {infoPanelContent && (
-                <div className="absolute top-28 left-2 z-30">
-                    <InfoPanel content={infoPanelContent} onClose={() => setInfoPanelContent(null)} />
+            {/* Tapped vessel: top right in full screen (classic: under the speed) */}
+            {selection && !compact && (
+                <div data-hud-solid className={`hud-stack absolute z-30 w-96 max-h-[calc(100%-5rem)] flex flex-col ${classic ? 'top-28 left-2' : 'top-14 right-3'}`}>
+                    <InfoPanel content={selection} onClose={() => setSelection(null)} />
                 </div>
             )}
 
             {rich && (
-                <div className="absolute left-3 bottom-3 z-20">
+                <div className="absolute left-3 bottom-3 z-20" data-hud-solid>
                     <DepthPanel />
                 </div>
             )}
             {rich && (
-                <div className="absolute right-3 bottom-3 z-20">
+                <div className="absolute right-3 bottom-3 z-20" data-hud-solid>
                     <TidePanel />
                 </div>
             )}
@@ -155,7 +160,7 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
             {/* We must keep clear: unmistakable banner (the hull turns the same colour) */}
             {!replaying && (
                 // Phones: on the right, the HUD values fill the left edge
-                <div className="absolute right-2 top-14 z-30 max-w-[calc(100%-10rem)] sm:right-auto sm:left-1/2 sm:-translate-x-1/2 sm:max-w-[calc(100%-12rem)]">
+                <div data-hud-solid className="absolute right-2 top-14 z-30 max-w-[calc(100%-10rem)] sm:right-auto sm:left-1/2 sm:-translate-x-1/2 sm:max-w-[calc(100%-12rem)]">
                     <GiveWayBanner />
                 </div>
             )}
@@ -167,35 +172,62 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                 </div>
             )}
 
-            {/* Voyage replay controls */}
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-3 z-30 max-w-[calc(100%-1rem)]">
-                <ReplayBar />
-            </div>
-
-            {/* Harbour: berth type, guidance */}
-            {states.parkingMode && (
-                <div className="absolute left-1/2 -translate-x-1/2 bottom-3 z-20 max-w-[calc(100%-9rem)]">
-                    <ParkingPanel />
+            {compact ? (
+                // One column from the bottom: tapped vessel, replay / harbour /
+                // advice, then the depth and tide cards side by side. On its
+                // side the phone keeps it on the right, clear of the HUD values.
+                <div data-hud-solid className={`hud-stack absolute bottom-2 z-30 flex flex-col gap-2 min-h-0 max-h-[calc(100%-4.5rem)] pointer-events-none [&>*]:pointer-events-auto
+                    ${short ? 'right-2 w-[min(24rem,58%)]' : 'inset-x-2 sm:left-auto sm:w-[26rem]'}`}>
+                    {selection && (
+                        <div className="min-h-0 flex flex-col">
+                            <InfoPanel content={selection} onClose={() => setSelection(null)} />
+                        </div>
+                    )}
+                    {/* On its side the phone has room for the card alone: the
+                        rest comes back when it is closed (the banner stays) */}
+                    {!(short && selection) && (
+                        <>
+                            <div className="empty:hidden shrink-0 flex justify-center"><ReplayBar /></div>
+                            {states.parkingMode && <div className="empty:hidden shrink-0 tesla-card !p-3 !rounded-2xl"><ParkingPanel /></div>}
+                            {showAdvice && <div className="empty:hidden shrink-0 [&>*]:max-w-none"><AdvicePanel /></div>}
+                            <div className="shrink-0 flex gap-2">
+                                <div className="empty:hidden flex-1 min-w-0"><DepthPanel compact /></div>
+                                <div className="empty:hidden flex-1 min-w-0"><TidePanel compact /></div>
+                            </div>
+                        </>
+                    )}
                 </div>
+            ) : (
+                <>
+                    {/* Voyage replay controls */}
+                    <div className="absolute left-1/2 -translate-x-1/2 bottom-3 z-30 max-w-[calc(100%-1rem)]">
+                        <ReplayBar />
+                    </div>
+
+                    {/* Harbour: berth type, guidance */}
+                    {states.parkingMode && (
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-3 z-20 max-w-[calc(100%-9rem)]">
+                            <ParkingPanel />
+                        </div>
+                    )}
+
+                    {/* Course advice (avoidance / VMG) in the boat view */}
+                    {showAdvice && (
+                        <div data-hud-solid className={`hud-stack absolute left-1/2 -translate-x-1/2 z-20 max-w-[calc(100%-9rem)] ${classic ? 'bottom-24' : 'bottom-3'}`}>
+                            <AdvicePanel />
+                        </div>
+                    )}
+                </>
             )}
 
-            {/* Course advice (avoidance / VMG) in the boat view */}
-            {!states.anchorWatch && !states.parkingMode && !replaying && (
-                <div className={`absolute left-1/2 -translate-x-1/2 z-20 max-w-[calc(100%-12rem)] sm:max-w-[calc(100%-9rem)] ${classic ? 'bottom-24' : 'bottom-3'}`}>
-                    <AdvicePanel />
-                </div>
-            )}
-
-            {/* Depth and tide gauges whenever the full-screen panels are not shown;
-                on a short screen both sit on the right, clear of the HUD values */}
-            {!rich && !short && (
+            {/* Classic HUD: the vertical depth and tide gauges */}
+            {classic && (
                 <div className="absolute left-2 bottom-2 z-20 flex flex-col items-center">
                     <ThreeDBoatSeaLevelIndicator />
                 </div>
             )}
-            {!rich && (
-                <div className="absolute right-2 bottom-2 z-20 flex items-end gap-2">
-                    {short && <ThreeDBoatSeaLevelIndicator />}
+            {classic && (
+                <div className="absolute right-2 bottom-2 z-20 flex flex-col items-center">
                     <ThreeDBoatTideLevelIndicator />
                 </div>
             )}
@@ -227,11 +259,11 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                     <RendererExposer />
                     {active && limited && <FrameLimiter fps={renderProfile.fps} />}
                     {states.parkingMode ? (
-                        <ThreeDParkAssistBoat onUpdateInfoPanel={setInfoPanelContent} />
+                        <ThreeDParkAssistBoat onUpdateInfoPanel={setSelection} />
                     ) : states.anchorWatch ? (
-                        <ThreeDAnchoredBoat onUpdateInfoPanel={setInfoPanelContent} />
+                        <ThreeDAnchoredBoat onUpdateInfoPanel={setSelection} />
                     ) : (
-                        <ThreeDBoatView onUpdateInfoPanel={setInfoPanelContent} />
+                        <ThreeDBoatView onUpdateInfoPanel={setSelection} selection={selection} />
                     )}
                 </Canvas>
             </div>

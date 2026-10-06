@@ -1233,5 +1233,37 @@
       "title": "Legend",
       "intro": "What the colours, ribbons and bands of the 3D view mean."
     }
+  },
+  "infoPanel": {
+    "ownBoat": "Our boat",
+    "heading": "Heading",
+    "range": "Range",
+    "callsign": "Call sign",
+    "beam": "Beam",
+    "state": "Status",
+    "latitude": "Lat",
+    "longitude": "Lon",
+    "status": {
+      "giveWay": "Risk of collision",
+      "yields": "It keeps clear",
+      "close": "Close, no risk of collision"
+    },
+    "category": {
+      "power": "Power-driven",
+      "sail": "Sailing",
+      "fishing": "Fishing",
+      "restricted": "Restricted in ability to manoeuvre"
+    },
+    "navState": {
+      "motoring": "Under engine",
+      "sailing": "Under sail",
+      "fishing": "Fishing",
+      "anchored": "At anchor",
+      "moored": "Moored",
+      "aground": "Aground",
+      "notUnderCommand": "Not under command",
+      "restrictedManouverability": "Restricted in ability to manoeuvre",
+      "constrainedByDraft": "Constrained by her draught"
+    }
   }
 }

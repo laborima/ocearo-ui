@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Changed
+
+- **Phones and split view: nothing overlaps any more.** The depth and tide gauges become two compact cards (value, trend or direction, the last 10 minutes or the day's curve) side by side at the bottom, under the course advice, in one column that cannot overlap itself; on its side the phone keeps it on the right, clear of the HUD values. Cards over the 3D scene are now opaque, the dark theme included.
+- **Tapping a vessel** (an AIS target or our boat) opens a new card: name and type, what the rules of the road expect in the colour of the scene, distance, CPA, TCPA and speed in large type, then the details, all translated. It sits in the bottom column on phones and top right on tablets, instead of over the speed. It is live (our boat's used to freeze at the tap) and a small or distant vessel is easier to tap.
+- Vessel name tags in the scene show just the name and hide while they would sit on the HUD; the suggested-course label in the scene, a repeat of the advice panel, is gone.
+
 ### Added
 
 - **An interactive Ocearo guide** opens the Help view: first steps, then each screen (3D view, route and performance, traffic and rules of the road, anchor watch, harbour, bathymetry, weather, man overboard, dashboard, logbook) as a screenshot with numbered spots; tap one to read what it shows. The 3D legend closes the guide. English and French (other languages show the English text for now).
@@ -11,6 +17,9 @@
 - **Bottom bar on phones and small tablets**: the temperature overlapped the buttons. Below 1024 px the chart, weather, dashboard and help shortcuts fold into the apps menu (they were already listed there), leaving room for the readings.
 - **Tide rising or falling** was shown as falling whenever the tide times were unknown (the curve was rising); the direction now comes from the curve. The tide panel and gauge agree.
 - **Phones**: the "You must give way" banner covered the speed; it now sits on the right.
+- **The vessel card reopened by itself** after being closed, at the next AIS update.
+- AIS names sent as Signal K values (`{ value, meta }`, as some servers and plugins do) crashed the 3D view.
+- The bottom bar showed "N/A" for temperature and pressure when the server has neither; the chip is hidden instead.
 - The 3D legend's close button was announced to screen readers as "Orange vessel: close, no risk of collision".
 - **Signal K address typed without `https://`** (e.g. `demo.signalk.org`) failed silently from the online demo, which then showed only its sample values: no depth, no AIS. The address now gets a scheme, `ws://` / `wss://` are accepted, and `http://` is upgraded on a page served over https, since the browser blocks insecure connections there.
 

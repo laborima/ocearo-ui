@@ -1,6 +1,5 @@
 import React, { useRef, useMemo, useEffect, useState } from 'react';
-import { toDegrees, toKnots } from '../context/OcearoContext';
-import { useSignalKPath, useSignalKPaths } from '../hooks/useSignalK';
+import { useSignalKPath } from '../hooks/useSignalK';
 import configService from '../settings/ConfigService';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
@@ -166,31 +165,6 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
     const rudderRef = useRef();
     const config = configService.getAll();
 
-    const preferredWindSpeed = config.preferredWindSpeedPath || 'speedTrue';
-    const preferredWindDir = config.preferredWindDirectionPath || 'angleTrueWater';
-    const preferredHeading = config.preferredHeadingPath || 'courseOverGroundTrue';
-
-    // Use subscription for info panel data to ensure reactivity without full context re-renders
-    const infoPaths = useMemo(() => [
-        `environment.wind.${preferredWindDir}`,
-        `environment.wind.${preferredWindSpeed}`,
-        'environment.wind.angleTrueWater',
-        'environment.wind.speedTrue',
-        'environment.wind.angleApparent',
-        'environment.wind.speedApparent',
-        'performance.beatAngle',
-        'performance.polarSpeed',
-        'performance.polarSpeedRatio',
-        'performance.velocityMadeGood',
-        'navigation.speedThroughWater',
-        `navigation.${preferredHeading}`,
-        'navigation.headingTrue',
-        'navigation.courseOverGroundTrue',
-        'navigation.position'
-    ], [preferredWindDir, preferredWindSpeed, preferredHeading]);
-
-    const skValues = useSignalKPaths(infoPaths);
-
     // Use specialized hooks for better performance in useFrame
     const skAttitude = useSignalKPath('navigation.attitude');
     const skRudderAngle = useSignalKPath('steering.rudderAngle', 0);
@@ -273,94 +247,9 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
         }
     });
 
-    // Get the various boat data values for display in the info panel
-    const boatData = useMemo(() => {
-        return {
-            // Basic info
-            name: selectedBoat.name || 'Sailboat',
-            type: 'sailboat',
-            
-            // Wind data — use preferred paths with fallback
-            trueWindAngle: skValues[`environment.wind.${preferredWindDir}`]
-                ?? skValues['environment.wind.angleTrueWater'] ?? 0,
-            trueWindSpeed: skValues[`environment.wind.${preferredWindSpeed}`]
-                ?? skValues['environment.wind.speedTrue'] ?? 0,
-            appWindAngle: skValues['environment.wind.angleApparent'] || 0,
-            appWindSpeed: skValues['environment.wind.speedApparent'] || 0,
-            
-            // Navigation performance
-            beatAngle: skValues['performance.beatAngle'] || 0,
-            polarSpeed: skValues['performance.polarSpeed'] || 0,
-            polarSpeedRatio: skValues['performance.polarSpeedRatio'] || 0,
-            velocityMadeGood: skValues['performance.velocityMadeGood'] || 0,
-            speedThroughWater: skValues['navigation.speedThroughWater'] || 0,
-            
-            // Heading and course — use preferred path with fallback
-            headingTrue: skValues[`navigation.${preferredHeading}`]
-                ?? skValues['navigation.headingTrue'] ?? 0,
-            courseOverGroundTrue: skValues['navigation.courseOverGroundTrue'] || 0,
-           
-            position: skValues['navigation.position'] || { latitude: 0, longitude: 0 }
-        };
-    }, [skValues, selectedBoat.name, preferredWindDir, preferredWindSpeed, preferredHeading]);
-
-   
-    // Format data for InfoPanel display
-    const formatInfoPanelContent = (data) => {
-        const result = [];
-        
-        if (data.name) {
-            result.push(`Vessel: ${data.name}`);
-        }
-        
-        if (Number.isFinite(data.trueWindSpeed)) {
-            const angle = toDegrees(data.trueWindAngle);
-            result.push(`Wind: ${toKnots(data.trueWindSpeed)} kn${angle !== null ? ` @ ${angle}°` : ''}`);
-        }
-
-        if (Number.isFinite(data.appWindSpeed)) {
-            const angle = toDegrees(data.appWindAngle);
-            result.push(`App Wind: ${toKnots(data.appWindSpeed)} kn${angle !== null ? ` @ ${angle}°` : ''}`);
-        }
-        
-        if (data.speedThroughWater) {
-            result.push(`STW: ${toKnots(data.speedThroughWater)} kn`);
-        }
-        
-        if (data.headingTrue !== undefined && data.headingTrue !== null) {
-            result.push(`HDG: ${toDegrees(data.headingTrue)}°`);
-        }
-        
-        if (data.courseOverGroundTrue !== undefined && data.courseOverGroundTrue !== null) {
-            result.push(`COG: ${toDegrees(data.courseOverGroundTrue)}°`);
-        }
-        
-        if (data.velocityMadeGood) {
-            result.push(`VMG: ${toKnots(data.velocityMadeGood)} kn`);
-        }
-        
-        if (data.polarSpeedRatio) {
-            result.push(`Polar: ${(data.polarSpeedRatio * 100).toFixed(0)}%`);
-        }
-        
-        if (data.position && data.position.latitude !== undefined && data.position.longitude !== undefined) {
-            result.push(`Pos: ${data.position.latitude.toFixed(4)}°, ${data.position.longitude.toFixed(4)}°`);
-        }
-        
-        return result.join('\n');
-    };
-    
-    // Handle touch/click events for touchscreen optimization
-    const [infoVisible, setInfoVisible] = useState(false);
-    
+    // Our boat's card is live (InfoPanel reads Signal K); a tap toggles it
     const handleInfoPanelToggle = () => {
-        const newVisibleState = !infoVisible;
-        setInfoVisible(newVisibleState);
-        
-        if (onUpdateInfoPanel) {
-            // If toggling on, show the info; if toggling off, hide it
-            onUpdateInfoPanel(newVisibleState ? formatInfoPanelContent(boatData) : null);
-        }
+        onUpdateInfoPanel?.(prev => (prev?.kind === 'own' ? null : { kind: 'own' }));
     };
 
     return (

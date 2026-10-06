@@ -1,9 +1,9 @@
-import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useMemo, useEffect, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Line } from '@react-three/drei';
 import * as THREE from 'three'; // Import THREE for Color
 
-import { toKnots, toDegrees, useOcearoContext } from '../../context/OcearoContext';
+import { useOcearoContext } from '../../context/OcearoContext';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import { useAIS, predictScenePosition } from './AISContext';
 import useColregs from '../../hooks/useColregs';
@@ -85,14 +85,17 @@ const CpaLines = ({ targets, statuses, colors }) => {
     });
 };
 
-const AISView = ({ onUpdateInfoPanel }) => {
+/**
+ * `selectedMmsi` comes from the 3D view, which owns the selection (tapped
+ * vessel) and shows its card; a tap here toggles it through `onUpdateInfoPanel`.
+ */
+const AISView = ({ onUpdateInfoPanel, selectedMmsi = null }) => {
     const { aisData, vesselIds, targets, targetsRef, motionRef } = useAIS();
     const { states } = useOcearoContext();
     const waterLevel = WATER_LEVEL[states.oceanMode] ?? DEFAULT_WATER_LEVEL;
     const boatRefs = useRef({}); // mmsi -> THREE.Group, moved directly every frame
     const meshCache = useRef({}); // mmsi -> meshes, resolved once the model has loaded
 
-    const [selectedMmsi, setSelectedMmsi] = useState(null);
 
     // Fleet materials are shared module-wide: recolour them with the theme
     const { scene } = useTheme();
@@ -165,8 +168,8 @@ const AISView = ({ onUpdateInfoPanel }) => {
     });
 
     const handleBoatClick = useCallback((mmsi) => {
-        setSelectedMmsi(prev => (prev === mmsi ? null : mmsi));
-    }, []);
+        onUpdateInfoPanel?.(prev => (prev?.kind === 'ais' && prev.mmsi === mmsi ? null : { kind: 'ais', mmsi }));
+    }, [onUpdateInfoPanel]);
 
     // One stable ref callback per vessel, so a list update doesn't detach and
     // re-attach boats that are still displayed
@@ -203,76 +206,6 @@ const AISView = ({ onUpdateInfoPanel }) => {
 
     // Model swaps (type/length update) remount the inner mesh: drop stale caches
     useEffect(() => { meshCache.current = {}; }, [vesselIds]);
-
-    const selectedBoat = selectedMmsi ? aisData[selectedMmsi] : null;
-
-    // --- Data Formatting Utilities ---
-    const formatBoatData = (label, value, unit = '', isAngle = false, isSpeed = false) => {
-        // If value is undefined, null, empty string, or 0 length string, return null
-        if (value === undefined || value === null || value === '' ||
-            (typeof value === 'string' && value.trim().length === 0)) {
-            return null;
-        }
-
-
-        // If it's an angle value (COG or heading) and in radians, convert to degrees
-        if (isAngle && value !== null) {
-            // SignalK provides angles in radians, always convert to degrees
-            value = toDegrees(value);
-        }
-
-        // If it's a speed value in m/s, convert to knots for display
-        if (isSpeed && value !== null) {
-            // SignalK provides speeds in m/s, convert to knots
-            value = toKnots(value);
-        }
-
-        return `${label}: ${value}${unit}`;
-
-    }
-
-    const formatMMSI = (mmsi) => {
-        if (!mmsi) return null;
-        const prefixes = ['urn:mrn:imo:mmsi:', 'urn:mrn:signalk:uuid:'];
-        let formattedMMSI = String(mmsi); // Ensure it's a string
-        for (const prefix of prefixes) {
-            if (formattedMMSI.startsWith(prefix)) {
-                formattedMMSI = formattedMMSI.substring(prefix.length);
-                break;
-            }
-        }
-        return formattedMMSI;
-    };
-
-
-    // --- Prepare Info Panel Content ---
-    const infoPanelContent = selectedBoat ? [
-        formatBoatData('Vessel', selectedBoat.name),
-        formatBoatData('MMSI', formatMMSI(selectedBoat.mmsi)),
-        formatBoatData('RNG', selectedBoat.distanceMeters ? selectedBoat.distanceMeters.toFixed(0) : 0, ' m'),
-        formatBoatData('CPA', selectedBoat.cpaMeters != null ? (selectedBoat.cpaMeters / 1852).toFixed(2) : null, ' NM'),
-        formatBoatData('TCPA', selectedBoat.tcpaSeconds != null && selectedBoat.tcpaSeconds > 0 ? Math.round(selectedBoat.tcpaSeconds / 60) : null, ' min'),
-        formatBoatData('LOA', selectedBoat.length, ' m'),
-        formatBoatData('Type', selectedBoat.shipType),
-        formatBoatData('SOG', selectedBoat.sog, ' kn', false, true),
-        formatBoatData('COG', selectedBoat.cog, '°', true),
-        formatBoatData('HDG', selectedBoat.heading, '°', true),
-        formatBoatData('Beam', selectedBoat.beam, ' m'),
-        formatBoatData('Draft', selectedBoat.draft, ' m'),
-        formatBoatData('Call', selectedBoat.callsign),
-        formatBoatData('Dest', selectedBoat.destination)
-    ]
-        .filter(item => item !== null) // Remove any unavailable information
-        .join('\n') : ''; // Format with newlines for display
-
-    // --- Update Parent Info Panel ---
-    useEffect(() => {
-        if (onUpdateInfoPanel) {
-            onUpdateInfoPanel(infoPanelContent);
-        }
-        // Depend only on the generated content and the callback itself
-    }, [infoPanelContent, onUpdateInfoPanel]);
-
 
     // --- Component Return ---
     return (

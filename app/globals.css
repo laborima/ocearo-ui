@@ -76,6 +76,13 @@
     @apply transition-colors duration-300;
   }
 
+  /* Cards laid over the 3D scene: opaque, the scene must not show through
+     (the plain card colour is almost transparent in the dark themes) */
+  .hud-stack .tesla-card {
+    background-color: color-mix(in srgb, var(--background) 94%, transparent);
+    backdrop-filter: blur(8px);
+  }
+
   .tesla-card .tesla-card {
     background-color: var(--hud-bg-elevated);
     border-color: transparent;

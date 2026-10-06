@@ -27,7 +27,7 @@ import useSailTrim from '../hooks/useSailTrim';
 import { updateSailTrim } from './sail/SailTrimUtils';
 import SailTrimSliders from './sail/SailTrimSliders';
 
-const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
+const ThreeDBoatView = ({ onUpdateInfoPanel, selection = null }) => {
     const { states } = useOcearoContext(); // Application state from context
     const { scene, id: themeId } = useTheme();
     const isCompassLayerVisible = true; // Compass visibility
@@ -137,7 +137,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel }) => {
                 <MobMarker3D />
 
                 {/* Live AIS makes no sense around a replayed voyage */}
-                {states.ais && !replaying && <AISView onUpdateInfoPanel={onUpdateInfoPanel} />}
+                {states.ais && !replaying && <AISView onUpdateInfoPanel={onUpdateInfoPanel} selectedMmsi={selection?.kind === 'ais' ? selection.mmsi : null} />}
 
                 {/* Compass */}
                 <ThreeDCompassView visible={isCompassLayerVisible} />
