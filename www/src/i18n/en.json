@@ -93,13 +93,21 @@
       {
         "b": "The seabed in 3D.",
         "text": "SHOM 5–20 m surveys on the French coast, soundings at the current tide, shallow water against your draft hatched in orange."
+      },
+      {
+        "b": "Buoys, beacons and the night sky.",
+        "text": "OpenSeaMap and AIS marks in 3D with their lights flashing, and the stars, planets and Moon where they really are."
       }
     ],
     "video_alt": "Bathymetry view: the seabed as a survey grid under the boat",
     "alt_chart": "Live chart with buoyage and AIS targets in 3D",
     "alt_bathy": "SHOM bathymetry as a survey grid with isobaths and soundings",
     "tag_chart": "Chart and buoyage",
-    "tag_bathy": "SHOM bathymetry"
+    "tag_bathy": "SHOM bathymetry",
+    "alt_night": "Night sky: the Moon, planets and named stars over lit buoys",
+    "alt_marks": "Cardinal buoys in 3D at dusk, light flashing",
+    "tag_night": "Night sky",
+    "tag_marks": "Buoys and beacons"
   },
   "colreg": {
     "eyebrow": "Traffic and the rules of the road",

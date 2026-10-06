@@ -93,13 +93,21 @@
       {
         "b": "Les fonds en 3D.",
         "text": "Relevés SHOM 5–20 m sur la côte française, sondes à la marée du moment, petits fonds hachurés en orange selon votre tirant d’eau."
+      },
+      {
+        "b": "Bouées, balises et ciel de nuit.",
+        "text": "Les marques OpenSeaMap et AIS en 3D avec leurs feux qui clignotent, et les étoiles, les planètes et la Lune à leur vraie place."
       }
     ],
     "video_alt": "Vue bathymétrie : les fonds en grille de relevé sous le bateau",
     "alt_chart": "Carte en direct avec balisage et cibles AIS en 3D",
     "alt_bathy": "Bathymétrie SHOM en grille de relevé avec isobathes et sondes",
     "tag_chart": "Carte et balisage",
-    "tag_bathy": "Bathymétrie SHOM"
+    "tag_bathy": "Bathymétrie SHOM",
+    "alt_night": "Ciel de nuit : la Lune, les planètes et les étoiles nommées au-dessus des bouées éclairées",
+    "alt_marks": "Bouées cardinales en 3D au crépuscule, feu allumé",
+    "tag_night": "Ciel de nuit",
+    "tag_marks": "Bouées et balises"
   },
   "colreg": {
     "eyebrow": "Trafic et règles de barre",

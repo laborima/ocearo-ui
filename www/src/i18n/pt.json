@@ -93,13 +93,21 @@
       {
         "b": "O fundo em 3D.",
         "text": "Levantamentos do SHOM de 5–20 m na costa francesa, profundidades com a maré do momento, águas rasas para o seu calado hachuradas em laranja."
+      },
+      {
+        "b": "Boias, balizas e o céu noturno.",
+        "text": "As marcas do OpenSeaMap e do AIS em 3D com as luzes a piscar, e as estrelas, os planetas e a Lua onde realmente estão."
       }
     ],
     "video_alt": "Visão de batimetria: o fundo como grade de levantamento sob o barco",
     "alt_chart": "Carta náutica ao vivo com balizamento e alvos AIS em 3D",
     "alt_bathy": "Batimetria do SHOM em grade de levantamento com isóbatas e profundidades",
     "tag_chart": "Carta e balizamento",
-    "tag_bathy": "Batimetria SHOM"
+    "tag_bathy": "Batimetria SHOM",
+    "alt_night": "Céu noturno: a Lua, os planetas e as estrelas nomeadas sobre boias iluminadas",
+    "alt_marks": "Boias cardinais em 3D ao entardecer, com a luz acesa",
+    "tag_night": "Céu noturno",
+    "tag_marks": "Boias e balizas"
   },
   "colreg": {
     "eyebrow": "Tráfego e regras do RIPEAM",

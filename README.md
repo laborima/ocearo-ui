@@ -44,7 +44,7 @@
 ## Highlights
 
 - **A boat you can trim from the screen.** Main, headsails and asymmetric spinnaker drawn from the wind (camber, twist, reefs, sail changes), with draft stripes, telltales and the traveller and jib cars where they should be.
-- **The sea around you, five ways.** A realistic sea built from the true wind, the live chart with buoyage, the seabed in 3D, the wind forecast, or a clean FSD-style ground for racing.
+- **The sea around you, five ways.** A realistic sea built from the true wind (or measured by a motion sensor), the live chart with buoyage, the seabed in 3D, the wind forecast, or a clean FSD-style ground for racing — with the buoys and beacons in 3D and the real night sky.
 - **Traffic you can read at a glance.** AIS targets drawn as real ship types and sizes, moving smoothly between reports, coloured by who must give way under COLREG — with the manoeuvre to make.
 - **Tactics.** Laylines to the waypoint, isochrones from your polars (where you will be in 5, 10 and 15 minutes), VMG advice and a polar-speed ghost boat.
 - **Safety first.** Man-overboard marker with drift prediction, anchor watch with the real swing track, shallow-water warnings against your draft.
@@ -63,8 +63,10 @@ The heart of Ocearo is a live 3D scene centred on your boat. A button cycles bet
 | **Chart.** OpenStreetMap with OpenSeaMap buoyage and lights, true to scale with your boat and the AIS targets. Uses a Signal K chart provider (MBTiles) when one is installed. | **Bathymetry.** The seabed as a survey grid: relief exaggerated, isobaths, soundings at the current tide, a sounder line from the keel, and water too shallow for your draft hatched in orange. 5–20 m SHOM surveys on the French coast, global relief elsewhere. |
 | ![Wind forecast layer](docs/screenshots/weather.jpg) | ![Isochrones and laylines](docs/screenshots/polars.jpg) |
 | **Weather.** The 48-hour wind forecast around the boat (Open-Meteo) in Windy colours, with a time slider. | **Polars and laylines.** Where the polars put you in 5, 10 and 15 minutes on every heading, the laylines to the waypoint and the VMG to steer. |
+| ![Night sky: the Moon, Mars, Jupiter, Procyon and Sirius over the entrance to La Rochelle, buoy lights flashing](docs/screenshots/night-sky.jpg) | ![Cardinal buoys at dusk, light flashing](docs/screenshots/seamarks.jpg) |
+| **Night sky.** The 57 navigational stars and Polaris, Venus, Mars, Jupiter, Saturn and the Moon with its phase, where they really are from your position and the GPS time (within a few arc minutes); the brightest are named. 2 November 2026, 02:00, off La Rochelle. | **Buoys and beacons.** Cardinal, lateral, isolated danger, safe water and special marks in 3D from OpenSeaMap, with their colours, topmark and light flashing its real rhythm at night, and the AIS aids to navigation received (virtual ones as a ghost), also on the radar. Downloaded once, kept offline; can be turned off. |
 
-The **sea** itself is generated from the true wind: wave height, length and direction of a coastal wind sea plus a swell, whitecaps from about 7 knots, the sky's reflection and the sun where it really is, and your own wake following the track you actually sailed. The sails are drawn from the apparent wind with their trim: draft stripes with the depth and position of maximum camber, telltales on the luff and leech, and the sheet cars on their tracks.
+The **sea** itself is generated from the true wind: wave height, length and direction of a coastal wind sea plus a swell, whitecaps from about 7 knots, the sky's reflection and the sun where it really is, and your own wake following the track you actually sailed. With a motion sensor in Signal K (for instance [ocean-imu](https://github.com/bareboat-necessities/ocean-imu)), the waves take the measured height and period, and the boat rolls, pitches and heaves with it. The sails are drawn from the apparent wind with their trim: draft stripes with the depth and position of maximum camber, telltales on the luff and leech, and the sheet cars on their tracks.
 
 Boats: a 10.8 m racer (default), a 14 m catamaran and simpler models, chosen in the settings.
 
