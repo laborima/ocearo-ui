@@ -29,6 +29,9 @@ const sizeAt = (d) => EXAGGERATION * Math.max(1, d / TRUE_SIZE_RANGE) ** 0.75;
 // Names of the closest marks only
 const LABEL_RANGE = 900;
 const MAX_LABELS = 8;
+// The closest marks are picked again, and labels resized, every 50 m sailed:
+// not on every fix (re-laying out text each second is expensive)
+const RESELECT_M = 50;
 const PATHS = ['navigation.position', 'navigation.speedOverGround', 'navigation.courseOverGroundTrue'];
 const LIGHT_PAINT = { white: '#fff6dc', red: '#ff3b30', green: '#30ff7a', yellow: '#ffd23a', blue: '#4aa3ff' };
 // A light is seen as a glow, not as its lantern: a soft disc a few metres wide
@@ -66,20 +69,25 @@ const useSeamarkCells = (lat, lon, enabled) => {
     ), [enabled, latKm, lonKm]);
 
     const [retry, setRetry] = useState(0);
+    // A download is kept even if the boat has moved on meanwhile (its cells
+    // stay useful); only unmounting drops it
+    const mounted = useRef(true);
+    const timer = useRef(null);
+    useEffect(() => () => { mounted.current = false; clearTimeout(timer.current); }, []);
     useEffect(() => {
-        let cancelled = false;
-        let timer = null;
         const missing = needed.filter((c) => !(c.key in cells) && !loading.current.has(c.key));
-        if (!missing.length) return undefined;
+        if (!missing.length) return;
         missing.forEach((c) => loading.current.add(c.key));
         loadCells(missing).then((found) => {
             missing.forEach((c) => loading.current.delete(c.key));
-            if (cancelled) return;
+            if (!mounted.current) return;
             if (Object.keys(found).length) setCells((prev) => ({ ...prev, ...found }));
             // Some cells could not be had (servers busy, offline): try again later
-            if (missing.some((c) => !(c.key in found))) timer = setTimeout(() => setRetry((r) => r + 1), RETRY_MS);
+            if (missing.some((c) => !(c.key in found))) {
+                clearTimeout(timer.current);
+                timer.current = setTimeout(() => setRetry((r) => r + 1), RETRY_MS);
+            }
         });
-        return () => { cancelled = true; clearTimeout(timer); };
     }, [needed, cells, retry]);
 
     return useMemo(() => needed.flatMap((c) => cells[c.key] || []), [needed, cells]);
@@ -110,8 +118,13 @@ const Seamarks3D = ({ waterLevel = -0.3 }) => {
     const cog = v['navigation.courseOverGroundTrue'];
 
     const osm = useSeamarkCells(position?.latitude, position?.longitude, enabled && overpass && hasFix);
-    const { atons } = useAIS();
-    const all = useMemo(() => mergeAtons(osm, atons), [osm, atons]);
+    // The AIS store republishes its aids to navigation whenever our own
+    // position changes (their distances): react to the marks themselves only
+    const { atons } = useAIS({ passive: !enabled });
+    const atonKey = atons.map((a) => `${a.id}|${a.latitude}|${a.longitude}|${a.atonType}|${a.virtual}|${a.offPosition}|${a.name}`).join(',');
+    const atonsRef = useRef(atons);
+    atonsRef.current = atons; // eslint-disable-line react-hooks/refs
+    const all = useMemo(() => mergeAtons(osm, atonsRef.current), [osm, atonKey]); // eslint-disable-line react-hooks/exhaustive-deps, react-hooks/refs
 
     // East/north metres from the session origin, like the own track offset
     const placed = useMemo(() => {
@@ -124,13 +137,15 @@ const Seamarks3D = ({ waterLevel = -0.3 }) => {
         });
     }, [all, convertLatLonToXY]);
 
-    // The closest marks, refreshed with each fix
+    // The closest marks, picked again every RESELECT_M sailed
+    const anchorX = Math.round(offset.x / RESELECT_M) * RESELECT_M;
+    const anchorY = Math.round(offset.y / RESELECT_M) * RESELECT_M;
     const shown = useMemo(() => placed
-        .map((m) => ({ m, d: Math.hypot(m.x - offset.x, m.y - offset.y) }))
+        .map((m) => ({ m, d: Math.hypot(m.x - anchorX, m.y - anchorY) }))
         .filter(({ d }) => d <= RADIUS_M)
         .sort((a, b) => a.d - b.d)
         .slice(0, MAX_MARKS)
-        .map(({ m, d }) => ({ ...m, d })), [placed, offset]);
+        .map(({ m, d }) => ({ ...m, d })), [placed, anchorX, anchorY]);
 
     const material = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.05 }), []);
     // Virtual AIS marks: nothing on the water, only the AIS message
