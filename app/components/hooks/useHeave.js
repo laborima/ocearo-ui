@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useSignalKPaths } from './useSignalK';
+import { useSignalKRef } from './useSignalK';
 
 // Signal K spec path, then the one the Bareboat Necessities image maps the
 // ocean-imu XDR sentences to (xdr-parser-plugin, DRT1)
@@ -14,14 +14,15 @@ const MAX_HEAVE = 6;
  * Vertical displacement of the vessel by the waves, metres, positive up,
  * eased frame by frame. Returns a ref read inside useFrame (0 without a
  * sensor). Every caller eases the same signal the same way, so the boat and
- * the water under it move together.
+ * the water under it move together. Read without re-rendering the caller.
  */
 const useHeave = () => {
-    const v = useSignalKPaths(PATHS);
-    const raw = v['environment.heave'] ?? v['navigation.heave.heave'];
-    const target = Number.isFinite(raw) ? Math.max(-MAX_HEAVE, Math.min(MAX_HEAVE, raw)) : 0;
+    const spec = useSignalKRef(PATHS[0]);
+    const bbn = useSignalKRef(PATHS[1]);
     const heave = useRef(0);
     useFrame((_, delta) => {
+        const raw = spec.current ?? bbn.current;
+        const target = Number.isFinite(raw) ? Math.max(-MAX_HEAVE, Math.min(MAX_HEAVE, raw)) : 0;
         heave.current += (target - heave.current) * (1 - Math.exp(-Math.min(delta, 0.1) / TAU));
     });
     return heave;

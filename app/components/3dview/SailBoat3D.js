@@ -1,6 +1,6 @@
 import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { toDegrees, toKnots } from '../context/OcearoContext';
-import { useSignalKPath, useSignalKPaths } from '../hooks/useSignalK';
+import { useSignalKPath, useSignalKPaths, useSignalKRef } from '../hooks/useSignalK';
 import configService from '../settings/ConfigService';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
@@ -162,6 +162,8 @@ const GltfBoatMeshes = ({ modelPath, selectedBoat, materialProperties, rudderRef
     return <BoatMeshes />;
 };
 
+const NO_ATTITUDE = { roll: 0, pitch: 0, yaw: 0 };
+
 const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, heave: showHeave = false, ...props }) => {
     const boatRef = useRef();
     const rudderRef = useRef();
@@ -193,21 +195,16 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
     const skValues = useSignalKPaths(infoPaths);
 
     // Use specialized hooks for better performance in useFrame
-    const skAttitude = useSignalKPath('navigation.attitude');
+    // Attitude read without re-rendering: a motion sensor sends it at 10 Hz
+    const skAttitude = useSignalKRef('navigation.attitude');
     const skRudderAngle = useSignalKPath('steering.rudderAngle', 0);
-    const attitudeRef = useRef({ roll: 0, pitch: 0, yaw: 0 });
+
     // Attitude shown, eased towards the last reading
     const shownAttitude = useRef({ roll: 0, pitch: 0 });
     const rudderAngleRef = useRef(0);
     const heave = useHeave();
     const baseY = props.position?.[1] ?? 0;
     const scaleY = Array.isArray(props.scale) ? props.scale[1] : (props.scale ?? 1);
-
-    useEffect(() => {
-        if (skAttitude) {
-            attitudeRef.current = skAttitude;
-        }
-    }, [skAttitude]);
 
     useEffect(() => {
         rudderAngleRef.current = skRudderAngle;
@@ -256,7 +253,7 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
         if (!boatRef.current) return;
 
         // Get attitude values from refs for maximum performance
-        const attitude = attitudeRef.current;
+        const attitude = skAttitude.current || NO_ATTITUDE;
         const rudderAngle = (rudderAngleRef.current * 180) / Math.PI;
 
         // Ease towards the reading (time constant ~0.15 s): smooth with a

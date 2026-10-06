@@ -91,6 +91,10 @@ const NightSky = () => {
     const { scene, id: themeId } = useTheme();
     const { heading } = useOwnTrack();
     const position = useSignalKPaths(['navigation.position'])['navigation.position'];
+    // A kilometre changes nothing visible in the sky: recompute on the minute,
+    // not on every fix
+    const lat = Number.isFinite(position?.latitude) ? Math.round(position.latitude * 100) / 100 : null;
+    const lon = Number.isFinite(position?.longitude) ? Math.round(position.longitude * 100) / 100 : null;
     const [sky, setSky] = useState(null);
 
     // The sky turns 0.25° a minute and the Moon moves its own width in an
@@ -98,14 +102,14 @@ const NightSky = () => {
     useEffect(() => {
         const update = () => {
             const now = vesselNow();
-            const stars = starPositions(position?.latitude, position?.longitude, now);
-            const bodies = skyBodies(position?.latitude, position?.longitude, now);
+            const stars = starPositions(lat, lon, now);
+            const bodies = skyBodies(lat, lon, now);
             setSky(stars && bodies ? { stars, ...bodies } : null);
         };
         update();
         const id = setInterval(update, 60000);
         return () => clearInterval(id);
-    }, [position?.latitude, position?.longitude]);
+    }, [lat, lon]);
 
     const sunAltitude = sky ? sky.sun.altitude : 90;
     // First stars at sunset, all of them from the middle of civil twilight
