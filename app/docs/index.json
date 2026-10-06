@@ -1,8 +1,13 @@
 [
     {
-        "file": "signalk.pdf",
-        "title": "SignalK Protocol Documentation"
-    } , {
+        "file": "signalk-specification.html",
+        "title": "Signal K Specification 1.8.4"
+    },
+    {
+        "file": "signalk-server.html",
+        "title": "Signal K Server 2.33.0"
+    },
+    {
         "file": "opencpn.pdf",
         "title": "OpenCPN User Manual Version 4.8.6"
     }
