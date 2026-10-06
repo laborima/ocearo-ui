@@ -1,4 +1,6 @@
-## [Unreleased]
+## [2.1.0] - 2026-10-06
+
+The real night sky, buoys and beacons in 3D (OpenSeaMap and AIS), a motion sensor for the sea, an interactive guide, and phones where nothing overlaps. Nothing to change in the settings; the new buoys and beacons can be turned off there.
 
 ### Changed
 
@@ -8,6 +10,10 @@
 
 ### Added
 
+- **The real night sky**: the 57 navigational stars and Polaris, Venus, Mars, Jupiter, Saturn and the Moon with its phase, drawn where they really are from the boat's position and the GPS time (within a few arc minutes of an ephemeris), in the dark and night themes once the sun is down. The brightest stars and the planets are named ([#13](https://github.com/laborima/ocearo-ui/issues/13)).
+- **Buoys and beacons in 3D**: cardinal, lateral, isolated danger, safe water and special marks within 3 NM from OpenSeaMap (through the Overpass API), with their shape, colours and topmark, and their light flashing its real rhythm from dusk to dawn (Fl, Q, VQ, Iso, Oc, Q(6)+LFl…). Downloaded once and kept for offline use, also by the offline download; two new settings turn the layer or the download off.
+- **AIS aids to navigation**: the buoys and beacons that transmit on AIS are drawn from their AIS type, even without the OpenSeaMap download (virtual ones as a translucent ghost labelled V-AIS), merged with the OpenSeaMap mark at the same place, and shown on the AIS radar as diamonds.
+- **Motion sensor** (for instance [ocean-imu](https://github.com/bareboat-necessities/ocean-imu) on the Bareboat Necessities image): the boat heaves with `environment.heave` or `navigation.heave.heave`, its roll and pitch are smoothed, and the sea takes its height and wavelength from the measured heave range and frequency ([#13](https://github.com/laborima/ocearo-ui/issues/13)).
 - **An interactive Ocearo guide** opens the Help view: first steps, then each screen (3D view, route and performance, traffic and rules of the road, anchor watch, harbour, bathymetry, weather, man overboard, dashboard, logbook) as a screenshot with numbered spots; tap one to read what it shows. The 3D legend closes the guide. English and French (other languages show the English text for now).
 - **Up-to-date Signal K documentation**: the Signal K Specification 1.8.4 and the Signal K Server 2.33 user guide replace the 2020 specification PDF. They are HTML pages now, readable on phones (which do not show a PDF inside a page) and following the light or dark setting. `node scripts/build-signalk-docs.mjs` rebuilds them from the latest releases. Links between chapters stay inside the page. The 25 MB OpenCPN 4.8.6 PDF is replaced by a link to the online OpenCPN user manual, always current.
 
@@ -22,6 +28,9 @@
 - The bottom bar showed "N/A" for temperature and pressure when the server has neither; the chip is hidden instead.
 - The 3D legend's close button was announced to screen readers as "Orange vessel: close, no risk of collision".
 - **Signal K address typed without `https://`** (e.g. `demo.signalk.org`) failed silently from the online demo, which then showed only its sample values: no depth, no AIS. The address now gets a scheme, `ws://` / `wss://` are accepted, and `http://` is upgraded on a page served over https, since the browser blocks insecure connections there.
+- An AIS aid to navigation filed as a vessel by a gateway could be drawn as a boat.
+- A 10 Hz motion sensor re-rendered the whole 3D boat ten times a second: the attitude is now read without re-rendering (less script time per second than 2.0.2 with all the new layers on).
+- **The tide curve stayed flat** until mid-morning when the next high water was late in the evening.
 
 ## [2.0.2] - 2026-10-05
 
