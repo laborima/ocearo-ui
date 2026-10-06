@@ -17,6 +17,9 @@ const originFor = (here) => {
     return sessionOrigin;
 };
 
+/** The session's first fix ({lat, lon}), null before it: origin of `offset` */
+export const getSessionOrigin = () => sessionOrigin;
+
 /**
  * Own heading (rad) used to turn north-up layers into the boat-up scene, the
  * same fallback chain as the AIS layer, plus our position as East/North metres

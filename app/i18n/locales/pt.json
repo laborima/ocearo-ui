@@ -184,7 +184,13 @@
     "renderQualityHint": "Raspberry Pi: 30 fps, sem antialiasing, água plana. Aplicado após recarregar.",
     "hudStyle": "HUD 3D",
     "hudStyle_minimal": "Mínimo",
-    "hudStyle_classic": "Clássico"
+    "hudStyle_classic": "Clássico",
+    "seamarks3D": "Boias e balizas em 3D",
+    "seamarks3DHint": "Marcas do OpenSeaMap e ajudas à navegação AIS recebidas. Não é uma carta oficial.",
+    "seamarksOverpass": "Descarregar do OpenSeaMap",
+    "seamarksOverpassHint": "Boias e balizas via Overpass, guardadas para uso offline. Desligado: só marcas AIS.",
+    "enabled": "Ligado",
+    "disabled": "Desligado"
   },
   "dashboard": {
     "environment": "Ambiente",

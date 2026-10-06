@@ -184,7 +184,13 @@
     "renderQualityHint": "Raspberry Pi: 30 fps, ei reunanpehmennystä, tasainen vesi. Voimassa uudelleenlatauksen jälkeen.",
     "hudStyle": "3D-HUD",
     "hudStyle_minimal": "Minimaalinen",
-    "hudStyle_classic": "Klassinen"
+    "hudStyle_classic": "Klassinen",
+    "seamarks3D": "Poijut ja viitat 3D:nä",
+    "seamarks3DHint": "OpenSeaMap-merkit ja vastaanotetut AIS-turvalaitteet. Ei virallinen merikartta.",
+    "seamarksOverpass": "Lataa OpenSeaMapista",
+    "seamarksOverpassHint": "Poijut ja viitat Overpassin kautta, tallennetaan offline-käyttöön. Pois: vain AIS-merkit.",
+    "enabled": "Päällä",
+    "disabled": "Pois"
   },
   "dashboard": {
     "environment": "Ympäristö",

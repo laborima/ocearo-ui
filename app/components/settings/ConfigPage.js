@@ -606,6 +606,44 @@ const ConfigPage = ({ onSave }) => {
                                         <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oBlue"></div>
                                     </label>
                                 </div>
+
+                                <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
+                                    <label className="flex items-center justify-between cursor-pointer">
+                                        <div className="space-y-1">
+                                            <span className="text-label font-bold uppercase tracking-widest text-hud-secondary">{t('settings.seamarks3D')}</span>
+                                            <p className="text-caption text-hud-muted font-medium uppercase tracking-wider">
+                                                {config.showSeamarks3D !== false ? t('settings.visible') : t('settings.hidden')}
+                                            </p>
+                                            <p className="text-caption text-hud-muted font-medium">{t('settings.seamarks3DHint')}</p>
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={config.showSeamarks3D !== false}
+                                            onChange={(e) => updateConfig({ showSeamarks3D: e.target.checked })}
+                                        />
+                                        <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oBlue"></div>
+                                    </label>
+                                </div>
+
+                                <div className="p-4 rounded-xl bg-hud-bg tesla-hover border border-hud">
+                                    <label className={`flex items-center justify-between cursor-pointer ${config.showSeamarks3D === false ? 'opacity-50' : ''}`}>
+                                        <div className="space-y-1">
+                                            <span className="text-label font-bold uppercase tracking-widest text-hud-secondary">{t('settings.seamarksOverpass')}</span>
+                                            <p className="text-caption text-hud-muted font-medium uppercase tracking-wider">
+                                                {config.seamarksOverpass !== false ? t('settings.enabled') : t('settings.disabled')}
+                                            </p>
+                                            <p className="text-caption text-hud-muted font-medium">{t('settings.seamarksOverpassHint')}</p>
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            className="sr-only peer"
+                                            checked={config.seamarksOverpass !== false}
+                                            onChange={(e) => updateConfig({ seamarksOverpass: e.target.checked })}
+                                        />
+                                        <div className="relative w-11 h-6 bg-hud-bg-elevated peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-hud-main after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-hud-main after:border-hud-main after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-oBlue"></div>
+                                    </label>
+                                </div>
                             </div>
 
                             <div className="space-y-4 pt-2">

@@ -9,16 +9,25 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTowerBroadcast, faShip, faLocationDot } from '@fortawesome/free-solid-svg-icons';
 import BaseWidget from './BaseWidget';
 import { useTranslation } from 'react-i18next';
+import { atonKind } from '../../3dview/seamarks/aisAton';
 
 const RADAR_RANGES = [1, 2, 5, 10, 20];
+
+// Colour of an aid to navigation on the scope, from its AIS type (IALA A)
+const ATON_COLOURS = { cardinal: '#f2c200', isolated_danger: '#e0483a', safe_water: '#f0f0f0', special_purpose: '#f2c200', station: '#8a9097' };
+const atonColour = (type) => {
+  const { kind, category = '' } = atonKind(type);
+  if (kind === 'lateral') return category.endsWith('starboard') ? '#1fae5b' : '#e0483a';
+  return ATON_COLOURS[kind] || ATON_COLOURS.station;
+};
 
 const AISRadarWidget = React.memo(() => {
   const { t } = useTranslation();
   // Every positioned target (not only the ones close enough for the 3D view),
   // so the 10 and 20 NM ranges actually show something
-  const { targets } = useAIS();
+  const { targets, atons } = useAIS();
   const { statuses } = useColregs({ always: true });
-  const { scene } = useTheme();
+  const { scene, id: themeId } = useTheme();
   const [radarRange, setRadarRange] = useState(5); // nautical miles
   const debugMode = configService.get('debugMode');
 
@@ -76,6 +85,26 @@ const AISRadarWidget = React.memo(() => {
       .slice(0, 10);
   }, [targets, radarRange, myPosition, myHeading]);
 
+  // Aids to navigation (AIS message 21) within range, head-up like the targets
+  const atonData = useMemo(() => {
+    if (!atons.length || !myPosition) return [];
+    return atons
+      .filter(a => a.distanceMeters !== null && a.distanceMeters <= radarRange * 1852)
+      .slice(0, 40)
+      .map(a => {
+        const trueBearing = (Math.atan2(a.east, a.north) * 180 / Math.PI + 360) % 360;
+        return {
+          id: a.id,
+          name: a.name || `MMSI ${a.mmsi || ''}`,
+          distance: a.distanceMeters / 1852,
+          bearing: (trueBearing - myHeading * 180 / Math.PI + 360) % 360,
+          // Night vision: one red, the shape tells the rest
+          colour: themeId === 'night' ? scene.compass : atonColour(a.atonType),
+          virtual: a.virtual,
+        };
+      });
+  }, [atons, radarRange, myPosition, myHeading, themeId, scene.compass]);
+
   // Same colours as the 3D view: red we must keep clear, violet it must keep
   // clear of us, orange close without risk of collision, neutral otherwise
   const STATUS_COLOR = { giveWay: scene.vesselDanger, yields: scene.vesselYields, close: scene.vesselClose };
@@ -89,7 +118,7 @@ const AISRadarWidget = React.memo(() => {
   };
 
   // Check if we should show data
-  const hasData = debugMode || aisData.length > 0;
+  const hasData = debugMode || aisData.length > 0 || atonData.length > 0;
 
   return (
     <BaseWidget
@@ -155,6 +184,26 @@ const AISRadarWidget = React.memo(() => {
             />
           </g>
           
+          {/* Aids to navigation: a diamond, hollow when virtual */}
+          {atonData.map(a => {
+            const r = (a.distance / radarRange) * 80;
+            const x = 100 + r * Math.cos((a.bearing - 90) * Math.PI / 180);
+            const y = 100 + r * Math.sin((a.bearing - 90) * Math.PI / 180);
+            return (
+              <polygon
+                key={a.id}
+                points={`${x},${y - 2.6} ${x + 2},${y} ${x},${y + 2.6} ${x - 2},${y}`}
+                fill={a.virtual ? 'none' : a.colour}
+                stroke={a.colour}
+                strokeWidth={a.virtual ? 0.7 : 0.4}
+                strokeDasharray={a.virtual ? '1 0.6' : undefined}
+                opacity="0.9"
+              >
+                <title>{a.virtual ? `${a.name} (V-AIS)` : a.name}</title>
+              </polygon>
+            );
+          })}
+
           {/* AIS Targets */}
           {(() => {
             // Place labels so close targets don't print over each other

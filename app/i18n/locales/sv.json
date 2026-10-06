@@ -184,7 +184,13 @@
     "renderQualityHint": "Raspberry Pi: 30 fps, ingen kantutjämning, platt vatten. Gäller efter omladdning.",
     "hudStyle": "3D-HUD",
     "hudStyle_minimal": "Minimal",
-    "hudStyle_classic": "Klassisk"
+    "hudStyle_classic": "Klassisk",
+    "seamarks3D": "Bojar och prickar i 3D",
+    "seamarks3DHint": "OpenSeaMap-märken och mottagna AIS-navigationshjälpmedel. Inte ett officiellt sjökort.",
+    "seamarksOverpass": "Hämta från OpenSeaMap",
+    "seamarksOverpassHint": "Bojar och prickar via Overpass, sparade för offlineanvändning. Av: endast AIS-märken.",
+    "enabled": "På",
+    "disabled": "Av"
   },
   "dashboard": {
     "environment": "Miljö",

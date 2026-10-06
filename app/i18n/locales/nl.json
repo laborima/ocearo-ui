@@ -184,7 +184,13 @@
     "renderQualityHint": "Raspberry Pi: 30 fps, geen anti-aliasing, vlak water. Actief na herladen.",
     "hudStyle": "3D-HUD",
     "hudStyle_minimal": "Minimaal",
-    "hudStyle_classic": "Klassiek"
+    "hudStyle_classic": "Klassiek",
+    "seamarks3D": "Boeien en bakens in 3D",
+    "seamarks3DHint": "OpenSeaMap-markeringen en ontvangen AIS-navigatiehulpmiddelen. Geen officiële zeekaart.",
+    "seamarksOverpass": "Downloaden van OpenSeaMap",
+    "seamarksOverpassHint": "Boeien en bakens via Overpass, bewaard voor offline gebruik. Uit: alleen AIS-markeringen.",
+    "enabled": "Aan",
+    "disabled": "Uit"
   },
   "dashboard": {
     "environment": "Omgeving",

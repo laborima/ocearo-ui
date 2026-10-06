@@ -39,7 +39,11 @@ class ConfigService {
       debugWindDirection: 0, // degrees
       debugShowAxes: false,
       showSailTrimSliders: true,
-      showRigging: true
+      showRigging: true,
+      // Buoys and beacons in the 3D view (OpenSeaMap and AIS aids to navigation)
+      showSeamarks3D: true,
+      // OpenSeaMap marks downloaded through Overpass (AIS marks need no download)
+      seamarksOverpass: true
     };
 
     this.configKey = 'ocearoConfig'; // Key used to store the config
