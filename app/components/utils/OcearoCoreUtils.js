@@ -14,7 +14,7 @@ const getOcearoCoreConfig = () => {
   // Determine the base URL - use configured URL if set, otherwise compute from window location
   let baseUrl;
   if (config.signalKUrlSet && config.signalkUrl) {
-    baseUrl = config.signalkUrl;
+    baseUrl = configService.normalizeSignalKUrl(config.signalkUrl);
   } else if (typeof configService.getComputedSignalKUrl === 'function') {
     baseUrl = configService.getComputedSignalKUrl();
   } else {

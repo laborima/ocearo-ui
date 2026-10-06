@@ -139,8 +139,25 @@ class ConfigService {
    * app under /ocearo-ui/, so a tablet on board connects with no set-up).
    */
   getSignalKUrl() {
-    if (this.config.signalKUrlSet && this.config.signalkUrl) return this.config.signalkUrl;
+    if (this.config.signalKUrlSet && this.config.signalkUrl) return this.normalizeSignalKUrl(this.config.signalkUrl);
     return this.getComputedSignalKUrl();
+  }
+
+  /**
+   * Turns what was typed in the settings into a usable server address:
+   * "demo.signalk.org" gets a scheme, ws(s):// becomes http(s)://, and on a
+   * page served over https (the online demo) http:// is upgraded, since the
+   * browser blocks plain http and ws connections from a secure page.
+   */
+  normalizeSignalKUrl(url) {
+    let u = String(url).trim().replace(/\/+$/, '');
+    if (!u) return u;
+    u = u.replace(/^wss:\/\//i, 'https://').replace(/^ws:\/\//i, 'http://');
+    const secure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    if (!/^https?:\/\//i.test(u)) u = `${secure ? 'https' : 'http'}://${u}`;
+    u = u.replace(/^https?:/i, (scheme) => scheme.toLowerCase());
+    if (secure && u.startsWith('http://')) u = 'https://' + u.slice(7).replace(/:80(?=\/|$)/, '');
+    return u;
   }
 
   /**

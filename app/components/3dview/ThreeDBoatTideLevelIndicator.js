@@ -1,6 +1,5 @@
-import { useTide } from '../context/TideContext';
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSignalKPaths } from '../hooks/useSignalK';
+import useTideCurve from '../hooks/useTideCurve';
 import { useTranslation } from 'react-i18next';
 import { vesselNow } from '../utils/VesselClock';
 
@@ -25,17 +24,9 @@ const ThreeDBoatTideLevelIndicator = () => {
   const { t } = useTranslation();
   const [maxHeight, setMaxHeight] = useState(240); // Default height (equivalent to h-60)
 
-  const tidePaths = useMemo(() => [
-    'environment.tide.heightNow',
-    'environment.tide.heightHigh',
-    'environment.tide.heightLow',
-    'environment.tide.timeLow',
-    'environment.tide.timeHigh',
-    'environment.tide.coeffNow'
-  ], []);
-
-  const skValues = useSignalKPaths(tidePaths);
-  const { tideData: tideContextData } = useTide();
+  // Same source as the full-screen tide panel: Signal K, the tide REST
+  // fallback, or the demo curve when nothing is measured
+  const curve = useTideCurve();
 
   /**
    * Parse a tide time value (ISO timestamp or HH:MM) to a Date object
@@ -105,28 +96,26 @@ const ThreeDBoatTideLevelIndicator = () => {
   }, []);
 
   const tideData = useMemo(() => {
-    // Use SignalK WebSocket data if available, fallback to TideContext (which uses REST API)
-    const level = skValues['environment.tide.heightNow'] ?? tideContextData?.level ?? null;
-    const high = skValues['environment.tide.heightHigh'] ?? tideContextData?.high ?? null;
-    const low = skValues['environment.tide.heightLow'] ?? tideContextData?.low ?? null;
-    const timeLow = skValues['environment.tide.timeLow'] ?? tideContextData?.timeLow ?? null;
-    const timeHigh = skValues['environment.tide.timeHigh'] ?? tideContextData?.timeHigh ?? null;
-    const coefficient = skValues['environment.tide.coeffNow'] ?? tideContextData?.coefficient ?? null;
-
-    const isDataComplete = [level, high, low, timeLow, timeHigh].every(value =>
-      value !== null && value !== undefined
-    );
-
-    if (isDataComplete) {
-      return {
-        level, high, low, timeLow, timeHigh, coefficient,
-        isRising: computeIsRising(timeLow, timeHigh)
-      };
+    const { hasData, chartData, coefficient, timeLow, timeHigh } = curve;
+    if (!hasData || chartData.length < 2) {
+      return { level: null, high: null, low: null, timeLow: null, timeHigh: null, coefficient: null, isRising: null };
     }
+    // Without a measured height, read the curve at "now"
+    const start = chartData[0].ms;
+    const end = chartData[chartData.length - 1].ms;
+    const pos = Math.min(1, Math.max(0, (vesselNow().getTime() - start) / (end - start))) * (chartData.length - 1);
+    const i = Math.min(chartData.length - 2, Math.floor(pos));
+    const estimated = chartData[i].height + (chartData[i + 1].height - chartData[i].height) * (pos - i);
+    const heights = chartData.map(p => p.height);
     return {
-      level: null, high: null, low: null, timeLow: null, timeHigh: null, coefficient: null, isRising: null
+      level: Number.isFinite(curve.level) ? curve.level : estimated,
+      high: curve.high ?? Math.max(...heights),
+      low: curve.low ?? Math.min(...heights),
+      timeLow, timeHigh, coefficient,
+      // With no tide times, the slope of the curve now
+      isRising: timeLow && timeHigh ? computeIsRising(timeLow, timeHigh) : chartData[i + 1].height > chartData[i].height
     };
-  }, [skValues, tideContextData, computeIsRising]);
+  }, [curve, computeIsRising]);
 
   const {
     level,

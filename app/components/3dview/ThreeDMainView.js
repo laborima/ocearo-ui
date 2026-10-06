@@ -30,6 +30,7 @@ const ReplayBar = dynamic(() => import('../replay/ReplayBar'));
 const MeteoBar = dynamic(() => import('./meteo/MeteoBar'));
 const GiveWayBanner = dynamic(() => import('./hud/GiveWayBanner'));
 import { useReplay } from '../replay/ReplayBar';
+import useMediaQuery from '../hooks/useMediaQuery';
 // Full-screen HUD panels (translucent, Tesla-style)
 const DepthPanel = dynamic(() => import('./hud/DepthPanel'));
 const TidePanel = dynamic(() => import('./hud/TidePanel'));
@@ -86,8 +87,12 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
     // 'minimal' (FSD-like: speed + four values per mode) or 'classic' gauges
     const [hudStyle] = useState(() => configService.get('hudStyle') || 'minimal');
     const classic = hudStyle === 'classic';
-    // Full screen has room for the detailed panels; split view stays minimal
-    const rich = fullscreen && !classic;
+    // Full screen on a tablet or a computer has room for the detailed panels;
+    // split view and phones (either way round) keep the compact gauges
+    const roomy = useMediaQuery('(min-width: 1024px) and (min-height: 600px)');
+    const rich = fullscreen && !classic && roomy;
+    // Phone on its side: the HUD values fill the left edge down to the bar
+    const short = useMediaQuery('(max-height: 500px)');
 
     // Get configuration directly using the configService
     useEffect(() => {
@@ -136,9 +141,8 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                 </div>
             )}
 
-            {/* Phones: depth stacked above the tide, side by side they overlap */}
             {rich && (
-                <div className="absolute left-3 bottom-44 sm:bottom-3 z-20">
+                <div className="absolute left-3 bottom-3 z-20">
                     <DepthPanel />
                 </div>
             )}
@@ -176,19 +180,21 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
 
             {/* Course advice (avoidance / VMG) in the boat view */}
             {!states.anchorWatch && !states.parkingMode && !replaying && (
-                <div className={`absolute left-1/2 -translate-x-1/2 z-20 max-w-[calc(100%-9rem)] ${classic ? 'bottom-24' : 'bottom-3'}`}>
+                <div className={`absolute left-1/2 -translate-x-1/2 z-20 max-w-[calc(100%-12rem)] sm:max-w-[calc(100%-9rem)] ${classic ? 'bottom-24' : 'bottom-3'}`}>
                     <AdvicePanel />
                 </div>
             )}
 
-            {/* Depth and tide gauges whenever the full-screen panels are not shown */}
-            {!rich && (
+            {/* Depth and tide gauges whenever the full-screen panels are not shown;
+                on a short screen both sit on the right, clear of the HUD values */}
+            {!rich && !short && (
                 <div className="absolute left-2 bottom-2 z-20 flex flex-col items-center">
                     <ThreeDBoatSeaLevelIndicator />
                 </div>
             )}
             {!rich && (
-                <div className="absolute right-2 bottom-2 z-20 flex flex-col items-center">
+                <div className="absolute right-2 bottom-2 z-20 flex items-end gap-2">
+                    {short && <ThreeDBoatSeaLevelIndicator />}
                     <ThreeDBoatTideLevelIndicator />
                 </div>
             )}

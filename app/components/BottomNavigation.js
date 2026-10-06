@@ -26,10 +26,10 @@ const DND_APPEARANCE = {
   all: { icon: faVolumeXmark, badgeColor: 'bg-oRed' }
 };
 
-const NavButton = ({ icon, onClick, label, textColor, badgeColor }) => (
+const NavButton = ({ icon, onClick, label, textColor, badgeColor, wideOnly }) => (
   <button
     onClick={onClick}
-    className={`${textColor} flex-shrink-0 flex flex-col items-center justify-center p-1 sm:p-2 rounded-xl tesla-hover transition-all duration-300 group relative`}
+    className={`${textColor} ${wideOnly ? 'hidden lg:flex' : 'flex'} flex-shrink-0 flex-col items-center justify-center p-1 sm:p-2 rounded-xl tesla-hover transition-all duration-300 group relative`}
     aria-label={label}
   >
     <div className="w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg group-hover:bg-hud-elevated transition-colors relative">
@@ -107,16 +107,20 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
       ]
     },
     {
+      // Narrower than a laptop the shortcuts fold into the apps menu, which
+      // lists them too, so the readings beside them never overlap a button
       section: 'center',
       items: [
         {
           icon: faMapMarkedAlt,
           onClick: () => setRightView('navigation'),
+          wideOnly: true,
           label: t('nav.nav')
         },
         {
           icon: faCloudSun,
           onClick: () => setRightView('weather'),
+          wideOnly: true,
           label: t('nav.weather')
         },
         {
@@ -127,11 +131,13 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
         {
           icon: faTachometerAlt,
           onClick: () => setRightView('dashboard'),
+          wideOnly: true,
           label: t('nav.dashboard')
         },
         {
           icon: faHandsHelping,
           onClick: () => setRightView('manual'),
+          wideOnly: true,
           label: t('nav.help')
         }
       ]
@@ -150,6 +156,7 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
         label={item.label}
         textColor={textColor}
         badgeColor={item.badgeColor}
+        wideOnly={item.wideOnly}
       />
     ));
   };
@@ -161,8 +168,7 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
         {renderSection('left')}
         <MobButton />
         <div className="hidden sm:block h-8 w-[1px] bg-hud-muted opacity-20 mx-1 sm:mx-2" />
-        {/* Phones: the buttons first, the readings would push the bar into a scroll */}
-        <div className="hidden sm:flex"><BottomTemperatureWidget /></div>
+        <div className="flex min-w-0"><BottomTemperatureWidget /></div>
       </div>
 
       {/* Center Section */}

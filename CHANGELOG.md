@@ -1,3 +1,11 @@
+## [Unreleased]
+
+### Fixed
+
+- **Phones in full screen** showed the large tide and depth panels, which covered the HUD values in landscape. Phones (either way round) now keep the compact depth and tide gauges, side by side at the bottom right when the phone is on its side; the detailed panels stay on tablets and computers. The tide gauge also shows the estimated tide when no tide station is configured, like the panel did.
+- **Bottom bar on phones and small tablets**: the temperature overlapped the buttons. Below 1024 px the chart, weather, dashboard and help shortcuts fold into the apps menu (they were already listed there), leaving room for the readings.
+- **Signal K address typed without `https://`** (e.g. `demo.signalk.org`) failed silently from the online demo, which then showed only its sample values: no depth, no AIS. The address now gets a scheme, `ws://` / `wss://` are accepted, and `http://` is upgraded on a page served over https, since the browser blocks insecure connections there.
+
 ## [2.0.2] - 2026-10-05
 
 A lighter install on the boat's server. Nothing to change in the settings.
