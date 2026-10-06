@@ -859,7 +859,8 @@
   "manual": {
     "unavailable": "The manuals cannot be loaded.",
     "none": "No manual installed.",
-    "openNewTab": "Open in a new tab"
+    "openNewTab": "Open in a new tab",
+    "online": "The online manual, always for the latest version. It opens in a new tab and needs an internet connection."
   },
   "offline": {
     "title": "Offline data",

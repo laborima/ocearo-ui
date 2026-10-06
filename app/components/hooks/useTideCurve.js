@@ -153,12 +153,6 @@ const useTideCurve = () => {
   const highDate = useMemo(() => parseTideTime(timeHigh), [timeHigh]);
   const lowDate = useMemo(() => parseTideTime(timeLow), [timeLow]);
 
-  // Determine if tide is rising: next high tide comes before next low tide
-  const isRising = useMemo(() => {
-    if (!highDate || !lowDate) return false;
-    return highDate.getTime() < lowDate.getTime();
-  }, [highDate, lowDate]);
-  const tideColor = isRising ? tokens.ok : tokens.accent;
 
   // Generate tide curve data points using Rule of Twelfths
   const chartData = useMemo(() => {
@@ -185,6 +179,17 @@ const useTideCurve = () => {
     }
     return data;
   }, [high, low, highDate, lowDate]);
+
+  // Rising when the next high water comes before the next low water; without
+  // both times, from the slope of the curve now
+  const isRising = useMemo(() => {
+    if (highDate && lowDate) return highDate.getTime() < lowDate.getTime();
+    const now = vesselNow().getTime();
+    const i = chartData.findIndex(p => p.ms > now);
+    if (i <= 0) return false;
+    return chartData[i].height > chartData[i - 1].height;
+  }, [highDate, lowDate, chartData]);
+  const tideColor = isRising ? tokens.ok : tokens.accent;
 
   return { hasData, level, high, low, timeHigh, timeLow, coefficient, isRising, tideColor, chartData };
 };

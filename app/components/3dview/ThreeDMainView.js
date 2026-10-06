@@ -154,7 +154,8 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
 
             {/* We must keep clear: unmistakable banner (the hull turns the same colour) */}
             {!replaying && (
-                <div className="absolute left-1/2 -translate-x-1/2 top-14 z-30 max-w-[calc(100%-12rem)]">
+                // Phones: on the right, the HUD values fill the left edge
+                <div className="absolute right-2 top-14 z-30 max-w-[calc(100%-10rem)] sm:right-auto sm:left-1/2 sm:-translate-x-1/2 sm:max-w-[calc(100%-12rem)]">
                     <GiveWayBanner />
                 </div>
             )}

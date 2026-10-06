@@ -859,7 +859,8 @@
   "manual": {
     "unavailable": "Impossible de charger les manuels.",
     "none": "Aucun manuel installé.",
-    "openNewTab": "Ouvrir dans un nouvel onglet"
+    "openNewTab": "Ouvrir dans un nouvel onglet",
+    "online": "Le manuel en ligne, toujours à jour avec la dernière version. Il s'ouvre dans un nouvel onglet et demande une connexion internet."
   },
   "offline": {
     "title": "Données hors-ligne",

@@ -18,7 +18,7 @@
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, dirname } from 'node:path';
+import { join, dirname, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const SPEC_VERSION = process.argv[2] || '1.8.4';
@@ -71,9 +71,29 @@ for (const src of new Set([...main.matchAll(/<img[^>]+src="([^"]+)"/g)].map(m =>
     if (/^https?:/.test(src)) continue;
     run('curl', ['-sfL', '-o', join(work, src), specUrl + src]);
 }
+// Links between chapters ("rest_api.html#…") must stay inside the single
+// page: to the anchor, or to the chapter's first heading
+const chapterIds = {};
+const chapterId = (page) => {
+    if (!(page in chapterIds)) {
+        let html = '';
+        try { html = run('curl', ['-sfL', specUrl + page]); } catch { /* missing page */ }
+        chapterIds[page] = html.match(/<h[12] id="([^"]+)"/)?.[1] || null;
+    }
+    return chapterIds[page];
+};
+const specBody = main
+    // mdBook's anchor links ("#") on every heading would show as stray characters
+    .replace(/<a class="header" href="[^"]*">([\s\S]*?)<\/a>/g, '$1')
+    // A Jekyll leftover in the source ("{{site.baseurl}}specification.html")
+    .replace(/href="(?:\{\{|%7B%7B)[^"]*"/g, 'href="https://signalk.org/specification/"')
+    .replace(/href="([\w-]+\.html)(#[^"]*)?"/g, (_, page, frag) => {
+        if (frag) return `href="${frag}"`;
+        const id = chapterId(page);
+        return `href="${id ? `#${id}` : specUrl + page}"`;
+    });
 const specIn = join(work, 'spec.html');
-// mdBook's anchor links ("#") on every heading would show as stray characters
-writeFileSync(specIn, `<html><body>${main.replace(/<a class="header" href="[^"]*">([\s\S]*?)<\/a>/g, '$1')}</body></html>`);
+writeFileSync(specIn, `<html><body>${specBody}</body></html>`);
 pandoc(specIn, join(OUT, 'signalk-specification.html'), {
     from: 'html',
     title: 'Signal K Specification',
@@ -104,11 +124,23 @@ const visit = (file) => {
 ['README.md', 'installation/README.md', 'setup/configuration.md', 'security.md',
     'guides/README.md', 'support/help.md'].forEach(visit);
 
+// Each page gets an anchor; links between pages point to it (or to the
+// heading named after "#"), pages left out of the bundle to GitHub
+const pageId = (file) => `page-${file.replace(/\.md$/, '').replace(/[^\w]+/g, '-')}`;
+const linkTarget = (dir, target) => {
+    const [path, frag] = target.split('#');
+    if (!path) return target;
+    const file = posix.normalize(posix.join(dir, path));
+    if (order.includes(file)) return frag ? `#${frag}` : `#${pageId(file)}`;
+    return `https://github.com/SignalK/signalk-server/blob/${SERVER_REF}/docs/${file}${frag ? `#${frag}` : ''}`;
+};
+
 // One markdown file; image paths made relative to docs/ so pandoc finds them
 const md = order.map((file) => {
     const { body } = frontMatter(readFileSync(join(docs, file), 'utf8'));
     const dir = dirname(file);
-    return body
+    return `<span id="${pageId(file)}"></span>\n\n` + body
+        .replace(/(?<!!)\[([^\]]*)\]\((?!https?:|mailto:|#)([^)\s]+)\)/g, (_, text, target) => `[${text}](${linkTarget(dir, target)})`)
         .replace(/!\[([^\]]*)\]\((?!https?:)([^)\s]+)\)/g, (_, alt, src) => `![${alt}](${join(dir, src)})`)
         .replace(/<img([^>]*?)src="(?!https?:)([^"]+)"/g, (_, attrs, src) => `<img${attrs}src="${join(dir, src)}"`);
 }).join('\n\n');

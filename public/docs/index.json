@@ -8,7 +8,7 @@
         "title": "Signal K Server 2.33.0"
     },
     {
-        "file": "opencpn.pdf",
-        "title": "OpenCPN User Manual Version 4.8.6"
+        "url": "https://opencpn.org/wiki/dokuwiki/doku.php?id=opencpn:manual_basic",
+        "title": "OpenCPN User Manual"
     }
 ]

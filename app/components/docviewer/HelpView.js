@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileAlt, faBookOpen, faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
+import { faFileAlt, faBookOpen, faArrowUpRightFromSquare, faGlobe } from '@fortawesome/free-solid-svg-icons';
 import OcearoGuide from './OcearoGuide';
 
-const GUIDE = { file: null, guide: true };
+const GUIDE = { guide: true };
+// A tab's identity: the guide, a file shipped in public/docs, or an online page
+const idOf = (doc) => (doc.guide ? 'guide' : doc.file || doc.url);
 
 /**
  * Help view: the interactive Ocearo guide first, then the documents listed
- * in <path>/index.json (Signal K pages, PDF manuals) in a frame.
+ * in <path>/index.json: files (Signal K pages, PDF manuals) shown in a
+ * frame, and online manuals ({ url }) opened in a new tab, since their
+ * sites refuse to be framed and need internet anyway.
  */
 const HelpView = ({ path }) => {
     const [docs, setDocs] = useState([]);
@@ -40,15 +44,15 @@ const HelpView = ({ path }) => {
             <div className="flex border-b border-hud bg-hud-bg overflow-x-auto scrollbar-hide shrink-0">
                 {tabs.map((doc) => (
                     <button
-                        key={doc.file || 'guide'}
+                        key={idOf(doc)}
                         onClick={() => setSelected(doc)}
                         className={`flex-1 py-3 px-3 text-caption font-semibold uppercase flex items-center justify-center transition-all duration-500 whitespace-nowrap ${
-                            selected.file === doc.file
+                            idOf(selected) === idOf(doc)
                                 ? 'text-oGreen border-b-2 border-oGreen bg-hud-bg'
                                 : 'text-hud-secondary hover:text-hud-main tesla-hover'
                         }`}
                     >
-                        <FontAwesomeIcon icon={doc.guide ? faBookOpen : faFileAlt} className="mr-2" />
+                        <FontAwesomeIcon icon={doc.guide ? faBookOpen : doc.url ? faGlobe : faFileAlt} className="mr-2" />
                         {doc.title}
                     </button>
                 ))}
@@ -65,6 +69,18 @@ const HelpView = ({ path }) => {
                 )}
                 {url && (
                     <iframe src={url} title={selected.title} className="flex-1 w-full border-0" />
+                )}
+                {selected.url && (
+                    <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center">
+                        <FontAwesomeIcon icon={faGlobe} className="text-4xl text-hud-muted" />
+                        <div className="text-value font-semibold text-hud-main">{selected.title}</div>
+                        <p className="text-label text-hud-secondary max-w-md">{t('manual.online')}</p>
+                        <a href={selected.url} target="_blank" rel="noopener noreferrer"
+                            className="px-4 py-2 rounded-xl bg-oBlue text-white text-label font-semibold">
+                            <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="mr-2" />
+                            {t('manual.openNewTab')}
+                        </a>
+                    </div>
                 )}
                 {failed && !selected.guide && (
                     <div className="text-label text-hud-secondary p-6 text-center">{t('manual.unavailable')}</div>

@@ -29,25 +29,6 @@ const ThreeDBoatTideLevelIndicator = () => {
   const curve = useTideCurve();
 
   /**
-   * Parse a tide time value (ISO timestamp or HH:MM) to a Date object
-   */
-  const parseTideTime = useCallback((timeValue) => {
-    if (!timeValue) return null;
-    if (typeof timeValue === 'string' && (timeValue.includes('T') || timeValue.includes('-'))) {
-      const d = new Date(timeValue);
-      return isNaN(d.getTime()) ? null : d;
-    }
-    if (typeof timeValue === 'string') {
-      const parts = timeValue.split(':').map(Number);
-      if (parts.length < 2) return null;
-      const d = vesselNow();
-      d.setHours(parts[0], parts[1], 0, 0);
-      return d;
-    }
-    return null;
-  }, []);
-
-  /**
    * Format a tide time value to HH:MM display string
    */
   const formatTideTime = useCallback((timeValue) => {
@@ -60,16 +41,6 @@ const ThreeDBoatTideLevelIndicator = () => {
     }
     return timeValue;
   }, []);
-
-  /**
-   * Determine if tide is rising: next high comes before next low
-   */
-  const computeIsRising = useCallback((timeLow, timeHigh) => {
-    const highDate = parseTideTime(timeHigh);
-    const lowDate = parseTideTime(timeLow);
-    if (!highDate || !lowDate) return false;
-    return highDate.getTime() < lowDate.getTime();
-  }, [parseTideTime]);
 
   const computeTidePercentage = useCallback((level, low, high) => {
     if (high <= low || !level) return 0;
@@ -112,10 +83,9 @@ const ThreeDBoatTideLevelIndicator = () => {
       high: curve.high ?? Math.max(...heights),
       low: curve.low ?? Math.min(...heights),
       timeLow, timeHigh, coefficient,
-      // With no tide times, the slope of the curve now
-      isRising: timeLow && timeHigh ? computeIsRising(timeLow, timeHigh) : chartData[i + 1].height > chartData[i].height
+      isRising: curve.isRising
     };
-  }, [curve, computeIsRising]);
+  }, [curve]);
 
   const {
     level,
