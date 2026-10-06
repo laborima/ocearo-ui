@@ -12,6 +12,8 @@ import { mergeAtons } from './aisAton';
 import { useAIS } from '../ais/AISContext';
 import { markStyle, seamarkGeometry } from './seamarkGeometry';
 import { lightSequence, isLit } from './lightRhythm';
+import { sunPosition } from '../../utils/SunUtils';
+import { vesselNow } from '../../utils/VesselClock';
 
 // Marks downloaded and drawn within 3 NM
 const RADIUS_M = 3 * 1852;
@@ -35,7 +37,7 @@ const RESELECT_M = 50;
 const PATHS = ['navigation.position', 'navigation.speedOverGround', 'navigation.courseOverGroundTrue'];
 const LIGHT_PAINT = { white: '#fff6dc', red: '#ff3b30', green: '#30ff7a', yellow: '#ffd23a', blue: '#4aa3ff' };
 // A light is seen as a glow, not as its lantern: a soft disc a few metres wide
-const GLOW_SIZE = 2.6;
+const GLOW_SIZE = 3.4;
 
 /** Radial glow texture shared by every light */
 const glowTexture = () => {
@@ -99,7 +101,7 @@ const useSeamarkCells = (lat, lon, enabled) => {
  * even without the OpenSeaMap download; virtual ones as a ghost):
  * cardinal, lateral, isolated danger, safe water and special marks, with
  * their colours, shape and topmark, and their light flashing its real
- * rhythm with a dark theme. Anchored to the sea like the AIS targets
+ * rhythm from dusk to dawn with a dark theme. Anchored to the sea like the AIS targets
  * (same scale and north-up layer turned by the heading), smoothed between
  * GPS fixes. Can be turned off in the settings (no download then).
  */
@@ -184,10 +186,24 @@ const Seamarks3D = ({ waterLevel = -0.3 }) => {
         fix.current = { x: offset.x, y: offset.y, at: performance.now() / 1000, init: true };
     }, [offset]);
 
+    // Lights burn from dusk to dawn (their photocell), shown with a dark theme
+    const lat = Number.isFinite(position?.latitude) ? Math.round(position.latitude * 10) / 10 : null;
+    const lon = Number.isFinite(position?.longitude) ? Math.round(position.longitude * 10) / 10 : null;
+    const [dark, setDark] = useState(false);
+    useEffect(() => {
+        const update = () => {
+            const sun = sunPosition(lat, lon, vesselNow());
+            setDark(!!sun && sun.elevation < 2);
+        };
+        update();
+        const id = setInterval(update, 60000);
+        return () => clearInterval(id);
+    }, [lat, lon]);
+
     const layer = useRef();
     const marks = useRef([]);
     const lights = useRef([]);
-    const lit = themeId !== 'day';
+    const lit = themeId !== 'day' && dark;
     useFrame((state, delta) => {
         const f = fix.current;
         const sm = smooth.current;
