@@ -186,7 +186,11 @@
     "hudStyle_minimal": "Minimaal",
     "hudStyle_classic": "Klassiek",
     "seamarks3D": "Boeien en bakens in 3D",
-    "seamarks3DHint": "Uit OpenSeaMap (Overpass), bewaard voor offline gebruik. Geen officiële zeekaart."
+    "seamarks3DHint": "OpenSeaMap-markeringen en ontvangen AIS-navigatiehulpmiddelen. Geen officiële zeekaart.",
+    "seamarksOverpass": "Downloaden van OpenSeaMap",
+    "seamarksOverpassHint": "Boeien en bakens via Overpass, bewaard voor offline gebruik. Uit: alleen AIS-markeringen.",
+    "enabled": "Aan",
+    "disabled": "Uit"
   },
   "dashboard": {
     "environment": "Omgeving",

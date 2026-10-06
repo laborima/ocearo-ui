@@ -69,6 +69,11 @@ export const markStyle = (mark) => {
         if (!topmark) topmark = 'sphere';
         if (!topColours.length) topColours = ['red'];
         shape = shape || 'pillar';
+    } else if (kind === 'station') {
+        // AIS station whose structure is unknown: a plain grey post
+        if (!colours.length) colours = ['grey'];
+        topColours = [];
+        shape = shape || 'pile';
     } else {
         if (!colours.length) colours = ['yellow'];
         if (!topmark) topmark = 'x-shape';

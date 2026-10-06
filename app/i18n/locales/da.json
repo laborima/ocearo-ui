@@ -186,7 +186,11 @@
     "hudStyle_minimal": "Minimal",
     "hudStyle_classic": "Klassisk",
     "seamarks3D": "Bøjer og sømærker i 3D",
-    "seamarks3DHint": "Fra OpenSeaMap (Overpass), gemt til offline brug. Ikke et officielt søkort."
+    "seamarks3DHint": "OpenSeaMap-mærker og modtagne AIS-afmærkninger. Ikke et officielt søkort.",
+    "seamarksOverpass": "Hent fra OpenSeaMap",
+    "seamarksOverpassHint": "Bøjer og sømærker via Overpass, gemt til offline brug. Fra: kun AIS-mærker.",
+    "enabled": "Til",
+    "disabled": "Fra"
   },
   "dashboard": {
     "environment": "Miljø",

@@ -15,6 +15,8 @@ const MIN_DISPLAYED_DISTANCE_METERS = 10;
 const PUBLISH_INTERVAL_MS = 250;
 // Drop targets that have been silent for this long.
 const STALE_TARGET_MS = 10 * 60 * 1000;
+// Aids to navigation report every 3 minutes (some every 6 or 12)
+const STALE_ATON_MS = 40 * 60 * 1000;
 
 const EMPTY_LIST = [];
 
@@ -48,6 +50,9 @@ const AIS_SUBSCRIPTION = [
     ...AIS_DYNAMIC_PATHS.map(path => ({ path, policy: 'instant' })),
     ...AIS_STATIC_PATHS.map(path => ({ path })),
 ];
+// AIS aids to navigation (message 21): buoys and beacons, some of them
+// virtual (no structure on the water, only the AIS message)
+const ATON_SUBSCRIPTION = ['navigation.position', 'atonType', 'name', 'virtual', 'offPosition'].map(path => ({ path }));
 
 // Identity of the 3D boat list: membership plus what picks/scales the model.
 // Positions are deliberately excluded — they are read per frame.
@@ -60,6 +65,7 @@ const getPath = (source, path) => path.split('.').reduce((acc, part) => acc?.[pa
 const nameOf = (name) => (typeof name === 'string' ? name : typeof name?.value === 'string' ? name.value : null);
 
 const stripVesselsPrefix = (context) => (context || '').replace(/^vessels\./, '');
+const isAtonContext = (context) => /^atons\./.test(context || '');
 
 /**
  * Whether an AIS identity can be a ship. Signal K files aids to navigation
@@ -67,10 +73,44 @@ const stripVesselsPrefix = (context) => (context || '').replace(/^vessels\./, ''
  * aircraft.*, and we only subscribe to vessels.*; a gateway that puts them
  * under vessels.* anyway must not have a buoy drawn as a boat.
  */
+const mmsiOf = (id) => /mmsi:(\d{9})$/.exec(id || '')?.[1] || null;
 export const isShipIdentity = (id) => {
-    const mmsi = /mmsi:(\d{9})$/.exec(id || '')?.[1];
+    const mmsi = mmsiOf(id);
     if (!mmsi) return true;
     return !mmsi.startsWith('99') && !mmsi.startsWith('00') && !mmsi.startsWith('111');
+};
+/** An aid to navigation's MMSI (99…), wherever the server filed it */
+const isAtonIdentity = (id) => mmsiOf(id)?.startsWith('99') ?? false;
+
+const createAton = (id) => ({
+    id,
+    mmsi: mmsiOf(id),
+    name: '',
+    latitude: null,
+    longitude: null,
+    atonType: null,     // AIS aid type, 1–31 (see seamarks/aisAton.js)
+    virtual: false,
+    offPosition: false,
+    distanceMeters: null,
+    lastUpdate: 0,
+});
+
+/** Applies one SignalK value to an aid to navigation */
+const applyAtonValue = (aton, path, value) => {
+    switch (path) {
+        case 'navigation.position':
+            if (value && Number.isFinite(value.latitude)) {
+                aton.latitude = value.latitude;
+                aton.longitude = value.longitude;
+            }
+            break;
+        case 'atonType': aton.atonType = value?.id ?? value ?? null; break;
+        case 'name': aton.name = nameOf(value) ?? aton.name; break;
+        case 'virtual': aton.virtual = value === true; break;
+        case 'offPosition': aton.offPosition = value === true; break;
+        case '': if (value?.name) aton.name = nameOf(value.name) ?? aton.name; break;
+        default: break;
+    }
 };
 
 const createTarget = (mmsi) => ({
@@ -157,12 +197,13 @@ export const AISProvider = ({ children }) => {
     const [thresholds] = useState(getCollisionThresholds);
 
     const targetsRef = useRef({});          // mmsi -> mutable target
+    const atonsRef = useRef({});            // id -> aid to navigation
     const selfIdRef = useRef(null);         // our own vessel id, from the server hello
     const myPositionRef = useRef(myPosition);
     const dirtyRef = useRef(false);
     const signatureRef = useRef('');
     const [consumerCount, setConsumerCount] = useState(0);
-    const [snapshot, setSnapshot] = useState({ aisData: {}, vesselIds: EMPTY_LIST, targets: EMPTY_LIST });
+    const [snapshot, setSnapshot] = useState({ aisData: {}, vesselIds: EMPTY_LIST, targets: EMPTY_LIST, atons: EMPTY_LIST });
 
     const register = useCallback(() => {
         setConsumerCount(c => c + 1);
@@ -215,6 +256,22 @@ export const AISProvider = ({ children }) => {
         } : null;
     }, [convertLatLonToXY, thresholds]);
 
+    /** Distance of an aid to navigation from us (it does not move: no CPA) */
+    const updateAtonSpatial = useCallback((aton) => {
+        const own = myPositionRef.current;
+        if (!Number.isFinite(aton.latitude) || !Number.isFinite(own?.latitude)) {
+            aton.distanceMeters = null;
+            return;
+        }
+        const { x, y } = convertLatLonToXY(
+            { lat: aton.latitude, lon: aton.longitude },
+            { lat: own.latitude, lon: own.longitude }
+        );
+        aton.east = x;
+        aton.north = y;
+        aton.distanceMeters = Math.hypot(x, y);
+    }, [convertLatLonToXY]);
+
     // Own boat moved or changed course: every relative position and CPA is
     // stale, not just the targets that happen to report next.
     useEffect(() => {
@@ -229,8 +286,9 @@ export const AISProvider = ({ children }) => {
             scale: configService.get('aisLengthScalingFactor') || 0.7,
         };
         Object.values(targetsRef.current).forEach(updateSpatial);
+        Object.values(atonsRef.current).forEach(updateAtonSpatial);
         dirtyRef.current = true;
-    }, [myPosition, mySog, myCog, myHeading, updateSpatial]);
+    }, [myPosition, mySog, myCog, myHeading, updateSpatial, updateAtonSpatial]);
 
     // Throttled publication + stale target cleanup
     useEffect(() => {
@@ -245,6 +303,13 @@ export const AISProvider = ({ children }) => {
                     dirtyRef.current = true;
                 }
             }
+            // Aids to navigation report every few minutes: allow three missed reports
+            for (const [id, aton] of Object.entries(atonsRef.current)) {
+                if (now - aton.lastUpdate > STALE_ATON_MS) {
+                    delete atonsRef.current[id];
+                    dirtyRef.current = true;
+                }
+            }
             if (!dirtyRef.current) return;
             dirtyRef.current = false;
 
@@ -255,10 +320,15 @@ export const AISProvider = ({ children }) => {
             const signature = renderSignature(visible);
             const membershipChanged = signature !== signatureRef.current;
             signatureRef.current = signature;
+            const atons = Object.values(atonsRef.current)
+                .filter(a => a.distanceMeters !== null)
+                .sort((a, b) => a.distanceMeters - b.distanceMeters)
+                .map(a => ({ ...a }));
             setSnapshot(prev => ({
                 aisData: { ...store },
                 targets,
                 vesselIds: membershipChanged ? visible : prev.vesselIds,
+                atons,
             }));
         };
 
@@ -276,8 +346,29 @@ export const AISProvider = ({ children }) => {
 
         const isSelf = (id) => id === 'self' || (selfIdRef.current && id === selfIdRef.current);
 
+        // Aids to navigation: from atons.*, or with an AtoN MMSI under vessels.*
+        // (a gateway that files them there): never drawn as a boat
+        const handleAton = (id, updates) => {
+            const aton = atonsRef.current[id] || (atonsRef.current[id] = createAton(id));
+            aton.lastUpdate = Date.now();
+            for (const update of updates) {
+                for (const { path, value } of update.values || []) applyAtonValue(aton, path, value);
+            }
+            updateAtonSpatial(aton);
+            dirtyRef.current = true;
+        };
+
         const handleDelta = (delta) => {
+            if (!delta?.updates) return;
+            if (isAtonContext(delta.context)) {
+                handleAton(delta.context.replace(/^atons\./, ''), delta.updates);
+                return;
+            }
             const id = stripVesselsPrefix(delta?.context);
+            if (id && isAtonIdentity(id)) {
+                handleAton(id, delta.updates);
+                return;
+            }
             if (!id || isSelf(id) || !isShipIdentity(id) || !delta.updates) return;
 
             const store = targetsRef.current;
@@ -295,14 +386,45 @@ export const AISProvider = ({ children }) => {
             dirtyRef.current = true;
         };
 
+        const loadInitialAtons = async (api) => {
+            const atons = await api.get('/atons').catch(() => null);
+            if (cancelled || !atons) return;
+            const now = Date.now();
+            for (const [id, data] of Object.entries(atons)) {
+                const aton = atonsRef.current[id] || (atonsRef.current[id] = createAton(id));
+                const position = getPath(data, 'navigation.position.value');
+                if (Number.isFinite(position?.latitude)) {
+                    aton.latitude = position.latitude;
+                    aton.longitude = position.longitude;
+                }
+                aton.atonType = getPath(data, 'atonType.value.id') ?? aton.atonType;
+                aton.name = nameOf(data.name) ?? aton.name;
+                aton.virtual = getPath(data, 'virtual.value') === true || data.virtual === true;
+                aton.offPosition = getPath(data, 'offPosition.value') === true || data.offPosition === true;
+                aton.lastUpdate = now;
+                updateAtonSpatial(aton);
+            }
+            dirtyRef.current = true;
+        };
+
         const loadInitialTargets = async () => {
-            const vessels = await client.API().then(api => api.vessels());
+            const api = await client.API();
+            loadInitialAtons(api);
+            const vessels = await api.vessels();
             if (cancelled || !vessels) return;
 
             const store = targetsRef.current;
             const now = Date.now();
             for (const [id, data] of Object.entries(vessels)) {
-                if (isSelf(id) || !isShipIdentity(id)) continue;
+                if (isSelf(id)) continue;
+                if (isAtonIdentity(id)) {
+                    const position = getPath(data, 'navigation.position.value');
+                    const values = [{ path: 'name', value: data.name }];
+                    if (position) values.push({ path: 'navigation.position', value: position });
+                    handleAton(id, [{ values }]);
+                    continue;
+                }
+                if (!isShipIdentity(id)) continue;
                 const target = store[id] || (store[id] = createTarget(id));
                 const set = (key, path) => {
                     const value = getPath(data, path);
@@ -339,6 +461,9 @@ export const AISProvider = ({ children }) => {
                     subscriptions: [{
                         context: 'vessels.*',
                         subscribe: AIS_SUBSCRIPTION,
+                    }, {
+                        context: 'atons.*',
+                        subscribe: ATON_SUBSCRIPTION,
                     }],
                 });
                 client.on('self', (self) => { selfIdRef.current = stripVesselsPrefix(self); });
@@ -359,7 +484,7 @@ export const AISProvider = ({ children }) => {
             client?.removeAllListeners?.('delta');
             client?.disconnect();
         };
-    }, [consumerCount > 0, updateSpatial]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [consumerCount > 0, updateSpatial, updateAtonSpatial]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const value = useMemo(() => ({
         ...snapshot,
@@ -378,6 +503,8 @@ export const AISProvider = ({ children }) => {
  * - `vesselIds`: targets within 3D range, closest first
  * - `targets`:   every positioned target, closest first (radar)
  * - `aisData`:   mmsi -> target snapshot
+ * - `atons`:     aids to navigation (buoys, beacons, virtual marks), closest
+ *                first, with their distance and east/north offset in metres
  * - `targetsRef`: live mutable store, for per-frame reads
  * - `motionRef`:  own velocity and fix time, for dead reckoning (see predictScenePosition)
  *
@@ -416,5 +543,5 @@ export const useAIS = ({ passive = false } = {}) => {
     const ctx = useContext(AISContext);
     const register = passive ? null : ctx?.register;
     useEffect(() => register?.(), [register]);
-    return ctx || { aisData: {}, vesselIds: EMPTY_LIST, targets: EMPTY_LIST, targetsRef: { current: {} }, motionRef: { current: { vx: 0, vy: 0, fixAt: 0, scale: 0.7 } } };
+    return ctx || { aisData: {}, vesselIds: EMPTY_LIST, targets: EMPTY_LIST, atons: EMPTY_LIST, targetsRef: { current: {} }, motionRef: { current: { vx: 0, vy: 0, fixAt: 0, scale: 0.7 } } };
 };

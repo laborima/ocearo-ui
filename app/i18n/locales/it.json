@@ -186,7 +186,11 @@
     "hudStyle_minimal": "Minimale",
     "hudStyle_classic": "Classico",
     "seamarks3D": "Boe e mede in 3D",
-    "seamarks3DHint": "Da OpenSeaMap (Overpass), conservate per l'uso offline. Non è una carta ufficiale."
+    "seamarks3DHint": "Segnalamenti OpenSeaMap e ausili alla navigazione AIS ricevuti. Non è una carta ufficiale.",
+    "seamarksOverpass": "Scarica da OpenSeaMap",
+    "seamarksOverpassHint": "Boe e mede tramite Overpass, conservate per l'uso offline. Disattivato: solo segnalamenti AIS.",
+    "enabled": "Attivo",
+    "disabled": "Disattivo"
   },
   "dashboard": {
     "environment": "Ambiente",

@@ -186,7 +186,11 @@
     "hudStyle_minimal": "Ελάχιστο",
     "hudStyle_classic": "Κλασικό",
     "seamarks3D": "Σημαντήρες και φάροι σε 3D",
-    "seamarks3DHint": "Από το OpenSeaMap (Overpass), αποθηκεύονται για χρήση εκτός σύνδεσης. Δεν είναι επίσημος χάρτης."
+    "seamarks3DHint": "Σημάνσεις OpenSeaMap και τα βοηθήματα ναυσιπλοΐας AIS που λαμβάνονται. Δεν είναι επίσημος χάρτης.",
+    "seamarksOverpass": "Λήψη από το OpenSeaMap",
+    "seamarksOverpassHint": "Σημαντήρες και φάροι μέσω Overpass, αποθηκευμένοι για χρήση εκτός σύνδεσης. Ανενεργό: μόνο σημάνσεις AIS.",
+    "enabled": "Ενεργό",
+    "disabled": "Ανενεργό"
   },
   "dashboard": {
     "environment": "Περιβάλλον",

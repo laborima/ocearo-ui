@@ -8,6 +8,8 @@ import configService from '../../settings/ConfigService';
 import useTheme from '../../theme/useTheme';
 import useOwnTrack, { getSessionOrigin } from '../fsd/useOwnTrack';
 import { cellsAround, loadCells } from './seamarkData';
+import { mergeAtons } from './aisAton';
+import { useAIS } from '../ais/AISContext';
 import { markStyle, seamarkGeometry } from './seamarkGeometry';
 import { lightSequence, isLit } from './lightRhythm';
 
@@ -84,7 +86,9 @@ const useSeamarkCells = (lat, lon, enabled) => {
 };
 
 /**
- * Buoys and beacons from OpenSeaMap in 3D, where they are on the water:
+ * Buoys and beacons in 3D, where they are on the water, from OpenSeaMap
+ * and from the AIS aids to navigation Signal K receives (the AIS ones show
+ * even without the OpenSeaMap download; virtual ones as a ghost):
  * cardinal, lateral, isolated danger, safe water and special marks, with
  * their colours, shape and topmark, and their light flashing its real
  * rhythm with a dark theme. Anchored to the sea like the AIS targets
@@ -93,6 +97,8 @@ const useSeamarkCells = (lat, lon, enabled) => {
  */
 const Seamarks3D = ({ waterLevel = -0.3 }) => {
     const enabled = configService.get('showSeamarks3D') !== false;
+    // OpenSeaMap download; the AIS marks come from Signal K either way
+    const overpass = configService.get('seamarksOverpass') !== false;
     const scale = configService.get('aisLengthScalingFactor') || 0.7;
     const { convertLatLonToXY } = useOcearoContext();
     const { id: themeId, scene } = useTheme();
@@ -103,7 +109,9 @@ const Seamarks3D = ({ waterLevel = -0.3 }) => {
     const sog = v['navigation.speedOverGround'];
     const cog = v['navigation.courseOverGroundTrue'];
 
-    const all = useSeamarkCells(position?.latitude, position?.longitude, enabled && hasFix);
+    const osm = useSeamarkCells(position?.latitude, position?.longitude, enabled && overpass && hasFix);
+    const { atons } = useAIS();
+    const all = useMemo(() => mergeAtons(osm, atons), [osm, atons]);
 
     // East/north metres from the session origin, like the own track offset
     const placed = useMemo(() => {
@@ -125,6 +133,10 @@ const Seamarks3D = ({ waterLevel = -0.3 }) => {
         .map(({ m, d }) => ({ ...m, d })), [placed, offset]);
 
     const material = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.05 }), []);
+    // Virtual AIS marks: nothing on the water, only the AIS message
+    const ghost = useMemo(() => new THREE.MeshStandardMaterial({
+        vertexColors: true, roughness: 0.55, transparent: true, opacity: 0.38, depthWrite: false,
+    }), []);
     const glow = useMemo(() => glowTexture(), []);
     // Light colours; all red-orange with the night theme
     const lightMaterials = useMemo(() => Object.fromEntries(Object.entries(LIGHT_PAINT).map(([name, c]) => [
@@ -136,15 +148,17 @@ const Seamarks3D = ({ waterLevel = -0.3 }) => {
     useEffect(() => () => Object.values(lightMaterials).forEach((m) => m.dispose()), [lightMaterials]);
     useEffect(() => () => {
         material.dispose();
+        ghost.dispose();
         glow.dispose();
-    }, [material, glow]);
+    }, [material, ghost, glow]);
 
     const items = useMemo(() => shown.map((m) => {
         const style = markStyle(m);
         const { geometry, lightY } = seamarkGeometry(style, night);
         const sequence = m.light ? lightSequence(m.light, m.kind === 'cardinal' && m.category === 'south') : null;
         // Each light starts its cycle at its own time
-        const phase = (m.id % 997) / 997 * (sequence?.period || 1);
+        const seed = [...String(m.id)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 997, 7);
+        const phase = seed / 997 * (sequence?.period || 1);
         return { m, geometry, lightY, sequence, phase, hasLight: !!m.light };
     }), [shown, night]);
 
@@ -187,9 +201,14 @@ const Seamarks3D = ({ waterLevel = -0.3 }) => {
         });
     });
 
+    // Name, and whether the mark transmits on AIS (V-AIS: virtual mark)
     const labels = useMemo(() => items
-        .filter((it) => it.m.name && it.m.d * scale <= LABEL_RANGE)
-        .slice(0, MAX_LABELS), [items, scale]);
+        .filter((it) => (it.m.name || it.m.ais) && it.m.d * scale <= LABEL_RANGE)
+        .slice(0, MAX_LABELS)
+        .map((it) => ({
+            ...it,
+            text: [it.m.name, it.m.ais && (it.m.virtual ? 'V-AIS' : 'AIS')].filter(Boolean).join(' · '),
+        })), [items, scale]);
 
     if (!enabled || !items.length) return null;
 
@@ -199,7 +218,7 @@ const Seamarks3D = ({ waterLevel = -0.3 }) => {
                 {items.map((it, i) => (
                     <group key={it.m.id} position={[it.m.x * scale, 0, -it.m.y * scale]}
                         ref={(g) => { marks.current[i] = g; }}>
-                        <mesh geometry={it.geometry} material={material} />
+                        <mesh geometry={it.geometry} material={it.m.virtual ? ghost : material} />
                         {it.hasLight && (
                             <sprite material={lightMaterials[it.m.light.colour] || lightMaterials.white}
                                 position={[0, it.lightY, 0]} scale={[GLOW_SIZE, GLOW_SIZE, 1]}
@@ -214,7 +233,7 @@ const Seamarks3D = ({ waterLevel = -0.3 }) => {
                         <Billboard key={`label-${it.m.id}`} position={[it.m.x * scale, (it.lightY + 1) * scale * k, -it.m.y * scale]}>
                             <Text fontSize={0.9 * k} color={scene.compass} fillOpacity={0.8} font="fonts/Roboto-Bold.ttf"
                                 anchorX="center" anchorY="bottom" outlineWidth={0.04 * k} outlineColor={scene.compassFace}>
-                                {it.m.name}
+                                {it.text}
                             </Text>
                         </Billboard>
                     );

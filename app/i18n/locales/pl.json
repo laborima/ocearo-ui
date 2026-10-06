@@ -186,7 +186,11 @@
     "hudStyle_minimal": "Minimalny",
     "hudStyle_classic": "Klasyczny",
     "seamarks3D": "Pławy i stawy w 3D",
-    "seamarks3DHint": "Z OpenSeaMap (Overpass), zapisane do użytku offline. To nie jest oficjalna mapa."
+    "seamarks3DHint": "Znaki OpenSeaMap i odbierane znaki nawigacyjne AIS. To nie jest oficjalna mapa.",
+    "seamarksOverpass": "Pobieraj z OpenSeaMap",
+    "seamarksOverpassHint": "Pławy i stawy przez Overpass, zapisane do użytku offline. Wyłączone: tylko znaki AIS.",
+    "enabled": "Włączone",
+    "disabled": "Wyłączone"
   },
   "dashboard": {
     "environment": "Środowisko",

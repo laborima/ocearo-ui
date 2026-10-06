@@ -186,7 +186,11 @@
     "hudStyle_minimal": "Épuré",
     "hudStyle_classic": "Classique",
     "seamarks3D": "Bouées et balises en 3D",
-    "seamarks3DHint": "Issues d'OpenSeaMap (Overpass), gardées pour le hors-ligne. Ce n'est pas une carte officielle."
+    "seamarks3DHint": "Marques OpenSeaMap et balises AIS reçues. Ce n'est pas une carte officielle.",
+    "seamarksOverpass": "Télécharger depuis OpenSeaMap",
+    "seamarksOverpassHint": "Bouées et balises via Overpass, gardées pour le hors-ligne. Désactivé : balises AIS seulement.",
+    "enabled": "Activé",
+    "disabled": "Désactivé"
   },
   "dashboard": {
     "environment": "Environnement",

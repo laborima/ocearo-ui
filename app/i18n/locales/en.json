@@ -186,7 +186,11 @@
     "hudStyle_minimal": "Minimal",
     "hudStyle_classic": "Classic",
     "seamarks3D": "3D buoys and beacons",
-    "seamarks3DHint": "From OpenSeaMap (Overpass), kept for offline use. Not an official chart."
+    "seamarks3DHint": "OpenSeaMap marks and the AIS aids to navigation received. Not an official chart.",
+    "seamarksOverpass": "Download from OpenSeaMap",
+    "seamarksOverpassHint": "Buoys and beacons through Overpass, kept for offline use. Off: AIS marks only.",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
   },
   "dashboard": {
     "environment": "Environment",

@@ -186,7 +186,11 @@
     "hudStyle_minimal": "Minimaalinen",
     "hudStyle_classic": "Klassinen",
     "seamarks3D": "Poijut ja viitat 3D:nä",
-    "seamarks3DHint": "OpenSeaMapista (Overpass), tallennetaan offline-käyttöön. Ei virallinen merikartta."
+    "seamarks3DHint": "OpenSeaMap-merkit ja vastaanotetut AIS-turvalaitteet. Ei virallinen merikartta.",
+    "seamarksOverpass": "Lataa OpenSeaMapista",
+    "seamarksOverpassHint": "Poijut ja viitat Overpassin kautta, tallennetaan offline-käyttöön. Pois: vain AIS-merkit.",
+    "enabled": "Päällä",
+    "disabled": "Pois"
   },
   "dashboard": {
     "environment": "Ympäristö",

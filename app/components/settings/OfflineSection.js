@@ -56,7 +56,7 @@ const OfflineSection = () => {
         // SHOM surveys: downloaded by the boat's server, in the background
         if (shom) downloadBathymetry(lat, lon, radiusNm).then(refreshShom).catch(() => {});
         // Buoys and beacons (OpenSeaMap): one Overpass query for the whole area
-        if (configService.get('showSeamarks3D') !== false) prefetchSeamarks(lat, lon, radiusM).catch(() => {});
+        if (configService.get('showSeamarks3D') !== false && configService.get('seamarksOverpass') !== false) prefetchSeamarks(lat, lon, radiusM).catch(() => {});
         // Bathymetry (open data) and the wind forecast. The chart itself is not
         // bulk-downloaded: the OpenStreetMap and OpenSeaMap tile servers forbid
         // it. Chart tiles viewed are kept as you go; for full offline charts,

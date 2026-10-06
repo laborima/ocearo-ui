@@ -186,7 +186,11 @@
     "hudStyle_minimal": "Minimal",
     "hudStyle_classic": "Klassisch",
     "seamarks3D": "Tonnen und Baken in 3D",
-    "seamarks3DHint": "Aus OpenSeaMap (Overpass), offline gespeichert. Keine amtliche Seekarte."
+    "seamarks3DHint": "OpenSeaMap-Seezeichen und empfangene AIS-Schifffahrtszeichen. Keine amtliche Seekarte.",
+    "seamarksOverpass": "Von OpenSeaMap laden",
+    "seamarksOverpassHint": "Tonnen und Baken über Overpass, offline gespeichert. Aus: nur AIS-Seezeichen.",
+    "enabled": "Ein",
+    "disabled": "Aus"
   },
   "dashboard": {
     "environment": "Umgebung",

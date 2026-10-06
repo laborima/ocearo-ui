@@ -186,7 +186,11 @@
     "hudStyle_minimal": "Mínimo",
     "hudStyle_classic": "Clásico",
     "seamarks3D": "Boyas y balizas en 3D",
-    "seamarks3DHint": "De OpenSeaMap (Overpass), guardadas para uso sin conexión. No es una carta oficial."
+    "seamarks3DHint": "Marcas de OpenSeaMap y ayudas a la navegación AIS recibidas. No es una carta oficial.",
+    "seamarksOverpass": "Descargar de OpenSeaMap",
+    "seamarksOverpassHint": "Boyas y balizas vía Overpass, guardadas para uso sin conexión. Desactivado: solo marcas AIS.",
+    "enabled": "Activado",
+    "disabled": "Desactivado"
   },
   "dashboard": {
     "environment": "Entorno",

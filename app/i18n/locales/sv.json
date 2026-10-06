@@ -186,7 +186,11 @@
     "hudStyle_minimal": "Minimal",
     "hudStyle_classic": "Klassisk",
     "seamarks3D": "Bojar och prickar i 3D",
-    "seamarks3DHint": "Från OpenSeaMap (Overpass), sparade för offlineanvändning. Inte ett officiellt sjökort."
+    "seamarks3DHint": "OpenSeaMap-märken och mottagna AIS-navigationshjälpmedel. Inte ett officiellt sjökort.",
+    "seamarksOverpass": "Hämta från OpenSeaMap",
+    "seamarksOverpassHint": "Bojar och prickar via Overpass, sparade för offlineanvändning. Av: endast AIS-märken.",
+    "enabled": "På",
+    "disabled": "Av"
   },
   "dashboard": {
     "environment": "Miljö",
