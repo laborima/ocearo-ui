@@ -858,7 +858,8 @@
   },
   "manual": {
     "unavailable": "Impossible de charger les manuels.",
-    "none": "Aucun manuel installé."
+    "none": "Aucun manuel installé.",
+    "openNewTab": "Ouvrir dans un nouvel onglet"
   },
   "offline": {
     "title": "Données hors-ligne",
@@ -884,5 +885,352 @@
   "bathymetry": {
     "chartDepth": "carte {{depth}} m",
     "levelFromSounder": "niveau d'après le sondeur"
+  },
+  "guide": {
+    "tab": "Guide Ocearo",
+    "previousSpot": "Précédent",
+    "nextSpot": "Suivant",
+    "start": {
+      "title": "Premiers pas",
+      "intro": "Ocearo montre votre bateau, la mer et le trafic en 3D, en direct, à partir des données d'un serveur Signal K. Cinq choses à savoir avant d'appareiller.",
+      "steps": {
+        "connect": {
+          "title": "Se connecter à Signal K",
+          "text": "Installé sur le serveur Signal K du bord, Ocearo s'y connecte tout seul. Ouvert depuis ailleurs, saisissez l'adresse du serveur dans Système › Paramètres (par exemple 192.168.1.10:3000, ou demo.signalk.org pour essayer)."
+        },
+        "demo": {
+          "title": "Mode démo",
+          "text": "Sans serveur, le mode démo (Système › Paramètres) remplit les écrans de valeurs d'exemple. Désactivez-le dès que vous naviguez avec de vraies données : les valeurs d'exemple se mêleraient aux vôtres."
+        },
+        "views": {
+          "title": "Vue bateau, vue partagée, vue complète",
+          "text": "Le menu Apps passe de la vue 3D seule à la vue 3D à côté d'une page (tableau de bord, carte, journal…) ou à la page seule. Votre choix est gardé au prochain démarrage."
+        },
+        "phone": {
+          "title": "Sur un téléphone",
+          "text": "La barre du bas garde l'essentiel : Système, Voix, MOB, les mesures et le menu Apps, qui contient la carte, la météo, le tableau de bord et l'aide. Ajoutez Ocearo à l'écran d'accueil pour une app en plein écran."
+        },
+        "settings": {
+          "title": "À votre main",
+          "text": "Dans les paramètres : le modèle de bateau et ses polaires, les unités, le thème (jour, sombre, nuit rouge, ou automatique selon le soleil), le style du HUD, les distances d'alerte AIS et les liens vers vos applications de carte et d'instruments."
+        }
+      }
+    },
+    "view": {
+      "title": "Vue 3D",
+      "intro": "L'écran principal : votre bateau en 3D, les valeurs utiles maintenant et la mer autour. Touchez un numéro pour voir ce qu'il montre.",
+      "spots": {
+        "toolbar": {
+          "title": "Modes et couches",
+          "text": "Modes navigation, mouillage et port, puis le thème, la mer (noire, eau 3D, carte, bathymétrie, météo), les anneaux polaires et les laylines, et le trafic AIS. Un point sous un bouton indique qu'il est actif."
+        },
+        "speed": {
+          "title": "Vitesse",
+          "text": "Le grand chiffre est votre vitesse. Touchez-le pour passer de la vitesse fond (SOG) à la VMG, à la vitesse surface (STW) et au pourcentage de la vitesse polaire."
+        },
+        "values": {
+          "title": "Valeurs du mode",
+          "text": "Cap, vent, angle apparent et distance au waypoint en navigation ; position, évitage et rayon d'alarme au mouillage ; les valeurs d'accostage au port."
+        },
+        "legend": {
+          "title": "Légende",
+          "text": "Ouvre la signification de chaque couleur et ruban de la scène. La dernière partie de ce guide les reprend."
+        },
+        "sky": {
+          "title": "Soleil, UV, heure, batterie",
+          "text": "Prochain lever ou coucher du soleil, l'indice UV, l'heure du bord (GPS) et la batterie de servitude. Touchez la batterie pour passer aux réservoirs."
+        },
+        "sails": {
+          "title": "Voiles et réglages",
+          "text": "Les voiles suivent l'angle du vent. Penons, creux (« Creux 11 % ») et position des chariots aident au réglage ; écoutes et pataras passent du vert au rouge avec la charge."
+        },
+        "ais": {
+          "title": "Trafic AIS",
+          "text": "Navires et bateaux à moins de 5 km, à leur vraie place et à leur cap. Touchez-en un pour son nom, sa distance, son point de rapprochement maximal (CPA, TCPA), sa vitesse et sa route."
+        },
+        "compass": {
+          "title": "Compas et vent",
+          "text": "La rose tourne avec le cap. Les flèches sur son bord donnent le vent réel et apparent avec leur force ; les repères montrent les laylines et la route vers le waypoint."
+        },
+        "wake": {
+          "title": "Sillage",
+          "text": "Coloré selon la part de la vitesse polaire atteinte : vert à 95 % et plus, jaune de 80 à 95 %, rouge en dessous."
+        },
+        "depth": {
+          "title": "Profondeur",
+          "text": "La profondeur maintenant et sur les 10 dernières minutes, en rouge quand c'est peu profond, avec la vitesse à laquelle le fond remonte. Sur téléphone, c'est une jauge en bas."
+        },
+        "tide": {
+          "title": "Marée",
+          "text": "Hauteur actuelle, montante ou descendante, la courbe du jour, prochaines pleine et basse mer et le coefficient. Sur téléphone, c'est une jauge en bas."
+        },
+        "bottom": {
+          "title": "Système, voix, MOB",
+          "text": "Système ouvre les paramètres. Voix règle ce que l'assistant Ocearo peut dire (tout, la sécurité seulement, silence). L'anneau rouge est le bouton homme à la mer."
+        },
+        "readings": {
+          "title": "Mesures",
+          "text": "Températures, pression, humidité et qualité de l'air. Touchez une mesure pour voir la suivante."
+        },
+        "shortcuts": {
+          "title": "Pages",
+          "text": "Carte, météo, menu Apps, tableau de bord et cette aide. Sur un téléphone ou une petite tablette, elles sont toutes dans le menu Apps."
+        }
+      }
+    },
+    "route": {
+      "title": "Route et performance",
+      "intro": "Avec un waypoint et vos polaires, la scène montre où vous allez et à quelle vitesse vous pourriez y arriver.",
+      "spots": {
+        "toggles": {
+          "title": "Anneaux polaires et laylines",
+          "text": "Le bouton compas affiche les anneaux polaires (avec la mer noire), le bouton règle les laylines."
+        },
+        "waypoint": {
+          "title": "Distance au waypoint",
+          "text": "Depuis la route active de votre traceur ou de Signal K."
+        },
+        "route": {
+          "title": "Route",
+          "text": "Le ruban à chevrons bleus mène au prochain waypoint."
+        },
+        "isochrones": {
+          "title": "Anneaux polaires",
+          "text": "Où vous serez dans 5, 10 et 15 minutes à chaque cap, d'après votre polaire, le vent et le courant. Le point est votre cap actuel."
+        },
+        "laylines": {
+          "title": "Laylines",
+          "text": "Les bords qui atteignent le waypoint : rouge bâbord amures, vert tribord amures."
+        },
+        "wake": {
+          "title": "Performance",
+          "text": "La couleur du sillage dit quelle part de la vitesse polaire vous atteignez."
+        }
+      }
+    },
+    "traffic": {
+      "title": "Trafic et règles de barre",
+      "intro": "Chaque cible AIS est colorée selon ce qu'attendent les règles de barre, et Ocearo vous prévient quand c'est à vous de manœuvrer.",
+      "spots": {
+        "toggle": {
+          "title": "AIS",
+          "text": "Affiche ou masque le trafic (aussi au mouillage et au port)."
+        },
+        "banner": {
+          "title": "Vous devez manœuvrer",
+          "text": "Votre coque devient orange et ce bandeau nomme le navire et la règle. Manœuvrez tôt et franchement."
+        },
+        "yields": {
+          "title": "C'est à lui de s'écarter",
+          "text": "Violet : risque de collision, l'autre navire doit s'écarter ; la flèche montre la manœuvre attendue. Gardez cap et vitesse, et surveillez."
+        },
+        "tags": {
+          "title": "Étiquettes",
+          "text": "Nom ou type, qui doit s'écarter et la règle (12, 13, 15, 18…)."
+        },
+        "danger": {
+          "title": "C'est à nous de manœuvrer",
+          "text": "Rouge : risque de collision et c'est à vous. Orange : proche mais sans risque. Blanc : sans risque."
+        },
+        "advice": {
+          "title": "Conseil",
+          "text": "Un changement de cap suggéré, ou ralentir quand aucun virage ne dégage tous les navires. Simple conseil : vous restez le chef de bord."
+        }
+      }
+    },
+    "anchor": {
+      "title": "Mouillage",
+      "intro": "Au mouillage, Ocearo trace le cercle d'évitage et le rayon d'alarme autour de l'ancre, et montre la trace du bateau.",
+      "spots": {
+        "button": {
+          "title": "Mode mouillage",
+          "text": "Passe en veille de mouillage. La position de l'ancre et le rayon d'alarme viennent du serveur (ocearo-core ou le plugin d'alarme de mouillage) ; tant que l'ancre n'est pas posée, le cercle est centré sur le bateau."
+        },
+        "position": {
+          "title": "Position et heure",
+          "text": "Pour le journal de bord ou un appel VHF."
+        },
+        "values": {
+          "title": "Vent, évitage, rayon d'alarme",
+          "text": "Force du vent réel, distance à l'ancre et rayon au-delà duquel l'alarme se déclenche."
+        },
+        "alarm": {
+          "title": "Cercle d'alarme",
+          "text": "Change de couleur quand le bateau en sort en chassant ; l'alarme de mouillage du serveur sonne et l'assistant vocal vous prévient."
+        },
+        "swing": {
+          "title": "Cercle d'évitage",
+          "text": "L'espace que balaie votre bateau avec la longueur de mouillage filée."
+        },
+        "track": {
+          "title": "Trace",
+          "text": "Où le bateau est passé depuis le mouillage : une trace qui s'étire signifie qu'il chasse."
+        },
+        "anchorPoint": {
+          "title": "Ancre",
+          "text": "La position de l'ancre et la ligne de mouillage depuis l'étrave."
+        }
+      }
+    },
+    "parking": {
+      "title": "Port",
+      "intro": "Comme la vue de stationnement d'une voiture : la trajectoire prévue, la place visée et un guidage pour accoster.",
+      "spots": {
+        "button": {
+          "title": "Mode port",
+          "text": "Une vue de dessus, au plus près du bateau, pour manœuvrer dans le port."
+        },
+        "berth": {
+          "title": "Place virtuelle",
+          "text": "La place visée, posée devant le bateau."
+        },
+        "path": {
+          "title": "Trajectoire prévue",
+          "text": "Où va le bateau avec la barre et la vitesse actuelles."
+        },
+        "wind": {
+          "title": "Vent",
+          "text": "Flèches du vent réel et apparent : ce qui vous écarte du ponton ou vous plaque dessus."
+        },
+        "depth": {
+          "title": "Profondeur",
+          "text": "En rouge quand c'est peu profond."
+        },
+        "guidance": {
+          "title": "Guidage",
+          "text": "Aligné, trop à gauche ou à droite, distance à l'entrée."
+        },
+        "types": {
+          "title": "Type de place",
+          "text": "En avant, en arrière, à couple, sur bouée, ou placer la place devant."
+        }
+      }
+    },
+    "bathymetry": {
+      "title": "Bathymétrie",
+      "intro": "Le fond de la mer en relief autour de vous, coloré selon la profondeur, avec la carte en surimpression.",
+      "spots": {
+        "button": {
+          "title": "Mode mer",
+          "text": "Ce bouton fait défiler noir, eau 3D, carte, bathymétrie et météo."
+        },
+        "coast": {
+          "title": "Côte",
+          "text": "La terre en relief à l'horizon."
+        },
+        "soundings": {
+          "title": "Sondes",
+          "text": "Profondeurs en mètres issues des données du SHOM (France), téléchargées par ocearo-core."
+        },
+        "seabed": {
+          "title": "Fond",
+          "text": "Relief et couleur selon la profondeur : plus c'est clair, moins c'est profond."
+        },
+        "keel": {
+          "title": "Sous la quille",
+          "text": "Le trait jusqu'au fond, avec la profondeur juste sous le bateau."
+        }
+      }
+    },
+    "weather": {
+      "title": "Météo",
+      "intro": "Le vent prévu sur la carte, façon Windy (prévisions Open-Meteo, connexion internet nécessaire).",
+      "spots": {
+        "button": {
+          "title": "Mode météo",
+          "text": "Le même bouton de mer, sur la position météo."
+        },
+        "slider": {
+          "title": "Heure de prévision",
+          "text": "Faites glisser pour voir le vent des prochaines heures ; l'échelle de couleur donne la force en nœuds."
+        },
+        "map": {
+          "title": "Carte",
+          "text": "La carte sous le vent, pour la côte et les ports."
+        },
+        "wind": {
+          "title": "Vent",
+          "text": "Les traits montrent la direction, les couleurs la force."
+        }
+      }
+    },
+    "mob": {
+      "title": "Homme à la mer",
+      "intro": "Un appui marque la position. Ocearo montre la dérive estimée de la personne et le chemin du retour.",
+      "spots": {
+        "button": {
+          "title": "Bouton MOB",
+          "text": "Marque la position, déclenche l'alarme sur tous les écrans et lance le chrono."
+        },
+        "alert": {
+          "title": "Alerte",
+          "text": "Temps écoulé, distance et relèvement de la personne. Acquitter coupe le son ; Aller au MOB en fait la destination quand le serveur propose l'API de route."
+        },
+        "marker": {
+          "title": "Position estimée",
+          "text": "Où la personne devrait être maintenant, avec le temps et la distance."
+        },
+        "drift": {
+          "title": "Dérive",
+          "text": "Depuis le point de chute, portée par le courant et le vent."
+        },
+        "return": {
+          "title": "Retour",
+          "text": "La route vers la position estimée."
+        }
+      }
+    },
+    "dashboard": {
+      "title": "Tableau de bord",
+      "intro": "À côté de la vue 3D : le trafic en radar, la météo et la route.",
+      "spots": {
+        "view": {
+          "title": "Vue 3D",
+          "text": "Reste en direct à gauche en vue partagée."
+        },
+        "radar": {
+          "title": "Radar AIS",
+          "text": "Les cibles autour de vous, les plus proches d'abord, avec leur nom."
+        },
+        "range": {
+          "title": "Portée",
+          "text": "Portée du radar en milles."
+        },
+        "tactical": {
+          "title": "Navires les plus proches",
+          "text": "Distance et point de rapprochement maximal (CPA) de chacun."
+        },
+        "weather": {
+          "title": "Météo",
+          "text": "Les conditions actuelles et le vent prévu."
+        },
+        "course": {
+          "title": "Route",
+          "text": "Distance et relèvement du waypoint, écart de route et VMG."
+        }
+      }
+    },
+    "logbook": {
+      "title": "Journal de bord",
+      "intro": "Le journal tenu sur le serveur du bord par ocearo-core : entrées automatiques pour les alertes et les rencontres AIS, vos propres entrées, et les voyages.",
+      "spots": {
+        "tabs": {
+          "title": "Onglets",
+          "text": "Chronologie, entrées, flotte et voyages passés (à rejouer dans la vue 3D)."
+        },
+        "add": {
+          "title": "Nouvelle entrée",
+          "text": "Ajoutez une entrée à la main, ou laissez l'assistant la rédiger à partir des données actuelles."
+        },
+        "entries": {
+          "title": "Entrées",
+          "text": "Heure, route, vitesse, météo, pression, profondeur, position, loch, heures moteur et la note."
+        }
+      }
+    },
+    "legend": {
+      "title": "Légende",
+      "intro": "Ce que veulent dire les couleurs, rubans et bandes de la vue 3D."
+    }
   }
 }

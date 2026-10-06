@@ -18,7 +18,7 @@ const LoadingFallback = ({ messageKey }) => {
 };
 
 // Dynamic imports for lazy-loaded components
-const PDFList = dynamic(() => import('./docviewer/PDFList'), {
+const HelpView = dynamic(() => import('./docviewer/HelpView'), {
   loading: () => <LoadingFallback messageKey="common.loadingDocuments" />
 });
 
@@ -156,7 +156,7 @@ const RightPane = ({ view }) => {
         switch (view) {
             case 'manual':
                 // Relative to the page: the app is served under a prefix (/ocearo-ui)
-                return <PDFList path="./docs" />;
+                return <HelpView path="./docs" />;
             case 'settings':
                 return <ConfigPage />;
             case 'mediaplayer':

@@ -1,9 +1,15 @@
 ## [Unreleased]
 
+### Added
+
+- **An interactive Ocearo guide** opens the Help view: first steps, then each screen (3D view, route and performance, traffic and rules of the road, anchor watch, harbour, bathymetry, weather, man overboard, dashboard, logbook) as a screenshot with numbered spots; tap one to read what it shows. The 3D legend closes the guide. English and French (other languages show the English text for now).
+- **Up-to-date Signal K documentation**: the Signal K Specification 1.8.4 and the Signal K Server 2.33 user guide replace the 2020 specification PDF. They are HTML pages now, readable on phones (which do not show a PDF inside a page) and following the light or dark setting. `node scripts/build-signalk-docs.mjs` rebuilds them from the latest releases. PDF manuals get an "Open in a new tab" link.
+
 ### Fixed
 
 - **Phones in full screen** showed the large tide and depth panels, which covered the HUD values in landscape. Phones (either way round) now keep the compact depth and tide gauges, side by side at the bottom right when the phone is on its side; the detailed panels stay on tablets and computers. The tide gauge also shows the estimated tide when no tide station is configured, like the panel did.
 - **Bottom bar on phones and small tablets**: the temperature overlapped the buttons. Below 1024 px the chart, weather, dashboard and help shortcuts fold into the apps menu (they were already listed there), leaving room for the readings.
+- The 3D legend's close button was announced to screen readers as "Orange vessel: close, no risk of collision".
 - **Signal K address typed without `https://`** (e.g. `demo.signalk.org`) failed silently from the online demo, which then showed only its sample values: no depth, no AIS. The address now gets a scheme, `ws://` / `wss://` are accepted, and `http://` is upgraded on a page served over https, since the browser blocks insecure connections there.
 
 ## [2.0.2] - 2026-10-05

@@ -858,7 +858,8 @@
   },
   "manual": {
     "unavailable": "The manuals cannot be loaded.",
-    "none": "No manual installed."
+    "none": "No manual installed.",
+    "openNewTab": "Open in a new tab"
   },
   "offline": {
     "title": "Offline data",
@@ -884,5 +885,352 @@
   "bathymetry": {
     "chartDepth": "chart {{depth}} m",
     "levelFromSounder": "level from the sounder"
+  },
+  "guide": {
+    "tab": "Ocearo guide",
+    "previousSpot": "Previous",
+    "nextSpot": "Next",
+    "start": {
+      "title": "First steps",
+      "intro": "Ocearo shows your boat, the sea and the traffic in live 3D from the data of a Signal K server. Five things to know before casting off.",
+      "steps": {
+        "connect": {
+          "title": "Connect to Signal K",
+          "text": "Installed on the boat's Signal K server, Ocearo connects to it on its own. Opened from elsewhere, enter the server address in System › Settings (for example 192.168.1.10:3000, or demo.signalk.org to try)."
+        },
+        "demo": {
+          "title": "Demo mode",
+          "text": "Without a server, demo mode (System › Settings) fills the screens with sample values. Turn it off as soon as you sail with real data: the sample values would mix with yours."
+        },
+        "views": {
+          "title": "Boat view, split view, full view",
+          "text": "The Apps menu switches between the 3D view alone, the 3D view beside a page (dashboard, chart, logbook…) and the page alone. Your choice is kept on the next start."
+        },
+        "phone": {
+          "title": "On a phone",
+          "text": "The bottom bar keeps the essentials: System, Voice, MOB, the readings and the Apps menu, which holds the chart, weather, dashboard and help. Add Ocearo to the home screen for a full-screen app."
+        },
+        "settings": {
+          "title": "Make it yours",
+          "text": "In Settings: your boat model and its polars, units, theme (day, dark, red night, or automatic by the sun), the HUD style, the AIS alert distances and the links to your chart and instrument apps."
+        }
+      }
+    },
+    "view": {
+      "title": "3D view",
+      "intro": "The main screen: your boat in 3D, the values you need now, and the sea around you. Tap a number to see what it shows.",
+      "spots": {
+        "toolbar": {
+          "title": "Modes and layers",
+          "text": "Sailing, anchor watch and harbour modes, then the theme, the sea (black, 3D water, chart, bathymetry, weather), the polar rings and laylines, and the AIS traffic. A dot under a button means it is on."
+        },
+        "speed": {
+          "title": "Speed",
+          "text": "The large number is your speed. Tap it to switch between speed over ground (SOG), velocity made good (VMG), speed through water (STW) and the share of the polar speed."
+        },
+        "values": {
+          "title": "Values of the mode",
+          "text": "Heading, wind, apparent angle and distance to the waypoint while sailing; position, swing and alarm radius at anchor; the docking values in the harbour."
+        },
+        "legend": {
+          "title": "Legend",
+          "text": "Opens the meaning of every colour and ribbon of the scene. The last section of this guide lists them too."
+        },
+        "sky": {
+          "title": "Sun, UV, time, battery",
+          "text": "Next sunrise or sunset, the UV index, the boat's time (GPS) and the house battery. Tap the battery to switch to the tanks."
+        },
+        "sails": {
+          "title": "Sails and trim",
+          "text": "The sails follow the wind angle. Telltales, draft (\"Depth 11%\") and the car positions help trim; sheets and backstay turn from green to red with the load."
+        },
+        "ais": {
+          "title": "AIS traffic",
+          "text": "Ships and boats within 5 km, at their real place and heading. Tap one for its name, distance, closest point of approach (CPA, TCPA), speed and course."
+        },
+        "compass": {
+          "title": "Compass and wind",
+          "text": "The rose turns with the heading. Arrows on its edge give the true and apparent wind with their speeds; the marks show the laylines and the course to the waypoint."
+        },
+        "wake": {
+          "title": "Wake",
+          "text": "Coloured by the share of the polar speed you reach: green 95 % and more, yellow 80 to 95 %, red below."
+        },
+        "depth": {
+          "title": "Depth",
+          "text": "Depth now and over the last 10 minutes, red when shallow, with the rate it is shoaling. On a phone it is a gauge at the bottom."
+        },
+        "tide": {
+          "title": "Tide",
+          "text": "Height now, rising or falling, the day's curve, next high and low water and the coefficient. On a phone it is a gauge at the bottom."
+        },
+        "bottom": {
+          "title": "System, voice, MOB",
+          "text": "System opens the settings. Voice sets what the Ocearo assistant may say (everything, safety only, silence). The red ring is the man-overboard button."
+        },
+        "readings": {
+          "title": "Readings",
+          "text": "Temperatures, pressure, humidity and air quality. Tap a reading to see the next one."
+        },
+        "shortcuts": {
+          "title": "Pages",
+          "text": "Chart, weather, Apps menu, dashboard and this help. On a phone or a small tablet they are all in the Apps menu."
+        }
+      }
+    },
+    "route": {
+      "title": "Route and performance",
+      "intro": "With a waypoint and your polars, the scene shows where you are going and how fast you could get there.",
+      "spots": {
+        "toggles": {
+          "title": "Polar rings and laylines",
+          "text": "The compass button shows the polar rings (with the black sea), the ruler button the laylines."
+        },
+        "waypoint": {
+          "title": "Distance to the waypoint",
+          "text": "From the active route of your chart plotter or Signal K."
+        },
+        "route": {
+          "title": "Route",
+          "text": "The blue chevron ribbon leads to the next waypoint."
+        },
+        "isochrones": {
+          "title": "Polar rings",
+          "text": "Where you would be in 5, 10 and 15 minutes on each heading, from your polar, the wind and the current. The dot is your present heading."
+        },
+        "laylines": {
+          "title": "Laylines",
+          "text": "The tacks that reach the waypoint: red on port tack, green on starboard."
+        },
+        "wake": {
+          "title": "Performance",
+          "text": "The wake colour tells how much of the polar speed you are making."
+        }
+      }
+    },
+    "traffic": {
+      "title": "Traffic and rules of the road",
+      "intro": "Each AIS target is coloured by what the rules of the road expect, and Ocearo tells you when you must keep clear.",
+      "spots": {
+        "toggle": {
+          "title": "AIS",
+          "text": "Shows or hides the traffic (also at anchor and in the harbour)."
+        },
+        "banner": {
+          "title": "You must give way",
+          "text": "Your hull turns orange and this banner names the vessel and the rule. Act early and clearly."
+        },
+        "yields": {
+          "title": "They keep clear",
+          "text": "Violet: risk of collision, the other vessel must give way; the arrow shows the manoeuvre expected from it. Keep your course and speed, and watch."
+        },
+        "tags": {
+          "title": "Labels",
+          "text": "Name or type, who keeps clear and the rule (12, 13, 15, 18…)."
+        },
+        "danger": {
+          "title": "We keep clear",
+          "text": "Red: risk of collision and it is up to you. Orange: close but no risk. White: no risk."
+        },
+        "advice": {
+          "title": "Advice",
+          "text": "A suggested course change, or slowing down when no turn clears every vessel. Advice only: you remain the skipper."
+        }
+      }
+    },
+    "anchor": {
+      "title": "Anchor watch",
+      "intro": "At anchor, Ocearo draws the swing circle and the alarm radius around the anchor, and shows the boat's track.",
+      "spots": {
+        "button": {
+          "title": "Anchor mode",
+          "text": "Switches to the anchor watch. The anchor position and the alarm radius come from the server (ocearo-core or the anchor alarm plugin); until the anchor is set, the circle is centred on the boat."
+        },
+        "position": {
+          "title": "Position and time",
+          "text": "For the logbook or a call on the radio."
+        },
+        "values": {
+          "title": "Wind, swing, alarm radius",
+          "text": "True wind speed, distance from the anchor, and the radius beyond which the alarm sounds."
+        },
+        "alarm": {
+          "title": "Alarm circle",
+          "text": "Coloured when the boat drags out of it; the server's anchor alarm sounds and the voice assistant warns you."
+        },
+        "swing": {
+          "title": "Swing circle",
+          "text": "The space your boat sweeps with the scope paid out."
+        },
+        "track": {
+          "title": "Track",
+          "text": "Where the boat has been since anchoring: a track spreading out means dragging."
+        },
+        "anchorPoint": {
+          "title": "Anchor",
+          "text": "The anchor position and the rode from the bow."
+        }
+      }
+    },
+    "parking": {
+      "title": "Harbour",
+      "intro": "Like a car's parking view: your predicted path, the berth you aim at, and guidance to come alongside.",
+      "spots": {
+        "button": {
+          "title": "Harbour mode",
+          "text": "A top view close to the boat, for manoeuvring in the marina."
+        },
+        "berth": {
+          "title": "Virtual berth",
+          "text": "The berth you aim at, placed ahead of the boat."
+        },
+        "path": {
+          "title": "Predicted path",
+          "text": "Where the boat goes with the present rudder and speed."
+        },
+        "wind": {
+          "title": "Wind",
+          "text": "True and apparent wind arrows: what pushes you off or onto the pontoon."
+        },
+        "depth": {
+          "title": "Depth",
+          "text": "Red when shallow."
+        },
+        "guidance": {
+          "title": "Guidance",
+          "text": "Lined up, too far left or right, distance to the entrance."
+        },
+        "types": {
+          "title": "Berth type",
+          "text": "Bow-in, stern-in, alongside, mooring buoy, or place the berth ahead."
+        }
+      }
+    },
+    "bathymetry": {
+      "title": "Bathymetry",
+      "intro": "The sea floor in relief around you, coloured by depth, with the chart laid over it.",
+      "spots": {
+        "button": {
+          "title": "Sea mode",
+          "text": "This button cycles through black, 3D water, chart, bathymetry and weather."
+        },
+        "coast": {
+          "title": "Coast",
+          "text": "The land in relief on the horizon."
+        },
+        "soundings": {
+          "title": "Soundings",
+          "text": "Depths in metres from the SHOM data (France), downloaded by ocearo-core."
+        },
+        "seabed": {
+          "title": "Seabed",
+          "text": "Relief and colour by depth: the lighter, the shallower."
+        },
+        "keel": {
+          "title": "Under the keel",
+          "text": "The line down to the bottom with the depth straight below the boat."
+        }
+      }
+    },
+    "weather": {
+      "title": "Weather",
+      "intro": "The forecast wind over the chart, like Windy (Open-Meteo forecast, needs internet).",
+      "spots": {
+        "button": {
+          "title": "Weather mode",
+          "text": "Same sea button, on the weather setting."
+        },
+        "slider": {
+          "title": "Forecast time",
+          "text": "Slide to see the wind in the coming hours; the colour scale gives the speed in knots."
+        },
+        "map": {
+          "title": "Chart",
+          "text": "The map under the wind, for the coast and the harbours."
+        },
+        "wind": {
+          "title": "Wind",
+          "text": "Streaks show the direction, colours the strength."
+        }
+      }
+    },
+    "mob": {
+      "title": "Man overboard",
+      "intro": "One press marks the position. Ocearo shows the person's estimated drift and the way back.",
+      "spots": {
+        "button": {
+          "title": "MOB button",
+          "text": "Marks the position, raises the alarm on every screen and starts the timer."
+        },
+        "alert": {
+          "title": "Alert",
+          "text": "Time elapsed, distance and bearing to the person. Acknowledge stops the sound; Go to MOB sets the person as the destination when the server offers the course API."
+        },
+        "marker": {
+          "title": "Estimated position",
+          "text": "Where the person should be now, with the time and distance."
+        },
+        "drift": {
+          "title": "Drift",
+          "text": "From the drop point, carried by the current and the wind."
+        },
+        "return": {
+          "title": "Way back",
+          "text": "The route to the estimated position."
+        }
+      }
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "intro": "Beside the 3D view: the traffic as a radar, the weather and the course.",
+      "spots": {
+        "view": {
+          "title": "3D view",
+          "text": "Stays live on the left in split view."
+        },
+        "radar": {
+          "title": "AIS radar",
+          "text": "Targets around you, the closest first, with their names."
+        },
+        "range": {
+          "title": "Range",
+          "text": "Radar range in nautical miles."
+        },
+        "tactical": {
+          "title": "Closest vessels",
+          "text": "Distance and closest point of approach (CPA) of each."
+        },
+        "weather": {
+          "title": "Weather",
+          "text": "Conditions now and the forecast wind."
+        },
+        "course": {
+          "title": "Course",
+          "text": "Distance and bearing to the waypoint, cross-track error and VMG."
+        }
+      }
+    },
+    "logbook": {
+      "title": "Logbook",
+      "intro": "The logbook kept on the boat's server by ocearo-core: automatic entries for alerts and AIS encounters, your own entries, and the voyages.",
+      "spots": {
+        "tabs": {
+          "title": "Tabs",
+          "text": "Timeline, entries, fleet, and past voyages (replay one in the 3D view)."
+        },
+        "add": {
+          "title": "New entry",
+          "text": "Add an entry by hand, or let the assistant write one from the present data."
+        },
+        "entries": {
+          "title": "Entries",
+          "text": "Time, course, speed, weather, pressure, depth, position, log, engine hours and the note."
+        }
+      }
+    },
+    "legend": {
+      "title": "Legend",
+      "intro": "What the colours, ribbons and bands of the 3D view mean."
+    }
   }
 }

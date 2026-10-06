@@ -56,21 +56,11 @@ const Swatch = ({ kind, colors }) => {
     return null;
 };
 
-/**
- * Legend of the 3D scene: what each ribbon, band and colour means. Closed
- * by default (a small "Legend" chip); remembers whether it was left open.
- */
-const SceneLegend = () => {
+/** What each ribbon, band and colour of the scene means, in theme colours */
+export const useLegendRows = () => {
     const { t } = useTranslation();
     const { scene, accent } = useTheme();
-    const [open, setOpen] = useState(() => configService.get('sceneLegendOpen') === true);
-
-    const toggle = () => {
-        configService.set('sceneLegendOpen', !open);
-        setOpen(!open);
-    };
-
-    const rows = [
+    return [
         { kind: 'chevrons', colors: [scene.route], label: t('legend.route') },
         { kind: 'bands', colors: [scene.wakeGood, scene.wakeFair, scene.wakeBad], label: t('legend.wake') },
         { kind: 'bands', colors: [scene.laylinePort, scene.laylineStarboard], label: t('legend.laylines') },
@@ -86,6 +76,35 @@ const SceneLegend = () => {
         { kind: 'bands', colors: [accent], label: t('legend.trim') },
         { kind: 'bands', colors: LOAD_COLORS, label: t('legend.loads') },
     ];
+};
+
+/** The legend rows with their swatches (3D view chip and the guide) */
+export const LegendList = ({ className = 'gap-1 text-caption' }) => {
+    const rows = useLegendRows();
+    return (
+        <ul className={`flex flex-col text-hud-main leading-tight ${className}`}>
+            {rows.map(row => (
+                <li key={row.label} className="flex items-center gap-2">
+                    <span className="shrink-0 w-7 flex justify-center"><Swatch kind={row.kind} colors={row.colors} /></span>
+                    <span>{row.label}</span>
+                </li>
+            ))}
+        </ul>
+    );
+};
+
+/**
+ * Legend of the 3D scene: what each ribbon, band and colour means. Closed
+ * by default (a small "Legend" chip); remembers whether it was left open.
+ */
+const SceneLegend = () => {
+    const { t } = useTranslation();
+    const [open, setOpen] = useState(() => configService.get('sceneLegendOpen') === true);
+
+    const toggle = () => {
+        configService.set('sceneLegendOpen', !open);
+        setOpen(!open);
+    };
 
     if (!open) {
         return (
@@ -101,18 +120,11 @@ const SceneLegend = () => {
         <div className="relative z-40 px-3 py-2 max-w-[19rem] max-h-[45vh] overflow-y-auto select-none rounded-2xl bg-hud-bg/90 backdrop-blur shadow-soft">
             <div className="flex items-center justify-between mb-1">
                 <span className="text-caption font-semibold uppercase tracking-widest text-hud-muted">{t('legend.title')}</span>
-                <button type="button" onClick={toggle} aria-label={t('legend.close')} className="text-hud-muted hover:text-hud-main px-1">
+                <button type="button" onClick={toggle} aria-label={t('common.close')} className="text-hud-muted hover:text-hud-main px-1">
                     <FontAwesomeIcon icon={faXmark} />
                 </button>
             </div>
-            <ul className="flex flex-col gap-1">
-                {rows.map(row => (
-                    <li key={row.label} className="flex items-center gap-2 text-caption text-hud-main leading-tight">
-                        <span className="shrink-0 w-7 flex justify-center"><Swatch kind={row.kind} colors={row.colors} /></span>
-                        <span>{row.label}</span>
-                    </li>
-                ))}
-            </ul>
+            <LegendList />
         </div>
     );
 };
