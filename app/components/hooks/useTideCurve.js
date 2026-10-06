@@ -27,34 +27,24 @@ const HALF_CYCLE_MS = 6.21 * 60 * 60 * 1000;
 const buildTideEvents = (highHeight, lowHeight, highTime, lowTime) => {
   const highMs = highTime.getTime();
   const lowMs = lowTime.getTime();
-  const events = [];
+  const heightOf = (type) => (type === 'high' ? highHeight : lowHeight);
+  const other = (type) => (type === 'high' ? 'low' : 'high');
+  // The known pair in time order (high then low: the tide is rising now)
+  const first = highMs < lowMs ? { time: highMs, type: 'high' } : { time: lowMs, type: 'low' };
+  const second = highMs < lowMs ? { time: lowMs, type: 'low' } : { time: highMs, type: 'high' };
 
-  // Build enough events to cover the full 00:00–24:00 window.
-  // We generate 4 half-cycles before and after the known pair.
-  if (highMs < lowMs) {
-    // Known order: high, then low → tide is currently rising toward high
-    events.push(
-      { time: highMs - 3 * HALF_CYCLE_MS, height: lowHeight, type: 'low' },
-      { time: highMs - 2 * HALF_CYCLE_MS, height: highHeight, type: 'high' },
-      { time: highMs - HALF_CYCLE_MS, height: lowHeight, type: 'low' },
-      { time: highMs, height: highHeight, type: 'high' },
-      { time: lowMs, height: lowHeight, type: 'low' },
-      { time: lowMs + HALF_CYCLE_MS, height: highHeight, type: 'high' },
-      { time: lowMs + 2 * HALF_CYCLE_MS, height: lowHeight, type: 'low' },
-      { time: lowMs + 3 * HALF_CYCLE_MS, height: highHeight, type: 'high' }
-    );
-  } else {
-    // Known order: low, then high → tide is currently falling toward low
-    events.push(
-      { time: lowMs - 3 * HALF_CYCLE_MS, height: highHeight, type: 'high' },
-      { time: lowMs - 2 * HALF_CYCLE_MS, height: lowHeight, type: 'low' },
-      { time: lowMs - HALF_CYCLE_MS, height: highHeight, type: 'high' },
-      { time: lowMs, height: lowHeight, type: 'low' },
-      { time: highMs, height: highHeight, type: 'high' },
-      { time: highMs + HALF_CYCLE_MS, height: lowHeight, type: 'low' },
-      { time: highMs + 2 * HALF_CYCLE_MS, height: highHeight, type: 'high' },
-      { time: highMs + 3 * HALF_CYCLE_MS, height: lowHeight, type: 'low' }
-    );
+  // Five half-cycles (~31 h) each side: the known pair can be late in the
+  // evening and the curve still has to start at 00:00 (three left it flat
+  // until mid-morning)
+  const events = [];
+  for (let k = 5; k >= 1; k--) {
+    const type = k % 2 ? other(first.type) : first.type;
+    events.push({ time: first.time - k * HALF_CYCLE_MS, height: heightOf(type), type });
+  }
+  events.push({ ...first, height: heightOf(first.type) }, { ...second, height: heightOf(second.type) });
+  for (let k = 1; k <= 5; k++) {
+    const type = k % 2 ? other(second.type) : second.type;
+    events.push({ time: second.time + k * HALF_CYCLE_MS, height: heightOf(type), type });
   }
   return events;
 };
