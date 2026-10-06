@@ -11,6 +11,7 @@ import TensionLines3D from './sail/TensionLines3D';
 import Rigging3D from './sail/Rigging3D';
 import useTheme from '../theme/useTheme';
 import useColregs from '../hooks/useColregs';
+import useHeave from '../hooks/useHeave';
 import RacerBoat from './boats/racer/RacerBoat';
 import CatamaranBoat from './boats/catamaran/CatamaranBoat';
 
@@ -161,7 +162,7 @@ const GltfBoatMeshes = ({ modelPath, selectedBoat, materialProperties, rudderRef
     return <BoatMeshes />;
 };
 
-const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, ...props }) => {
+const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, heave: showHeave = false, ...props }) => {
     const boatRef = useRef();
     const rudderRef = useRef();
     const config = configService.getAll();
@@ -195,7 +196,12 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
     const skAttitude = useSignalKPath('navigation.attitude');
     const skRudderAngle = useSignalKPath('steering.rudderAngle', 0);
     const attitudeRef = useRef({ roll: 0, pitch: 0, yaw: 0 });
+    // Attitude shown, eased towards the last reading
+    const shownAttitude = useRef({ roll: 0, pitch: 0 });
     const rudderAngleRef = useRef(0);
+    const heave = useHeave();
+    const baseY = props.position?.[1] ?? 0;
+    const scaleY = Array.isArray(props.scale) ? props.scale[1] : (props.scale ?? 1);
 
     useEffect(() => {
         if (skAttitude) {
@@ -246,21 +252,28 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
     const rudderBaseEuler = useMemo(() => new THREE.Euler(-Math.PI / 2, Math.PI / 2, 0), []);
 
     // Optimize frame updates using RAF
-    useFrame(() => {
+    useFrame((_, delta) => {
         if (!boatRef.current) return;
 
         // Get attitude values from refs for maximum performance
         const attitude = attitudeRef.current;
         const rudderAngle = (rudderAngleRef.current * 180) / Math.PI;
 
+        // Ease towards the reading (time constant ~0.15 s): smooth with a
+        // 1 Hz feed, still follows a 10 Hz motion sensor in a seaway
+        const ease = 1 - Math.exp(-Math.min(delta, 0.1) / 0.15);
+        const shown = shownAttitude.current;
+        shown.pitch += ((attitude.pitch || 0) - shown.pitch) * ease;
+        shown.roll += ((attitude.roll || 0) - shown.roll) * ease;
+
         // Update boat attitude
-        if (boatRef.current) {
-            boatRef.current.rotation.set(
-                attitude.pitch || 0,  // X rotation (pitch)
-                0/*2* Math.PI  - attitude.yaw*/,    // Y rotation (yaw)
-                2* Math.PI  - (attitude.roll || 0)    // Z rotation (roll)
-            );
-        }
+        boatRef.current.rotation.set(
+            shown.pitch,  // X rotation (pitch)
+            0/*2* Math.PI  - attitude.yaw*/,    // Y rotation (yaw)
+            2* Math.PI  - shown.roll    // Z rotation (roll)
+        );
+        // Heave, metres at the boat's scale, on the water only
+        boatRef.current.position.y = baseY + (showHeave ? heave.current * scaleY : 0);
 
         // Update rudder rotation
         if (rudderRef.current) {
