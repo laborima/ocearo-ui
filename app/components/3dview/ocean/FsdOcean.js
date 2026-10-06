@@ -7,6 +7,8 @@ import { sunPosition } from '../../utils/SunUtils';
 import { vesselNow } from '../../utils/VesselClock';
 import useOwnTrack from '../fsd/useOwnTrack';
 import { getRenderProfile } from '../../utils/RenderProfile';
+import NightSky from './NightSky';
+import useHeave from '../../hooks/useHeave';
 
 // The sea is drawn at the own boat's scale (scene units per metre, see
 // ThreeDBoatView): wavelengths, wake and speed past the hull read true
@@ -34,6 +36,11 @@ const PATHS = [
     'environment.wind.directionTrue',
     'navigation.speedThroughWater',
     'navigation.speedOverGround',
+    // Measured sea state from a motion sensor (ocean-imu on the Bareboat
+    // Necessities image): heave range ~ wave height, heave frequency
+    'navigation.heave.range',
+    'navigation.heave.apparentFreqAvg',
+    'navigation.heave.apparentFreq',
 ];
 
 const common = `
@@ -43,6 +50,7 @@ const common = `
     uniform float uWaveLength;
     uniform float uChop;
     uniform vec2 uOffset;
+    uniform float uHeave;
 `;
 
 // Wave field: a spectrum of Gerstner trains spread around the downwind
@@ -112,7 +120,8 @@ const seaVertex = `
         vHeight = disp.z / max(uAmp, 1e-3);
         vSea = sea + disp.xy;
         vDist = dist;
-        vPos = vec3(local + disp.xy, disp.z);
+        // The water around the hull rises and falls with the boat (heave)
+        vPos = vec3(local + disp.xy, disp.z + uHeave * (1.0 - smoothstep(6.0, 40.0, dist)));
         gl_Position = projectionMatrix * modelViewMatrix * vec4(vPos, 1.0);
     }
 `;
@@ -350,7 +359,8 @@ export const useSun = () => {
 
 /**
  * Clean gradient sky with the sun where it really is: zenith to a pale haze
- * at the horizon, no clouds (FSD look). Shared by every ocean mode.
+ * at the horizon, no clouds (FSD look), with the Moon, planets and navigational stars.
+ * Shared by every ocean mode.
  */
 export const SkyDome = () => {
     const { scene, id: themeId } = useTheme();
@@ -389,9 +399,12 @@ export const SkyDome = () => {
     });
     useEffect(() => () => material.dispose(), [material]);
     return (
-        <mesh material={material} renderOrder={-3} frustumCulled={false}>
-            <sphereGeometry args={[SKY_RADIUS, 48, 24]} />
-        </mesh>
+        <>
+            <mesh material={material} renderOrder={-3} frustumCulled={false}>
+                <sphereGeometry args={[SKY_RADIUS, 48, 24]} />
+            </mesh>
+            <NightSky />
+        </>
     );
 };
 
@@ -410,6 +423,9 @@ const FsdOcean = ({ y = -0.3 }) => {
     const tws = v['environment.wind.speedTrue'];
     const twd = v['environment.wind.directionTrue'];
     const speed = v['navigation.speedThroughWater'] ?? v['navigation.speedOverGround'];
+    const heaveRange = v['navigation.heave.range'];
+    const heaveFreq = v['navigation.heave.apparentFreqAvg'] ?? v['navigation.heave.apparentFreq'];
+    const heave = useHeave();
     const sun = useSun();
     const seaRef = useRef();
     const trail = useRef([]);
@@ -421,6 +437,7 @@ const FsdOcean = ({ y = -0.3 }) => {
         uWaveLength: { value: 15 },
         uChop: { value: 0.6 },
         uOffset: { value: new THREE.Vector2() },
+        uHeave: { value: 0 },
         uCam: { value: new THREE.Vector3() },
         uSunDir: { value: new THREE.Vector3(0.3, 0.6, 0.5).normalize() },
         uSunI: { value: 1 },
@@ -475,16 +492,25 @@ const FsdOcean = ({ y = -0.3 }) => {
     // developed sea (Hs ≈ 0.21·U²/g): the fetch keeps waves shorter and
     // steeper, so cap the wavelength (≈ 0.5·U², 6 – 55 m) and the height
     // (2.5 m). Whitecaps from ~4 m/s.
+    // A motion sensor, when there is one, gives the measured height (heave
+    // range) and period (heave frequency, deep-water L = g·T²/2π). It is the
+    // frequency of encounter, shifted by our own speed: right for the look of
+    // the sea, not a wave measurement.
     useEffect(() => {
         const u = Number.isFinite(tws) ? tws : 4;
-        const hs = Math.min(0.21 * u * u / 9.81, 2.5);
+        const measuredHeight = Number.isFinite(heaveRange) && heaveRange > 0;
+        const measuredPeriod = Number.isFinite(heaveFreq) && heaveFreq > 0.03 && heaveFreq < 2;
+        const hs = measuredHeight ? Math.min(heaveRange, 6) : Math.min(0.21 * u * u / 9.81, 2.5);
+        const length = measuredPeriod
+            ? 9.81 / (2 * Math.PI * heaveFreq * heaveFreq)
+            : 0.5 * u * u;
         uniforms.uAmp.value = Math.max(0.15, hs) * BOAT_SCALE;
         uniforms.uChop.value = 0.4 + 0.5 * THREE.MathUtils.smoothstep(u, 3, 13);
-        uniforms.uWaveLength.value = Math.min(55, Math.max(6, 0.5 * u * u)) * BOAT_SCALE;
+        uniforms.uWaveLength.value = Math.min(measuredPeriod ? 150 : 55, Math.max(6, length)) * BOAT_SCALE;
         uniforms.uWind.value = THREE.MathUtils.smoothstep(u, 3.5, 13);
         // Waves travel downwind; the plane is in the north-up layer (+Y north)
         uniforms.uDir.value = Number.isFinite(twd) ? twd + Math.PI : Math.PI;
-    }, [uniforms, tws, twd]);
+    }, [uniforms, tws, twd, heaveRange, heaveFreq]);
 
     // Position between fixes: the GPS gives one a second, the waves must
     // not jump with it. Dead-reckon at our speed and heading, easing onto
@@ -515,6 +541,7 @@ const FsdOcean = ({ y = -0.3 }) => {
             sm.y += vy * dt + (ty - sm.y - vy * dt) * Math.min(1, dt * 3);
         }
         uniforms.uOffset.value.set(sm.x, sm.y);
+        uniforms.uHeave.value = heave.current * BOAT_SCALE;
 
         // Camera in the sea's frame (east, north, up), for reflections
         mesh.updateWorldMatrix(true, false);

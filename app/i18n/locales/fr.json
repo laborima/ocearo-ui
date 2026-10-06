@@ -1265,5 +1265,12 @@
       "restrictedManouverability": "Capacité de manœuvre restreinte",
       "constrainedByDraft": "Handicapé par son tirant d'eau"
     }
+  },
+  "sky": {
+    "moon": "Lune",
+    "venus": "Vénus",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturne"
   }
 }

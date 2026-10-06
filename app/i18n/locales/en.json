@@ -1265,5 +1265,12 @@
       "restrictedManouverability": "Restricted in ability to manoeuvre",
       "constrainedByDraft": "Constrained by her draught"
     }
+  },
+  "sky": {
+    "moon": "Moon",
+    "venus": "Venus",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturn"
   }
 }

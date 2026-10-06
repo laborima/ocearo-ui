@@ -884,5 +884,12 @@
   "bathymetry": {
     "chartDepth": "carta {{depth}} m",
     "levelFromSounder": "livello dall'ecoscandaglio"
+  },
+  "sky": {
+    "moon": "Luna",
+    "venus": "Venere",
+    "mars": "Marte",
+    "jupiter": "Giove",
+    "saturn": "Saturno"
   }
 }

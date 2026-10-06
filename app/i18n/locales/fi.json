@@ -884,5 +884,12 @@
   "bathymetry": {
     "chartDepth": "kartta {{depth}} m",
     "levelFromSounder": "taso kaikuluotaimesta"
+  },
+  "sky": {
+    "moon": "Kuu",
+    "venus": "Venus",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturnus"
   }
 }

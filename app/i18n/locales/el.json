@@ -884,5 +884,12 @@
   "bathymetry": {
     "chartDepth": "χάρτης {{depth}} m",
     "levelFromSounder": "στάθμη από το βυθόμετρο"
+  },
+  "sky": {
+    "moon": "Σελήνη",
+    "venus": "Αφροδίτη",
+    "mars": "Άρης",
+    "jupiter": "Δίας",
+    "saturn": "Κρόνος"
   }
 }

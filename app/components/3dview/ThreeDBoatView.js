@@ -88,6 +88,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel, selection = null }) => {
                     showSail={true} 
                     onUpdateInfoPanel={onUpdateInfoPanel}
                     sailTrimData={sailTrimData}
+                    heave={states.oceanMode === 'water'}
                 />
 
                 {/* Boat sailing at the polar speed: ahead of us = we are under the polar */}

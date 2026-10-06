@@ -884,5 +884,12 @@
   "bathymetry": {
     "chartDepth": "kaart {{depth}} m",
     "levelFromSounder": "niveau volgens dieptemeter"
+  },
+  "sky": {
+    "moon": "Maan",
+    "venus": "Venus",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturnus"
   }
 }

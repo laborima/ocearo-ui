@@ -46,6 +46,28 @@ export const useSignalKPath = (path, defaultValue = null) => {
 };
 
 /**
+ * useSignalKRef - The latest value of a SignalK path in a ref, without
+ * re-rendering: for fast feeds read inside useFrame (a 10 Hz motion sensor
+ * must not re-render the whole 3D boat ten times a second).
+ *
+ * @param {string} path - The SignalK path to follow
+ * @returns {{current: any}} Ref holding the latest value (null until known)
+ */
+export const useSignalKRef = (path) => {
+  const { getSignalKValue, subscribe, unsubscribe } = useOcearoContext();
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const update = (value) => { ref.current = value ?? null; };
+    update(getSignalKValue(path));
+    subscribe?.(path, update);
+    return () => unsubscribe?.(path, update);
+  }, [path, subscribe, unsubscribe, getSignalKValue]);
+
+  return ref;
+};
+
+/**
  * useSignalKPaths - A hook to subscribe to multiple SignalK data paths.
  * 
  * @param {Array<string>} paths - Array of SignalK paths
