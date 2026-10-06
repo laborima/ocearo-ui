@@ -184,7 +184,9 @@
     "renderQualityHint": "Raspberry Pi: 30 fps, ohne Kantenglättung, glattes Wasser. Wirksam nach Neuladen.",
     "hudStyle": "3D-HUD",
     "hudStyle_minimal": "Minimal",
-    "hudStyle_classic": "Klassisch"
+    "hudStyle_classic": "Klassisch",
+    "seamarks3D": "Tonnen und Baken in 3D",
+    "seamarks3DHint": "Aus OpenSeaMap (Overpass), offline gespeichert. Keine amtliche Seekarte."
   },
   "dashboard": {
     "environment": "Umgebung",

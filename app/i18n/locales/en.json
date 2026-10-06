@@ -184,7 +184,9 @@
     "renderQualityHint": "Raspberry Pi: 30 fps, no anti-aliasing, flat water. Applied after reload.",
     "hudStyle": "3D HUD",
     "hudStyle_minimal": "Minimal",
-    "hudStyle_classic": "Classic"
+    "hudStyle_classic": "Classic",
+    "seamarks3D": "3D buoys and beacons",
+    "seamarks3DHint": "From OpenSeaMap (Overpass), kept for offline use. Not an official chart."
   },
   "dashboard": {
     "environment": "Environment",

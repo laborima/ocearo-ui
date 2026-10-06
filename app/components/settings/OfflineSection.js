@@ -7,6 +7,8 @@ import { useSignalKPath } from '../hooks/useSignalK';
 import { clearOfflineCache, offlineCacheSize, prefetchArea } from '../utils/offlineCache';
 import { TERRARIUM, BATHY_ZOOM } from '../3dview/ocean/Seabed3D';
 import { windFieldUrl } from '../3dview/meteo/windField';
+import { prefetchSeamarks } from '../3dview/seamarks/seamarkData';
+import configService from './ConfigService';
 import { downloadBathymetry, getBathymetryStatus, isOcearoCoreEnabled } from '../utils/OcearoCoreUtils';
 
 const NM = 1852;
@@ -53,6 +55,8 @@ const OfflineSection = () => {
         setProgress({ done: 0, total: 0, failed: 0 });
         // SHOM surveys: downloaded by the boat's server, in the background
         if (shom) downloadBathymetry(lat, lon, radiusNm).then(refreshShom).catch(() => {});
+        // Buoys and beacons (OpenSeaMap): one Overpass query for the whole area
+        if (configService.get('showSeamarks3D') !== false) prefetchSeamarks(lat, lon, radiusM).catch(() => {});
         // Bathymetry (open data) and the wind forecast. The chart itself is not
         // bulk-downloaded: the OpenStreetMap and OpenSeaMap tile servers forbid
         // it. Chart tiles viewed are kept as you go; for full offline charts,

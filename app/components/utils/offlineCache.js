@@ -125,6 +125,21 @@ export const offlineCacheSize = async () => {
     return null;
 };
 
+/** Stores a response under a URL (data downloaded in bulk, split locally) */
+export const storeCached = async (url, response) => {
+    if (!available()) return false;
+    const cache = await caches.open(CACHE);
+    await cache.put(url, response);
+    return true;
+};
+
+/** A stored response, or null: no network access */
+export const readCached = async (url) => {
+    if (!available()) return null;
+    const cache = await caches.open(CACHE);
+    return (await cache.match(url)) || null;
+};
+
 export const clearOfflineCache = () => (available() ? caches.delete(CACHE) : Promise.resolve(false));
 
 export { FRESH_MS };

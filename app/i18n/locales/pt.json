@@ -184,7 +184,9 @@
     "renderQualityHint": "Raspberry Pi: 30 fps, sem antialiasing, água plana. Aplicado após recarregar.",
     "hudStyle": "HUD 3D",
     "hudStyle_minimal": "Mínimo",
-    "hudStyle_classic": "Clássico"
+    "hudStyle_classic": "Clássico",
+    "seamarks3D": "Boias e balizas em 3D",
+    "seamarks3DHint": "Do OpenSeaMap (Overpass), guardadas para uso offline. Não é uma carta oficial."
   },
   "dashboard": {
     "environment": "Ambiente",

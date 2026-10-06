@@ -39,7 +39,9 @@ class ConfigService {
       debugWindDirection: 0, // degrees
       debugShowAxes: false,
       showSailTrimSliders: true,
-      showRigging: true
+      showRigging: true,
+      // Buoys and beacons from OpenSeaMap (Overpass) in the 3D view
+      showSeamarks3D: true
     };
 
     this.configKey = 'ocearoConfig'; // Key used to store the config

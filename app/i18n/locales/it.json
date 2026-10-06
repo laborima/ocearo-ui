@@ -184,7 +184,9 @@
     "renderQualityHint": "Raspberry Pi: 30 fps, senza antialiasing, acqua piatta. Attivo dopo il ricaricamento.",
     "hudStyle": "HUD 3D",
     "hudStyle_minimal": "Minimale",
-    "hudStyle_classic": "Classico"
+    "hudStyle_classic": "Classico",
+    "seamarks3D": "Boe e mede in 3D",
+    "seamarks3DHint": "Da OpenSeaMap (Overpass), conservate per l'uso offline. Non è una carta ufficiale."
   },
   "dashboard": {
     "environment": "Ambiente",

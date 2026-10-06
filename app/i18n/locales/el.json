@@ -184,7 +184,9 @@
     "renderQualityHint": "Raspberry Pi: 30 fps, χωρίς εξομάλυνση, επίπεδο νερό. Ισχύει μετά την επαναφόρτωση.",
     "hudStyle": "HUD 3D",
     "hudStyle_minimal": "Ελάχιστο",
-    "hudStyle_classic": "Κλασικό"
+    "hudStyle_classic": "Κλασικό",
+    "seamarks3D": "Σημαντήρες και φάροι σε 3D",
+    "seamarks3DHint": "Από το OpenSeaMap (Overpass), αποθηκεύονται για χρήση εκτός σύνδεσης. Δεν είναι επίσημος χάρτης."
   },
   "dashboard": {
     "environment": "Περιβάλλον",

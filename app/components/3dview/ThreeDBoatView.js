@@ -4,6 +4,7 @@ import SailBoat3D from './SailBoat3D';
 import Ocean3D from './ocean/Ocean3D';
 import MapPlane3D from './ocean/MapPlane3D';
 import AISView from './ais/AISView';
+import Seamarks3D from './seamarks/Seamarks3D';
 import ThreeDCompassView from './ThreeDCompassView';
 import LayLines3D from './compass/LayLines3D';
 import { useOcearoContext } from '../context/OcearoContext';
@@ -135,6 +136,11 @@ const ThreeDBoatView = ({ onUpdateInfoPanel, selection = null }) => {
                 {/* AIS Boats */}
                 {/* Person overboard: drop point, drift and estimated position */}
                 <MobMarker3D />
+
+                {/* Buoys and beacons (OpenSeaMap), on the water; not on the meteo map */}
+                {states.oceanMode !== 'meteo' && (
+                    <Seamarks3D waterLevel={states.oceanMode === 'chart' ? -0.1 : -0.3} />
+                )}
 
                 {/* Live AIS makes no sense around a replayed voyage */}
                 {states.ais && !replaying && <AISView onUpdateInfoPanel={onUpdateInfoPanel} selectedMmsi={selection?.kind === 'ais' ? selection.mmsi : null} />}

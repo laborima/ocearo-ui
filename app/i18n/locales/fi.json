@@ -184,7 +184,9 @@
     "renderQualityHint": "Raspberry Pi: 30 fps, ei reunanpehmennystä, tasainen vesi. Voimassa uudelleenlatauksen jälkeen.",
     "hudStyle": "3D-HUD",
     "hudStyle_minimal": "Minimaalinen",
-    "hudStyle_classic": "Klassinen"
+    "hudStyle_classic": "Klassinen",
+    "seamarks3D": "Poijut ja viitat 3D:nä",
+    "seamarks3DHint": "OpenSeaMapista (Overpass), tallennetaan offline-käyttöön. Ei virallinen merikartta."
   },
   "dashboard": {
     "environment": "Ympäristö",

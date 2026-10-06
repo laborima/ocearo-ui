@@ -184,7 +184,9 @@
     "renderQualityHint": "Raspberry Pi: 30 fps, ingen kantudjævning, fladt vand. Træder i kraft efter genindlæsning.",
     "hudStyle": "3D-HUD",
     "hudStyle_minimal": "Minimal",
-    "hudStyle_classic": "Klassisk"
+    "hudStyle_classic": "Klassisk",
+    "seamarks3D": "Bøjer og sømærker i 3D",
+    "seamarks3DHint": "Fra OpenSeaMap (Overpass), gemt til offline brug. Ikke et officielt søkort."
   },
   "dashboard": {
     "environment": "Miljø",
