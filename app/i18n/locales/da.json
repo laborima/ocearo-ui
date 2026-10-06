@@ -884,5 +884,12 @@
   "bathymetry": {
     "chartDepth": "kort {{depth}} m",
     "levelFromSounder": "niveau fra ekkoloddet"
+  },
+  "sky": {
+    "moon": "Månen",
+    "venus": "Venus",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturn"
   }
 }

@@ -884,5 +884,12 @@
   "bathymetry": {
     "chartDepth": "chart {{depth}} m",
     "levelFromSounder": "level from the sounder"
+  },
+  "sky": {
+    "moon": "Moon",
+    "venus": "Venus",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturn"
   }
 }

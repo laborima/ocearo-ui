@@ -114,41 +114,59 @@ const gmst = (date) => {
 };
 
 /**
+ * The observer's sky at a time: local sidereal time and latitude, for
+ * localDirection. Null without a position.
+ */
+export const observerFrame = (latitude, longitude, date) => {
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !(date instanceof Date)) return null;
+  const lat = latitude * DEG;
+  return { lst: gmst(date) + longitude * DEG, sinLat: Math.sin(lat), cosLat: Math.cos(lat) };
+};
+
+/**
+ * A direction given in equatorial coordinates of date (x towards the
+ * equinox, z towards the pole, any length) seen from the observer.
+ * @returns {{altitude: number, azimuth: number, enu: number[]}} altitude and
+ *   azimuth (from true north) in degrees, enu the unit vector (east, north, up)
+ */
+export const localDirection = (x, y, z, { lst, sinLat, cosLat }) => {
+  const length = Math.hypot(x, y, z) || 1;
+  const ha = lst - Math.atan2(y, x);
+  const cosDec = Math.hypot(x, y) / length;
+  const sinDec = z / length;
+  const east = -cosDec * Math.sin(ha);
+  const north = sinDec * cosLat - cosDec * Math.cos(ha) * sinLat;
+  const up = sinDec * sinLat + cosDec * Math.cos(ha) * cosLat;
+  return {
+    altitude: Math.asin(Math.max(-1, Math.min(1, up))) / DEG,
+    azimuth: ((Math.atan2(east, north) / DEG) + 360) % 360,
+    enu: [east, north, up],
+  };
+};
+
+/**
  * Apparent direction of every navigational star from a position at a time.
  * @param {number} latitude - degrees
  * @param {number} longitude - degrees, east positive
  * @param {Date} date
  * @returns {Array<{number: number, name: string, magnitude: number,
- *   altitude: number, azimuth: number, enu: number[]}>|null} altitude and
- *   azimuth (from true north) in degrees, enu the unit vector (east, north,
- *   up); null without a position
+ *   altitude: number, azimuth: number, enu: number[]}>|null} see
+ *   localDirection; null without a position
  */
 export const starPositions = (latitude, longitude, date) => {
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !(date instanceof Date)) return null;
+  const frame = observerFrame(latitude, longitude, date);
+  if (!frame) return null;
   const P = precessionMatrix(julianCenturies(date));
-  const lst = gmst(date) + longitude * DEG;
-  const lat = latitude * DEG;
-  const sinLat = Math.sin(lat), cosLat = Math.cos(lat);
-
-  return NAV_STARS.map(({ number, name, magnitude, j2000: [x0, y0, z0] }) => {
-    // Equatorial of date, then turned to the local meridian (hour angle)
-    const x = P[0] * x0 + P[1] * y0 + P[2] * z0;
-    const y = P[3] * x0 + P[4] * y0 + P[5] * z0;
-    const z = P[6] * x0 + P[7] * y0 + P[8] * z0;
-    const ha = lst - Math.atan2(y, x);
-    const cosDec = Math.hypot(x, y);
-    // Local frame: east, north, up
-    const east = -cosDec * Math.sin(ha);
-    const north = z * cosLat - cosDec * Math.cos(ha) * sinLat;
-    const up = z * sinLat + cosDec * Math.cos(ha) * cosLat;
-    const azimuth = ((Math.atan2(east, north) / DEG) + 360) % 360;
-    return {
-      number,
-      name,
-      magnitude,
-      altitude: Math.asin(Math.max(-1, Math.min(1, up))) / DEG,
-      azimuth,
-      enu: [east, north, up],
-    };
-  });
+  return NAV_STARS.map(({ number, name, magnitude, j2000: [x0, y0, z0] }) => ({
+    number,
+    name,
+    magnitude,
+    // Equatorial of date, then seen from the boat
+    ...localDirection(
+      P[0] * x0 + P[1] * y0 + P[2] * z0,
+      P[3] * x0 + P[4] * y0 + P[5] * z0,
+      P[6] * x0 + P[7] * y0 + P[8] * z0,
+      frame
+    ),
+  }));
 };

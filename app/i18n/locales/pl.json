@@ -884,5 +884,12 @@
   "bathymetry": {
     "chartDepth": "mapa {{depth}} m",
     "levelFromSounder": "poziom z echosondy"
+  },
+  "sky": {
+    "moon": "Księżyc",
+    "venus": "Wenus",
+    "mars": "Mars",
+    "jupiter": "Jowisz",
+    "saturn": "Saturn"
   }
 }

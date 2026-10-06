@@ -884,5 +884,12 @@
   "bathymetry": {
     "chartDepth": "carta {{depth}} m",
     "levelFromSounder": "nivel según la sonda"
+  },
+  "sky": {
+    "moon": "Luna",
+    "venus": "Venus",
+    "mars": "Marte",
+    "jupiter": "Júpiter",
+    "saturn": "Saturno"
   }
 }

@@ -7,7 +7,7 @@ import { sunPosition } from '../../utils/SunUtils';
 import { vesselNow } from '../../utils/VesselClock';
 import useOwnTrack from '../fsd/useOwnTrack';
 import { getRenderProfile } from '../../utils/RenderProfile';
-import NavStars from './NavStars';
+import NightSky from './NightSky';
 import useHeave from '../../hooks/useHeave';
 
 // The sea is drawn at the own boat's scale (scene units per metre, see
@@ -359,7 +359,7 @@ export const useSun = () => {
 
 /**
  * Clean gradient sky with the sun where it really is: zenith to a pale haze
- * at the horizon, no clouds (FSD look), and the navigational stars at night.
+ * at the horizon, no clouds (FSD look), with the Moon, planets and navigational stars.
  * Shared by every ocean mode.
  */
 export const SkyDome = () => {
@@ -403,7 +403,7 @@ export const SkyDome = () => {
             <mesh material={material} renderOrder={-3} frustumCulled={false}>
                 <sphereGeometry args={[SKY_RADIUS, 48, 24]} />
             </mesh>
-            <NavStars />
+            <NightSky />
         </>
     );
 };

@@ -884,5 +884,12 @@
   "bathymetry": {
     "chartDepth": "Karte {{depth}} m",
     "levelFromSounder": "Pegel vom Echolot"
+  },
+  "sky": {
+    "moon": "Mond",
+    "venus": "Venus",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturn"
   }
 }

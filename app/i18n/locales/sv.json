@@ -884,5 +884,12 @@
   "bathymetry": {
     "chartDepth": "sjökort {{depth}} m",
     "levelFromSounder": "nivå från ekolodet"
+  },
+  "sky": {
+    "moon": "Månen",
+    "venus": "Venus",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturnus"
   }
 }
