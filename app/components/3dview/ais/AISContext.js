@@ -61,6 +61,18 @@ const nameOf = (name) => (typeof name === 'string' ? name : typeof name?.value =
 
 const stripVesselsPrefix = (context) => (context || '').replace(/^vessels\./, '');
 
+/**
+ * Whether an AIS identity can be a ship. Signal K files aids to navigation
+ * (MMSI 99…) and base stations under atons.*, SAR aircraft (111…) under
+ * aircraft.*, and we only subscribe to vessels.*; a gateway that puts them
+ * under vessels.* anyway must not have a buoy drawn as a boat.
+ */
+export const isShipIdentity = (id) => {
+    const mmsi = /mmsi:(\d{9})$/.exec(id || '')?.[1];
+    if (!mmsi) return true;
+    return !mmsi.startsWith('99') && !mmsi.startsWith('00') && !mmsi.startsWith('111');
+};
+
 const createTarget = (mmsi) => ({
     mmsi,
     name: 'unknown',
@@ -266,7 +278,7 @@ export const AISProvider = ({ children }) => {
 
         const handleDelta = (delta) => {
             const id = stripVesselsPrefix(delta?.context);
-            if (!id || isSelf(id) || !delta.updates) return;
+            if (!id || isSelf(id) || !isShipIdentity(id) || !delta.updates) return;
 
             const store = targetsRef.current;
             const target = store[id] || (store[id] = createTarget(id));
@@ -290,7 +302,7 @@ export const AISProvider = ({ children }) => {
             const store = targetsRef.current;
             const now = Date.now();
             for (const [id, data] of Object.entries(vessels)) {
-                if (isSelf(id)) continue;
+                if (isSelf(id) || !isShipIdentity(id)) continue;
                 const target = store[id] || (store[id] = createTarget(id));
                 const set = (key, path) => {
                     const value = getPath(data, path);
