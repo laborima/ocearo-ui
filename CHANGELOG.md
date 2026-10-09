@@ -1,3 +1,9 @@
+## [2.1.1] - 2026-10-09
+
+### Fixed
+
+- **A sensor that stops sending no longer leaves its last value on screen** ([#14](https://github.com/laborima/ocearo-ui/issues/14)). Position, speeds, heading, attitude, wind, depth, rudder, engine revolutions and performance values are cleared (shown as `--`) after 30 seconds without an update, and at once when the connection to Signal K is lost. Old values the server replays on connect, from sources that have since gone quiet, are no longer shown as live. Values sent once or on change only (boat design, notifications, anchor, route, tanks, batteries, tides) are kept. Sample data (debug mode) and voyage replay are not affected.
+
 ## [2.1.0] - 2026-10-06
 
 The real night sky, buoys and beacons in 3D (OpenSeaMap and AIS), a motion sensor for the sea, an interactive guide, and phones where nothing overlaps. Nothing to change in the settings; the new buoys and beacons can be turned off there.
