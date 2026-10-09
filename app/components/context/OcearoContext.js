@@ -17,6 +17,7 @@ export {
 } from '../utils/UnitConversions';
 
 import { SAMPLE_DATA, SAMPLE_DATA_INTERVAL } from './SampleData';
+import { createStaleTracker, staleTimeoutMs, STALE_CHECK_INTERVAL_MS } from './StaleData';
 import { THEMES, applyThemeTokens, normalizeThemeMode, themeForSunElevation } from '../theme/themes';
 import { sunPosition } from '../utils/SunUtils';
 import { vesselNow } from '../utils/VesselClock';
@@ -412,6 +413,7 @@ export const OcearoContextProvider = ({ children }) => {
     // Use useRef to persist client between renders
     const clientRef = useRef(null);
     const sampleDataIntervalRef = useRef(null);
+    const staleCheckIntervalRef = useRef(null);
 
     // Initialize SignalK client connection
     useEffect(() => {
@@ -426,6 +428,14 @@ export const OcearoContextProvider = ({ children }) => {
             const config = configService.getAll(); // Load config from the service
             const { debugMode } = config;
             const signalkUrl = configService.getSignalKUrl();
+
+            // Live sensor values expire when their source stops sending.
+            // Sample data has no source to lose: no expiry in debug mode.
+            const staleTracker = createStaleTracker(debugMode ? 0 : staleTimeoutMs(config.staleDataTimeout));
+            const clearPaths = (paths) => {
+                if (paths.length === 0) return;
+                updateSignalKData(Object.fromEntries(paths.map((path) => [path, null])));
+            };
             
             // Setup debug data interval function - extracted to be reusable
             const setupDebugDataInterval = () => {
@@ -516,15 +526,19 @@ export const OcearoContextProvider = ({ children }) => {
             // Listen for delta updates from SignalK server
             client.on('delta', (delta) => {
                         if (!isMounted) return;
+                        const now = Date.now();
                         delta.updates.forEach((update) => {
                     if (update.values) {
                         update.values.forEach((value) => {
                     // Skip wind paths when wind override is active
                     if (configService.get('debugWindOverride') && WIND_OVERRIDE_PATHS.includes(value.path)) {
+                        staleTracker.forget(value.path);
                         return;
                     }
                     // A voyage replay owns the own-boat data meanwhile
                     if (isReplaying()) return;
+                    // Old value replayed from the server's model: not live
+                    if (!staleTracker.seen(value.path, update.timestamp, now)) return;
                     updateSignalKData({
                         [value.path]: value.value,
                     });
@@ -532,6 +546,30 @@ export const OcearoContextProvider = ({ children }) => {
                     }
                 });
             });
+
+            // A new connection brings a new clock skew estimate; a lost one
+            // leaves nothing live on screen (the server replays its model on reconnect)
+            client.on('connect', () => staleTracker.reset());
+            const syncServerClock = (info) => staleTracker.syncClock(info?.timestamp, Date.now());
+            client.on('connectionInfo', syncServerClock);
+            if (client.connection?.connectionInfo) syncServerClock(client.connection.connectionInfo);
+            client.on('disconnect', () => {
+                if (!isMounted) return;
+                staleTracker.reset();
+                if (!isReplaying()) clearPaths(staleTracker.clear());
+            });
+
+            if (staleTracker.timeoutMs) {
+                staleCheckIntervalRef.current = setInterval(() => {
+                    const now = Date.now();
+                    // A voyage replay owns the own-boat data: pause the expiry
+                    if (isReplaying()) {
+                        staleTracker.touchAll(now);
+                        return;
+                    }
+                    clearPaths(staleTracker.expire(now));
+                }, STALE_CHECK_INTERVAL_MS);
+            }
 
 
                 // Set up interval for sample data if debugMode is enabled
@@ -573,6 +611,9 @@ export const OcearoContextProvider = ({ children }) => {
                 }
                 if (sampleDataIntervalRef.current) {
                     clearInterval(sampleDataIntervalRef.current);
+                }
+                if (staleCheckIntervalRef.current) {
+                    clearInterval(staleCheckIntervalRef.current);
                 }
             };
         }, []); // Empty dependency array means this runs once on mount

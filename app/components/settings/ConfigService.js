@@ -43,7 +43,10 @@ class ConfigService {
       // Buoys and beacons in the 3D view (OpenSeaMap and AIS aids to navigation)
       showSeamarks3D: true,
       // OpenSeaMap marks downloaded through Overpass (AIS marks need no download)
-      seamarksOverpass: true
+      seamarksOverpass: true,
+      // Seconds without an update before a live sensor value (wind, depth,
+      // position, speeds, heading…) is cleared; 0 keeps the last value forever
+      staleDataTimeout: 30
     };
 
     this.configKey = 'ocearoConfig'; // Key used to store the config
