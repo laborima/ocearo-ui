@@ -37,6 +37,9 @@ const INITIAL_STATES = {
     autopilot: true,
     anchorWatch: false,
     parkingMode: false,
+    // ocearo-core says the boat is alongside (startup default): alerts and
+    // advice off, but the 3D view stays (the docking assistant is the P button)
+    moored: false,
     mob: false,
     oceanMode: 'black',
     ais: false,
@@ -412,6 +415,17 @@ export const OcearoContextProvider = ({ children }) => {
             // buttons until the helm button was pressed again
             setStates((prevState) => ({ ...prevState, autopilot: true }));
             return toggleState(key, false);
+        } else if (states.moored && isOcearoCoreEnabled()) {
+            // Moored at startup with the navigation view on: pressing it means
+            // "we are under way", without waiting for the boat to move
+            try {
+                const data = signalkDataRef.current;
+                const engineState = data['propulsion.main.state'] || data['propulsion.main.revolutions'];
+                await updateOcearoCoreMode((engineState === 'running' || (typeof engineState === 'number' && engineState > 0)) ? 'motoring' : 'sailing');
+                setStates((prevState) => ({ ...prevState, moored: false }));
+            } catch (error) {
+                console.warn('Failed to leave moored mode:', handleOcearoCoreError(error));
+            }
         }
         // Navigation is the default view: pressing it again keeps it on
     }, [states, toggleState]);
@@ -425,15 +439,21 @@ export const OcearoContextProvider = ({ children }) => {
         const sync = async () => {
             const status = await getOcearoCoreStatus();
             const mode = status?.mode;
-            if (cancelled || typeof mode !== 'string' || mode === coreModeRef.current) return;
+            const source = status?.modeSource;
+            const key = `${mode}/${source}`;
+            if (cancelled || typeof mode !== 'string' || key === coreModeRef.current) return;
             // A toggle made here is on its way to ocearo-core: let it land
             if (Date.now() - localModeChangeRef.current < 5000) return;
-            coreModeRef.current = mode;
+            coreModeRef.current = key;
+            // Moored by the crew (P button) shows the docking assistant; moored
+            // at startup keeps the 3D view
+            const docking = mode === 'moored' && source === 'user';
             setStates((prev) => ({
                 ...prev,
-                autopilot: mode !== 'anchored' && mode !== 'moored',
+                autopilot: mode !== 'anchored' && !docking,
                 anchorWatch: mode === 'anchored',
-                parkingMode: mode === 'moored',
+                parkingMode: docking,
+                moored: mode === 'moored',
                 racing: mode === 'racing',
             }));
         };

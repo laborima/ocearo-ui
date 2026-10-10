@@ -48,7 +48,7 @@ const useColregs = ({ always = false } = {}) => {
     const { targets: aisTargets } = useAIS({ passive: true });
     const { states } = useOcearoContext();
     // Alongside or at anchor, boats passing close are not encounters to advise on
-    const stationary = states.anchorWatch || states.parkingMode;
+    const stationary = states.anchorWatch || states.parkingMode || states.moored;
     const enabled = (always || states.ais) && !stationary;
     const targets = enabled ? aisTargets : NO_TARGETS;
     const { twd, heading } = usePolarPerformance();

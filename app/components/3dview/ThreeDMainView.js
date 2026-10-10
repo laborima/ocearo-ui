@@ -105,7 +105,7 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
     // Phones and the split view: the bottom panels stack in one column, so
     // they can never overlap one another
     const compact = !rich && !classic;
-    const showAdvice = !states.anchorWatch && !states.parkingMode && !replaying;
+    const showAdvice = !states.anchorWatch && !states.parkingMode && !states.moored && !replaying;
 
     // Get configuration directly using the configService
     useEffect(() => {
