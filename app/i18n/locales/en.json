@@ -1278,5 +1278,10 @@
     "mars": "Mars",
     "jupiter": "Jupiter",
     "saturn": "Saturn"
+  },
+  "sceneScale": {
+    "help": "Scale of the world around the boat: − brings AIS targets, marks and the seabed closer; + spreads them out and deepens the seabed. Double-click: 1:1.",
+    "closer": "Closer",
+    "wider": "Wider"
   }
 }

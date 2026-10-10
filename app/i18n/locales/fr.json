@@ -1278,5 +1278,10 @@
     "mars": "Mars",
     "jupiter": "Jupiter",
     "saturn": "Saturne"
+  },
+  "sceneScale": {
+    "help": "Échelle du monde autour du bateau : − rapproche les cibles AIS, les marques et le fond ; + les éloigne et creuse le fond. Double-clic : 1:1.",
+    "closer": "Rapprocher",
+    "wider": "Éloigner"
   }
 }

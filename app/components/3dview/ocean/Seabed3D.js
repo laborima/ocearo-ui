@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 
 /**
  * 3D seabed for the bathymetry mode: the bottom as a deformed grid under the
- * (translucent) chart, the way a survey is drawn. Relief exaggerated,
+ * (translucent) chart, the way a survey is drawn. Relief at true scale,
  * grid lines every 50 m (bold every 250 m) anchored to the ground, colour by
  * depth, isobaths at 2, 5, 10, 20, 30 and 50 m, soundings (depth now, tide
  * included) and a sounder line from the keel to the bottom. Water shallower
@@ -38,10 +38,11 @@ export const SHOM_ZOOM = 13;
 const TILES = 3;            // 3×3 tiles: ~80 km square around the boat
 const GRID = 160;           // mesh resolution
 const GRID_SHOM = 240;      // finer where the survey allows it (~25 m between vertices)
-// Vertical exaggeration so a 2 m bank reads from the cockpit view: more on
-// a SHOM survey, whose detail is real, than on the smoothed global relief
-const EXAGGERATION_SURVEY = 9;
-const EXAGGERATION_GLOBAL = 5;
+// True proportions against the boat (drawn at the same scale): 3 m of water
+// under an 11 m mast must look like it. The scene zoom (−/+ under the battery)
+// deepens or flattens everything together.
+const EXAGGERATION_SURVEY = 1;
+const EXAGGERATION_GLOBAL = 1;
 const HALF = 3000;          // metres each side of the boat
 // Soundings: one every SOUNDING_STEP metres within SOUNDING_RADIUS
 const SOUNDING_STEP = 250;
@@ -51,9 +52,9 @@ const SOUNDING_RADIUS = 1500;
 const DRYING_LIMIT_CD = 6.5;
 const SAFETY_MARGIN = 1.0;  // metres under the keel
 const DEFAULT_DRAFT = 2.0;
-// Ground above the water now (banks uncovered by the tide, land) rises less
-// than the seabed sinks, and is capped: a relief, not cliffs over the chart
-const EXAGGERATION_ABOVE = 3;
+// Ground above the water now (banks uncovered by the tide, land), capped: a
+// relief, not cliffs over the chart
+const EXAGGERATION_ABOVE = 1;
 const ABOVE_CAP = 4;        // metres
 // Water level steps: the mesh is rebuilt when the level moves by this much
 const LEVEL_STEP = 0.1;
