@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, useContext, useRef, useCallb
 import configService from '../settings/ConfigService';
 import { isReplaying } from '../replay/replayEngine';
 import signalKService from '../services/SignalKService';
-import { updateOcearoCoreMode, isOcearoCoreEnabled, handleOcearoCoreError } from '../utils/OcearoCoreUtils';
+import { updateOcearoCoreMode, isOcearoCoreEnabled, handleOcearoCoreError, getOcearoCoreStatus } from '../utils/OcearoCoreUtils';
 import { MathUtils } from 'three';
 
 export {
@@ -276,9 +276,14 @@ export const OcearoContextProvider = ({ children }) => {
         });
     }, []);
 
+    // Last mode read from ocearo-core, and when the crew last changed it here
+    const coreModeRef = useRef(null);
+    const localModeChangeRef = useRef(0);
+
     // Method to toggle any state (e.g., autopilot, anchorWatch)
     const toggleState = useCallback(async (key, value = undefined) => {
         const newValue = value !== undefined ? value : !states[key];
+        localModeChangeRef.current = Date.now();
 
         setStates((prevState) => ({
             ...prevState,
@@ -370,6 +375,7 @@ export const OcearoContextProvider = ({ children }) => {
         }
 
         const newValue = !states[key];
+        localModeChangeRef.current = Date.now();
         
         // If we're turning it ON, we turn OFF all others
         if (newValue) {
@@ -409,6 +415,32 @@ export const OcearoContextProvider = ({ children }) => {
         }
         // Navigation is the default view: pressing it again keeps it on
     }, [states, toggleState]);
+
+    // ocearo-core owns the mode: it starts moored (anchored if the anchor was
+    // down) and switches to sailing or motoring by itself once the boat moves.
+    // Follow it, without posting it back, whenever it changes there.
+    useEffect(() => {
+        if (!isOcearoCoreEnabled()) return undefined;
+        let cancelled = false;
+        const sync = async () => {
+            const status = await getOcearoCoreStatus();
+            const mode = status?.mode;
+            if (cancelled || typeof mode !== 'string' || mode === coreModeRef.current) return;
+            // A toggle made here is on its way to ocearo-core: let it land
+            if (Date.now() - localModeChangeRef.current < 5000) return;
+            coreModeRef.current = mode;
+            setStates((prev) => ({
+                ...prev,
+                autopilot: mode !== 'anchored' && mode !== 'moored',
+                anchorWatch: mode === 'anchored',
+                parkingMode: mode === 'moored',
+                racing: mode === 'racing',
+            }));
+        };
+        sync();
+        const timer = setInterval(sync, 10000);
+        return () => { cancelled = true; clearInterval(timer); };
+    }, []);
 
     // Use useRef to persist client between renders
     const clientRef = useRef(null);

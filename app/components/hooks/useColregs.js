@@ -33,7 +33,8 @@ const useOwnCategory = () => {
  *
  * The boat view only advises while its AIS layer is on: with AIS hidden,
  * no "keep clear" banner, orange hull or avoidance course either. The
- * dashboard radar shows the targets itself and passes `always`.
+ * dashboard radar shows the targets itself and passes `always`. Nothing is
+ * advised alongside or at anchor (parking or anchor watch mode).
  *
  * @param {{ always?: boolean }} [options]
  * @returns {{ ownCategory: string, encounters: Array<{ target, role }>,
@@ -46,7 +47,9 @@ const useColregs = ({ always = false } = {}) => {
     // Passive: only while the AIS layer keeps the connection open
     const { targets: aisTargets } = useAIS({ passive: true });
     const { states } = useOcearoContext();
-    const enabled = always || states.ais;
+    // Alongside or at anchor, boats passing close are not encounters to advise on
+    const stationary = states.anchorWatch || states.parkingMode;
+    const enabled = (always || states.ais) && !stationary;
     const targets = enabled ? aisTargets : NO_TARGETS;
     const { twd, heading } = usePolarPerformance();
     const v = useSignalKPaths(PATHS);
