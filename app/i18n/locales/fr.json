@@ -771,7 +771,8 @@
   },
   "laylines": {
     "tack": "Virer",
-    "gybe": "Empanner"
+    "gybe": "Empanner",
+    "forecastWind": "vent prévu"
   },
   "advice": {
     "avoid": "Éviter : {{deg}}° sur {{side}}",
@@ -1283,5 +1284,18 @@
     "help": "Échelle du monde autour du bateau : − rapproche les cibles AIS, les marques et le fond ; + les éloigne et creuse le fond. Double-clic : 1:1.",
     "closer": "Rapprocher",
     "wider": "Éloigner"
+  },
+  "waypointPicker": {
+    "button": "Poser la destination",
+    "hint": "Touchez la mer pour poser la destination (le ruban de route et les laylines la suivent).",
+    "set": "Destination {{name}} à {{distance}} M",
+    "failed": "Destination non posée : {{error}}",
+    "description": "Posé depuis la vue 3D",
+    "clear": "Supprimer la destination",
+    "cleared": "Destination supprimée",
+    "clearFailed": "Destination non supprimée : {{error}}"
+  },
+  "viewButtons": {
+    "recenter": "Recentrer sur le bateau"
   }
 }

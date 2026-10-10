@@ -1,5 +1,10 @@
 import React, { Suspense, useRef, useMemo } from 'react';
-import { OrbitControls, PerspectiveCamera, Html } from '@react-three/drei';
+import { PerspectiveCamera, Html } from '@react-three/drei';
+import SceneControls from './SceneControls';
+import WaypointPicker from './WaypointPicker';
+
+// Home camera, where the recenter button brings the view back
+const HOME = [0, 5, 20];
 import SailBoat3D from './SailBoat3D';
 import Ocean3D from './ocean/Ocean3D';
 import MapPlane3D from './ocean/MapPlane3D';
@@ -60,11 +65,12 @@ const ThreeDBoatView = ({ onUpdateInfoPanel, selection = null }) => {
                 near={5}
                 // Meteo: the camera pulls far out over the wind field
                 far={states.oceanMode === 'meteo' ? 60000 : 6000}
-                position={[0, 5, 20]}
+                position={HOME}
             />
             <DepthRange />
             {/* Orbit controls */}
-            <OrbitControls
+            <SceneControls
+                home={HOME}
                 enableZoom={true}
                 enableRotate={true}
                 maxPolarAngle={Math.PI / 2}
@@ -122,6 +128,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel, selection = null }) => {
 
                 {/* Planned route to the next waypoint */}
                 <RouteRibbon />
+                <WaypointPicker y={(states.oceanMode === 'chart' || states.oceanMode === 'depth' || states.oceanMode === 'meteo') ? -0.1 : -0.3} />
 
                 {/* Wake coloured by the share of the polar reached */}
                 <PerformanceWake />

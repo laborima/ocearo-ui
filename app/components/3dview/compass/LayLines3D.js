@@ -35,7 +35,7 @@ const LayLines3D = () => {
     const scale = configService.get('aisLengthScalingFactor') || 0.7;
 
     if (!laylines) return null;
-    const { waypoint, port, starboard, tack, upwind } = laylines;
+    const { waypoint, port, starboard, tack, upwind, forecastWind } = laylines;
     const wp = toScene(waypoint, scale);
     const reach = Math.min(Math.hypot(wp[0], wp[1]) * 1.3 + 200, MAX_LENGTH);
 
@@ -48,7 +48,7 @@ const LayLines3D = () => {
     const width = Math.min(25, Math.max(3, Math.hypot(wp[0], wp[1]) * 0.015));
     const ahead = (h) => [Math.sin(h) * TACK_PREVIEW, -Math.cos(h) * TACK_PREVIEW];
     const tackLabel = tack
-        ? `${upwind ? t('laylines.tack') : t('laylines.gybe')} ${convertDistanceUnit(tack.distance)} ${getDistanceUnitLabel()}${formatTime(tack.time) ? ` · ${formatTime(tack.time)}` : ''}`
+        ? `${upwind ? t('laylines.tack') : t('laylines.gybe')} ${convertDistanceUnit(tack.distance)} ${getDistanceUnitLabel()}${formatTime(tack.time) ? ` · ${formatTime(tack.time)}` : ''}${forecastWind ? ` · ${t('laylines.forecastWind')}` : ''}`
         : null;
 
     return (

@@ -771,7 +771,8 @@
   },
   "laylines": {
     "tack": "Tack",
-    "gybe": "Gybe"
+    "gybe": "Gybe",
+    "forecastWind": "forecast wind"
   },
   "advice": {
     "avoid": "Avoid: {{deg}}° to {{side}}",
@@ -1283,5 +1284,18 @@
     "help": "Scale of the world around the boat: − brings AIS targets, marks and the seabed closer; + spreads them out and deepens the seabed. Double-click: 1:1.",
     "closer": "Closer",
     "wider": "Wider"
+  },
+  "waypointPicker": {
+    "button": "Set destination",
+    "hint": "Tap the sea to set the destination (the route ribbon and the laylines follow it).",
+    "set": "Destination {{name}} at {{distance}} NM",
+    "failed": "Destination not set: {{error}}",
+    "description": "Set from the 3D view",
+    "clear": "Clear the destination",
+    "cleared": "Destination cleared",
+    "clearFailed": "Destination not cleared: {{error}}"
+  },
+  "viewButtons": {
+    "recenter": "Recenter on the boat"
   }
 }

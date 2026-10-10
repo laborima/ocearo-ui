@@ -3,12 +3,13 @@ import { useMemo } from 'react';
 import { useSignalKPaths } from './useSignalK';
 import usePolarPerformance from './usePolarPerformance';
 import { wrapPi, optimalUpwind, optimalDownwind } from '../utils/Polar';
+import { coursePaths, courseValue } from '../utils/coursePaths';
+import useForecastWind from './useForecastWind';
 
 const KN_PER_MS = 1.943844;
 
 const PATHS = [
-    'navigation.courseGreatCircle.nextPoint.bearingTrue',
-    'navigation.courseGreatCircle.nextPoint.distance',
+    ...coursePaths('bearingTrue', 'distance'),
     'navigation.speedOverGround',
 ];
 
@@ -33,11 +34,19 @@ const unit = (a) => ({ x: Math.sin(a), y: Math.cos(a) });
 const useLaylines = () => {
     const v = useSignalKPaths(PATHS);
     const perf = usePolarPerformance();
+    const forecast = useForecastWind();
 
     return useMemo(() => {
-        const bearing = v['navigation.courseGreatCircle.nextPoint.bearingTrue'];
-        const distance = v['navigation.courseGreatCircle.nextPoint.distance'];
-        const { twd, tws, twa, heading } = perf;
+        const bearing = courseValue(v, 'bearingTrue');
+        const distance = courseValue(v, 'distance');
+        const { heading } = perf;
+        // A dead anemometer reads 0 kn: lay the lines on the forecast wind
+        // then, and say so, rather than drawing nothing
+        const measured = Number.isFinite(perf.tws) && perf.tws > 0 && Number.isFinite(perf.twd);
+        const forecastWind = !measured && forecast !== null;
+        const twd = measured ? perf.twd : forecast?.twd;
+        const tws = measured ? perf.tws : forecast?.tws;
+        const twa = measured ? perf.twa : (Number.isFinite(heading) && Number.isFinite(twd) ? wrapPi(twd - heading) : undefined);
         if (![bearing, distance, twd, tws].every(Number.isFinite) || tws <= 0) return null;
 
         const waypoint = { x: distance * Math.sin(bearing), y: distance * Math.cos(bearing) };
@@ -75,8 +84,8 @@ const useLaylines = () => {
             }
         }
 
-        return { waypoint, upwind, port, starboard, tack };
-    }, [v, perf]);
+        return { waypoint, upwind, port, starboard, tack, forecastWind };
+    }, [v, perf, forecast]);
 };
 
 export default useLaylines;

@@ -5,13 +5,9 @@ import useTheme from '../../theme/useTheme';
 import configService from '../../settings/ConfigService';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import useOwnTrack from './useOwnTrack';
+import { coursePaths, courseValue } from '../../utils/coursePaths';
 
-const PATHS = [
-    'navigation.courseGreatCircle.nextPoint.bearingTrue',
-    'navigation.courseGreatCircle.nextPoint.distance',
-    'navigation.courseRhumbline.nextPoint.bearingTrue',
-    'navigation.courseRhumbline.nextPoint.distance',
-];
+const PATHS = coursePaths('bearingTrue', 'distance');
 
 const WIDTH = 3.2;           // scene units, about a hull's beam
 const MAX_LENGTH = 1600;     // beyond this the fog hides it anyway
@@ -70,10 +66,8 @@ const RouteRibbon = ({ y = -0.2 }) => {
     const { heading } = useOwnTrack();
     const values = useSignalKPaths(PATHS);
 
-    const bearing = values['navigation.courseGreatCircle.nextPoint.bearingTrue']
-        ?? values['navigation.courseRhumbline.nextPoint.bearingTrue'];
-    const distance = values['navigation.courseGreatCircle.nextPoint.distance']
-        ?? values['navigation.courseRhumbline.nextPoint.distance'];
+    const bearing = courseValue(values, 'bearingTrue');
+    const distance = courseValue(values, 'distance');
 
     const scale = configService.get('aisLengthScalingFactor') || 0.7;
     const length = Number.isFinite(distance) ? Math.min(distance * scale, MAX_LENGTH) : 0;

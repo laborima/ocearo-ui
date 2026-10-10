@@ -10,6 +10,7 @@ import configService from '../settings/ConfigService';
 import ThreeDBoatToolbar from './ThreeDBoatToolbar';
 import ThreeDBoatThanksIndicator from './ThreeDBoatThanksIndicator';
 import SceneScaleControl, { DEFAULT_SCENE_SCALE } from './hud/SceneScaleControl';
+import ViewButtons from './hud/ViewButtons';
 
 // Heavy 3D components loaded dynamically
 const ThreeDBoatView = dynamic(() => import('./ThreeDBoatView'), { ssr: false });
@@ -130,8 +131,9 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                 </div>
             </div>
 
-            <div className="absolute top-14 right-2 z-30 hidden sm:block" data-hud-solid>
+            <div className="absolute top-14 right-2 z-30 hidden sm:flex flex-col items-end gap-2" data-hud-solid>
                 <SceneScaleControl value={sceneScale} onChange={changeSceneScale} />
+                <ViewButtons canPlace={!states.parkingMode && !states.anchorWatch} />
             </div>
 
             <div className="absolute top-14 left-2 z-30" data-hud-solid>

@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 import { useSignalKPaths } from './useSignalK';
 import { polarSpeedSi, optimalUpwind, optimalDownwind, bestVmcHeading, vmcForHeading, wrapPi } from '../utils/Polar';
+import { coursePaths, courseValue } from '../utils/coursePaths';
 
 const KN_PER_MS = 1.943844;
 const DEG = 180 / Math.PI;
@@ -16,7 +17,7 @@ const PATHS = [
     'environment.wind.directionTrue',
     'performance.polarSpeed',
     'performance.polarSpeedRatio',
-    'navigation.courseGreatCircle.nextPoint.bearingTrue',
+    ...coursePaths('bearingTrue'),
 ];
 
 /**
@@ -71,7 +72,7 @@ const usePolarPerformance = () => {
             }
         }
 
-        const bearing = v['navigation.courseGreatCircle.nextPoint.bearingTrue'];
+        const bearing = courseValue(v, 'bearingTrue');
         let vmc = null;
         if (Number.isFinite(bearing) && Number.isFinite(twd) && Number.isFinite(tws)) {
             const best = bestVmcHeading({ twd, tws, bearing });

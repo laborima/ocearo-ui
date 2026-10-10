@@ -1,5 +1,9 @@
 import React, { Suspense, useRef, useMemo } from 'react';
-import { OrbitControls, PerspectiveCamera, Html } from '@react-three/drei';
+import { PerspectiveCamera, Html } from '@react-three/drei';
+import SceneControls from '../SceneControls';
+
+const HOME = [0, 30, 12];
+const HOME_TARGET = [0, -3, -2];
 import SailBoat3D from '../SailBoat3D';
 import SceneSetup from '../SceneSetup';
 import SeaGround from '../fsd/SeaGround';
@@ -73,9 +77,10 @@ const ThreeDParkAssistBoat = ({ onUpdateInfoPanel }) => {
     return (
         <Suspense fallback={<Html center>Loading...</Html>}>
             {/* From above and a little behind, like a car's parking view */}
-            <PerspectiveCamera makeDefault fov={50} near={1} far={1000} position={[0, 30, 12]} />
-            <OrbitControls
-                target={[0, -3, -2]}
+            <PerspectiveCamera makeDefault fov={50} near={1} far={1000} position={HOME} />
+            <SceneControls
+                home={HOME}
+                homeTarget={HOME_TARGET}
                 enableZoom
                 enableRotate
                 maxPolarAngle={Math.PI / 2.4}
