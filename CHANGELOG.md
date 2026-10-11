@@ -1,6 +1,6 @@
 ## [2.1.2] - 2026-10-11
 
-Fixes from a day on board at La Rochelle: the boat buried in the seabed, laylines gone after a server update, alarms in the marina, and new controls in the 3D view. Works with ocearo-core's automatic mode (start moored, switch to sailing or motoring once the boat moves).
+Fixes from a day on board: the boat buried in the seabed, laylines gone after a server update, alarms in the marina, and new controls in the 3D view. Works with ocearo-core's automatic mode (start moored, switch to sailing or motoring once the boat moves).
 
 ### Added
 
@@ -167,7 +167,7 @@ Ocearo 2: a new 3D view built around what a sailor needs to see — a realistic 
 
 ### Notes
 
-- True wind (`environment.wind.speedTrue`, `angleTrueWater`, `directionTrue`) and `navigation.headingTrue` are not published by the NMEA2000 bus on Cirrus; they require the **`signalk-derived-data`** plugin, enabled with the `heading`, `angleTrueWater` and `directionTrue` calculations. Without it the true-wind paths are simply absent.
+- True wind (`environment.wind.speedTrue`, `angleTrueWater`, `directionTrue`) and `navigation.headingTrue` are not published by many NMEA2000 buses; they require the **`signalk-derived-data`** plugin, enabled with the `heading`, `angleTrueWater` and `directionTrue` calculations. Without it the true-wind paths are simply absent.
 - The autopilot view additionally requires an autopilot **provider** plugin server-side (e.g. `@signalk/signalk-autopilot`); the v2 API does not exist without one.
 
 ## [0.1.19] - 2026-07-22
