@@ -1,3 +1,30 @@
+## [2.1.2] - 2026-10-11
+
+Fixes from a day on board at La Rochelle: the boat buried in the seabed, laylines gone after a server update, alarms in the marina, and new controls in the 3D view. Works with ocearo-core's automatic mode (start moored, switch to sailing or motoring once the boat moves).
+
+### Added
+
+- **Set the destination by tapping the sea.** The pin button under the zoom turns on the picking mode; a tap on the water creates a Signal K waypoint there and makes it the active destination, so the route ribbon and the laylines follow. A drag still turns the view, and a double tap no longer creates two waypoints.
+- **Clear the destination.** A bin button shows while a destination is active: it stops the navigation, and deletes the waypoint when it was placed from the 3D view (waypoints from Freeboard or a route are kept).
+- **Recenter on the boat.** A crosshair button appears as soon as the camera has been turned, panned or zoomed, and brings the view back behind the boat (navigation, anchor and docking views). Tapping a boat does not show it.
+- **Scene zoom under the battery gauge.** − brings AIS targets, buoys and the seabed closer, + spreads them out and deepens the seabed; the boat and the AIS models keep their size. Double-click the value to go back to 1:1. Remembered across restarts.
+- **Wind speed labels** in knots, with an arrow, on the meteo view.
+
+### Changed
+
+- **The mode follows ocearo-core.** At startup the boat is moored (anchored when the anchor was down) and the view switches to navigation by itself once the boat moves; the anchor button still never ends on its own. Moored at startup keeps the 3D view: the docking assistant opens only with the P button. Pressing the navigation button while moored means "under way" at once.
+- **No COLREG advice alongside or at anchor** (give-way banner, avoidance course), where boats passing close by are normal.
+- **Seabed and seamarks at true scale against the boat.** The seabed was drawn nine times deeper (3 m of water looked like 27 m under an 11 m mast) and buoys up to eight times larger in the distance.
+- **Wind streaks redrawn**: wider streamlines that bend with the flow and fade to their tail, coloured by wind speed (darker by day, lighter at night) instead of thin white strokes.
+
+### Fixed
+
+- **The boat no longer sinks into the seabed in a marina.** The coarse global relief (about 150 m per pixel) made land of the marina basin and raised it over the hull; the ground at the boat is now lowered to the depth the sounder measures. The SHOM surveys are also requested again every minute until ocearo-core has them, instead of only when the view opens.
+- **Laylines, route ribbon and waypoint distance came back.** course-provider 1.5 publishes the course under `navigation.course.calcValues`, no longer under `navigation.courseGreatCircle`; both are read now (laylines, route ribbon, HUD, course widget, VMC).
+- **Laylines with a failed anemometer.** When the measured true wind is zero or missing, the laylines use the forecast wind at the boat and say so ("forecast wind") instead of disappearing.
+- **Forecasts when Open-Meteo is overloaded.** An error answer (503) now falls back to the last forecast kept offline, as a network failure did; the laylines' forecast wind then falls back on the Signal K weather observation.
+- **Depth under the boat** also uses `environment.depth.belowTransducer` (with the transducer offset when known), for boats without a keel or surface depth.
+
 ## [2.1.1] - 2026-10-09
 
 ### Fixed
