@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, useContext, useRef, useCallb
 import configService from '../settings/ConfigService';
 import { isReplaying } from '../replay/replayEngine';
 import signalKService from '../services/SignalKService';
-import { updateOcearoCoreMode, isOcearoCoreEnabled, handleOcearoCoreError } from '../utils/OcearoCoreUtils';
+import { updateOcearoCoreMode, isOcearoCoreEnabled, handleOcearoCoreError, getOcearoCoreStatus } from '../utils/OcearoCoreUtils';
 import { MathUtils } from 'three';
 
 export {
@@ -37,6 +37,9 @@ const INITIAL_STATES = {
     autopilot: true,
     anchorWatch: false,
     parkingMode: false,
+    // ocearo-core says the boat is alongside (startup default): alerts and
+    // advice off, but the 3D view stays (the docking assistant is the P button)
+    moored: false,
     mob: false,
     oceanMode: 'black',
     ais: false,
@@ -276,9 +279,14 @@ export const OcearoContextProvider = ({ children }) => {
         });
     }, []);
 
+    // Last mode read from ocearo-core, and when the crew last changed it here
+    const coreModeRef = useRef(null);
+    const localModeChangeRef = useRef(0);
+
     // Method to toggle any state (e.g., autopilot, anchorWatch)
     const toggleState = useCallback(async (key, value = undefined) => {
         const newValue = value !== undefined ? value : !states[key];
+        localModeChangeRef.current = Date.now();
 
         setStates((prevState) => ({
             ...prevState,
@@ -370,6 +378,7 @@ export const OcearoContextProvider = ({ children }) => {
         }
 
         const newValue = !states[key];
+        localModeChangeRef.current = Date.now();
         
         // If we're turning it ON, we turn OFF all others
         if (newValue) {
@@ -406,9 +415,52 @@ export const OcearoContextProvider = ({ children }) => {
             // buttons until the helm button was pressed again
             setStates((prevState) => ({ ...prevState, autopilot: true }));
             return toggleState(key, false);
+        } else if (states.moored && isOcearoCoreEnabled()) {
+            // Moored at startup with the navigation view on: pressing it means
+            // "we are under way", without waiting for the boat to move
+            try {
+                const data = signalkDataRef.current;
+                const engineState = data['propulsion.main.state'] || data['propulsion.main.revolutions'];
+                await updateOcearoCoreMode((engineState === 'running' || (typeof engineState === 'number' && engineState > 0)) ? 'motoring' : 'sailing');
+                setStates((prevState) => ({ ...prevState, moored: false }));
+            } catch (error) {
+                console.warn('Failed to leave moored mode:', handleOcearoCoreError(error));
+            }
         }
         // Navigation is the default view: pressing it again keeps it on
     }, [states, toggleState]);
+
+    // ocearo-core owns the mode: it starts moored (anchored if the anchor was
+    // down) and switches to sailing or motoring by itself once the boat moves.
+    // Follow it, without posting it back, whenever it changes there.
+    useEffect(() => {
+        if (!isOcearoCoreEnabled()) return undefined;
+        let cancelled = false;
+        const sync = async () => {
+            const status = await getOcearoCoreStatus();
+            const mode = status?.mode;
+            const source = status?.modeSource;
+            const key = `${mode}/${source}`;
+            if (cancelled || typeof mode !== 'string' || key === coreModeRef.current) return;
+            // A toggle made here is on its way to ocearo-core: let it land
+            if (Date.now() - localModeChangeRef.current < 5000) return;
+            coreModeRef.current = key;
+            // Moored by the crew (P button) shows the docking assistant; moored
+            // at startup keeps the 3D view
+            const docking = mode === 'moored' && source === 'user';
+            setStates((prev) => ({
+                ...prev,
+                autopilot: mode !== 'anchored' && !docking,
+                anchorWatch: mode === 'anchored',
+                parkingMode: docking,
+                moored: mode === 'moored',
+                racing: mode === 'racing',
+            }));
+        };
+        sync();
+        const timer = setInterval(sync, 10000);
+        return () => { cancelled = true; clearInterval(timer); };
+    }, []);
 
     // Use useRef to persist client between renders
     const clientRef = useRef(null);

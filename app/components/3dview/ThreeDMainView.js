@@ -9,6 +9,8 @@ import configService from '../settings/ConfigService';
 // Basic UI components loaded synchronously
 import ThreeDBoatToolbar from './ThreeDBoatToolbar';
 import ThreeDBoatThanksIndicator from './ThreeDBoatThanksIndicator';
+import SceneScaleControl, { DEFAULT_SCENE_SCALE } from './hud/SceneScaleControl';
+import ViewButtons from './hud/ViewButtons';
 
 // Heavy 3D components loaded dynamically
 const ThreeDBoatView = dynamic(() => import('./ThreeDBoatView'), { ssr: false });
@@ -84,6 +86,13 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
     const replaying = useReplay().active;
     // The tapped vessel: null, { kind: 'own' } or { kind: 'ais', mmsi }
     const [selection, setSelection] = useState(null);
+    // World scale around the boat: the 3D components read it from the config
+    // when they mount, so the scene is mounted again (key) when it changes
+    const [sceneScale, setSceneScale] = useState(() => configService.get('aisLengthScalingFactor') || DEFAULT_SCENE_SCALE);
+    const changeSceneScale = (scale) => {
+        configService.set('aisLengthScalingFactor', scale);
+        setSceneScale(scale);
+    };
     const [showAttitudeIndicator, setShowAttitudeIndicator] = useState(true);
     // 'minimal' (FSD-like: speed + four values per mode) or 'classic' gauges
     const [hudStyle] = useState(() => configService.get('hudStyle') || 'minimal');
@@ -97,7 +106,7 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
     // Phones and the split view: the bottom panels stack in one column, so
     // they can never overlap one another
     const compact = !rich && !classic;
-    const showAdvice = !states.anchorWatch && !states.parkingMode && !replaying;
+    const showAdvice = !states.anchorWatch && !states.parkingMode && !states.moored && !replaying;
 
     // Get configuration directly using the configService
     useEffect(() => {
@@ -120,6 +129,11 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                     <SkyClock compact={!fullscreen} />
                     <ThreeDBoatThanksIndicator />
                 </div>
+            </div>
+
+            <div className="absolute top-14 right-2 z-30 hidden sm:flex flex-col items-end gap-2" data-hud-solid>
+                <SceneScaleControl value={sceneScale} onChange={changeSceneScale} />
+                <ViewButtons canPlace={!states.parkingMode && !states.anchorWatch} />
             </div>
 
             <div className="absolute top-14 left-2 z-30" data-hud-solid>
@@ -259,11 +273,11 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                     <RendererExposer />
                     {active && limited && <FrameLimiter fps={renderProfile.fps} />}
                     {states.parkingMode ? (
-                        <ThreeDParkAssistBoat onUpdateInfoPanel={setSelection} />
+                        <ThreeDParkAssistBoat key={sceneScale} onUpdateInfoPanel={setSelection} />
                     ) : states.anchorWatch ? (
-                        <ThreeDAnchoredBoat onUpdateInfoPanel={setSelection} />
+                        <ThreeDAnchoredBoat key={sceneScale} onUpdateInfoPanel={setSelection} />
                     ) : (
-                        <ThreeDBoatView onUpdateInfoPanel={setSelection} selection={selection} />
+                        <ThreeDBoatView key={sceneScale} onUpdateInfoPanel={setSelection} selection={selection} />
                     )}
                 </Canvas>
             </div>

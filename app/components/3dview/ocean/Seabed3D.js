@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 
 /**
  * 3D seabed for the bathymetry mode: the bottom as a deformed grid under the
- * (translucent) chart, the way a survey is drawn. Relief exaggerated,
+ * (translucent) chart, the way a survey is drawn. Relief at true scale,
  * grid lines every 50 m (bold every 250 m) anchored to the ground, colour by
  * depth, isobaths at 2, 5, 10, 20, 30 and 50 m, soundings (depth now, tide
  * included) and a sounder line from the keel to the bottom. Water shallower
@@ -38,10 +38,11 @@ export const SHOM_ZOOM = 13;
 const TILES = 3;            // 3×3 tiles: ~80 km square around the boat
 const GRID = 160;           // mesh resolution
 const GRID_SHOM = 240;      // finer where the survey allows it (~25 m between vertices)
-// Vertical exaggeration so a 2 m bank reads from the cockpit view: more on
-// a SHOM survey, whose detail is real, than on the smoothed global relief
-const EXAGGERATION_SURVEY = 9;
-const EXAGGERATION_GLOBAL = 5;
+// True proportions against the boat (drawn at the same scale): 3 m of water
+// under an 11 m mast must look like it. The scene zoom (−/+ under the battery)
+// deepens or flattens everything together.
+const EXAGGERATION_SURVEY = 1;
+const EXAGGERATION_GLOBAL = 1;
 const HALF = 3000;          // metres each side of the boat
 // Soundings: one every SOUNDING_STEP metres within SOUNDING_RADIUS
 const SOUNDING_STEP = 250;
@@ -51,18 +52,27 @@ const SOUNDING_RADIUS = 1500;
 const DRYING_LIMIT_CD = 6.5;
 const SAFETY_MARGIN = 1.0;  // metres under the keel
 const DEFAULT_DRAFT = 2.0;
-// Ground above the water now (banks uncovered by the tide, land) rises less
-// than the seabed sinks, and is capped: a relief, not cliffs over the chart
-const EXAGGERATION_ABOVE = 3;
+// Ground above the water now (banks uncovered by the tide, land), capped: a
+// relief, not cliffs over the chart
+const EXAGGERATION_ABOVE = 1;
 const ABOVE_CAP = 4;        // metres
 // Water level steps: the mesh is rebuilt when the level moves by this much
 const LEVEL_STEP = 0.1;
 const SOUNDER_LEVEL_STEP = 0.5;
 // Sounder and chart disagree beyond this: show both depths
 const GAP_SHOWN = 0.3;
+// The boat floats: where a chart puts ground under it (the global relief,
+// ~150 m per pixel, makes land of a marina basin), the bottom is lowered to
+// the sounder's depth around the boat, fading out over this radius
+const FLOAT_RADIUS_GLOBAL = 350;
+const FLOAT_RADIUS_SURVEY = 60;
+// SHOM models arrive while the app runs (ocearo-core downloads them when
+// online): ask again this often while none covers the boat
+const SURVEY_RETRY_MS = 60000;
 
 const PATHS = ['navigation.position', 'design.draft', 'environment.tide.heightNow', 'environment.tide.heightHigh',
-    'environment.tide.heightLow', 'environment.depth.belowSurface', 'environment.depth.belowKeel'];
+    'environment.tide.heightLow', 'environment.depth.belowSurface', 'environment.depth.belowKeel',
+    'environment.depth.belowTransducer', 'environment.depth.surfaceToTransducer'];
 
 const tileXY = (lat, lon, z) => {
     const n = 2 ** z;
@@ -76,6 +86,29 @@ const tileToLatLon = (x, y, z) => {
     const lon = x / n * 360 - 180;
     const lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI;
     return { lat, lon };
+};
+
+/**
+ * A boat floats: wraps a sampler ({h, drying} per lat/lon, h = elevation above
+ * the water now) so the ground at the boat sits at least `depth` metres below
+ * the surface, lowered smoothly over `radius` metres around it. Returns the
+ * sampler unchanged when the chart already gives that much water.
+ */
+export const floatingSample = (sampler, lat, lon, depth, radius) => {
+    const here = sampler(lat, lon);
+    const needed = -depth;
+    if (!here || here.h <= needed) return sampler;
+    const lower = needed - here.h;
+    const mPerDegLat = 111320;
+    const mPerDegLon = 111320 * Math.cos(lat * Math.PI / 180);
+    return (pLat, pLon) => {
+        const s = sampler(pLat, pLon);
+        if (!s) return s;
+        const d = Math.hypot((pLat - lat) * mPerDegLat, (pLon - lon) * mPerDegLon) / radius;
+        if (d >= 1) return s;
+        const w = 1 - d * d * (3 - 2 * d); // smoothstep fade
+        return { h: s.h + lower * w, drying: w > 0.5 ? false : s.drying };
+    };
 };
 
 // Network or the offline cache
@@ -380,11 +413,16 @@ const Seabed3D = ({ y = -0.1 }) => {
     const scale = configService.get('aisLengthScalingFactor') || 0.7;
     const draft = Number.isFinite(v['design.draft']?.maximum) ? v['design.draft'].maximum
         : Number(configService.get('boatDraft')) || DEFAULT_DRAFT;
-    // Water depth under the boat from the sounder (surface, or keel + draft)
+    // Water depth under the boat from the sounder (surface, keel + draft, or
+    // transducer + its depth when the offset is known)
     const belowSurface = v['environment.depth.belowSurface'];
     const belowKeel = v['environment.depth.belowKeel'];
+    const belowTransducer = v['environment.depth.belowTransducer'];
+    const surfaceToTransducer = v['environment.depth.surfaceToTransducer'];
     const measured = Number.isFinite(belowSurface) ? belowSurface
-        : Number.isFinite(belowKeel) ? belowKeel + draft : null;
+        : Number.isFinite(belowKeel) ? belowKeel + draft
+            : Number.isFinite(belowTransducer) ? belowTransducer + (Number.isFinite(surfaceToTransducer) ? surfaceToTransducer : 0)
+                : null;
     const palette = PALETTES[themeId] || PALETTES.light;
 
     const lat = position?.latitude;
@@ -395,8 +433,16 @@ const Seabed3D = ({ y = -0.1 }) => {
     useEffect(() => {
         if (!tileKey) return undefined;
         let cancelled = false;
-        loadSeabed(lat, lon).then((d) => { if (!cancelled) setData(d); }).catch(() => {});
-        return () => { cancelled = true; };
+        let retry = null;
+        const load = () => loadSeabed(lat, lon).then((d) => {
+            if (cancelled) return;
+            setData(d);
+            if (!d.shom && bathymetryTileTemplate()) retry = setTimeout(load, SURVEY_RETRY_MS);
+        }).catch(() => {
+            if (!cancelled) retry = setTimeout(load, SURVEY_RETRY_MS);
+        });
+        load();
+        return () => { cancelled = true; clearTimeout(retry); };
     }, [tileKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Chart elevation of the bottom under the boat, per dataset (survey: chart
@@ -420,7 +466,7 @@ const Seabed3D = ({ y = -0.1 }) => {
     const levelMsl = level.msl;
 
     /** Elevation (m) now, i.e. above the water surface (tide included), and whether it dries */
-    const sample = useMemo(() => {
+    const chartSample = useMemo(() => {
         if (!data) return null;
         return (pLat, pLon) => {
             const survey = data.shom ? heightAt(data.shom, pLat, pLon) : NaN;
@@ -430,6 +476,14 @@ const Seabed3D = ({ y = -0.1 }) => {
             return null;
         };
     }, [data, levelCd, levelMsl]);
+
+    // Same, with the ground under the boat lowered to the water it floats in
+    const neededKey = Math.round((Number.isFinite(measured) ? measured : draft + SAFETY_MARGIN) * 2) / 2;
+    const sample = useMemo(() => {
+        if (!chartSample || !Number.isFinite(lat)) return chartSample;
+        const surveyHere = data.shom && Number.isFinite(heightAt(data.shom, lat, lon));
+        return floatingSample(chartSample, lat, lon, neededKey, surveyHere ? FLOAT_RADIUS_SURVEY : FLOAT_RADIUS_GLOBAL);
+    }, [chartSample, neededKey, latKey, lonKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Mesh around the boat: ±HALF metres, north-up local (x east, y north)
     const built = useMemo(() => {

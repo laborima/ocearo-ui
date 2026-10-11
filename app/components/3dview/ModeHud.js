@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useOcearoContext } from '../context/OcearoContext';
 import { useSignalKPaths } from '../hooks/useSignalK';
 import usePolarPerformance from '../hooks/usePolarPerformance';
+import { coursePaths, courseValue } from '../utils/coursePaths';
 import {
     convertSpeedUnit, getSpeedUnitLabel, convertDepthUnit, getDepthUnitLabel,
     convertDistanceUnit, getDistanceUnitLabel, toDegrees, radToDeg,
@@ -20,8 +21,7 @@ const PATHS = [
     'environment.depth.belowKeel',
     'environment.depth.belowTransducer',
     'environment.depth.belowSurface',
-    'navigation.courseGreatCircle.nextPoint.distance',
-    'navigation.courseGreatCircle.nextPoint.timeToGo',
+    ...coursePaths('distance', 'timeToGo'),
     'performance.velocityMadeGood',
     'performance.polarSpeedRatio',
     'environment.current',
@@ -101,13 +101,13 @@ const ModeHud = ({ omitDepth = false, maxItems = 4 }) => {
                     { label: t('hud.alarmRadius'), value: fmt(v['navigation.anchor.maxRadius'], 0), unit: 'm' },
                 ];
             default: {
-                const wptDistance = v['navigation.courseGreatCircle.nextPoint.distance'];
+                const wptDistance = courseValue(v, 'distance');
                 return [
                     { label: t('hud.heading'), value: fmtAngle(heading) },
                     tws,
                     { label: t('hud.awa'), value: fmtWindAngle(v['environment.wind.angleApparent'], t) },
                     depthItem,
-                    Number.isFinite(wptDistance) && { label: t('hud.waypoint'), value: fmt(convertDistanceUnit(wptDistance)), unit: getDistanceUnitLabel(), sub: fmtDuration(v['navigation.courseGreatCircle.nextPoint.timeToGo']) },
+                    Number.isFinite(wptDistance) && { label: t('hud.waypoint'), value: fmt(convertDistanceUnit(wptDistance)), unit: getDistanceUnitLabel(), sub: fmtDuration(courseValue(v, 'timeToGo')) },
                 ].filter(Boolean);
             }
         }

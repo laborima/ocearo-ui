@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useSignalKPath } from '../../hooks/useSignalK';
+import { useSignalKPath, useSignalKPaths } from '../../hooks/useSignalK';
 import BaseWidget from './BaseWidget';
 import { useNavigation } from '../../context/NavigationContext';
 import { toDegrees } from '../../context/OcearoContext';
@@ -22,6 +22,9 @@ import {
     faRobot
 } from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
+import { coursePaths, courseValue } from '../../utils/coursePaths';
+
+const COURSE_PATHS = coursePaths('distance', 'bearingTrue', 'crossTrackError', 'velocityMadeGood');
 
 /**
  * CourseWidget - Displays active course, waypoints and routes
@@ -48,10 +51,11 @@ export default function CourseWidget() {
     const debugMode = configService.get('debugMode');
     
     // Use specialized hooks for better performance
-    const skDistance = useSignalKPath('navigation.courseGreatCircle.nextPoint.distance');
-    const skBearingTrue = useSignalKPath('navigation.courseGreatCircle.nextPoint.bearingTrue');
-    const skXte = useSignalKPath('navigation.courseGreatCircle.crossTrackError');
-    const skVmg = useSignalKPath('navigation.courseGreatCircle.velocityMadeGood');
+    const course = useSignalKPaths(COURSE_PATHS);
+    const skDistance = courseValue(course, 'distance');
+    const skBearingTrue = courseValue(course, 'bearingTrue');
+    const skXte = courseValue(course, 'crossTrackError');
+    const skVmg = courseValue(course, 'velocityMadeGood');
 
     // Autopilot data
     const autopilotState = useSignalKPath('steering.autopilot.state');

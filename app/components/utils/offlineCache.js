@@ -46,6 +46,12 @@ export const cachedFetch = async (url, { kind = 'tile' } = {}) => {
         // policy asks: it identifies the boat's server, nothing more.
         const res = await fetch(url, { mode: 'cors', referrerPolicy: 'strict-origin-when-cross-origin' });
         if (res.ok) await cache.put(url, res.clone());
+        else {
+            // An overloaded service (Open-Meteo answers 503) is as good as
+            // offline: the last copy kept beats nothing
+            const hit = await cache.match(url);
+            if (hit) return hit;
+        }
         return res;
     } catch (error) {
         const hit = await cache.match(url);

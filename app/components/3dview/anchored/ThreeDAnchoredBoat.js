@@ -1,10 +1,14 @@
 import React, { Suspense, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Html } from '@react-three/drei';
+import { PerspectiveCamera, Html } from '@react-three/drei';
+import SceneControls from '../SceneControls';
 import SceneSetup from '../SceneSetup';
 import SeaGround from '../fsd/SeaGround';
 import SailBoat3D from '../SailBoat3D';
 import AnchoredCircle from './AnchoredCircle';
+
+// Home camera, where the recenter button brings the view back
+const HOME = [32, 10, -32];
 
 const ThreeDAnchoredBoat = ({ onUpdateInfoPanel }) => {
     const sailBoatRef = useRef();
@@ -24,7 +28,8 @@ const ThreeDAnchoredBoat = ({ onUpdateInfoPanel }) => {
             />
 
             {/* Orbit controls */}
-            <OrbitControls
+            <SceneControls
+                home={HOME}
                 enableZoom={true}
                 enableRotate={true}
 

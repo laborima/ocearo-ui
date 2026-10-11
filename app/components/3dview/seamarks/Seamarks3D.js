@@ -21,13 +21,13 @@ const RADIUS_M = 3 * 1852;
 const RETRY_MS = 2 * 60 * 1000;
 // The closest ones only: one draw call each (a Raspberry Pi budget)
 const MAX_MARKS = 120;
-// Marks are drawn 1.5 times their size, and beyond this distance (scene
-// units, ~120 m) they grow with distance, a little slower than they shrink
-// in perspective: a real buoy is a few pixels from half a mile, and the
-// far ones must not crowd the horizon
-const EXAGGERATION = 1.5;
+// Marks are drawn at their true size against the boat, and beyond this
+// distance (scene units, ~120 m) grow gently with distance, much slower than
+// they shrink in perspective: a real buoy is a few pixels from half a mile,
+// but a cardinal must not tower over the boat either
+const EXAGGERATION = 1;
 const TRUE_SIZE_RANGE = 80;
-const sizeAt = (d) => EXAGGERATION * Math.max(1, d / TRUE_SIZE_RANGE) ** 0.75;
+const sizeAt = (d) => EXAGGERATION * Math.max(1, d / TRUE_SIZE_RANGE) ** 0.5;
 // Names of the closest marks only
 const LABEL_RANGE = 900;
 const MAX_LABELS = 8;
