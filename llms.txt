@@ -47,5 +47,5 @@ Ocearo is an aid to the watch, not a certified navigation system.
 
 ## Author
 
-- [Matthieu Laborie](https://laborima.github.io/chatel-apps-repository/about-matthieu/): developer and sailor in La Rochelle, author of Ocearo (page in French)
+- [Matthieu Laborie](https://laborima.github.io/): developer and sailor in La Rochelle, author of Ocearo (page in French)
 - [GitHub](https://github.com/laborima) · [LinkedIn](https://www.linkedin.com/in/matthieu-laborie-2433b546)
