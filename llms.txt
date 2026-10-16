@@ -1,0 +1,51 @@
+# Ocearo
+
+> See your boat, the sea and the traffic in live 3D. Sail trim, COLREG advice, man overboard, anchor watch, bathymetry and weather on any screen on board. Open source, runs on a Raspberry Pi.
+
+Ocearo (Ocean Robot) is an open-source (Apache 2.0) sailing display for Signal K, version 2.1.2. Ocearo turns your boat’s data into a calm picture you read at a glance — sail trim, rules of the road, man overboard and anchor watch included. Open source, on any screen on board. Ocearo is a Signal K webapp. If your boat already runs Signal K, you are one click away.
+
+Ocearo is an aid to the watch, not a certified navigation system.
+
+## Features
+
+- **Your boat, the sea and the seabed, live.** A real-time 3D scene centred on your boat, built from your own instruments. One button switches between five views of the world around it.
+- **Who gives way? Ocearo tells you.** Every AIS target is drawn as its real ship type and size, glides between reports, and is coloured by who must keep clear — with the rule and the alteration to make.
+- **Sail faster, trim better.** Ocearo draws your sails from the apparent wind and shows where your polars will take you. Racing or cruising, you see the next move.
+- **When it matters most, one button.** The moments you train for and hope never happen. Ocearo keeps them simple, visible and loud.
+
+## Install
+
+- Install: Signal K server ≥ 2: Appstore → Available → ocearo-ui, or from the command line.
+- Open: Restart the server and open Ocearo on any screen on board: chart table, tablet or phone.
+- Go further: Add Ocearo Core for the logbook, anchor watch, SHOM bathymetry, spoken alerts and the AI copilot.
+- `npm install ocearo-ui` (display), `npm install ocearo-core` (server plugin).
+
+## Pages
+
+- [Ocearo — the open-source 3D sailing display for Signal K](https://laborima.github.io/ocearo-ui/): See your boat, the sea and the traffic in live 3D. Sail trim, COLREG advice, man overboard, anchor watch, bathymetry and weather on any screen on board. Open source, runs on a Raspberry Pi.
+- [Live demo — try Ocearo in your browser](https://laborima.github.io/ocearo-ui/demo/): Open the real Ocearo app in your browser, fed with simulated Signal K data: the 3D view, AIS traffic, dashboard and settings. Nothing to install.
+- [Brand guidelines — Ocearo logo, colours and typography](https://laborima.github.io/ocearo-ui/brand/): How to use the Ocearo logo, the compass mark and the bow A, the colour palette, the Geist typeface and the voice of the product.
+- French: https://laborima.github.io/ocearo-ui/fr/ · Brazilian Portuguese: https://laborima.github.io/ocearo-ui/pt/
+
+## Docs
+
+- [README](https://github.com/laborima/ocearo-ui/blob/main/README.md): features, installation, configuration and screenshots
+- [Changelog](https://github.com/laborima/ocearo-ui/blob/main/CHANGELOG.md): what changed in each release
+- [Ocearo Core](https://github.com/laborima/ocearo-core): the Signal K server plugin (voice, anchor and collision watch, bathymetry, logbook, AI copilot)
+- [npm package](https://www.npmjs.com/package/ocearo-ui)
+- [Signal K](https://signalk.org): the open marine data server Ocearo runs on
+
+## FAQ
+
+- **Is Ocearo open source?** Yes, under the Apache 2.0 licence. The code of Ocearo UI and Ocearo Core is on GitHub: you can read it, adapt it to your boat and contribute.
+- **What hardware do I need?** A Signal K server, which a Raspberry Pi 4 or 5 runs comfortably, connected to your instruments (NMEA 2000 or 0183). Any recent browser on a tablet, phone or chart-table screen is a display.
+- **Does it work without internet?** Yes. Your instruments, AIS and the 3D view need no internet. Chart tiles, wind forecasts and bathymetry are kept on board whenever you have a connection, and can be downloaded for the area before you leave.
+- **Is it a certified navigation system?** No. Ocearo is an aid to the watch, like a second pair of eyes. Keep a proper lookout and use official charts; the skipper stays responsible for the boat.
+- **Which boats does it support?** Any boat that publishes standard Signal K data: sailing yachts, catamarans and motor boats. The 3D view offers a 10.8 m racer, a 14 m catamaran and simpler models.
+- **Which languages are available?** Twelve: English, French, German, Spanish, Italian, Dutch, Portuguese, Danish, Swedish, Finnish, Polish and Greek, with metric, imperial or nautical units.
+- **How is Ocearo built?** Mostly with AI coding assistants, in the interest of transparency. The author, a developer and sailor, decides what the app does, reviews the changes and tests it on board, on the boat it is developed on. Code reviews and bug reports on GitHub are especially welcome.
+
+## Author
+
+- [Matthieu Laborie](https://laborima.github.io/chatel-apps-repository/about-matthieu/): developer and sailor in La Rochelle, author of Ocearo (page in French)
+- [GitHub](https://github.com/laborima) · [LinkedIn](https://www.linkedin.com/in/matthieu-laborie-2433b546)

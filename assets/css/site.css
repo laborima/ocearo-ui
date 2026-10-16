@@ -484,3 +484,16 @@ section { position: relative; }
   .nav-links a { padding-inline: 10px; }
   .nav-end .btn-gh { display: none; }
 }
+
+/* About the author */
+.author { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(28px, 5vw, 72px); align-items: center; padding: clamp(20px, 3vw, 32px); border: 1px solid var(--line); border-radius: var(--radius); background: var(--ink-2); }
+.author-photo { width: 100%; height: auto; aspect-ratio: 3 / 4; object-fit: cover; border-radius: var(--radius-s); }
+.author-copy { display: flex; flex-direction: column; gap: 18px; align-items: flex-start; }
+.author-copy > p:not(.lead) { color: var(--fg-2); max-width: 60ch; line-height: 1.6; }
+.author-copy .cta { justify-content: flex-start; margin-top: 6px; }
+.author-note { color: var(--fg-3); font-size: 13px; }
+.author-note:empty { display: none; }
+@media (max-width: 860px) {
+  .author { grid-template-columns: minmax(0, 1fr); }
+  .author-photo { aspect-ratio: 4 / 3; object-position: 50% 30%; }
+}
