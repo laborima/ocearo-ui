@@ -20,4 +20,4 @@ For a local preview, build with `SITE_URL=http://localhost:8765 node www/build.m
 
 **Domain.** `SITE_URL` (default `https://laborima.github.io/ocearo-ui`) sets canonical links, the sitemap, `robots.txt`, `llms.txt` and the path the pages are served under. The workflow sets it in the *Build website* step. To move to `https://ocearo.leslaborie.org`, first add a DNS `CNAME` record `ocearo` → `laborima.github.io.`, then set `SITE_URL` to that domain: a `CNAME` file is written, the app's `_next` goes to `/ocearo-ui/_next` (its assetPrefix), and GitHub redirects `laborima.github.io/ocearo-ui/` to the domain.
 
-**Author.** The About section links to `ABOUT_URL` (default: the author's page in chatel-apps-repository), also used for the author in the structured data and `llms.txt`.
+**Author.** The About section links to `ABOUT_URL` (default: the author's page, https://laborima.github.io/), also used for the author in the structured data and `llms.txt`.

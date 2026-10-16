@@ -26,7 +26,7 @@ const SITE = (process.env.SITE_URL || 'https://laborima.github.io/ocearo-ui').re
 const BASE = new URL(SITE).pathname.replace(/\/$/, '');
 const LANGS = ['en', 'fr', 'pt'];
 /** The author's page (profile, other projects, the windsurf game). */
-const ABOUT = process.env.ABOUT_URL || 'https://laborima.github.io/chatel-apps-repository/about-matthieu/';
+const ABOUT = process.env.ABOUT_URL || 'https://laborima.github.io/';
 const AUTHOR = {
   '@type': 'Person',
   name: 'Matthieu Laborie',
