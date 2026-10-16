@@ -383,6 +383,15 @@
       }
     ]
   },
+  "about": {
+    "eyebrow": "Sobre",
+    "title": "Feito no mar, em La Rochelle",
+    "lead": "Ocearo é o projeto pessoal de Matthieu Laborie, desenvolvedor e velejador em La Rochelle.",
+    "text": "Ele nasce para um barco: cada versão é testada a bordo e depois compartilhada como código aberto. Boa parte do código é escrita com assistentes de programação por IA; Matthieu decide o que o app faz e revisa cada mudança. Outros projetos — eletrônica, sensores Signal K, apps — e um jogo de windsurf estão na página do autor.",
+    "cta": "Conheça o autor",
+    "note": "A página do autor está em francês.",
+    "photo_alt": "Matthieu Laborie no leme do seu veleiro, ao largo de La Rochelle"
+  },
   "final": {
     "title": "Pronto para ver o mar de outro jeito?",
     "lead": "Abra a demonstração no seu navegador ou instale hoje o Ocearo no servidor Signal K do seu barco.",
@@ -612,6 +621,7 @@
     "changelog": "Novidades",
     "sponsor": "Me pague um café",
     "made": "Feito em La Rochelle",
-    "disclaimer": "Não é um sistema de navegação certificado: é uma ajuda na vigilância."
+    "disclaimer": "Não é um sistema de navegação certificado: é uma ajuda na vigilância.",
+    "about_author": "Sobre o autor"
   }
 }

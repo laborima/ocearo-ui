@@ -52,10 +52,15 @@ jobs:
             npm publish --access public --provenance
           fi
 
-      # laborima.github.io/ocearo-ui/: the website at the root, the app (live demo)
-      # under app/. The app loads its scripts from /ocearo-ui/_next (its production
-      # assetPrefix), so _next goes to the root; everything else it loads is relative.
+      # The website at the root, the app (live demo) under app/. The app loads its
+      # scripts from /ocearo-ui/_next (its production assetPrefix); everything else
+      # it loads is relative.
+      # SITE_URL: https://laborima.github.io/ocearo-ui until the DNS record of the
+      # custom domain exists, then https://ocearo.leslaborie.org (a CNAME file is
+      # written, and laborima.github.io/ocearo-ui/ redirects to it)
       - name: Build website
+        env:
+          SITE_URL: https://laborima.github.io/ocearo-ui
         run: node www/build.mjs
 
       - name: Assemble GitHub Pages
@@ -63,7 +68,9 @@ jobs:
           mkdir -p pages/app
           cp -r www/dist/. pages/
           cp -r out/. pages/app/
-          mv pages/app/_next pages/_next
+          # /ocearo-ui/_next: at the site root on laborima.github.io/ocearo-ui/, in an
+          # ocearo-ui/ folder on a custom domain
+          if [ -f pages/CNAME ]; then mkdir -p pages/ocearo-ui && mv pages/app/_next pages/ocearo-ui/_next; else mv pages/app/_next pages/_next; fi
           rm -f pages/app/package.json pages/app/README.md pages/app/README.fr.md
 
       - name: Deploy to GitHub Pages

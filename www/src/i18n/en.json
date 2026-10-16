@@ -383,6 +383,15 @@
       }
     ]
   },
+  "about": {
+    "eyebrow": "About",
+    "title": "Made at sea, in La Rochelle",
+    "lead": "Ocearo is the personal project of Matthieu Laborie, a developer and sailor based in La Rochelle.",
+    "text": "It is built for one boat first: every version is tested on board, then shared as open source. Much of the code is written with AI coding assistants; Matthieu decides what the app does and reviews every change. More projects — electronics, Signal K sensors, apps — and a windsurf game are on the author’s page.",
+    "cta": "Meet the author",
+    "note": "The author’s page is in French.",
+    "photo_alt": "Matthieu Laborie at the helm of his sailing boat, off La Rochelle"
+  },
   "final": {
     "title": "Ready to see your sea differently?",
     "lead": "Open the live demo in your browser, or install Ocearo on your boat’s Signal K server today.",
@@ -612,6 +621,7 @@
     "changelog": "What’s new",
     "sponsor": "Buy me a coffee",
     "made": "Made in La Rochelle",
-    "disclaimer": "Not a certified navigation system: an aid to the watch."
+    "disclaimer": "Not a certified navigation system: an aid to the watch.",
+    "about_author": "About the author"
   }
 }

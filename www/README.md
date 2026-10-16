@@ -1,6 +1,6 @@
 # Ocearo website
 
-The public site at <https://laborima.github.io/ocearo-ui/>: plain HTML, CSS and JavaScript, English at `/`, French at `/fr/` and Brazilian Portuguese at `/pt/` (declared as `pt-BR` through `html_lang`), with the live demo (the app itself) served under `app/`.
+The public site at <https://laborima.github.io/ocearo-ui/>: plain HTML, CSS and JavaScript, English at `/`, French at `/fr/` and Brazilian Portuguese at `/pt/` (declared as `pt-BR` through `html_lang`), with the live demo (the app itself) served under `app/`, plus `sitemap.xml`, `robots.txt` and `llms.txt`.
 
 ```sh
 node www/build.mjs                 # writes www/dist
@@ -18,4 +18,6 @@ For a local preview, build with `SITE_URL=http://localhost:8765 node www/build.m
 
 **YouTube.** Once the tour is published, put the video id (the part after `v=`) in `video.youtube_id` of each language file. Until then the player shows “Coming soon on YouTube”.
 
-**Domain.** `SITE_URL` (default `https://laborima.github.io/ocearo-ui`) sets canonical links, the sitemap and the path the pages are served under. To move to a domain of your own, set `SITE_URL=https://your.domain` in the workflow (a `CNAME` file is then written), add a DNS `CNAME` record to `laborima.github.io`, and serve the app's `_next` from `/ocearo-ui/_next` (or rebuild the app with a matching assetPrefix).
+**Domain.** `SITE_URL` (default `https://laborima.github.io/ocearo-ui`) sets canonical links, the sitemap, `robots.txt`, `llms.txt` and the path the pages are served under. The workflow sets it in the *Build website* step. To move to `https://ocearo.leslaborie.org`, first add a DNS `CNAME` record `ocearo` → `laborima.github.io.`, then set `SITE_URL` to that domain: a `CNAME` file is written, the app's `_next` goes to `/ocearo-ui/_next` (its assetPrefix), and GitHub redirects `laborima.github.io/ocearo-ui/` to the domain.
+
+**Author.** The About section links to `ABOUT_URL` (default: the author's page in chatel-apps-repository), also used for the author in the structured data and `llms.txt`.

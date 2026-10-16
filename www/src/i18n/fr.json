@@ -383,6 +383,15 @@
       }
     ]
   },
+  "about": {
+    "eyebrow": "À propos",
+    "title": "Conçu en mer, à La Rochelle",
+    "lead": "Ocearo est le projet personnel de Matthieu Laborie, développeur et plaisancier à La Rochelle.",
+    "text": "Il est d’abord conçu pour un bateau : chaque version est testée à bord, puis partagée en open source. Une grande partie du code est écrite avec des assistants de programmation IA ; Matthieu décide de ce que fait l’application et relit chaque changement. D’autres projets — électronique, capteurs Signal K, applications — et un jeu de planche à voile sont sur la page de l’auteur.",
+    "cta": "Découvrir l’auteur",
+    "note": "",
+    "photo_alt": "Matthieu Laborie à la barre de son voilier, au large de La Rochelle"
+  },
   "final": {
     "title": "Prêt à voir la mer autrement ?",
     "lead": "Ouvrez la démo dans votre navigateur, ou installez Ocearo dès aujourd’hui sur le serveur Signal K de votre bateau.",
@@ -612,6 +621,7 @@
     "changelog": "Nouveautés",
     "sponsor": "Offrir un café",
     "made": "Fait à La Rochelle",
-    "disclaimer": "Pas un système de navigation certifié : une aide à la veille."
+    "disclaimer": "Pas un système de navigation certifié : une aide à la veille.",
+    "about_author": "À propos de l’auteur"
   }
 }

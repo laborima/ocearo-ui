@@ -25,6 +25,14 @@ const SITE = (process.env.SITE_URL || 'https://laborima.github.io/ocearo-ui').re
 /** Path the site is served under ('/ocearo-ui' on GitHub project pages, '' on its own domain). */
 const BASE = new URL(SITE).pathname.replace(/\/$/, '');
 const LANGS = ['en', 'fr', 'pt'];
+/** The author's page (profile, other projects, the windsurf game). */
+const ABOUT = process.env.ABOUT_URL || 'https://laborima.github.io/chatel-apps-repository/about-matthieu/';
+const AUTHOR = {
+  '@type': 'Person',
+  name: 'Matthieu Laborie',
+  url: ABOUT,
+  sameAs: ['https://github.com/laborima', 'https://www.linkedin.com/in/matthieu-laborie-2433b546'],
+};
 const PKG = JSON.parse(fs.readFileSync(path.join(REPO, 'package.json'), 'utf8'));
 
 /** Pages and their slug in each language. */
@@ -100,7 +108,7 @@ function jsonLd(page, lang, url) {
       downloadUrl: 'https://www.npmjs.com/package/ocearo-ui',
       codeRepository: 'https://github.com/laborima/ocearo-ui',
       inLanguage: ['en', 'fr', 'de', 'es', 'it', 'nl', 'pt', 'da', 'sv', 'fi', 'pl', 'el'],
-      author: { '@type': 'Person', name: 'Matthieu Laborie' },
+      author: AUTHOR,
     });
     graph.push({
       '@type': 'FAQPage',
@@ -163,6 +171,7 @@ for (const page of PAGES) {
       altPath,
       langs: langNav(page, lang),
       links,
+      about: ABOUT,
       year: new Date().getFullYear(),
       version: PKG.version,
     };
@@ -212,6 +221,50 @@ const sitemap = [
 ].join('\n');
 fs.writeFileSync(path.join(DIST, 'sitemap.xml'), sitemap);
 fs.writeFileSync(path.join(DIST, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: ${BASE}/app/\n\nSitemap: ${SITE}/sitemap.xml\n`);
+// llms.txt (https://llmstxt.org): what Ocearo is, in plain Markdown, for AI assistants and search
+const en = i18n.en;
+const llms = [
+  '# Ocearo',
+  '',
+  `> ${en.pages.index.description}`,
+  '',
+  `Ocearo (Ocean Robot) is an open-source (Apache 2.0) sailing display for Signal K, version ${PKG.version}. ${en.hero.lead} ${en.install.lead}`,
+  '',
+  'Ocearo is an aid to the watch, not a certified navigation system.',
+  '',
+  '## Features',
+  '',
+  ...['f3d', 'colreg', 'tactics', 'safety'].map((k) => `- **${en[k].title}** ${en[k].lead}`),
+  '',
+  '## Install',
+  '',
+  ...['s1', 's2', 's3'].map((k) => `- ${en.install[`${k}_title`]}: ${en.install[k]}`),
+  '- `npm install ocearo-ui` (display), `npm install ocearo-core` (server plugin).',
+  '',
+  '## Pages',
+  '',
+  ...PAGES.map((page) => `- [${en.pages[page.tpl].title}](${SITE}${pageUrl(page, 'en')}): ${en.pages[page.tpl].description}`),
+  `- French: ${SITE}/fr/ · Brazilian Portuguese: ${SITE}/pt/`,
+  '',
+  '## Docs',
+  '',
+  '- [README](https://github.com/laborima/ocearo-ui/blob/main/README.md): features, installation, configuration and screenshots',
+  '- [Changelog](https://github.com/laborima/ocearo-ui/blob/main/CHANGELOG.md): what changed in each release',
+  '- [Ocearo Core](https://github.com/laborima/ocearo-core): the Signal K server plugin (voice, anchor and collision watch, bathymetry, logbook, AI copilot)',
+  '- [npm package](https://www.npmjs.com/package/ocearo-ui)',
+  '- [Signal K](https://signalk.org): the open marine data server Ocearo runs on',
+  '',
+  '## FAQ',
+  '',
+  ...en.faq.items.map((q) => `- **${q.q}** ${q.a}`),
+  '',
+  '## Author',
+  '',
+  `- [Matthieu Laborie](${ABOUT}): developer and sailor in La Rochelle, author of Ocearo (page in French)`,
+  `- [GitHub](${AUTHOR.sameAs[0]}) · [LinkedIn](${AUTHOR.sameAs[1]})`,
+  '',
+].join('\n');
+fs.writeFileSync(path.join(DIST, 'llms.txt'), llms);
 const host = new URL(SITE).hostname;
 if (!host.endsWith('github.io')) fs.writeFileSync(path.join(DIST, 'CNAME'), `${host}\n`);
 fs.writeFileSync(path.join(DIST, '.nojekyll'), '');
