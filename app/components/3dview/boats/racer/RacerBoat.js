@@ -6,7 +6,7 @@ import SailPlan, { boomAngleWithTraveller } from './SailPlan';
 import DeckTrim, { jibCarSheave, mainCarSheave } from './DeckTrim';
 import { RIG, chooseSails } from './rig';
 import { buildRacerParts, sheerOutline } from './racerGeometry';
-import { Line } from '@react-three/drei';
+import Line from '../../Line';
 import Tiller from './Tiller';
 import { useSignalKPath } from '../../../hooks/useSignalK';
 

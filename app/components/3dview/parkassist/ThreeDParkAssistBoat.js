@@ -13,7 +13,7 @@ import WindSector3D from '../compass/WindSector3D';
 import Current3D from '../compass/Current3D';
 import PathRibbon from './PathRibbon';
 import VirtualBerth from './VirtualBerth';
-import { Line } from '@react-three/drei';
+import Line from '../Line';
 import { predictTrack } from './steering';
 import { wrapPi } from '../../utils/Polar';
 

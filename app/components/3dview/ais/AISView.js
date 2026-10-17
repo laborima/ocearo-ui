@@ -1,6 +1,6 @@
 import React, { useRef, useMemo, useEffect, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Line } from '@react-three/drei';
+import Line from '../Line';
 import * as THREE from 'three'; // Import THREE for Color
 
 import { useOcearoContext } from '../../context/OcearoContext';

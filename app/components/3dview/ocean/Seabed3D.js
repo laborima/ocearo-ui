@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
-import { Html, Line } from '@react-three/drei';
+import { Html } from '@react-three/drei';
+import Line from '../Line';
 import useTheme from '../../theme/useTheme';
 import configService from '../../settings/ConfigService';
 import { useSignalKPaths } from '../../hooks/useSignalK';

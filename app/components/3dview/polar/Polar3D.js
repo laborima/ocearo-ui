@@ -1,6 +1,7 @@
 import React, { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Html, Line } from '@react-three/drei';
+import { Html } from '@react-three/drei';
+import Line from '../Line';
 import useTheme from '../../theme/useTheme';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import { optimalUpwind, polarSpeed, wrapPi } from '../../utils/Polar';

@@ -81,6 +81,10 @@ const FrameLimiter = ({ fps }) => {
 const ThreeDMainView = ({ active = true, fullscreen = false }) => {
     // Read once: changing it in settings takes effect on reload
     const [renderProfile] = useState(getRenderProfile);
+    // CSS hook for the profile (globals.css drops the HUD backdrop blur on a Pi)
+    useEffect(() => {
+        document.documentElement.dataset.renderProfile = renderProfile.id;
+    }, [renderProfile.id]);
     const limited = renderProfile.fps < 60;
     const { states, theme } = useOcearoContext(); // Access global context
     const replaying = useReplay().active;

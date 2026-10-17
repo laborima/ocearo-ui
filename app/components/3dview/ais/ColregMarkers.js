@@ -5,7 +5,7 @@ import useTheme from '../../theme/useTheme';
 import useColregs from '../../hooks/useColregs';
 import useHudClearance from '../hud/useHudClearance';
 
-import { Line } from '@react-three/drei';
+import Line from '../Line';
 
 const START_AHEAD = 6;   // scene units ahead of the target's bow
 const ARC_LENGTH = 30;   // length of the expected turn
