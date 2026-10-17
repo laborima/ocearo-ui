@@ -30,7 +30,8 @@
       "off": "Voix",
       "safety": "Sécurité",
       "all": "Silence"
-    }
+    },
+    "view": "Vue"
   },
   "menu": {
     "splitView": "Vue partagée",
@@ -767,7 +768,10 @@
     "water": "Eau",
     "pressure": "Pression",
     "battery": "Batterie",
-    "sailDepth": "Creux"
+    "sailDepth": "Creux",
+    "wind": "Vent",
+    "windApparent": "Vent apparent",
+    "gust": "rafales {{value}}"
   },
   "laylines": {
     "tack": "Virer",

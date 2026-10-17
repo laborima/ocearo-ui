@@ -205,3 +205,14 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Raspberry Pi render profile (set on <html> by ThreeDMainView): a backdrop
+   blur over the WebGL canvas is redrawn by the GPU on every frame — 14 HUD
+   panels halved the frame rate of the 3D view (4 fps instead of 9). The panels
+   keep their translucent background, without the blur. */
+html[data-render-profile="pi"] *,
+html[data-render-profile="pi"] *::before,
+html[data-render-profile="pi"] *::after {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}

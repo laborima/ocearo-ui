@@ -44,7 +44,7 @@ const NavButton = ({ icon, onClick, label, textColor, badgeColor, wideOnly }) =>
   </button>
 );
 
-const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
+const BottomNavigation = ({ setRightView, toggleLayout, toggleAppMenu }) => {
   const { t } = useTranslation();
   const textColor = 'text-hud-main';
 
@@ -93,10 +93,10 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
       section: 'left',
       items: [
         {
+          // Boat full screen <-> boat beside the app (settings: APPS menu)
           icon: faShip,
-          onClick: () => toggleSettings(),
-          label: t('nav.system'),
-          badgeColor: settingsBadgeColor
+          onClick: () => toggleLayout(),
+          label: t('nav.view'),
         },
         ...(isOcearoCoreEnabled() ? [{
           icon: DND_APPEARANCE[dndMode].icon,
@@ -126,6 +126,8 @@ const BottomNavigation = ({ setRightView, toggleSettings , toggleAppMenu }) => {
         {
           icon: faTh,
           onClick: toggleAppMenu,
+          // Settings live in the APPS menu: flag them there
+          badgeColor: settingsBadgeColor,
           label: t('nav.apps')
         },
         {

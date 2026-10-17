@@ -149,12 +149,13 @@ export default function Home() {
     }, []);
 
     const handleSetRightView = useCallback((view) => {
+        // From the boat alone, an app opens beside it (phones: instead of it)
         if (currentViewMode === VIEW_MODES.BOAT) {
-            toggleViewMode(VIEW_MODES.APP);
+            toggleViewMode(narrow ? VIEW_MODES.APP : VIEW_MODES.SPLIT);
         }
         setRightView(view);
         configService.setCurrentView(view);
-    }, [currentViewMode, toggleViewMode]);
+    }, [currentViewMode, toggleViewMode, narrow]);
 
     // A voyage replay plays in the 3D view: bring it on screen
     useEffect(() => subscribeReplay((replay) => {
@@ -183,6 +184,28 @@ export default function Home() {
             setCurrentViewMode(VIEW_MODES.APP);
         }
     }, [rightView, currentViewMode, toggleViewMode, handleSetRightView]);
+
+    /**
+     * The VIEW button: the boat full screen, or the boat beside the app (a
+     * phone has no room for both: the boat, or the app). From the settings it
+     * closes them and goes back to the boat.
+     */
+    const toggleLayout = useCallback(() => {
+        if (rightView === 'settings') {
+            isSettingsViewRef.current = false;
+            setIsSettingsView(false);
+            const previousRightView = previousRightViewRef.current || 'navigation';
+            setRightView(previousRightView);
+            configService.setCurrentView(previousRightView);
+            toggleViewMode(VIEW_MODES.BOAT);
+            return;
+        }
+        if (currentViewMode === VIEW_MODES.BOAT) {
+            toggleViewMode(narrow ? VIEW_MODES.APP : VIEW_MODES.SPLIT);
+        } else {
+            toggleViewMode(VIEW_MODES.BOAT);
+        }
+    }, [rightView, currentViewMode, narrow, toggleViewMode]);
 
     useEffect(() => {
         if (rightView === 'settings') {
@@ -268,6 +291,7 @@ export default function Home() {
                                 setRightView={handleSetRightView}
                                 toggleAppMenu={toggleAppMenu}
                                 toggleSettings={toggleSettings}
+                                toggleLayout={toggleLayout}
                             />
                         </div>
 

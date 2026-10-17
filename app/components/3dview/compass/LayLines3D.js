@@ -1,5 +1,6 @@
 import React from 'react';
-import { Billboard, Line, Text } from '@react-three/drei';
+import { Billboard, Text } from '@react-three/drei';
+import Line from '../Line';
 import { useTranslation } from 'react-i18next';
 import useTheme from '../../theme/useTheme';
 import useLaylines from '../../hooks/useLaylines';

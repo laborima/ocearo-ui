@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
-import { Line } from '@react-three/drei';
+import Line from '../Line';
 import useTheme from '../../theme/useTheme';
 import { useSignalKPath } from '../../hooks/useSignalK';
 import { getAnchorTrack } from '../../utils/OcearoCoreUtils';

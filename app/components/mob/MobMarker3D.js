@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Billboard, Line, Text } from '@react-three/drei';
+import { Billboard, Text } from '@react-three/drei';
+import Line from '../3dview/Line';
 import { useTranslation } from 'react-i18next';
 import useTheme from '../theme/useTheme';
 import configService from '../settings/ConfigService';

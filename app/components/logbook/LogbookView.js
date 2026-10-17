@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useOcearoContext } from '../context/OcearoContext';
-import { useSignalKPaths } from '../hooks/useSignalK';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faBook, faTimeline, faChartLine, faRobot, faPlus,
@@ -28,7 +27,7 @@ import { useTranslation } from 'react-i18next';
  */
 const LogbookView = () => {
   const { t } = useTranslation();
-  const { states, toggleState } = useOcearoContext();
+  const { states, toggleState, getSignalKValue } = useOcearoContext();
   const racingMode = states?.racing ?? false;
   const [activeTab, setActiveTab] = useState('logbook');
   
@@ -50,12 +49,24 @@ const LogbookView = () => {
     'propulsion.main.runTime'
   ], []);
 
-  const skValues = useSignalKPaths(logbookPaths);
+  // Read when an entry is written, not subscribed: a subscription re-rendered
+  // the whole table (hundreds of rows) on every Signal K delta, which kept a
+  // Raspberry Pi's browser at 100 % CPU while the logbook was open
+  const readValues = useCallback(
+    () => Object.fromEntries(logbookPaths.map((path) => [path, getSignalKValue(path)])),
+    [logbookPaths, getSignalKValue]);
 
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [displayTimeZone, setDisplayTimeZone] = useState('UTC');
+  // One formatter per format: toLocaleString with options builds a new one on
+  // every call, for every row of every render
+  const dateFormats = useMemo(() => ({
+    row: new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: displayTimeZone }),
+    day: new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: displayTimeZone }),
+    time: new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: displayTimeZone }),
+  }), [displayTimeZone]);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [entryForm, setEntryForm] = useState({
@@ -182,6 +193,7 @@ const LogbookView = () => {
    * Add a new logbook entry through OcearoCore proxy
    */
   const addEntry = useCallback(async () => {
+    const skValues = readValues();
     try {
       let payload;
       if (selectedEntry) {
@@ -263,12 +275,13 @@ const LogbookView = () => {
       const errorMessage = handleOcearoCoreError(err, 'Save logbook entry');
       setError(errorMessage);
     }
-  }, [skValues, fetchLogbookEntriesData, entryForm, selectedEntry]);
+  }, [readValues, fetchLogbookEntriesData, entryForm, selectedEntry]);
 
   /**
    * Add entry using OcearoCore AI
    */
   const addOcearoCoreEntry = useCallback(async () => {
+    const skValues = readValues();
     if (!ocearoCoreEnabled) {
       setError(t('logbook.ocearoCoreNotEnabled'));
       return;
@@ -315,7 +328,7 @@ const LogbookView = () => {
     } finally {
       setAiEntryLoading(false);
     }
-  }, [ocearoCoreEnabled, skValues, fetchLogbookEntriesData, t]);
+  }, [ocearoCoreEnabled, readValues, fetchLogbookEntriesData, t]);
 
   /**
    * Get OcearoCore analysis of logbook data
@@ -513,13 +526,7 @@ const LogbookView = () => {
                 className="tesla-hover cursor-pointer text-hud-main"
               >
                 <td className="p-3 whitespace-nowrap opacity-60">
-                  {entry.date.toLocaleString('en-GB', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    timeZone: displayTimeZone,
-                  })}
+                  {dateFormats.row.format(entry.date)}
                 </td>
                 <td className="p-3 gliding-value">{getCourse(entry)}</td>
                 <td className="p-3 gliding-value">{fmt(entry.speed?.sog, 'kt')}</td>
@@ -594,10 +601,7 @@ const LogbookView = () => {
     // Group by calendar day for a readable cruise chronology
     const groups = [];
     for (const entry of timelineEntries) {
-      const dayKey = entry.date.toLocaleDateString('fr-FR', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-        timeZone: displayTimeZone,
-      });
+      const dayKey = dateFormats.day.format(entry.date);
       const last = groups[groups.length - 1];
       if (last && last.day === dayKey) {
         last.items.push(entry);
@@ -668,10 +672,7 @@ const LogbookView = () => {
                       <div className="px-4 py-2 flex justify-between items-center border-b border-hud">
                         <div className="flex items-center min-w-0 gap-3">
                           <span className="text-label font-semibold text-hud-main tracking-tight">
-                            {entry.date.toLocaleTimeString('fr-FR', {
-                              hour: '2-digit', minute: '2-digit',
-                              timeZone: displayTimeZone,
-                            })}
+                            {dateFormats.time.format(entry.date)}
                           </span>
                           <span className={`px-2 py-0.5 rounded-sm text-caption font-semibold uppercase tracking-widest border ${style.color} ${style.border} ${style.bg}`}>
                             {t(`logbook.types.${type}`, { defaultValue: type.replace(/_/g, ' ') })}

@@ -30,7 +30,8 @@
       "off": "Röst",
       "safety": "Säkerhet",
       "all": "Tyst"
-    }
+    },
+    "view": "Vy"
   },
   "menu": {
     "splitView": "Delad vy",
@@ -767,7 +768,10 @@
     "water": "Vatten",
     "pressure": "Lufttryck",
     "battery": "Batteri",
-    "sailDepth": "Buk"
+    "sailDepth": "Buk",
+    "wind": "Vind",
+    "windApparent": "Skenbar vind",
+    "gust": "byar {{value}}"
   },
   "laylines": {
     "tack": "Slag",

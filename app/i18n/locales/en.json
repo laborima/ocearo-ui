@@ -30,7 +30,8 @@
       "off": "Voice",
       "safety": "Safety",
       "all": "Muted"
-    }
+    },
+    "view": "View"
   },
   "menu": {
     "splitView": "Split View",
@@ -767,7 +768,10 @@
     "water": "Water",
     "pressure": "Pressure",
     "battery": "Battery",
-    "sailDepth": "Depth"
+    "sailDepth": "Depth",
+    "wind": "Wind",
+    "windApparent": "Apparent wind",
+    "gust": "gusts {{value}}"
   },
   "laylines": {
     "tack": "Tack",

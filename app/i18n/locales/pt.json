@@ -30,7 +30,8 @@
       "off": "Voz",
       "safety": "Segurança",
       "all": "Silêncio"
-    }
+    },
+    "view": "Vista"
   },
   "menu": {
     "splitView": "Vista dividida",
@@ -767,7 +768,10 @@
     "water": "Água",
     "pressure": "Pressão",
     "battery": "Bateria",
-    "sailDepth": "Bolsa"
+    "sailDepth": "Bolsa",
+    "wind": "Vento",
+    "windApparent": "Vento aparente",
+    "gust": "rajadas {{value}}"
   },
   "laylines": {
     "tack": "Virada por d'avante",

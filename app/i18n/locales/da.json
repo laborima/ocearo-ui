@@ -30,7 +30,8 @@
       "off": "Tale",
       "safety": "Sikkerhed",
       "all": "Lydløs"
-    }
+    },
+    "view": "Visning"
   },
   "menu": {
     "splitView": "Delt visning",
@@ -767,7 +768,10 @@
     "water": "Vand",
     "pressure": "Lufttryk",
     "battery": "Batteri",
-    "sailDepth": "Bugt"
+    "sailDepth": "Bugt",
+    "wind": "Vind",
+    "windApparent": "Tilsyneladende vind",
+    "gust": "vindstød {{value}}"
   },
   "laylines": {
     "tack": "Stagvending",

@@ -30,7 +30,8 @@
       "off": "Spraak",
       "safety": "Veiligheid",
       "all": "Stil"
-    }
+    },
+    "view": "Weergave"
   },
   "menu": {
     "splitView": "Gesplitste weergave",
@@ -767,7 +768,10 @@
     "water": "Water",
     "pressure": "Luchtdruk",
     "battery": "Accu",
-    "sailDepth": "Bolling"
+    "sailDepth": "Bolling",
+    "wind": "Wind",
+    "windApparent": "Schijnbare wind",
+    "gust": "vlagen {{value}}"
   },
   "laylines": {
     "tack": "Overstag",

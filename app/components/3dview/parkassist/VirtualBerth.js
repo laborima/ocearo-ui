@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
-import { Line } from '@react-three/drei';
+import Line from '../Line';
 import useTheme from '../../theme/useTheme';
 import useOwnTrack from '../fsd/useOwnTrack';
 import { useBerth, getBerth, placeVirtualBerth } from './parkingStore';

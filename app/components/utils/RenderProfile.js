@@ -1,7 +1,8 @@
 /**
  * 3D render profile. On a Raspberry Pi the GPU is fill-rate bound: drawing
- * fewer pixels (device pixel ratio 1, no MSAA) and fewer frames (30 fps, enough
- * for a scene that moves at boat speed) is what keeps the UI responsive.
+ * fewer pixels (75 % resolution, no MSAA, no backdrop blur on the HUD) and
+ * fewer frames (30 fps, enough for a scene that moves at boat speed) is what
+ * keeps the UI responsive.
  *
  * Config key `renderQuality`: 'auto' (default) | 'high' | 'pi'.
  */
@@ -9,10 +10,35 @@ import configService from '../settings/ConfigService';
 
 export const RENDER_QUALITIES = ['auto', 'high', 'pi'];
 
-/** ARM Linux (Raspberry Pi) or a small machine */
+// Embedded GPUs: Raspberry Pi (V3D / VideoCore), Mali, Adreno, PowerVR, and
+// software rendering
+const LOW_POWER_GPU = /v3d|videocore|mali|adreno|powervr|llvmpipe|swiftshader/i;
+
+let gpuName;
+/** WebGL renderer string ('V3D 7.1.7.0' on a Pi 5), read once */
+const gpuRenderer = () => {
+    if (gpuName !== undefined) return gpuName;
+    gpuName = '';
+    try {
+        const gl = document.createElement('canvas').getContext('webgl');
+        const ext = gl?.getExtension('WEBGL_debug_renderer_info');
+        gpuName = String(gl?.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || '');
+        gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    } catch {
+        // No WebGL here: the 3D view will not run anyway
+    }
+    return gpuName;
+};
+
+/**
+ * ARM Linux (Raspberry Pi) or a small machine. Chromium's reduced user agent
+ * says "Linux x86_64" on ARM too, and a Pi 5 reports 8 GB: the GPU is what
+ * gives it away.
+ */
 export const isLowPowerDevice = () => {
     if (typeof navigator === 'undefined') return false;
     if (/aarch64|armv7|armv8|arm64|raspbian|raspberry/i.test(navigator.userAgent)) return true;
+    if (LOW_POWER_GPU.test(gpuRenderer())) return true;
     const cores = navigator.hardwareConcurrency || 8;
     const memory = navigator.deviceMemory || 8;
     return cores <= 4 && memory <= 4;
@@ -25,7 +51,9 @@ export const getRenderProfile = () => {
     const setting = configService.get('renderQuality') || 'auto';
     const pi = setting === 'pi' || (setting === 'auto' && isLowPowerDevice());
     if (pi) {
-        return { id: 'pi', fps: 30, dpr: 1, antialias: false };
+        // 3D at 75 % of the screen resolution, upscaled: a third more frames on
+        // the Pi 5 (measured 9 -> 12 fps with the HUD and KIP running)
+        return { id: 'pi', fps: 30, dpr: 0.75, antialias: false };
     }
     const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 1.5) : 1;
     return { id: 'high', fps: 60, dpr, antialias: true };
