@@ -1,0 +1,9 @@
+Model Information:
+* title:	Wing foiler: 145 cm foil board, 85 cm mast, 5 m² wing, with the rider
+* author:	Matthieu Laborie (https://github.com/laborima)
+* source:	built with the Blender scripts of https://github.com/laborima/chatel-apps-repository (about-matthieu/windsurf)
+* rider:	the author's own 3D avatar
+
+Model License:
+* The board, rig and wing are generated procedurally by those scripts (Apache-2.0).
+* The rider is the author's likeness: shipped with Ocearo UI for use in Ocearo UI.

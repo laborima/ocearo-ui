@@ -13,9 +13,11 @@ import useColregs from '../hooks/useColregs';
 import useHeave from '../hooks/useHeave';
 import RacerBoat from './boats/racer/RacerBoat';
 import CatamaranBoat from './boats/catamaran/CatamaranBoat';
+import { WindsurfRider, WingRider } from './boats/rider/RiderBoat';
 
-// Boats generated in code (no glTF to load)
-const PROCEDURAL_BOATS = { racer: RacerBoat, catamaran: CatamaranBoat };
+// Boats with their own component: generated in code, or an animated glTF
+// with its rider (windsurf, wing foil)
+const PROCEDURAL_BOATS = { racer: RacerBoat, catamaran: CatamaranBoat, windsurf: WindsurfRider, wingfoil: WingRider };
 
 
 const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
@@ -136,19 +138,8 @@ const GltfBoatMeshes = ({ modelPath, selectedBoat, materialProperties, rudderRef
                     <mesh geometry={nodes.zincirray_ahsap_0.geometry} material={materials.ahsap} position={[0, 0.864, -6.113]} rotation={[-Math.PI / 2, 0, 0]} scale={[0.017, 0.181, 0.003]} />
                 </>
             ),
-            Optimist: () => (
-                <>
-                    <mesh geometry={nodes.body_body_0.geometry} material={materials.body} position={[-0.054, 0.272, -0.022]} rotation={[-1.571, 0.01, 0.01]} scale={[1, 5.242, 1]} />
-                    <mesh geometry={nodes.boom_aluminium_0.geometry} material={materials.aluminium} position={[-0.019, 2.771, 0.964]} rotation={[0, 0.01, -0.01]} scale={[0.15, 0.15, 4.609]} />
-                    <mesh geometry={nodes.rubber_joint__0.geometry} material={materials.rubber_joint__0} position={[-0.008, 1.407, 3.453]} rotation={[1.571, -0.01, -0.01]} scale={[-0.037, 0.056, 0.079]} />
-                    <mesh geometry={nodes.sail_sail_0.geometry} material={materials.sail} position={[0.038, 8.739, 0.698]} rotation={[2.356, 1.557, 2.356]} scale={[-5.728, 4.361, 4.361]} />
-                </>
-            ),
             Ship: () => (
                 <mesh geometry={nodes.Object_10.geometry} material={materials.material_0} position={[0, -0.55, 0]} rotation={[-1.558, 0.002, 3.139]} scale={0.004} />
-            ),
-            Windsurf: () => (
-                <mesh geometry={nodes['body_Material_#30_0'].geometry} material={materials.Material_30} position={[-0.007, 0, -0.071]} rotation={[-Math.PI / 2, 0, 0]} scale={0.002} />
             ),
             Sailboat: () => (
                 <mesh geometry={nodes.sailboat.geometry} material={materials.texture} position={[0, -1.5, 0]} rotation={[-Math.PI, 0.011, -Math.PI]} scale={0.219} />

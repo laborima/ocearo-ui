@@ -1,3 +1,9 @@
+## [Unreleased]
+
+### Changed
+
+- **Windsurf and Wing foil boats: the author riding them.** The Optimist and the old static windsurf are replaced by two animated models with their rider (the author's 3D avatar): a JP Magic Ride 119 with a Duotone E_Pace 6.2, and a wing foil board on its foil with a 5 m² wing. The rider moves to the windward rail on the other tack, rides faster with the speed, and the foil board lifts off from about 7 knots. Drawn 2.2 times larger than life so they read in the compass ring; under 1 MB each (Draco). A boat set to Optimist goes back to the default one.
+
 ## [2.1.2] - 2026-10-11
 
 Fixes from a day on board: the boat buried in the seabed, laylines gone after a server update, alarms in the marina, and new controls in the 3D view. Works with ocearo-core's automatic mode (start moored, switch to sailing or motoring once the boat moves).
