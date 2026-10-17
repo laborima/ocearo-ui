@@ -29,14 +29,6 @@
       ]
     },
     {
-      "name": "Optimist",
-      "modelPath": "optimist",
-      "capabilities": [
-        "navigation",
-        "ais"
-      ]
-    },
-    {
       "name": "Sailboat",
       "modelPath": "sailboat",
       "capabilities": [
@@ -55,6 +47,14 @@
     {
       "name": "Windsurf",
       "modelPath": "windsurf",
+      "capabilities": [
+        "navigation",
+        "ais"
+      ]
+    },
+    {
+      "name": "Wing foil",
+      "modelPath": "wingfoil",
       "capabilities": [
         "navigation",
         "ais"
