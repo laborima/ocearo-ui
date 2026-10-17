@@ -22,10 +22,10 @@ Ocearo is an aid to the watch, not a certified navigation system.
 
 ## Pages
 
-- [Ocearo — the open-source 3D sailing display for Signal K](https://laborima.github.io/ocearo-ui/): See your boat, the sea and the traffic in live 3D. Sail trim, COLREG advice, man overboard, anchor watch, bathymetry and weather on any screen on board. Open source, runs on a Raspberry Pi.
-- [Live demo — try Ocearo in your browser](https://laborima.github.io/ocearo-ui/demo/): Open the real Ocearo app in your browser, fed with simulated Signal K data: the 3D view, AIS traffic, dashboard and settings. Nothing to install.
-- [Brand guidelines — Ocearo logo, colours and typography](https://laborima.github.io/ocearo-ui/brand/): How to use the Ocearo logo, the compass mark and the bow A, the colour palette, the Geist typeface and the voice of the product.
-- French: https://laborima.github.io/ocearo-ui/fr/ · Brazilian Portuguese: https://laborima.github.io/ocearo-ui/pt/
+- [Ocearo — the open-source 3D sailing display for Signal K](https://ocearo.leslaborie.org/): See your boat, the sea and the traffic in live 3D. Sail trim, COLREG advice, man overboard, anchor watch, bathymetry and weather on any screen on board. Open source, runs on a Raspberry Pi.
+- [Live demo — try Ocearo in your browser](https://ocearo.leslaborie.org/demo/): Open the real Ocearo app in your browser, fed with simulated Signal K data: the 3D view, AIS traffic, dashboard and settings. Nothing to install.
+- [Brand guidelines — Ocearo logo, colours and typography](https://ocearo.leslaborie.org/brand/): How to use the Ocearo logo, the compass mark and the bow A, the colour palette, the Geist typeface and the voice of the product.
+- French: https://ocearo.leslaborie.org/fr/ · Brazilian Portuguese: https://ocearo.leslaborie.org/pt/
 
 ## Docs
 

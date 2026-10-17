@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
-Disallow: /ocearo-ui/app/
+Disallow: /app/
 
-Sitemap: https://laborima.github.io/ocearo-ui/sitemap.xml
+Sitemap: https://ocearo.leslaborie.org/sitemap.xml
