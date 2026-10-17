@@ -55,12 +55,12 @@ jobs:
       # The website at the root, the app (live demo) under app/. The app loads its
       # scripts from /ocearo-ui/_next (its production assetPrefix); everything else
       # it loads is relative.
-      # SITE_URL: https://laborima.github.io/ocearo-ui until the DNS record of the
-      # custom domain exists, then https://ocearo.leslaborie.org (a CNAME file is
-      # written, and laborima.github.io/ocearo-ui/ redirects to it)
+      # SITE_URL: the custom domain (DNS CNAME ocearo -> laborima.github.io.). The build
+      # writes the CNAME file, so each deploy keeps the domain, and
+      # laborima.github.io/ocearo-ui/ redirects to it
       - name: Build website
         env:
-          SITE_URL: https://laborima.github.io/ocearo-ui
+          SITE_URL: https://ocearo.leslaborie.org
         run: node www/build.mjs
 
       - name: Assemble GitHub Pages

@@ -1,6 +1,6 @@
 # Ocearo website
 
-The public site at <https://laborima.github.io/ocearo-ui/>: plain HTML, CSS and JavaScript, English at `/`, French at `/fr/` and Brazilian Portuguese at `/pt/` (declared as `pt-BR` through `html_lang`), with the live demo (the app itself) served under `app/`, plus `sitemap.xml`, `robots.txt` and `llms.txt`.
+The public site at <https://ocearo.leslaborie.org/> (laborima.github.io/ocearo-ui/ redirects there): plain HTML, CSS and JavaScript, English at `/`, French at `/fr/` and Brazilian Portuguese at `/pt/` (declared as `pt-BR` through `html_lang`), with the live demo (the app itself) served under `app/`, plus `sitemap.xml`, `robots.txt` and `llms.txt`.
 
 ```sh
 node www/build.mjs                 # writes www/dist
@@ -18,6 +18,6 @@ For a local preview, build with `SITE_URL=http://localhost:8765 node www/build.m
 
 **YouTube.** Once the tour is published, put the video id (the part after `v=`) in `video.youtube_id` of each language file. Until then the player shows “Coming soon on YouTube”.
 
-**Domain.** `SITE_URL` (default `https://laborima.github.io/ocearo-ui`) sets canonical links, the sitemap, `robots.txt`, `llms.txt` and the path the pages are served under. The workflow sets it in the *Build website* step. To move to `https://ocearo.leslaborie.org`, first add a DNS `CNAME` record `ocearo` → `laborima.github.io.`, then set `SITE_URL` to that domain: a `CNAME` file is written, the app's `_next` goes to `/ocearo-ui/_next` (its assetPrefix), and GitHub redirects `laborima.github.io/ocearo-ui/` to the domain.
+**Domain.** `SITE_URL` (default `https://ocearo.leslaborie.org`, DNS `CNAME` record `ocearo` → `laborima.github.io.`) sets canonical links, the sitemap, `robots.txt`, `llms.txt` and the path the pages are served under. The workflow sets it in the *Build website* step. On a custom domain a `CNAME` file is written (each deploy keeps the domain) and the app's `_next` goes to `/ocearo-ui/_next` (its assetPrefix). To go back to GitHub's address, set `SITE_URL=https://laborima.github.io/ocearo-ui` and remove the domain in the Pages settings.
 
 **Author.** The About section links to `ABOUT_URL` (default: the author's page, https://laborima.github.io/), also used for the author in the structured data and `llms.txt`.

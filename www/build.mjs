@@ -21,7 +21,7 @@ const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(ROOT, '..');
 const SRC = path.join(ROOT, 'src');
 const DIST = path.join(ROOT, process.env.OUT_DIR || 'dist');
-const SITE = (process.env.SITE_URL || 'https://laborima.github.io/ocearo-ui').replace(/\/$/, '');
+const SITE = (process.env.SITE_URL || 'https://ocearo.leslaborie.org').replace(/\/$/, '');
 /** Path the site is served under ('/ocearo-ui' on GitHub project pages, '' on its own domain). */
 const BASE = new URL(SITE).pathname.replace(/\/$/, '');
 const LANGS = ['en', 'fr', 'pt'];

@@ -161,7 +161,7 @@ Ocearo UI is a Signal K **webapp**.
 2. Restart the server and open `http://<signalk-server>:3000/ocearo-ui/` on any screen on board.
 3. Recommended: install **[ocearo-core](https://github.com/laborima/ocearo-core)** for the logbook, anchor watch, SHOM bathymetry, system metrics and the AI copilot.
 
-Website: <https://laborima.github.io/ocearo-ui/> · live demo with simulated data: <https://laborima.github.io/ocearo-ui/demo/>
+Website: <https://ocearo.leslaborie.org/> · live demo with simulated data: <https://ocearo.leslaborie.org/demo/>
 
 ### Signal K prerequisites
 
