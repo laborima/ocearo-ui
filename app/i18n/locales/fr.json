@@ -767,7 +767,10 @@
     "water": "Eau",
     "pressure": "Pression",
     "battery": "Batterie",
-    "sailDepth": "Creux"
+    "sailDepth": "Creux",
+    "wind": "Vent",
+    "windApparent": "Vent apparent",
+    "gust": "rafales {{value}}"
   },
   "laylines": {
     "tack": "Virer",

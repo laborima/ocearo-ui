@@ -36,6 +36,7 @@ import useMediaQuery from '../hooks/useMediaQuery';
 // Full-screen HUD panels (translucent, Tesla-style)
 const DepthPanel = dynamic(() => import('./hud/DepthPanel'));
 const TidePanel = dynamic(() => import('./hud/TidePanel'));
+const WindPanel = dynamic(() => import('./hud/WindPanel'));
 const SkyClock = dynamic(() => import('./hud/SkyClock'));
 const SceneLegend = dynamic(() => import('./hud/SceneLegend'));
 
@@ -165,8 +166,9 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
             )}
 
             {rich && (
-                <div className="absolute left-3 bottom-3 z-20" data-hud-solid>
+                <div className="absolute left-3 bottom-3 z-20 flex items-end gap-3" data-hud-solid>
                     <DepthPanel />
+                    <WindPanel />
                 </div>
             )}
             {rich && (
@@ -210,6 +212,7 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                             {showAdvice && <div className="empty:hidden shrink-0 [&>*]:max-w-none"><AdvicePanel /></div>}
                             <div className="shrink-0 flex gap-2">
                                 <div className="empty:hidden flex-1 min-w-0"><DepthPanel compact /></div>
+                                <div className="empty:hidden flex-1 min-w-0"><WindPanel compact /></div>
                                 <div className="empty:hidden flex-1 min-w-0"><TidePanel compact /></div>
                             </div>
                         </>
