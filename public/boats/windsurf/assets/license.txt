@@ -1,11 +1,9 @@
 Model Information:
-* title:	Windsurfing
-* source:	https://sketchfab.com/3d-models/windsurfing-88188362fe7b4263ae0fce961af14a9f
-* author:	MykleKorvin (https://sketchfab.com/corschunov2010)
+* title:	Windsurfer: JP Australia Magic Ride 119 board, Duotone E_Pace 6.2 rig (no logos reproduced), with the rider
+* author:	Matthieu Laborie (https://github.com/laborima)
+* source:	built with the Blender scripts of https://github.com/laborima/chatel-apps-repository (about-matthieu/windsurf)
+* rider:	the author's own 3D avatar
 
 Model License:
-* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
-* requirements:	Author must be credited. Commercial use is allowed.
-
-If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
-This work is based on "Windsurfing" (https://sketchfab.com/3d-models/windsurfing-88188362fe7b4263ae0fce961af14a9f) by MykleKorvin (https://sketchfab.com/corschunov2010) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* The board, rig and wing are generated procedurally by those scripts (Apache-2.0).
+* The rider is the author's likeness: shipped with Ocearo UI for use in Ocearo UI.
