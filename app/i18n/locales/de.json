@@ -30,7 +30,8 @@
       "off": "Sprache",
       "safety": "Sicherheit",
       "all": "Stumm"
-    }
+    },
+    "view": "Ansicht"
   },
   "menu": {
     "splitView": "Geteilte Ansicht",
@@ -767,7 +768,10 @@
     "water": "Wasser",
     "pressure": "Luftdruck",
     "battery": "Batterie",
-    "sailDepth": "Profiltiefe"
+    "sailDepth": "Profiltiefe",
+    "wind": "Wind",
+    "windApparent": "Scheinbarer Wind",
+    "gust": "Böen {{value}}"
   },
   "laylines": {
     "tack": "Wende",

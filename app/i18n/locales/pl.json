@@ -30,7 +30,8 @@
       "off": "Głos",
       "safety": "Bezpieczeństwo",
       "all": "Wyciszone"
-    }
+    },
+    "view": "Widok"
   },
   "menu": {
     "splitView": "Widok podzielony",
@@ -767,7 +768,10 @@
     "water": "Woda",
     "pressure": "Ciśnienie",
     "battery": "Akumulator",
-    "sailDepth": "Wybrzuszenie"
+    "sailDepth": "Wybrzuszenie",
+    "wind": "Wiatr",
+    "windApparent": "Wiatr pozorny",
+    "gust": "porywy {{value}}"
   },
   "laylines": {
     "tack": "Zwrot przez sztag",

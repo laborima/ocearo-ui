@@ -30,7 +30,8 @@
       "off": "Puhe",
       "safety": "Turvallisuus",
       "all": "Mykistetty"
-    }
+    },
+    "view": "Näkymä"
   },
   "menu": {
     "splitView": "Jaettu näkymä",
@@ -767,7 +768,10 @@
     "water": "Vesi",
     "pressure": "Ilmanpaine",
     "battery": "Akku",
-    "sailDepth": "Pussi"
+    "sailDepth": "Pussi",
+    "wind": "Tuuli",
+    "windApparent": "Näennäinen tuuli",
+    "gust": "puuskat {{value}}"
   },
   "laylines": {
     "tack": "Vastakäännös",
