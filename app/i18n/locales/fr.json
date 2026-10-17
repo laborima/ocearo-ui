@@ -30,7 +30,8 @@
       "off": "Voix",
       "safety": "Sécurité",
       "all": "Silence"
-    }
+    },
+    "view": "Vue"
   },
   "menu": {
     "splitView": "Vue partagée",
