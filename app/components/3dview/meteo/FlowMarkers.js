@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { Html } from '@react-three/drei';
 import { useTranslation } from 'react-i18next';
 import FlowArrows from './FlowArrows';
+import useHudClearance from '../hud/useHudClearance';
 
 const KNOTS = 1.943844;
 // Below this the flow has no direction worth an arrow (m/s)
@@ -10,6 +11,13 @@ const SLACK = 0.1 / KNOTS;
 const TREND = 0.05;
 const BUILDING = [0.86, 0.22, 0.2];
 const EASING = [0.16, 0.48, 0.86];
+
+/** A label hidden while it sits under the HUD (values, bars, banner) */
+const ClearLabel = ({ children }) => {
+    const ref = useRef(null);
+    useHudClearance(ref);
+    return <div ref={ref}>{children}</div>;
+};
 
 /**
  * Flow markers in the way chart plotters draw tidal streams: few arrows,
@@ -53,6 +61,7 @@ const FlowMarkers = ({ items, width, screen = 0, fadeNear = 0, format = (kn) => 
                 const slack = it.speed < SLACK;
                 return (
                     <Html key={it.key} position={[it.x, it.y, it.z]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}>
+                        <ClearLabel>
                         {slack ? (
                             <div className="rounded-md border-2 border-oBlue bg-hud-bg/80 px-1.5 text-caption font-semibold uppercase tracking-wide text-hud-main whitespace-nowrap">
                                 {t(`meteo.${slackLabel}`)}
@@ -64,6 +73,7 @@ const FlowMarkers = ({ items, width, screen = 0, fadeNear = 0, format = (kn) => 
                                 {format(it.speed * KNOTS)}
                             </div>
                         )}
+                        </ClearLabel>
                     </Html>
                 );
             })}

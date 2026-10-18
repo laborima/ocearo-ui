@@ -26,6 +26,8 @@
 
 ### Fixed
 
+- **Phone on its side: nothing on top of anything.** The forecast bar shrinks to the slider and the curves and becomes nearly opaque (vessel names and arrow speeds showed through), the speed and the values on the left get smaller so the last one is no longer cut by the bottom bar, and the speeds on the wind and current arrows hide under the HUD like the vessel names.
+
 - **Layers menu on phones.** It ran off the right edge of a phone held upright, was cut at the bottom on a phone on its side, and opened under the HUD values, the give-way banner and the vessel card: it now opens leftwards upright, in two columns on its side, over the HUD.
 
 - **Fuzzy text over the 3D chart.** The HUD's secondary text was translucent black, a dull blue-grey over the water, with a wide blurred halo: now opaque greys and a tight outline.
