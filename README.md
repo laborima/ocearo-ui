@@ -44,7 +44,7 @@
 ## Highlights
 
 - **A boat you can trim from the screen.** Main, headsails and asymmetric spinnaker drawn from the wind (camber, twist, reefs, sail changes), with draft stripes, telltales and the traveller and jib cars where they should be.
-- **The sea around you, five ways.** A realistic sea built from the true wind (or measured by a motion sensor), the live chart with buoyage, the seabed in 3D, the wind forecast, or a clean FSD-style ground for racing — with the buoys and beacons in 3D and the real night sky.
+- **The sea around you, in layers.** Three bases — a realistic sea built from the true wind (or measured by a motion sensor), a clean FSD-style grid for racing, or the 3D chart with the seabed in relief — and layers on top: AIS traffic, the wind and currents forecast, laylines, the polar, buoys and beacons in 3D, and the real night sky. NOAA charts in US waters, a finer seabed worldwide.
 - **Traffic you can read at a glance.** AIS targets drawn as real ship types and sizes, moving smoothly between reports, coloured by who must give way under COLREG — with the manoeuvre to make.
 - **Tactics.** Laylines to the waypoint, isochrones from your polars (where you will be in 5, 10 and 15 minutes), VMG advice and a polar-speed ghost boat.
 - **Safety first.** Man-overboard marker with drift prediction, anchor watch with the real swing track, shallow-water warnings against your draft.
@@ -55,14 +55,16 @@
 
 ## The 3D view
 
-The heart of Ocearo is a live 3D scene centred on your boat. A button cycles between five representations of the world around it.
+The heart of Ocearo is a live 3D scene centred on your boat. One button picks the base — the sea, a plain grid or the 3D chart — and the layers menu adds what you need on top: AIS traffic, wind, currents, laylines, the polar, buoys and beacons.
 
 | | |
 |---|---|
-| ![Live chart with buoyage and AIS](docs/screenshots/chart.jpg) | ![SHOM bathymetry as a survey grid](docs/screenshots/bathymetry.jpg) |
-| **Chart.** OpenStreetMap with OpenSeaMap buoyage and lights, true to scale with your boat and the AIS targets. Uses a Signal K chart provider (MBTiles) when one is installed. | **Bathymetry.** The seabed as a survey grid: relief exaggerated, isobaths, soundings at the current tide, a sounder line from the keel, and water too shallow for your draft hatched in orange. 5–20 m SHOM surveys on the French coast, global relief elsewhere. |
-| ![Wind forecast layer](docs/screenshots/weather.jpg) | ![Isochrones and laylines](docs/screenshots/polars.jpg) |
-| **Weather.** The 48-hour wind forecast around the boat (Open-Meteo) in Windy colours, with a time slider. | **Polars and laylines.** Where the polars put you in 5, 10 and 15 minutes on every heading, the laylines to the waypoint and the VMG to steer. |
+| ![3D chart: the seabed in relief with the chart over it](docs/screenshots/bathymetry.jpg) | ![Currents: the water coloured by the current, chart-plotter arrows](docs/screenshots/currents.jpg) |
+| **3D chart.** The seabed in relief, coloured by depth, with the chart over it in transparency: isobaths, soundings at the current tide, a sounder line from the keel, and water too shallow for your draft hatched in orange. 5–20 m SHOM surveys in France, EMODnet (~115 m) in Europe, NOAA grids elsewhere (a few metres along the US coasts). | **Currents.** The water from the surface to the seabed coloured by the current (Mercator forecast through Open-Meteo, tides included): light in slack water and over the shallows, the full colour where it runs. Arrows in the chart-plotter style give the direction and the speed in knots, with a red border when it builds and a blue one when it eases. |
+| ![Wind forecast in 3D: arrows with the speed and the 48-hour curve](docs/screenshots/weather.jpg) | ![Isochrones and laylines](docs/screenshots/polars.jpg) |
+| **Wind.** The 48-hour forecast around the boat (Open-Meteo) in Windy colours: the air tinted by the wind, a few streaks and arrows with the speed in knots. The forecast bar has a time slider and the wind and current at the boat over the two days. | **Polars and laylines.** Where the polars put you in 5, 10 and 15 minutes on every heading, the laylines to the waypoint and the VMG to steer. |
+| ![NOAA nautical chart over the seabed at the Narrows, New York](docs/screenshots/chart.jpg) | ![Layers menu, forecast bar and corner cards](docs/screenshots/layers.jpg) |
+| **Charts.** In US waters the official NOAA nautical chart (depths, buoys, lights, bridge clearances); OpenStreetMap with OpenSeaMap buoyage elsewhere, or your own MBTiles through a Signal K chart provider. | **Layers and cards.** The layers menu turns AIS, wind, currents, laylines, the polar and buoys on or off over any base. In full screen, one card in each bottom corner — depth, wind, speed or tide, changed with a tap — with its last 10 minutes. |
 | ![Night sky: the Moon, Mars, Jupiter, Procyon and Sirius over the entrance to La Rochelle, buoy lights flashing](docs/screenshots/night-sky.jpg) | ![Cardinal buoys at dusk, light flashing](docs/screenshots/seamarks.jpg) |
 | **Night sky.** The 57 navigational stars and Polaris, Venus, Mars, Jupiter, Saturn and the Moon with its phase, where they really are from your position and the GPS time (within a few arc minutes); the brightest are named. 2 November 2026, 02:00, off La Rochelle. | **Buoys and beacons.** Cardinal, lateral, isolated danger, safe water and special marks in 3D from OpenSeaMap, with their colours, topmark and light flashing its real rhythm at night, and the AIS aids to navigation received (virtual ones as a ghost), also on the radar. Downloaded once, kept offline; can be turned off. |
 

@@ -55,7 +55,7 @@ const vertexShader = `
         vec3 p = base + side * position.x * uWidth * k + d * position.y * aLenSpeed.x * k;
         vColor = aColor;
         // Faded close to the camera, where an arrow would fill the view
-        vAlpha = (uStill > 0.5 ? 1.0 : pow(sin(3.14159 * phase), 0.6)) * smoothstep(uFadeNear * 0.5, uFadeNear, length(uCam - base));
+        vAlpha = (uStill > 0.5 ? 1.0 : pow(sin(3.14159 * phase), 0.6)) * (uFadeNear > 0.0 ? smoothstep(uFadeNear * 0.5, uFadeNear, length(uCam - base)) : 1.0);
         gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
     }
 `;

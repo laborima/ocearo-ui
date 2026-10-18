@@ -12,7 +12,7 @@ import { colorMapTexture, colorAt } from './colorMaps';
 import { useFieldTexture, NOISE_GLSL, FIELD_GLSL } from './fieldVolume';
 import { getForecastHour, subscribeForecast, setSeries } from './forecastStore';
 import FlowMarkers from './FlowMarkers';
-import { markerLattice, sameMarkers } from './markerLattice';
+import { markerLattice, sameMarkers, onScreenTest } from './markerLattice';
 import useTheme from '../../theme/useTheme';
 
 const PATHS = ['navigation.position', 'environment.wind.speedTrue', 'environment.wind.directionTrue'];
@@ -32,7 +32,9 @@ const SHADE_NIGHT = 0.45;
 const MAX_MARKERS = 10;
 const MARKER_LENGTH = 0.14;
 const MARKER_WIDTH = 0.025;
-const MARKER_HEIGHT = 10;
+// Just above the waves: higher, the arrows near the boat sat at mast height
+// and read as far away on the horizon from the cockpit camera
+const MARKER_HEIGHT = 4;
 // Streak width in pixels (WebGL draws plain lines one pixel wide, lost in the
 // grazing view of the cockpit camera)
 const STREAK_WIDTH = 3;
@@ -131,6 +133,8 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
     // flat Windy sheet and its many streaks
     const style = configService.get('windStyle') || 'volume';
     const volume = sheet && style === 'volume';
+    // The few streaks go with the volume style, over the sea as well
+    const streakCount = style === 'volume' ? VOLUME_STREAKS : PARTICLES;
     const mapName = configService.get('windColorMap') || 'windy';
     const v = useSignalKPaths(PATHS);
     const position = v['navigation.position'];
@@ -171,7 +175,8 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
         return t;
     }, []);
     useEffect(() => {
-        if (!field) return;
+        // Only the flat sheet uses it
+        if (!field || !sheet || volume) return;
         const data = texture.image.data;
         for (let j = 0; j < TEX; j++) {
             for (let i = 0; i < TEX; i++) {
@@ -187,7 +192,7 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
             }
         }
         texture.needsUpdate = true;
-    }, [texture, field, hour]);
+    }, [texture, field, hour, sheet, volume, mapName]);
     useEffect(() => () => texture.dispose(), [texture]);
 
     // Streaks: particles advected by the field, drawn as streamline segments
@@ -226,8 +231,8 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
     useEffect(() => () => { air.dispose(); airMap.dispose(); }, [air, airMap]);
     // Fewer streaks over the air volume
     useEffect(() => {
-        particles.geo.instanceCount = (volume ? VOLUME_STREAKS : PARTICLES) * TRAIL; // eslint-disable-line react-hooks/immutability
-    }, [particles, volume]);
+        particles.geo.instanceCount = streakCount * TRAIL; // eslint-disable-line react-hooks/immutability
+    }, [particles, streakCount]);
     const [markers, setMarkers] = useState([]);
     const labelClock = useRef(0);
 
@@ -250,7 +255,7 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
 
     // Close to the boat the chart matters more than the colours: lighter sheet
     const sheetRef = useRef();
-    useFrame(({ camera, size, clock }, delta) => {
+    useFrame(({ camera, size, clock, gl }, delta) => {
         if (!field) return;
         if (volume) {
             air.uniforms.uTime.value = clock.elapsedTime;
@@ -271,7 +276,7 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
         particles.material.resolution.set(size.width, size.height);
         const pos = particles.geo.attributes.instanceStart.data.array;
         const col = particles.geo.attributes.instanceColorStart.data.array;
-        const count = volume ? VOLUME_STREAKS : PARTICLES;
+        const count = streakCount;
         particles.state.forEach((p, k) => {
             if (k >= count) return;
             p.age += dt;
@@ -320,7 +325,7 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
         particles.geo.attributes.instanceStart.data.needsUpdate = true;
         particles.geo.attributes.instanceColorStart.data.needsUpdate = true;
 
-        // Wind markers at 10 m, refreshed once a second on a lattice fixed to
+        // Wind markers, refreshed once a second on a lattice fixed to
         // the ground (they do not swim with the boat) and sized to the view
         labelClock.current += delta;
         if (labelClock.current < 1) return;
@@ -336,21 +341,24 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
         // Not too far: from the cockpit, 10 m up sits on the horizon beyond a
         // few hundred metres, and the arrows would pile up there
         const reach = Math.min(radiusM * 0.9, Math.max(800, heightM * 60));
-        const nodes = markerLattice({ cx, cy, radius: reach, step: markerStep, near: markerStep * 3, originE: cx, originN: cy, max: 80 });
+        const nodes = markerLattice({ cx, cy, radius: reach, step: markerStep, near: markerStep * 3, originE: cx, originN: cy, max: 400 });
         const next = [];
-        const ndc = new THREE.Vector3();
+        // The closest nodes are mostly behind the camera: the ones on screen
+        // first, then the closest of those
+        const onScreen = onScreenTest(layer, camera, gl.domElement);
         nodes.forEach(({ e, n, d }) => {
+            if (next.length >= MAX_MARKERS) return;
             if (Math.hypot(e - be, n - bn) < 20) return; // none on the boat itself
-            // Keep the points the camera sees, away from the screen edges
-            ndc.set((e - be) * scale, (n - bn) * scale, MARKER_HEIGHT * scale);
-            layer.localToWorld(ndc).project(camera);
-            if (ndc.z > 1 || Math.abs(ndc.x) > 0.9 || Math.abs(ndc.y) > 0.9) return;
+            // The points the camera sees, away from the screen edges and the HUD
+            if (!onScreen((e - be) * scale, (n - bn) * scale, MARKER_HEIGHT * scale)) return;
             const wl = sampleWind(field, e, n, hour);
             const later = sampleWind(field, e, n, hour + 1);
             const speed = Math.hypot(wl.u, wl.v);
             const [r, g, b] = windColorIn(mapName, speed);
+            // Shaded like the streaks: Windy's colours are those of the water
+            const tone = (c) => (shade >= 0 ? (c / 255) * (1 - shade) + shade : (c / 255) * (1 + shade));
             next.push({ key: `${e},${n}`, x: (e - be) * scale, y: (n - bn) * scale, z: MARKER_HEIGHT * scale, u: wl.u, v: wl.v,
-                speed, trend: Math.hypot(later.u, later.v) - speed, color: [r / 255, g / 255, b / 255],
+                speed, trend: Math.hypot(later.u, later.v) - speed, color: [tone(r), tone(g), tone(b)],
                 len: MARKER_LENGTH * (0.4 + 0.6 * Math.min(1, speed / 15)), d });
         });
         // The closest ones first, few enough to stay readable

@@ -115,6 +115,8 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
     const rich = fullscreen && !classic && roomy;
     // Phone on its side: the HUD values fill the left edge down to the bar
     const short = useMediaQuery('(max-height: 500px)');
+    // Phone held upright
+    const narrow = useMediaQuery('(max-width: 639px)');
     // Phones and the split view: the bottom panels stack in one column, so
     // they can never overlap one another
     const compact = !rich && !classic;
@@ -196,8 +198,9 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
 
             {/* Forecast hour and the wind / current legends */}
             {(states.showWind || states.showCurrent) && (
-                <div data-hud-solid className="absolute left-1/2 -translate-x-1/2 top-14 z-30 w-[30rem] max-w-[calc(100%-12rem)]">
-                    <MeteoBar compact={short} wind={!!states.showWind} current={!!states.showCurrent} />
+                // A phone held upright: beside the values column, compact
+                <div data-hud-solid className={`absolute top-14 z-30 ${narrow ? 'left-36 right-2' : 'left-1/2 -translate-x-1/2 w-[30rem] max-w-[calc(100%-12rem)]'}`}>
+                    <MeteoBar compact={short || narrow} wind={!!states.showWind} current={!!states.showCurrent} />
                 </div>
             )}
 
@@ -239,7 +242,8 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
 
                     {/* Course advice (avoidance / VMG) in the boat view */}
                     {showAdvice && (
-                        <div data-hud-solid className={`hud-stack absolute left-1/2 -translate-x-1/2 z-20 max-w-[calc(100%-9rem)] ${classic ? 'bottom-24' : 'bottom-3'}`}>
+                        // Between the two corner cards in full screen (they are 17 and 19 rem wide)
+                        <div data-hud-solid className={`hud-stack absolute left-1/2 -translate-x-1/2 z-20 ${classic ? 'bottom-24 max-w-[calc(100%-9rem)]' : 'bottom-3 max-w-[calc(100%-41rem)]'}`}>
                             <AdvicePanel />
                         </div>
                     )}
@@ -251,16 +255,16 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                 view). On its side the phone has the HUD values down the left
                 edge: both gauges then stand side by side at the bottom right. */}
             {(classic || compact) && (short && !classic ? (
-                <div className="absolute right-2 bottom-2 z-20 flex items-end">
+                <div className="absolute right-2 bottom-2 z-20 flex items-end" data-hud-solid>
                     <ThreeDBoatSeaLevelIndicator />
                     <ThreeDBoatTideLevelIndicator />
                 </div>
             ) : (
                 <>
-                    <div className="absolute left-2 bottom-2 z-20 flex flex-col items-center">
+                    <div className="absolute left-2 bottom-2 z-20 flex flex-col items-center" data-hud-solid>
                         <ThreeDBoatSeaLevelIndicator />
                     </div>
-                    <div className="absolute right-2 bottom-2 z-20 flex flex-col items-center">
+                    <div className="absolute right-2 bottom-2 z-20 flex flex-col items-center" data-hud-solid>
                         <ThreeDBoatTideLevelIndicator />
                     </div>
                 </>

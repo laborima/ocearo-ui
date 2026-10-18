@@ -1,37 +1,40 @@
-## [Unreleased]
+## [2.1.3] - 2026-10-18
+
+The 3D view becomes a base and layers: the sea, a grid or the 3D chart, with AIS, wind, currents, laylines, the polar and buoys on top. Currents arrive, the wind and the currents read like a chart plotter's tidal streams, the seabed is finer all over the world and NOAA's charts show in US waters. Full speed again on the Raspberry Pi, sharper on phones.
 
 ### Added
 
 - **Currents layer.** The water column of the 3D chart, from the surface down to the seabed, coloured by the current (Grid Viewer's thermal colour map): the deeper the water and the stronger the stream, the denser the colour; slack water and shallows stay light over the relief. Arrows drawn the way chart plotters draw tidal streams give the direction: as long as the stream is strong, the speed written on them, a red border when it builds over the next hour and a blue one when it eases, "Slack" when it stops; they keep the same size on screen near and far, spread evenly from the cockpit to the horizon. Forecast from the Open-Meteo marine API (Mercator Ocean's SMOC, 1/12°, tides included), 48 hours on the forecast bar; the colour scale spans the strongest current of the two days around. Offline, the current the instruments measure.
 - **Currents over every base**: the arrows alone over the sea and the grid; the 3D chart also colours the water column.
-- **NOAA nautical charts in US waters.** Where the Signal K server has no chart, the 3D chart lays NOAA's official chart (drawn from its electronic charts by the NOAA Chart Display Service, public domain) over OpenStreetMap: depths, buoys, lights, bridge clearances, anchorages. Its tiles can be downloaded ahead with the area, in the settings.
+- **NOAA nautical charts in US waters.** Where the Signal K server has no chart, the 3D chart lays NOAA's official chart (drawn from its electronic charts by the NOAA Chart Display Service, public domain) over OpenStreetMap: depths, buoys, lights, bridge clearances, anchorages. Drawn more opaque than OpenStreetMap over the seabed (a real chart, like one from the Signal K server). Its tiles can be downloaded ahead with the area, in the settings.
 - **Finer seabed all over the world.** Outside the SHOM surveys, the 3D chart takes the best open grid for the area: EMODnet Bathymetry in Europe (~115 m) and NOAA NCEI's DEM mosaic elsewhere (coastal surveys down to a few metres along the US coasts, ETOPO 2022 at ~450 m everywhere else), instead of the ~1.8 km global relief. Kept for offline use and downloaded with the area in the settings.
 - **One card per corner, changed with a tap** (full screen): depth, wind, speed and tide in turn; depth on the left and tide on the right by default, the choice kept. Every card records its last 10 minutes from the start, so the curve is full when tapped to. A new speed card: SOG, STW and the best of the last 10 minutes with their curve.
+- **VIEW button**: the boat full screen, or the boat beside the app (a phone shows one or the other); settings come first in the APPS menu, and an app opens beside the boat.
 - **Speed at the boat over the next two days** on the forecast bar, for the wind and the current: the turn of the tide or the arrival of a front at a glance, the value at the chosen hour beside it.
 
 ### Changed
 
-- **Wind layer as a volume of air.** The air above the water coloured by the wind, more with the depth of air towards the horizon, gusty wisps drifting with it, arrows at 10 m in the same chart plotter style (speed in knots, building or easing), and 150 streaks instead of 1 100. The flat sheet stays available (`windStyle: 'sheet'`), and Windy's colours can give way to a Grid Viewer colour map (`windColorMap`).
-
+- **Website at [ocearo.leslaborie.org](https://ocearo.leslaborie.org)** (the old address redirects), with an About section, a contact address and an llms.txt.
+- **Wind layer as a volume of air.** The air above the water coloured by the wind, more with the depth of air towards the horizon, gusty wisps drifting with it, arrows just above the waves in the same chart plotter style (speed in knots, building or easing), and 150 streaks instead of 1 100. The flat sheet stays available (`windStyle: 'sheet'`), and Windy's colours can give way to a Grid Viewer colour map (`windColorMap`).
 - **Three bases and layers in the 3D view.** One button cycles the base: the sea, the plain grid, or the 3D chart (seabed relief with the chart over it); the flat chart and the meteo map are gone (a saved meteo view opens as the 3D chart with the wind). A layers button adds, on any base: other vessels (AIS), wind (Windy-style; streaks only over the sea), laylines, polar, buoys and beacons.
 - **Phones and split view: the vertical depth and tide gauges again**; the depth, wind and tide cards are for full screen when there is room.
 - **Phone on its side: the depth and tide gauges side by side at the bottom right**, clear of the speed, heading and wind values down the left edge.
 - **Opaque menus** (APPS, layers): they read on a phone and on a Pi.
 - **Windsurf and wing foil let out their rig for the wind**, like the racer's boom, the hands staying on the wishbone or the handles.
 - **Sharper 3D on phones**: up to 2.5 pixels per CSS pixel instead of 1.5.
-
 - **Boats: the Racer 10.8 first, "Default" renamed "Sailboat".** The old low-poly sailboat is gone; a boat saved as "Default" becomes "Sailboat", the Optimist goes back to the Racer.
-
 - **Windsurf and Wing foil boats: the author riding them.** The Optimist and the old static windsurf are replaced by two animated models with their rider (the author's 3D avatar): a JP Magic Ride 119 with a Duotone E_Pace 6.2, and a wing foil board on its foil with a 5 m² wing. The rider moves to the windward rail on the other tack, rides faster with the speed, and the foil board lifts off from about 7 knots. Drawn 2.2 times larger than life so they read in the compass ring; under 1 MB each (Draco). A boat set to Optimist goes back to the default one.
 
 ### Fixed
 
+- **Bottom bar on a phone on its side and on a 1024 px tablet**: the water temperature ran over the buttons in the middle.
+- **Course advice banner over the depth and tide cards** on a narrow full screen: it now stays between them.
+- **Wind and current arrows over the HUD**: no arrow is drawn under the values, the bars or the cards; the forecast bar sits beside the values on a phone held upright.
+- **3D view at 0.5 fps on the Raspberry Pi**: every line recompiled its shader on each render. The Pi is now told by its GPU (its reduced user agent says x86), draws at 75 % resolution and without the HUD's backdrop blur.
+- **Logbook kept the Pi's browser at 100 % CPU**: the table re-rendered on every Signal K delta; live values are now read when an entry is written.
 - **Phone on its side: nothing on top of anything.** The forecast bar shrinks to the slider and the curves and becomes nearly opaque (vessel names and arrow speeds showed through), the speed and the values on the left get smaller so the last one is no longer cut by the bottom bar, and the speeds on the wind and current arrows hide under the HUD like the vessel names.
-
 - **Layers menu on phones.** It ran off the right edge of a phone held upright, was cut at the bottom on a phone on its side, and opened under the HUD values, the give-way banner and the vessel card: it now opens leftwards upright, in two columns on its side, over the HUD.
-
 - **Fuzzy text over the 3D chart.** The HUD's secondary text was translucent black, a dull blue-grey over the water, with a wide blurred halo: now opaque greys and a tight outline.
-
 - **True wind from the apparent wind** when the boat publishes none (many instruments, and the Signal K demo server): the polar, the sail plan and the laylines took 0 kn from dead ahead.
 - **Demo mode no longer rewrites the server's data**: the sample values only fill in what the server does not send (the wind angle spun every 5 s over the demo server's own wind).
 - **Blurry 3D on phones in automatic quality.** Phone GPUs (Mali, Adreno, PowerVR) were taken for a Raspberry Pi: 75 % resolution, no anti-aliasing, 30 fps. The reduced profile is now for the Pi's own GPU and software rendering only.

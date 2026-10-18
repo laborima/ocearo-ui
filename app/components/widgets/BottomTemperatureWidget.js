@@ -70,7 +70,7 @@ const TemperatureDisplay = ({ mode, value, icon }) => {
         <span className="ocearo-large-label text-caption font-semibold uppercase tracking-widest text-hud-muted leading-none mb-1">
           {label.split(' ')[0]}
         </span>
-        <span className="text-label sm:text-value font-bold tracking-tight leading-none whitespace-nowrap">
+        <span className="text-label sm:text-value lg:text-label xl:text-value font-bold tracking-tight leading-none whitespace-nowrap">
           {TEMPERATURE_MODES[mode].format(value)}
         </span>
       </div>

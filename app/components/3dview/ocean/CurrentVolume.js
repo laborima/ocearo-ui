@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import configService from '../../settings/ConfigService';
 import { colorMapTexture } from '../meteo/colorMaps';
 import FlowMarkers from '../meteo/FlowMarkers';
-import { sameMarkers } from '../meteo/markerLattice';
+import { sameMarkers, onScreenTest } from '../meteo/markerLattice';
 import { useCurrentField, currentMarkers, DEFAULT_CURRENT_MAP, CURRENT_ARROW_WIDTH } from '../meteo/useCurrentField';
 import { useFieldTexture, NOISE_GLSL, FIELD_GLSL } from '../meteo/fieldVolume';
 
@@ -147,7 +147,7 @@ const CurrentVolume = ({ geometry }) => {
     const cam = useMemo(() => new THREE.Vector3(), []);
     const [markers, setMarkers] = useState([]);
     const tick = useRef(1);
-    useFrame(({ camera, clock }, delta) => {
+    useFrame(({ camera, clock, gl }, delta) => {
         const mesh = meshRef.current;
         if (!mesh) return;
         mesh.updateWorldMatrix(true, false);
@@ -167,6 +167,7 @@ const CurrentVolume = ({ geometry }) => {
         const refN = g.getY(0) - p.getY(0) / scale;
         const next = currentMarkers({
             field, hour, top, mapName, refE, refN, scale, radius: 1450, z: 0.3,
+            onScreen: onScreenTest(meshRef.current, camera, gl.domElement),
             cx: refE + camLocal.x / scale, cy: refN + camLocal.y / scale, heightM: Math.max(5, camLocal.z / scale),
             isWater: (x, y) => depthAt(geometry, x, y) > MIN_ARROW_DEPTH,
         });

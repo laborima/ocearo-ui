@@ -59,8 +59,8 @@
         "text": "thèmes : jour, sombre, et nuit rouge pour préserver la vision nocturne."
       },
       {
-        "value": "5",
-        "text": "façons de voir le monde autour du bateau : mer, carte, fonds, météo, régate."
+        "value": "3",
+        "text": "bases pour la vue 3D — mer, grille, carte 3D — et six couches : AIS, vent, courants, laylines, polaire, balisage."
       },
       {
         "value": "6",
@@ -80,19 +80,19 @@
   "f3d": {
     "eyebrow": "La vue 3D",
     "title": "Le bateau, la mer et les fonds, en direct.",
-    "lead": "Une scène 3D temps réel centrée sur votre bateau, construite à partir de vos propres instruments. Un bouton fait défiler cinq représentations du monde autour.",
+    "lead": "Une scène 3D temps réel centrée sur votre bateau, construite à partir de vos propres instruments. Un bouton choisit la base — la mer, une grille ou la carte 3D — et un menu de couches ajoute le trafic, le vent, les courants, le balisage et la polaire.",
     "ticks": [
       {
         "b": "Une mer issue du vent réel.",
         "text": "Mer du vent et houle, moutons dès 7 nœuds, le soleil là où il est vraiment et votre propre sillage."
       },
       {
-        "b": "Carte et balisage en direct.",
-        "text": "OpenStreetMap et les feux et marques d’OpenSeaMap, à l’échelle avec les cibles AIS."
+        "b": "Cartes officielles sur les fonds.",
+        "text": "OpenStreetMap et les feux et marques d’OpenSeaMap partout, cartes marines de la NOAA dans les eaux américaines, à l’échelle avec les cibles AIS."
       },
       {
-        "b": "Les fonds en 3D.",
-        "text": "Relevés SHOM 5–20 m sur la côte française, sondes à la marée du moment, petits fonds hachurés en orange selon votre tirant d’eau."
+        "b": "Les fonds en 3D, partout.",
+        "text": "Relevés SHOM 5–20 m en France, EMODnet en Europe, grilles NOAA ailleurs ; sondes à la marée du moment, petits fonds hachurés en orange selon votre tirant d’eau."
       },
       {
         "b": "Bouées, balises et ciel de nuit.",
@@ -100,10 +100,10 @@
       }
     ],
     "video_alt": "Vue bathymétrie : les fonds en grille de relevé sous le bateau",
-    "alt_chart": "Carte en direct avec balisage et cibles AIS en 3D",
-    "alt_bathy": "Bathymétrie SHOM en grille de relevé avec isobathes et sondes",
-    "tag_chart": "Carte et balisage",
-    "tag_bathy": "Bathymétrie SHOM",
+    "alt_chart": "Carte marine NOAA posée sur les fonds en 3D aux Narrows, New York",
+    "alt_bathy": "Carte 3D : les fonds en relief, colorés selon la profondeur, la carte par-dessus",
+    "tag_chart": "Cartes NOAA (États-Unis)",
+    "tag_bathy": "Carte 3D",
     "alt_night": "Ciel de nuit : la Lune, les planètes et les étoiles nommées au-dessus des bouées éclairées",
     "alt_marks": "Bouées cardinales en 3D au crépuscule, feu allumé",
     "tag_night": "Ciel de nuit",
@@ -150,14 +150,14 @@
         "text": "où vous serez dans 5, 10 et 15 minutes à chaque cap, conseil de VMG et bateau fantôme des polaires."
       },
       {
-        "b": "Prévision de vent sur 48 heures",
-        "text": "autour du bateau aux couleurs de Windy, gardée à bord pour naviguer hors ligne."
+        "b": "Vent et courants sur 48 heures :",
+        "text": "les couleurs de Windy pour le vent, l’eau colorée par le courant, des flèches façon traceur avec la vitesse et la tendance, gardés à bord pour naviguer hors ligne."
       }
     ],
     "video_alt": "Retour au près sur les laylines avec les isochrones",
-    "alt_weather": "Prévision de vent autour du bateau aux couleurs de Windy",
+    "alt_weather": "Prévision de vent en 3D : flèches avec la vitesse en nœuds et la courbe sur 48 heures au bateau",
     "alt_trim": "Bandes de creux et penons sous spi",
-    "tag_weather": "Prévision de vent",
+    "tag_weather": "Vent et courants",
     "tag_trim": "Réglage des voiles"
   },
   "safety": {

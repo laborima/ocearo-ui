@@ -16,7 +16,9 @@ const EASING = [0.16, 0.48, 0.86];
 const ClearLabel = ({ children }) => {
     const ref = useRef(null);
     useHudClearance(ref);
-    return <div ref={ref}>{children}</div>;
+    // Just above the arrow, not on it: a wind or stream along the line of
+    // sight gives a short arrow the label would hide
+    return <div ref={ref} style={{ transform: 'translateY(-1.1rem)' }}>{children}</div>;
 };
 
 /**

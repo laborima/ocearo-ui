@@ -59,8 +59,8 @@
         "text": "temas: diurno, escuro e noturno em vermelho, que preserva a visão noturna."
       },
       {
-        "value": "5",
-        "text": "jeitos de ver o que está ao redor do barco: mar, carta náutica, fundo, previsão do tempo e regata."
+        "value": "3",
+        "text": "bases para a vista 3D — mar, grade, carta 3D — e seis camadas: AIS, vento, correntes, laylines, polar, balizamento."
       },
       {
         "value": "6",
@@ -80,19 +80,19 @@
   "f3d": {
     "eyebrow": "A visão 3D",
     "title": "O barco, o mar e o fundo, ao vivo.",
-    "lead": "Uma cena 3D em tempo real, centrada no seu barco e montada a partir dos seus próprios instrumentos. Com um botão, você troca entre cinco visões do que está ao redor.",
+    "lead": "Uma cena 3D em tempo real, centrada no seu barco e montada a partir dos seus próprios instrumentos. Um botão escolhe a base — o mar, uma grade ou a carta 3D — e um menu de camadas acrescenta o tráfego, o vento, as correntes, o balizamento e a polar.",
     "ticks": [
       {
         "b": "Um mar gerado pelo vento real.",
         "text": "Mar de vento e ondulação, carneirinhos a partir de 7 nós, o sol na posição real e a esteira do seu próprio barco."
       },
       {
-        "b": "Carta náutica e balizamento ao vivo.",
-        "text": "OpenStreetMap e as luzes e marcas do OpenSeaMap, em escala com os alvos AIS."
+        "b": "Cartas oficiais sobre o fundo.",
+        "text": "OpenStreetMap e as luzes e marcas do OpenSeaMap em todo lugar, cartas náuticas da NOAA em águas dos Estados Unidos, em escala com os alvos AIS."
       },
       {
-        "b": "O fundo em 3D.",
-        "text": "Levantamentos do SHOM de 5 a 20 m na costa francesa, profundidades corrigidas pela maré do momento e as águas rasas demais para o seu calado hachuradas em laranja."
+        "b": "O fundo em 3D, no mundo todo.",
+        "text": "Levantamentos do SHOM de 5 a 20 m na França, EMODnet na Europa, grades da NOAA no resto do mundo; profundidades corrigidas pela maré do momento e as águas rasas demais para o seu calado hachuradas em laranja."
       },
       {
         "b": "Boias, balizas e o céu noturno.",
@@ -100,10 +100,10 @@
       }
     ],
     "video_alt": "Visão de batimetria: o fundo como grade de levantamento sob o barco",
-    "alt_chart": "Carta náutica ao vivo com balizamento e alvos AIS em 3D",
-    "alt_bathy": "Batimetria do SHOM em grade de levantamento com isóbatas e profundidades",
-    "tag_chart": "Carta e balizamento",
-    "tag_bathy": "Batimetria SHOM",
+    "alt_chart": "Carta náutica da NOAA sobre o fundo em 3D em The Narrows, Nova York",
+    "alt_bathy": "Carta 3D: o fundo em relevo, colorido pela profundidade, com a carta por cima",
+    "tag_chart": "Cartas NOAA (EUA)",
+    "tag_bathy": "Carta 3D",
     "alt_night": "Céu noturno: a Lua, os planetas e as estrelas nomeadas sobre boias iluminadas",
     "alt_marks": "Boias cardinais em 3D ao entardecer, com a luz acesa",
     "tag_night": "Céu noturno",
@@ -150,14 +150,14 @@
         "text": "onde você vai estar daqui a 5, 10 e 15 minutos em cada bordo, dica de VMG e um barco fantasma tirado das polares."
       },
       {
-        "b": "Previsão de vento para 48 horas",
-        "text": "ao redor do barco, nas cores do Windy, guardada a bordo para usar offline."
+        "b": "Vento e correntes para 48 horas:",
+        "text": "as cores do Windy para o vento, a água colorida pela corrente, setas como num plotter com a velocidade e a tendência, guardados a bordo para usar offline."
       }
     ],
     "video_alt": "Bordejando contra o vento pelas laylines, com as isócronas",
-    "alt_weather": "Previsão de vento ao redor do barco nas cores do Windy",
+    "alt_weather": "Previsão de vento em 3D: setas com a velocidade em nós e a curva de 48 horas no barco",
     "alt_trim": "Listras de perfil e birutas, com balão",
-    "tag_weather": "Previsão de vento",
+    "tag_weather": "Vento e correntes",
     "tag_trim": "Regulagem das velas"
   },
   "safety": {
