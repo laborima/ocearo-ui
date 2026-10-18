@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
@@ -12,7 +11,8 @@ import { fetchWindField, uniformField, sampleWind, windColor, HALF_EXTENT_M } fr
 import { colorMapTexture, colorAt } from './colorMaps';
 import { useFieldTexture, NOISE_GLSL, FIELD_GLSL } from './fieldVolume';
 import { getForecastHour, subscribeForecast, setSeries } from './forecastStore';
-import FlowArrows from './FlowArrows';
+import FlowMarkers from './FlowMarkers';
+import { markerLattice } from './markerLattice';
 import useTheme from '../../theme/useTheme';
 
 const PATHS = ['navigation.position', 'environment.wind.speedTrue', 'environment.wind.directionTrue'];
@@ -27,12 +27,15 @@ const SEGMENTS = PARTICLES * TRAIL;
 const SHADE_DAY = -0.6;
 const SHADE_NIGHT = 0.45;
 // Speed labels: on a ground-anchored lattice, the ones on screen only
-const LABELS_ACROSS = 6;
-const MAX_LABELS = 10;
+// Wind markers (arrows with the speed): at most, size on screen (shares of
+// the distance to the camera), height (m)
+const MAX_MARKERS = 10;
+const MARKER_LENGTH = 0.14;
+const MARKER_WIDTH = 0.025;
+const MARKER_HEIGHT = 10;
 // Streak width in pixels (WebGL draws plain lines one pixel wide, lost in the
 // grazing view of the cockpit camera)
 const STREAK_WIDTH = 3;
-const KNOTS = 1.943844;
 const R = 6371000;
 // Air volume: the layer of air drawn above the water, metres, and the top of
 // a colour map (m/s) when one replaces Windy's scale
@@ -40,10 +43,6 @@ const AIR_HEIGHT = 150;
 export const WIND_MAP_TOP = 20;
 // Streaks kept over the air volume: a few, for the direction at a glance
 const VOLUME_STREAKS = 150;
-// Wind arrows: heights above the water (m); 10 m is the forecast's own.
-// One level: higher ones crowd the sky in the cockpit view
-const ARROW_HEIGHTS = [10];
-const Z0 = 0.0002; // sea roughness length (m), log wind profile
 
 /** Colour of a wind speed (m/s) in the chosen scale: Windy's or a colour map */
 export const windColorIn = (mapName, speed) => (mapName && mapName !== 'windy'
@@ -229,8 +228,7 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
     useEffect(() => {
         particles.geo.instanceCount = (volume ? VOLUME_STREAKS : PARTICLES) * TRAIL; // eslint-disable-line react-hooks/immutability
     }, [particles, volume]);
-    const [labels, setLabels] = useState([]);
-    const [arrows, setArrows] = useState({ items: [], step: 100 });
+    const [markers, setMarkers] = useState([]);
     const labelClock = useRef(0);
 
     // Wind at the boat over the forecast, for the curve of the forecast bar
@@ -322,59 +320,42 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
         particles.geo.attributes.instanceStart.data.needsUpdate = true;
         particles.geo.attributes.instanceColorStart.data.needsUpdate = true;
 
-        // Speed labels, refreshed once a second on a lattice fixed to the
-        // ground (they do not swim with the boat) and sized to the view
+        // Wind markers at 10 m, refreshed once a second on a lattice fixed to
+        // the ground (they do not swim with the boat) and sized to the view
         labelClock.current += delta;
         if (labelClock.current < 1) return;
         labelClock.current = 0;
-        const spacing = Math.max(400, Math.round(radiusM * 2 / LABELS_ACROSS / 100) * 100);
-        const e0 = Math.ceil((be - radiusM * 0.8) / spacing) * spacing;
-        const n0 = Math.ceil((bn - radiusM * 0.8) / spacing) * spacing;
-        const next = [];
         const layer = layerRef.current;
+        if (!layer) return;
+        // Camera over the ground, metres in the field frame
+        const camLocal = layer.worldToLocal(new THREE.Vector3().copy(camera.position));
+        const cx = be + camLocal.x / scale;
+        const cy = bn + camLocal.y / scale;
+        const heightM = Math.max(5, camLocal.z / scale);
+        const markerStep = THREE.MathUtils.clamp(Math.round(heightM * 3 / 10) * 10, 60, 4000);
+        // Not too far: from the cockpit, 10 m up sits on the horizon beyond a
+        // few hundred metres, and the arrows would pile up there
+        const reach = Math.min(radiusM * 0.9, Math.max(800, heightM * 60));
+        const nodes = markerLattice({ cx, cy, radius: reach, step: markerStep, near: markerStep * 3, originE: cx, originN: cy, max: 80 });
+        const next = [];
         const ndc = new THREE.Vector3();
-        for (let e = e0; e <= be + radiusM * 0.8; e += spacing) {
-            for (let n = n0; n <= bn + radiusM * 0.8; n += spacing) {
-                // Keep the points the camera sees, away from the screen edges
-                if (layer) {
-                    ndc.set((e - be) * scale, (n - bn) * scale, 0.5);
-                    layer.localToWorld(ndc).project(camera);
-                    if (ndc.z > 1 || Math.abs(ndc.x) > 0.85 || ndc.y > 0.6 || ndc.y < -0.85) continue;
-                }
-                const wl = sampleWind(field, e, n, hour);
-                const kn = Math.hypot(wl.u, wl.v) * KNOTS;
-                // Direction the wind blows towards, degrees from north
-                const to = Math.atan2(wl.u, wl.v) * 180 / Math.PI;
-                next.push({ key: `${e},${n}`, x: e - be, y: n - bn, kn: Math.round(kn), to: Math.round(to), d: Math.hypot(e - be, n - bn) });
-            }
-        }
-        // Arrows in the air, twice as dense as the bubbles, over the volume
-        if (volume) {
-            const step = spacing / 2;
-            const ae = Math.ceil((be - radiusM * 0.9) / step) * step;
-            const an = Math.ceil((bn - radiusM * 0.9) / step) * step;
-            const items = [];
-            for (let e = ae; e <= be + radiusM * 0.9; e += step) {
-                for (let n = an; n <= bn + radiusM * 0.9; n += step) {
-                    if (Math.hypot(e - be, n - bn) > radiusM * 0.9) continue;
-                    const wl = sampleWind(field, e, n, hour);
-                    const s10 = Math.hypot(wl.u, wl.v);
-                    if (s10 < 0.2) continue;
-                    ARROW_HEIGHTS.forEach((h) => {
-                        const speed = s10 * Math.log(h / Z0) / Math.log(10 / Z0);
-                        const [r, g, b] = windColorIn(mapName, speed);
-                        const c = [r, g, b].map((x) => (shade >= 0 ? (x / 255) * (1 - shade) + shade : (x / 255) * (1 + shade)));
-                        items.push({ x: (e - be) * scale, y: (n - bn) * scale, z: h * scale, u: wl.u, v: wl.v, speed, color: c,
-                            len: step * scale * 0.32 * Math.min(1, 0.3 + speed / 18) });
-                    });
-                }
-            }
-            setArrows({ items, step });
-        }
+        nodes.forEach(({ e, n, d }) => {
+            if (Math.hypot(e - be, n - bn) < 20) return; // none on the boat itself
+            // Keep the points the camera sees, away from the screen edges
+            ndc.set((e - be) * scale, (n - bn) * scale, MARKER_HEIGHT * scale);
+            layer.localToWorld(ndc).project(camera);
+            if (ndc.z > 1 || Math.abs(ndc.x) > 0.9 || Math.abs(ndc.y) > 0.9) return;
+            const wl = sampleWind(field, e, n, hour);
+            const later = sampleWind(field, e, n, hour + 1);
+            const speed = Math.hypot(wl.u, wl.v);
+            const [r, g, b] = windColorIn(mapName, speed);
+            next.push({ key: `${e},${n}`, x: (e - be) * scale, y: (n - bn) * scale, z: MARKER_HEIGHT * scale, u: wl.u, v: wl.v,
+                speed, trend: Math.hypot(later.u, later.v) - speed, color: [r / 255, g / 255, b / 255],
+                len: MARKER_LENGTH * (0.4 + 0.6 * Math.min(1, speed / 15)), d });
+        });
         // The closest ones first, few enough to stay readable
-        next.sort((a, b) => a.d - b.d).splice(MAX_LABELS);
-        setLabels((prev) => (prev.length === next.length && prev.every((l, i) => l.key === next[i].key && l.kn === next[i].kn && l.to === next[i].to
-            && Math.abs(l.x - next[i].x) < 20 && Math.abs(l.y - next[i].y) < 20) ? prev : next));
+        next.sort((a, b) => a.d - b.d).splice(MAX_MARKERS);
+        setMarkers(next);
     });
 
     if (!field) return null;
@@ -393,23 +374,7 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
                     </mesh>
                 )}
                 <primitive object={particles.object} />
-                {volume && (
-                    <FlowArrows items={arrows.items} width={arrows.step * scale * 0.045} travel={arrows.step * scale * 0.5}
-                        pace={arrows.step * scale * 0.04} opacity={0.7} fadeNear={arrows.step * scale * 2} />
-                )}
-                {labels.map((l) => {
-                    const [r, g, b] = windColorIn(mapName, l.kn / KNOTS);
-                    return (
-                        <Html key={l.key} position={[l.x * scale, l.y * scale, 0.5]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}>
-                            <div className="flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-caption font-semibold tabular-nums text-white shadow"
-                                style={{ background: `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},0.85)` }}>
-                                {/* Heading-up view: the arrow points where the wind goes on screen */}
-                                <span style={{ display: 'inline-block', transform: `rotate(${l.to - heading * 180 / Math.PI}deg)` }}>↑</span>
-                                {l.kn} kn
-                            </div>
-                        </Html>
-                    );
-                })}
+                <FlowMarkers items={markers} width={MARKER_WIDTH} screen={1} format={(kn) => String(Math.round(kn))} slackLabel="calm" />
             </group>
         </group>
     );

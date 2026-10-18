@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 /**
- * Arrows drifting with a flow (current, wind), one draw call for all of them.
+ * Arrows along a flow (current, wind), one draw call for all of them.
  * Each arrow lies along the flow and turns about its own axis to face the
  * camera, so it reads from the cockpit as well as from above. It slides
  * along its direction over `travel` and fades in and out, faster in a
@@ -18,6 +18,9 @@ import * as THREE from 'three';
  * @param {number} travel - distance an arrow slides before it fades, scene units
  * @param {number} pace - slide speed per m/s of flow, scene units per second
  * @param {number} fadeNear - arrows closer to the camera than this fade out (scene units)
+ * @param {boolean} still - arrows stay put, at full strength
+ * @param {number} screen - when set, `width` and each `len` are shares of the
+ *   arrow's distance to the camera (times this): the same size on screen
  */
 const MAX_ARROWS = 400;
 
@@ -33,20 +36,26 @@ const vertexShader = `
     uniform float uTravel;
     uniform float uPace;
     uniform float uFadeNear;
+    uniform float uStill;
+    uniform float uScreen;
     varying vec3 vColor;
     varying float vAlpha;
     void main() {
         vec3 d = normalize(vec3(aDir, 0.0));
-        float phase = fract(uTime * aLenSpeed.y * uPace / uTravel + aSeed);
+        // Still arrows stay put at full strength (a chart plotter's current arrows)
+        float phase = uStill > 0.5 ? 0.5 : fract(uTime * aLenSpeed.y * uPace / max(uTravel, 1e-3) + aSeed);
         vec3 base = aBase + d * (phase - 0.5) * uTravel;
         // Turn the arrow about its axis towards the camera
         vec3 toCam = normalize(uCam - base);
         vec3 side = cross(toCam, d);
         side = length(side) < 1e-3 ? vec3(-d.y, d.x, 0.0) : normalize(side);
-        vec3 p = base + side * position.x * uWidth + d * position.y * aLenSpeed.x;
+        // Screen-sized: lengths and width are shares of the distance to the
+        // camera, so a far arrow reads as well as a near one
+        float k = uScreen > 0.0 ? length(uCam - aBase) * uScreen : 1.0;
+        vec3 p = base + side * position.x * uWidth * k + d * position.y * aLenSpeed.x * k;
         vColor = aColor;
         // Faded close to the camera, where an arrow would fill the view
-        vAlpha = pow(sin(3.14159 * phase), 0.6) * smoothstep(uFadeNear * 0.5, uFadeNear, length(uCam - base));
+        vAlpha = (uStill > 0.5 ? 1.0 : pow(sin(3.14159 * phase), 0.6)) * smoothstep(uFadeNear * 0.5, uFadeNear, length(uCam - base));
         gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
     }
 `;
@@ -75,7 +84,7 @@ const arrowShape = () => {
     return new THREE.ShapeGeometry(s);
 };
 
-const FlowArrows = ({ items, width, travel, pace, opacity = 0.9, fadeNear = 0, renderOrder = 3 }) => {
+const FlowArrows = ({ items, width, travel = 0, pace = 0, opacity = 0.9, fadeNear = 0, still = false, screen = 0, renderOrder = 3 }) => {
     const { geometry, material } = useMemo(() => {
         const shape = arrowShape();
         const geo = new THREE.InstancedBufferGeometry();
@@ -93,7 +102,7 @@ const FlowArrows = ({ items, width, travel, pace, opacity = 0.9, fadeNear = 0, r
         const mat = new THREE.ShaderMaterial({
             uniforms: {
                 uCam: { value: new THREE.Vector3() }, uTime: { value: 0 }, uWidth: { value: 1 },
-                uTravel: { value: 1 }, uPace: { value: 1 }, uOpacity: { value: opacity }, uFadeNear: { value: 0 },
+                uTravel: { value: 1 }, uPace: { value: 1 }, uOpacity: { value: opacity }, uFadeNear: { value: 0 }, uStill: { value: 0 }, uScreen: { value: 0 },
             },
             vertexShader,
             fragmentShader,
@@ -126,7 +135,9 @@ const FlowArrows = ({ items, width, travel, pace, opacity = 0.9, fadeNear = 0, r
         u.uPace.value = pace;
         u.uOpacity.value = opacity;
         u.uFadeNear.value = fadeNear;
-    }, [material, width, travel, pace, opacity, fadeNear]);
+        u.uStill.value = still ? 1 : 0;
+        u.uScreen.value = screen;
+    }, [material, width, travel, pace, opacity, fadeNear, still, screen]);
 
     const ref = useRef();
     const cam = useMemo(() => new THREE.Vector3(), []);

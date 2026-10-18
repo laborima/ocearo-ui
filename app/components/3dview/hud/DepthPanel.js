@@ -32,7 +32,9 @@ const DepthPanel = ({ compact = false }) => {
         return () => clearInterval(timer);
     }, []);
 
-    if (!Number.isFinite(depth)) return null;
+    if (!Number.isFinite(depth)) {
+        return compact ? null : <GlassPanel title={t('hud.depth')} className="w-[17rem]"><span className="text-value font-semibold text-hud-muted">--</span></GlassPanel>;
+    }
 
     // Trend over the last minute, metres per minute (negative: shoaling)
     const recent = history.slice(-12);

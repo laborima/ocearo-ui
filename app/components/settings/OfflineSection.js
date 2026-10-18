@@ -7,6 +7,8 @@ import { useSignalKPath } from '../hooks/useSignalK';
 import { clearOfflineCache, offlineCacheSize, prefetchArea } from '../utils/offlineCache';
 import { TERRARIUM, BATHY_ZOOM } from '../3dview/ocean/Seabed3D';
 import { windFieldUrl } from '../3dview/meteo/windField';
+import { currentFieldUrl } from '../3dview/meteo/currentField';
+import { regionalSeabedUrls } from '../3dview/ocean/regionalBathymetry';
 import { prefetchSeamarks } from '../3dview/seamarks/seamarkData';
 import configService from './ConfigService';
 import { downloadBathymetry, getBathymetryStatus, isOcearoCoreEnabled } from '../utils/OcearoCoreUtils';
@@ -57,14 +59,16 @@ const OfflineSection = () => {
         if (shom) downloadBathymetry(lat, lon, radiusNm).then(refreshShom).catch(() => {});
         // Buoys and beacons (OpenSeaMap): one Overpass query for the whole area
         if (configService.get('showSeamarks3D') !== false && configService.get('seamarksOverpass') !== false) prefetchSeamarks(lat, lon, radiusM).catch(() => {});
-        // Bathymetry (open data) and the wind forecast. The chart itself is not
+        // Bathymetry (open data: global, EMODnet / NOAA for the area) and the
+        // wind and current forecasts. The chart itself is not
         // bulk-downloaded: the OpenStreetMap and OpenSeaMap tile servers forbid
         // it. Chart tiles viewed are kept as you go; for full offline charts,
         // serve MBTiles through a Signal K chart provider (used automatically).
         const result = await prefetchArea({
             lat, lon, radiusM,
             layers: [{ template: TERRARIUM, zooms: [BATHY_ZOOM - 1, BATHY_ZOOM] }],
-            urls: [windFieldUrl(Number(lat.toFixed(1)), Number(lon.toFixed(1)))],
+            urls: [windFieldUrl(Number(lat.toFixed(1)), Number(lon.toFixed(1))), currentFieldUrl(Number(lat.toFixed(1)), Number(lon.toFixed(1))),
+                ...regionalSeabedUrls(lat, lon)],
             onProgress: (done, total, failed) => setProgress({ done, total, failed }),
         });
         setProgress({ ...result, finished: true });

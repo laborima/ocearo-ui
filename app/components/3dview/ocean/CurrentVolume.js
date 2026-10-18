@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import configService from '../../settings/ConfigService';
 import { useSignalKPaths } from '../../hooks/useSignalK';
@@ -8,18 +7,17 @@ import { fetchCurrentField, uniformCurrent, setCurrentScale } from '../meteo/cur
 import { getForecastHour, subscribeForecast, setSeries } from '../meteo/forecastStore';
 import { colorMapTexture, colorAt } from '../meteo/colorMaps';
 import { sampleWind } from '../meteo/windField';
-import FlowArrows from '../meteo/FlowArrows';
-import useOwnTrack from '../fsd/useOwnTrack';
+import FlowMarkers from '../meteo/FlowMarkers';
+import { markerLattice } from '../meteo/markerLattice';
 import { useFieldTexture, NOISE_GLSL, FIELD_GLSL } from '../meteo/fieldVolume';
 
 const PATHS = ['navigation.position', 'environment.current'];
 export const DEFAULT_CURRENT_MAP = 'thermal';
 const CURRENT_RANGE = 4; // m/s stored in the field texture
-const KNOTS = 1.943844;
-// Arrows: two levels in the water (share of the depth below the surface)
-const ARROW_LEVELS = [0.2, 0.75];
 const MIN_ARROW_DEPTH = 1.5; // metres of water
-const MAX_LABELS = 5;
+// Arrow size on screen: shares of its distance to the camera
+const ARROW_LENGTH = 0.16;
+const ARROW_WIDTH = 0.028;
 
 /** Water depth (m) at a point of the seabed mesh (local x, y), bilinear; NaN outside */
 const depthAt = (geometry, x, y) => {
@@ -106,10 +104,10 @@ const fragmentShader = `
  * current (Grid Viewer's colour maps): drawn on the seabed mesh, each pixel
  * is as opaque as the water the view ray crosses down to the bottom, so the
  * shallows stay light over the relief and the deep channels take the full
- * colour. A soft pattern drifts with the stream, and arrows at two levels of
- * the water (shorter near the bottom, where the current slows) slide with
- * it, longer and faster where it runs strong; a few bubbles give the speed
- * in knots. Over the translucent chart, so the colours keep their strength.
+ * colour. A soft pattern drifts with the stream, and a few arrows drawn the
+ * way chart plotters draw tidal streams give its direction, its speed in
+ * knots and whether it is building or easing. Over the translucent chart,
+ * so the colours keep their strength.
  *
  * @param {THREE.BufferGeometry} geometry - the seabed mesh (aDepth, aGround)
  */
@@ -187,11 +185,9 @@ const CurrentVolume = ({ geometry }) => {
         return () => setSeries('current', null);
     }, [field, Math.round(lat * 100), Math.round(lon * 100)]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const { heading } = useOwnTrack();
     const meshRef = useRef();
     const cam = useMemo(() => new THREE.Vector3(), []);
-    const [arrows, setArrows] = useState({ items: [], spacing: 100 });
-    const [labels, setLabels] = useState([]);
+    const [markers, setMarkers] = useState([]);
     const tick = useRef(1);
     useFrame(({ camera, clock }, delta) => {
         const mesh = meshRef.current;
@@ -200,8 +196,8 @@ const CurrentVolume = ({ geometry }) => {
         material.uniforms.uCam.value.copy(mesh.worldToLocal(cam.copy(camera.position)));
         material.uniforms.uTime.value = clock.elapsedTime;
 
-        // Arrows and bubbles on a lattice fixed to the ground, sized to the
-        // view, refreshed once a second
+        // Markers fixed to the ground, about evenly spread on screen,
+        // refreshed once a second
         tick.current += delta;
         if (tick.current < 1 || !field) return;
         tick.current = 0;
@@ -211,67 +207,40 @@ const CurrentVolume = ({ geometry }) => {
         // Ground metres of the mesh's origin (the boat when it was built)
         const refE = g.getX(0) - p.getX(0) / scale;
         const refN = g.getY(0) - p.getY(0) / scale;
-        const distM = camera.position.length() / scale;
-        const spacing = THREE.MathUtils.clamp(Math.round(distM / 3 / 25) * 25, 60, 400);
-        const radius = Math.min(1450, Math.max(300, distM * 2.2));
+        // Camera over the ground, in the lattice frame (ground metres)
+        const camLocal = cam.copy(camera.position);
+        mesh.worldToLocal(camLocal);
+        const cx = refE + camLocal.x / scale;
+        const cy = refN + camLocal.y / scale;
+        const heightM = Math.max(5, camLocal.z / scale);
+        const step = THREE.MathUtils.clamp(Math.round(heightM * 0.9 / 5) * 5, 25, 400);
+        const nodes = markerLattice({ cx, cy, radius: 1450, step, near: step * 3, originE: refE, originN: refN, max: 40 });
         const items = [];
-        const spots = [];
-        const e0 = Math.ceil((refE - radius) / spacing) * spacing;
-        const n0 = Math.ceil((refN - radius) / spacing) * spacing;
-        for (let ge = e0; ge <= refE + radius; ge += spacing) {
-            for (let gn = n0; gn <= refN + radius; gn += spacing) {
-                const x = (ge - refE) * scale;
-                const y = (gn - refN) * scale;
-                const r = Math.hypot(ge - refE, gn - refN);
-                // None on the boat itself
-                if (r > radius || r < spacing * 0.7) continue;
-                const depth = depthAt(geometry, x, y);
-                if (!(depth > MIN_ARROW_DEPTH)) continue;
-                const f = sampleWind(field, ge, gn, hour);
-                const surface = Math.hypot(f.u, f.v);
-                if (surface < 0.02) continue;
-                ARROW_LEVELS.forEach((level) => {
-                    // 1/7 power law: slower towards the bottom
-                    const speed = surface * Math.pow(1 - level, 1 / 7);
-                    const t = Math.min(1, speed / top);
-                    const [cr, cg, cb] = colorAt(mapName, 0.28 + 0.72 * t);
-                    // Paler than the water of the same colour, to stand out in it
-                    const color = [cr, cg, cb].map((c) => (c / 255) * 0.45 + 0.55);
-                    items.push({ x, y, z: -level * depth * scale, u: f.u, v: f.v, speed, color,
-                        len: spacing * scale * 0.38 * (0.3 + 0.7 * t) });
-                });
-                spots.push({ key: `${ge},${gn}`, x, y, r, kn: surface * KNOTS, to: Math.atan2(f.u, f.v) * 180 / Math.PI, t: Math.min(1, surface / top) });
-            }
-        }
-        setArrows({ items, spacing });
-        // Bubbles: the closest points, every other lattice node
-        const next = spots.filter((sp) => Math.round(sp.x / scale / spacing) % 2 === 0 && Math.round(sp.y / scale / spacing) % 2 === 0)
-            .sort((a, b) => a.r - b.r).slice(1, MAX_LABELS + 1)
-            .map((sp) => ({ ...sp, kn: Math.round(sp.kn * 10) / 10, to: Math.round(sp.to) }));
-        setLabels((prev) => (prev.length === next.length && prev.every((l, i) => l.key === next[i].key && l.kn === next[i].kn && l.to === next[i].to) ? prev : next));
+        nodes.forEach(({ e: ge, n: gn }) => {
+            const x = (ge - refE) * scale;
+            const y = (gn - refN) * scale;
+            // None on the boat itself
+            if (Math.hypot(ge - refE, gn - refN) < 15) return;
+            if (!(depthAt(geometry, x, y) > MIN_ARROW_DEPTH)) return;
+            const f = sampleWind(field, ge, gn, hour);
+            const later = sampleWind(field, ge, gn, hour + 1);
+            const speed = Math.hypot(f.u, f.v);
+            const t = Math.min(1, speed / top);
+            const [cr, cg, cb] = colorAt(mapName, 0.28 + 0.72 * t);
+            items.push({ key: `${ge},${gn}`, x, y, z: 0.3, u: f.u, v: f.v, speed,
+                trend: Math.hypot(later.u, later.v) - speed, color: [cr / 255, cg / 255, cb / 255],
+                len: ARROW_LENGTH * (0.4 + 0.6 * t) });
+        });
+        setMarkers(items);
     });
 
     if (!field) return null;
-    const cell = arrows.spacing * scale;
     return (
         <>
             <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} geometry={geometry} material={material} renderOrder={2} />
             {/* Same frame as the mesh: x east, y north, z up */}
             <group rotation={[-Math.PI / 2, 0, 0]}>
-                <FlowArrows items={arrows.items} width={cell * 0.075} travel={cell * 0.5} pace={cell * 0.4} fadeNear={cell * 0.8} />
-                {labels.map((l) => {
-                    const [r, g, b] = colorAt(mapName, 0.28 + 0.72 * l.t);
-                    return (
-                        <Html key={l.key} position={[l.x, l.y, 0.5]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}>
-                            <div className="flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-caption font-semibold tabular-nums text-white shadow"
-                                style={{ background: `rgba(${Math.round(r * 0.75)},${Math.round(g * 0.75)},${Math.round(b * 0.75)},0.9)` }}>
-                                {/* Heading-up view: the arrow points where the current goes on screen */}
-                                <span style={{ display: 'inline-block', transform: `rotate(${l.to - heading * 180 / Math.PI}deg)` }}>↑</span>
-                                {l.kn.toFixed(1)} kn
-                            </div>
-                        </Html>
-                    );
-                })}
+                <FlowMarkers items={markers} width={ARROW_WIDTH} screen={1} />
             </group>
         </>
     );

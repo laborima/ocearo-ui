@@ -773,7 +773,14 @@
     "sailDepth": "Bugt",
     "wind": "Vind",
     "windApparent": "Tilsyneladende vind",
-    "gust": "vindstød {{value}}"
+    "gust": "vindstød {{value}}",
+    "speed": "Fart",
+    "best": "maks. {{value}}",
+    "switchTo": "Vis {{name}}",
+    "panel_depth": "Dybde",
+    "panel_wind": "Vind",
+    "panel_speed": "Fart",
+    "panel_tide": "Tidevand"
   },
   "laylines": {
     "tack": "Stagvending",
@@ -866,6 +873,8 @@
   },
   "meteo": {
     "forecast": "Prognose",
+    "slack": "Strømskifte",
+    "calm": "Stille",
     "now": "Nu"
   },
   "manual": {

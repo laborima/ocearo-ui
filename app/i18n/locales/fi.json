@@ -773,7 +773,14 @@
     "sailDepth": "Pussi",
     "wind": "Tuuli",
     "windApparent": "Näennäinen tuuli",
-    "gust": "puuskat {{value}}"
+    "gust": "puuskat {{value}}",
+    "speed": "Nopeus",
+    "best": "enint. {{value}}",
+    "switchTo": "Näytä {{name}}",
+    "panel_depth": "Syvyys",
+    "panel_wind": "Tuuli",
+    "panel_speed": "Nopeus",
+    "panel_tide": "Vuorovesi"
   },
   "laylines": {
     "tack": "Vastakäännös",
@@ -866,6 +873,8 @@
   },
   "meteo": {
     "forecast": "Ennuste",
+    "slack": "Virtauksen käänne",
+    "calm": "Tyyni",
     "now": "Nyt"
   },
   "manual": {

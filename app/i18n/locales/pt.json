@@ -773,7 +773,14 @@
     "sailDepth": "Bolsa",
     "wind": "Vento",
     "windApparent": "Vento aparente",
-    "gust": "rajadas {{value}}"
+    "gust": "rajadas {{value}}",
+    "speed": "Velocidade",
+    "best": "máx. {{value}}",
+    "switchTo": "Mostrar {{name}}",
+    "panel_depth": "Profundidade",
+    "panel_wind": "Vento",
+    "panel_speed": "Velocidade",
+    "panel_tide": "Maré"
   },
   "laylines": {
     "tack": "Virada por d'avante",
@@ -866,6 +873,8 @@
   },
   "meteo": {
     "forecast": "Previsão",
+    "slack": "Estofo",
+    "calm": "Calmaria",
     "now": "Agora"
   },
   "manual": {

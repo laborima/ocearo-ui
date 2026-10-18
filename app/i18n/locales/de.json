@@ -773,7 +773,14 @@
     "sailDepth": "Profiltiefe",
     "wind": "Wind",
     "windApparent": "Scheinbarer Wind",
-    "gust": "Böen {{value}}"
+    "gust": "Böen {{value}}",
+    "speed": "Fahrt",
+    "best": "max. {{value}}",
+    "switchTo": "{{name}} anzeigen",
+    "panel_depth": "Tiefe",
+    "panel_wind": "Wind",
+    "panel_speed": "Fahrt",
+    "panel_tide": "Gezeit"
   },
   "laylines": {
     "tack": "Wende",
@@ -866,6 +873,8 @@
   },
   "meteo": {
     "forecast": "Vorhersage",
+    "slack": "Stauwasser",
+    "calm": "Flaute",
     "now": "Jetzt"
   },
   "manual": {

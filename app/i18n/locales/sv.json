@@ -773,7 +773,14 @@
     "sailDepth": "Buk",
     "wind": "Vind",
     "windApparent": "Skenbar vind",
-    "gust": "byar {{value}}"
+    "gust": "byar {{value}}",
+    "speed": "Fart",
+    "best": "max {{value}}",
+    "switchTo": "Visa {{name}}",
+    "panel_depth": "Djup",
+    "panel_wind": "Vind",
+    "panel_speed": "Fart",
+    "panel_tide": "Tidvatten"
   },
   "laylines": {
     "tack": "Slag",
@@ -866,6 +873,8 @@
   },
   "meteo": {
     "forecast": "Prognos",
+    "slack": "Strömvändning",
+    "calm": "Stiltje",
     "now": "Nu"
   },
   "manual": {

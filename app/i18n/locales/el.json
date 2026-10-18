@@ -773,7 +773,14 @@
     "sailDepth": "Κοιλιά",
     "wind": "Άνεμος",
     "windApparent": "Φαινόμενος άνεμος",
-    "gust": "ριπές {{value}}"
+    "gust": "ριπές {{value}}",
+    "speed": "Ταχύτητα",
+    "best": "μέγ. {{value}}",
+    "switchTo": "Εμφάνιση: {{name}}",
+    "panel_depth": "Βάθος",
+    "panel_wind": "Άνεμος",
+    "panel_speed": "Ταχύτητα",
+    "panel_tide": "Παλίρροια"
   },
   "laylines": {
     "tack": "Αναστροφή",
@@ -866,6 +873,8 @@
   },
   "meteo": {
     "forecast": "Πρόγνωση",
+    "slack": "Νεκρό ρεύμα",
+    "calm": "Άπνοια",
     "now": "Τώρα"
   },
   "manual": {

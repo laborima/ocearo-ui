@@ -47,7 +47,9 @@ const WindPanel = ({ compact = false }) => {
         return () => clearInterval(timer);
     }, []);
 
-    if (!Number.isFinite(speed)) return null;
+    if (!Number.isFinite(speed)) {
+        return compact ? null : <GlassPanel title={t('hud.wind')} className="w-[17rem]"><span className="text-value font-semibold text-hud-muted">--</span></GlassPanel>;
+    }
 
     const unit = getSpeedUnitLabel();
     const value = convertSpeedUnit(speed);

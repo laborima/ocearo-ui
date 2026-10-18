@@ -773,7 +773,14 @@
     "sailDepth": "Wybrzuszenie",
     "wind": "Wiatr",
     "windApparent": "Wiatr pozorny",
-    "gust": "porywy {{value}}"
+    "gust": "porywy {{value}}",
+    "speed": "Prędkość",
+    "best": "maks. {{value}}",
+    "switchTo": "Pokaż: {{name}}",
+    "panel_depth": "Głębokość",
+    "panel_wind": "Wiatr",
+    "panel_speed": "Prędkość",
+    "panel_tide": "Pływ"
   },
   "laylines": {
     "tack": "Zwrot przez sztag",
@@ -866,6 +873,8 @@
   },
   "meteo": {
     "forecast": "Prognoza",
+    "slack": "Martwa woda",
+    "calm": "Cisza",
     "now": "Teraz"
   },
   "manual": {
