@@ -72,9 +72,11 @@ class ConfigService {
           const merged = { ...this.defaultConfig, ...JSON.parse(storedConfig) };
           // The cruiser-racer replaced the generic hull as the default boat:
           // move configs that only hold an old default, never an explicit choice
-          if ((!merged.boatChosen && merged.selectedBoat === 'Default') || merged.selectedBoat === 'RM1080') {
+          if ((!merged.boatChosen && merged.selectedBoat === 'Default') || merged.selectedBoat === 'RM1080' || merged.selectedBoat === 'Optimist') {
               merged.selectedBoat = 'Racer 10.8';
           }
+          // The generic hull is now called "Sailboat" (the old low-poly "Sailboat" is gone)
+          if (merged.selectedBoat === 'Default') merged.selectedBoat = 'Sailboat';
           return merged;
         } catch (error) {
           console.error('Failed to parse stored configuration:', error);

@@ -1,16 +1,6 @@
 {
   "boats": [
     {
-      "name": "Default",
-      "modelPath": "default",
-      "capabilities": [
-        "navigation",
-        "rudder",
-        "sail",
-        "color"
-      ]
-    },
-    {
       "name": "Racer 10.8",
       "modelPath": "racer",
       "capabilities": [
@@ -30,10 +20,12 @@
     },
     {
       "name": "Sailboat",
-      "modelPath": "sailboat",
+      "modelPath": "default",
       "capabilities": [
         "navigation",
-        "ais"
+        "rudder",
+        "sail",
+        "color"
       ]
     },
     {

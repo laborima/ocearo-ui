@@ -170,6 +170,9 @@ const loadSeabed = async (lat, lon) => {
 };
 
 /** Height (m) at a lat/lon, bilinear in the pixel grid; NaN where not covered */
+// A new water level is used for the mesh once it has held this long (ms)
+const LEVEL_SETTLE_MS = 20000;
+
 const heightAt = (data, lat, lon) => {
     const { heights, size, nw, se, z } = data;
     const fx = (lon - nw.lon) / (se.lon - nw.lon) * (size - 1);
@@ -463,8 +466,21 @@ const Seabed3D = ({ y = -0.1 }) => {
         tideNow: v['environment.tide.heightNow'], tideHigh: v['environment.tide.heightHigh'], tideLow: v['environment.tide.heightLow'],
         measured, surveyHere: bottomHere.survey, globalHere: bottomHere.global,
     });
-    const levelCd = level.cd;
-    const levelMsl = level.msl;
+    // The sounder's level (rounded to 0.5 m) flips between two steps with every
+    // wave near a boundary: each flip rebuilt the seabed (some 100 000 height
+    // look-ups). A new level is used for the mesh once it has held 20 s; the
+    // first one at once.
+    const [shownLevel, setShownLevel] = useState({ cd: NaN, msl: NaN });
+    useEffect(() => {
+        const same = (a, b) => (Number.isFinite(a) ? Math.abs(a - b) < 1e-6 : !Number.isFinite(b));
+        if (same(shownLevel.cd, level.cd) && same(shownLevel.msl, level.msl)) return undefined;
+        const next = { cd: level.cd, msl: level.msl };
+        const first = !Number.isFinite(shownLevel.cd) && !Number.isFinite(shownLevel.msl);
+        const timer = setTimeout(() => setShownLevel(next), first ? 0 : LEVEL_SETTLE_MS);
+        return () => clearTimeout(timer);
+    }, [level.cd, level.msl, shownLevel]);
+    const levelCd = Number.isFinite(shownLevel.cd) || !Number.isFinite(level.cd) ? shownLevel.cd : level.cd;
+    const levelMsl = Number.isFinite(shownLevel.msl) || !Number.isFinite(level.msl) ? shownLevel.msl : level.msl;
 
     /** Elevation (m) now, i.e. above the water surface (tide included), and whether it dries */
     const chartSample = useMemo(() => {

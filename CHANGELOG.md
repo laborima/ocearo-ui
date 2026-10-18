@@ -2,7 +2,14 @@
 
 ### Changed
 
+- **Boats: the Racer 10.8 first, "Default" renamed "Sailboat".** The old low-poly sailboat is gone; a boat saved as "Default" becomes "Sailboat", the Optimist goes back to the Racer.
+
 - **Windsurf and Wing foil boats: the author riding them.** The Optimist and the old static windsurf are replaced by two animated models with their rider (the author's 3D avatar): a JP Magic Ride 119 with a Duotone E_Pace 6.2, and a wing foil board on its foil with a 5 m² wing. The rider moves to the windward rail on the other tack, rides faster with the speed, and the foil board lifts off from about 7 knots. Drawn 2.2 times larger than life so they read in the compass ring; under 1 MB each (Draco). A boat set to Optimist goes back to the default one.
+
+### Fixed
+
+- **Blurry 3D on phones in automatic quality.** Phone GPUs (Mali, Adreno, PowerVR) were taken for a Raspberry Pi: 75 % resolution, no anti-aliasing, 30 fps. The reduced profile is now for the Pi's own GPU and software rendering only.
+- **Depth view busy rebuilding the seabed.** Without tide data the sounder sets the water level, and each reading near a 0.5 m step rebuilt the whole seabed mesh; a new level is now used once it has held 20 s.
 
 ## [2.1.2] - 2026-10-11
 

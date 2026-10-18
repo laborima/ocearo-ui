@@ -28,7 +28,7 @@ const getModelPath = (modelPath = 'default') =>
     `${ASSET_PREFIX}/boats/${modelPath}/assets/scene-transformed.glb`;
 
 // Without a choice in settings: the procedural cruiser-racer (the generic
-// "Default" hull stays selectable)
+// generic hull stays selectable as "Sailboat")
 const defaultBoat = {
     name: "Racer 10.8",
     modelPath: "racer",
@@ -100,7 +100,7 @@ const GltfBoatMeshes = ({ modelPath, selectedBoat, materialProperties, rudderRef
     // Memoize boat meshes based on selected boat
     const BoatMeshes = useMemo(() => {
         const meshComponents = {
-            Default: () => (
+            Sailboat: () => (
                 <>
                     <mesh geometry={nodes.baba_metal_0.geometry} material={materials.metal} position={[0.24, 0.895, -5.546]} rotation={[-Math.PI / 2, 0, 1.968]} scale={0.027} />
                     <mesh geometry={nodes.camadadirek_fiberglass_0.geometry} material={materials.fiberglass} position={[0, 5.267, -3.711]} rotation={[2.054, 0, Math.PI]} scale={[-0.042, 0.042, 4.707]} />
@@ -141,12 +141,9 @@ const GltfBoatMeshes = ({ modelPath, selectedBoat, materialProperties, rudderRef
             Ship: () => (
                 <mesh geometry={nodes.Object_10.geometry} material={materials.material_0} position={[0, -0.55, 0]} rotation={[-1.558, 0.002, 3.139]} scale={0.004} />
             ),
-            Sailboat: () => (
-                <mesh geometry={nodes.sailboat.geometry} material={materials.texture} position={[0, -1.5, 0]} rotation={[-Math.PI, 0.011, -Math.PI]} scale={0.219} />
-            ),
         };
 
-        return meshComponents[selectedBoat.name] || meshComponents.Default;
+        return meshComponents[selectedBoat.name] || meshComponents.Sailboat;
     }, [selectedBoat.name, nodes, materials]);
 
     return <BoatMeshes />;
