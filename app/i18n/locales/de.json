@@ -62,15 +62,16 @@
     "polarView": "Polaransicht",
     "laylines3D": "Laylines 3D",
     "aisRadar": "AIS-Radar",
-    "oceanBlack": "Schwarz (kein Ozean)",
-    "oceanWater": "Ozean (3D-Wasser)",
-    "oceanChart": "Karte (freeboard-sk)",
-    "oceanMeteo": "Wetter (Windy)",
+    "oceanBlack": "Raster (ohne Meer)",
+    "oceanWater": "Meer",
     "themeAuto": "Design: automatisch ({{theme}})",
     "theme_day": "Tagdesign",
     "theme_dark": "Dunkles Design",
     "theme_night": "Nachtdesign (rot)",
-    "oceanDepth": "Bathymetrie (Meeresbodenrelief)"
+    "oceanDepth": "3D-Karte (Meeresgrund und Karte)",
+    "layers": "Ebenen",
+    "layerWind": "Wind",
+    "layerSeamarks": "Tonnen und Baken"
   },
   "indicators": {
     "depth": "Tiefe",

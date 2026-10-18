@@ -64,7 +64,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel, selection = null }) => {
                 fov={60}
                 near={5}
                 // Meteo: the camera pulls far out over the wind field
-                far={states.oceanMode === 'meteo' ? 60000 : 6000}
+                far={states.showWind ? 60000 : 6000}
                 position={HOME}
             />
             <DepthRange />
@@ -89,7 +89,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel, selection = null }) => {
                     plane (-0.3), so lift the hull by the same amount in map
                     modes or it floats visibly below the chart surface */}
                 <SailBoat3D
-                    position={[0, (states.oceanMode === 'chart' || states.oceanMode === 'depth' || states.oceanMode === 'meteo') ? 0.2 : 0, 0]}
+                    position={[0, states.oceanMode === 'depth' ? 0.2 : 0, 0]}
                     scale={[0.7, 0.7, 0.7]} 
                     ref={sailBoatRef} 
                     showSail={true} 
@@ -103,32 +103,31 @@ const ThreeDBoatView = ({ onUpdateInfoPanel, selection = null }) => {
                     <GhostBoat scale={0.7} />
                 )}
 
-                {/* Ocean / Map plane — chart & meteo keep the ocean sky/water,
-                    the map plane floats just above the water surface */}
-                {/* The mirrored water renders the scene twice: flat water on a Pi */}
-                {/* Water: FSD faceted sea and gradient sky; chart / meteo keep the flat lite water */}
+                {/* Base: the sea, the plain grid, or the 3D chart */}
+                {/* Water: FSD faceted sea and gradient sky */}
                 {states.oceanMode === 'water' && <FsdOcean />}
-                {(states.oceanMode === 'chart' || states.oceanMode === 'depth' || states.oceanMode === 'meteo') && (
+                {/* 3D chart: seabed relief coloured by depth, the chart laid over it in transparency */}
+                {states.oceanMode === 'depth' && (
                     <>
                         <SkyDome />
                         <Ocean3D lite sky={false} horizon={scene.skyHorizon} liteColor={themeId === 'day' ? 0xb4cbd1 : scene.sea}
-                            fogDensity={states.oceanMode === 'meteo' ? 0.00003 : undefined} water={states.oceanMode !== 'depth'} />
+                            fogDensity={states.showWind ? 0.00003 : undefined} water={false} />
+                        <Seabed3D />
+                        <MapPlane3D mode="chart" opacity={0.2} />
                     </>
                 )}
-                {/* Bathymetry: seabed relief coloured by depth, the chart laid over it in transparency */}
-                {states.oceanMode === 'depth' && <Seabed3D />}
-                {states.oceanMode === 'depth' && <MapPlane3D mode="chart" opacity={0.2} />}
-                {/* Windy-style forecast wind: colours and streaks over the chart */}
-                {states.oceanMode === 'meteo' && <WindLayer3D />}
-                {states.oceanMode === 'chart' && <MapPlane3D mode="chart" />}
-                {states.oceanMode === 'meteo' && <MapPlane3D mode="meteo" />}
+                {/* Wind layer, Windy style: over the sea only the streaks, above the waves */}
+                {states.showWind && (
+                    states.oceanMode === 'water' ? <WindLayer3D sheet={false} y={0.8} />
+                        : <WindLayer3D y={states.oceanMode === 'black' ? -0.25 : 0.05} />
+                )}
 
                 {/* FSD view: neutral ground with a sea-anchored grid */}
                 {states.oceanMode === 'black' && <SeaGround />}
 
                 {/* Planned route to the next waypoint */}
                 <RouteRibbon />
-                <WaypointPicker y={(states.oceanMode === 'chart' || states.oceanMode === 'depth' || states.oceanMode === 'meteo') ? -0.1 : -0.3} />
+                <WaypointPicker y={states.oceanMode === 'depth' ? -0.1 : -0.3} />
 
                 {/* Wake coloured by the share of the polar reached */}
                 <PerformanceWake />
@@ -139,16 +138,14 @@ const ThreeDBoatView = ({ onUpdateInfoPanel, selection = null }) => {
                 {/* Suggested course change (avoidance or VMG), advisory only */}
                 <AdvicePath3D />
 
-                {states.showPolar && states.oceanMode === 'black' && <PolarProjection /> }
+                {states.showPolar && <PolarProjection />}
 
                 {/* AIS Boats */}
                 {/* Person overboard: drop point, drift and estimated position */}
                 <MobMarker3D />
 
-                {/* Buoys and beacons (OpenSeaMap), on the water; not on the meteo map */}
-                {states.oceanMode !== 'meteo' && (
-                    <Seamarks3D waterLevel={states.oceanMode === 'chart' ? -0.1 : -0.3} />
-                )}
+                {/* Buoys and beacons (OpenSeaMap), on the water */}
+                {states.showSeamarks && <Seamarks3D waterLevel={-0.3} />}
 
                 {/* Live AIS makes no sense around a replayed voyage */}
                 {states.ais && !replaying && <AISView onUpdateInfoPanel={onUpdateInfoPanel} selectedMmsi={selection?.kind === 'ais' ? selection.mmsi : null} />}

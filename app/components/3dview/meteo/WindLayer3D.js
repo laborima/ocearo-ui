@@ -39,12 +39,13 @@ const offsetM = (origin, p) => ({
 });
 
 /**
- * Windy-style wind layer for the meteo mode: the forecast wind speed painted
- * with Windy's colour scale on a translucent sheet over the chart, and
- * streaks drifting with the wind. Pull the camera out to see the winds
- * along the route; the forecast hour comes from the meteo bar.
+ * Windy-style wind layer (the "Wind" layer, over any base mode): the forecast
+ * wind speed painted with Windy's colour scale on a translucent sheet, and
+ * streaks drifting with the wind. Pull the camera out to see the winds along
+ * the route; the forecast hour comes from the meteo bar. `sheet`: false over
+ * the sea, where only the streaks are drawn, above the waves.
  */
-const WindLayer3D = ({ y = 0.05 }) => {
+const WindLayer3D = ({ y = 0.05, sheet = true }) => {
     const v = useSignalKPaths(PATHS);
     const position = v['navigation.position'];
     const { heading } = useOwnTrack();
@@ -132,7 +133,7 @@ const WindLayer3D = ({ y = 0.05 }) => {
         if (!field) return;
         if (sheetRef.current) {
             const distM = camera.position.length() / scale;
-            sheetRef.current.opacity = THREE.MathUtils.clamp(0.3 + (distM - 300) / 3000 * 0.3, 0.3, 0.6);
+            if (sheetRef.current) sheetRef.current.opacity = THREE.MathUtils.clamp(0.3 + (distM - 300) / 3000 * 0.3, 0.3, 0.6);
         }
         const dt = Math.min(delta, 0.1);
         // Streaks cover what the camera sees: a few times its distance
@@ -231,10 +232,12 @@ const WindLayer3D = ({ y = 0.05 }) => {
         // North-up layer turned into the boat frame; local x east, y north
         <group rotation={[0, heading, 0]} position={[0, y, 0]}>
             <group ref={layerRef} rotation={[-Math.PI / 2, 0, 0]}>
-                <mesh position={[-be * scale, -bn * scale, 0]} renderOrder={1}>
-                    <planeGeometry args={[size, size]} />
-                    <meshBasicMaterial ref={sheetRef} map={texture} transparent opacity={0.6} depthWrite={false} toneMapped={false} />
-                </mesh>
+                {sheet && (
+                    <mesh position={[-be * scale, -bn * scale, 0]} renderOrder={1}>
+                        <planeGeometry args={[size, size]} />
+                        <meshBasicMaterial ref={sheetRef} map={texture} transparent opacity={0.6} depthWrite={false} toneMapped={false} />
+                    </mesh>
+                )}
                 <primitive object={particles.object} />
                 {labels.map((l) => {
                     const [r, g, b] = windColor(l.kn / KNOTS);

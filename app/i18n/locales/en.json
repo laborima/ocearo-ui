@@ -62,15 +62,16 @@
     "polarView": "Polar View",
     "laylines3D": "Laylines 3D",
     "aisRadar": "AIS Radar",
-    "oceanBlack": "Black (no ocean)",
-    "oceanWater": "Ocean (3D water)",
-    "oceanChart": "Chart and buoyage",
-    "oceanMeteo": "Meteo (wind)",
+    "oceanBlack": "Grid (no sea)",
+    "oceanWater": "Sea",
     "themeAuto": "Theme: automatic ({{theme}})",
     "theme_day": "Day theme",
     "theme_dark": "Dark theme",
     "theme_night": "Night theme (red)",
-    "oceanDepth": "Bathymetry (seabed relief)"
+    "oceanDepth": "3D chart (seabed and chart)",
+    "layers": "Layers",
+    "layerWind": "Wind",
+    "layerSeamarks": "Buoys and beacons"
   },
   "indicators": {
     "depth": "Depth",

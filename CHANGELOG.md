@@ -2,12 +2,20 @@
 
 ### Changed
 
+- **Three bases and layers in the 3D view.** One button cycles the base: the sea, the plain grid, or the 3D chart (seabed relief with the chart over it); the flat chart and the meteo map are gone (a saved meteo view opens as the 3D chart with the wind). A layers button adds, on any base: other vessels (AIS), wind (Windy-style; streaks only over the sea), laylines, polar, buoys and beacons.
+- **Phones and split view: the vertical depth and tide gauges again**; the depth, wind and tide cards are for full screen when there is room.
+- **Opaque menus** (APPS, layers): they read on a phone and on a Pi.
+- **Windsurf and wing foil let out their rig for the wind**, like the racer's boom, the hands staying on the wishbone or the handles.
+- **Sharper 3D on phones**: up to 2.5 pixels per CSS pixel instead of 1.5.
+
 - **Boats: the Racer 10.8 first, "Default" renamed "Sailboat".** The old low-poly sailboat is gone; a boat saved as "Default" becomes "Sailboat", the Optimist goes back to the Racer.
 
 - **Windsurf and Wing foil boats: the author riding them.** The Optimist and the old static windsurf are replaced by two animated models with their rider (the author's 3D avatar): a JP Magic Ride 119 with a Duotone E_Pace 6.2, and a wing foil board on its foil with a 5 m² wing. The rider moves to the windward rail on the other tack, rides faster with the speed, and the foil board lifts off from about 7 knots. Drawn 2.2 times larger than life so they read in the compass ring; under 1 MB each (Draco). A boat set to Optimist goes back to the default one.
 
 ### Fixed
 
+- **True wind from the apparent wind** when the boat publishes none (many instruments, and the Signal K demo server): the polar, the sail plan and the laylines took 0 kn from dead ahead.
+- **Demo mode no longer rewrites the server's data**: the sample values only fill in what the server does not send (the wind angle spun every 5 s over the demo server's own wind).
 - **Blurry 3D on phones in automatic quality.** Phone GPUs (Mali, Adreno, PowerVR) were taken for a Raspberry Pi: 75 % resolution, no anti-aliasing, 30 fps. The reduced profile is now for the Pi's own GPU and software rendering only.
 - **Depth view busy rebuilding the seabed.** Without tide data the sounder sets the water level, and each reading near a 0.5 m step rebuilt the whole seabed mesh; a new level is now used once it has held 20 s.
 

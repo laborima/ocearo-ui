@@ -41,29 +41,64 @@ const INITIAL_STATES = {
     // advice off, but the 3D view stays (the docking assistant is the P button)
     moored: false,
     mob: false,
+    // Base of the scene: 'water' (the sea), 'black' (plain grid), 'depth'
+    // (3D chart: seabed relief with the chart over it)
     oceanMode: 'black',
+    // Layers, on any base: other vessels, polar, laylines, wind, buoys
     ais: false,
     showPolar: true,
     showLaylines3D: false,
+    showWind: false,
+    showSeamarks: true,
     racing: false
 };
 
 // Display preferences restored across restarts. Transient/safety modes
 // (autopilot, anchor watch, parking, MOB, racing) always start from defaults.
-const PERSISTED_STATE_KEYS = ['oceanMode', 'ais', 'showPolar', 'showLaylines3D'];
+const PERSISTED_STATE_KEYS = ['oceanMode', 'ais', 'showPolar', 'showLaylines3D', 'showWind', 'showSeamarks'];
+
+// True wind from the apparent wind and the boat's speed and heading, when the
+// server publishes none (TRUE_WIND_QUIET_MS without one)
+const TRUE_WIND_PATHS = ['environment.wind.speedTrue', 'environment.wind.angleTrueWater', 'environment.wind.directionTrue'];
+const TRUE_WIND_INPUTS = ['environment.wind.angleApparent', 'environment.wind.speedApparent', 'navigation.speedThroughWater',
+    'navigation.speedOverGround', 'navigation.headingTrue', 'navigation.courseOverGroundTrue'];
+const TRUE_WIND_QUIET_MS = 10000;
+export const trueWindFromApparent = (data) => {
+    const awa = data['environment.wind.angleApparent'];
+    const aws = data['environment.wind.speedApparent'];
+    if (!Number.isFinite(awa) || !Number.isFinite(aws)) return null;
+    // Through the water when the log gives it, else over the ground
+    const stw = data['navigation.speedThroughWater'];
+    const v = Number.isFinite(stw) ? stw : (data['navigation.speedOverGround'] ?? 0);
+    const u = aws * Math.cos(awa) - (Number.isFinite(v) ? v : 0);
+    const w = aws * Math.sin(awa);
+    const tws = Math.hypot(u, w);
+    const twa = tws > 0.05 ? Math.atan2(w, u) : awa;
+    const out = { 'environment.wind.speedTrue': tws, 'environment.wind.angleTrueWater': twa };
+    const heading = data['navigation.headingTrue'] ?? data['navigation.courseOverGroundTrue'];
+    if (Number.isFinite(heading)) out['environment.wind.directionTrue'] = ((heading + twa) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+    return out;
+};
+
+// The base modes, in the order the button cycles through them
+export const OCEAN_MODES = ['water', 'black', 'depth'];
 
 const loadPersistedStates = () => {
     const saved = configService.get('uiStates');
     if (!saved || typeof saved !== 'object') return {};
-    return PERSISTED_STATE_KEYS.reduce((acc, key) => {
+    const states = PERSISTED_STATE_KEYS.reduce((acc, key) => {
         if (key in saved) acc[key] = saved[key];
         return acc;
     }, {});
+    // The flat chart and the meteo map became the 3D chart (+ the wind layer)
+    if (states.oceanMode === 'chart') states.oceanMode = 'depth';
+    if (states.oceanMode === 'meteo') { states.oceanMode = 'depth'; states.showWind = true; }
+    if (!OCEAN_MODES.includes(states.oceanMode)) delete states.oceanMode;
+    return states;
 };
 
 
 
-const OCEAN_MODES = ['black', 'water', 'chart', 'depth', 'meteo'];
 
 export const OcearoContextProvider = ({ children }) => {
     // themeMode is the user's choice ('auto' | 'day' | 'dark' | 'night');
@@ -166,23 +201,38 @@ export const OcearoContextProvider = ({ children }) => {
      * This prevents unnecessary re-renders when demo/sample data is re-pushed
      * with identical values.
      */
+    // True wind computed here when the boat only publishes the apparent wind
+    // (many instruments, and the Signal K demo server): without it the polar,
+    // the sail plan and the laylines took 0 kn of wind from dead ahead
+    const serverTrueWindAt = useRef(0);
     const updateSignalKData = useCallback((updates) => {
         const current = signalkDataRef.current;
-        let hasChanges = false;
+        if (TRUE_WIND_PATHS.some((p) => Number.isFinite(updates[p]))) serverTrueWindAt.current = Date.now();
 
-        for (const [path, value] of Object.entries(updates)) {
-            const prev = current[path];
-            if (prev === value) continue;
-            if (typeof prev === 'object' && typeof value === 'object' &&
-                prev !== null && value !== null &&
-                JSON.stringify(prev) === JSON.stringify(value)) {
-                continue;
+        // Store the values that changed and tell their subscribers
+        const apply = (values) => {
+            let changed = false;
+            for (const [path, value] of Object.entries(values)) {
+                const prev = current[path];
+                if (prev === value) continue;
+                if (typeof prev === 'object' && typeof value === 'object' &&
+                    prev !== null && value !== null &&
+                    JSON.stringify(prev) === JSON.stringify(value)) {
+                    continue;
+                }
+                current[path] = value;
+                changed = true;
+                notifySubscribers(path, value);
             }
-            current[path] = value;
-            hasChanges = true;
-            notifySubscribers(path, value);
-        }
+            return changed;
+        };
 
+        const hasChanges = apply(updates);
+        if (hasChanges && Date.now() - serverTrueWindAt.current > TRUE_WIND_QUIET_MS
+            && TRUE_WIND_INPUTS.some((p) => p in updates)) {
+            const trueWind = trueWindFromApparent(current);
+            if (trueWind) apply(trueWind);
+        }
         if (hasChanges) {
             signalkDataRef.current = current;
         }
@@ -490,10 +540,22 @@ export const OcearoContextProvider = ({ children }) => {
             };
             
             // Setup debug data interval function - extracted to be reusable
-            const setupDebugDataInterval = () => {
+            // Paths the server actually sends: the sample data (demo mode) only
+            // fills in the others. Over the demo server it used to rewrite the
+            // wind angle every 5 s, spinning the sails and the polar.
+            const livePaths = new Set();
+            const notLive = (values) => Object.fromEntries(Object.entries(values).filter(([path]) => !livePaths.has(path)));
+            const liveWind = () => [...livePaths].some((path) => path.startsWith('environment.wind.'));
+
+            const setupDebugDataInterval = (live = false) => {
                 // Clear any existing interval
                 if (sampleDataIntervalRef.current) {
                     clearInterval(sampleDataIntervalRef.current);
+                }
+                if (live) {
+                    // Give the server a moment to show what it sends
+                    sampleDataIntervalRef.current = setTimeout(() => setupDebugDataInterval(false), 3000);
+                    return;
                 }
 
                 // Track angles for smooth incremental changes
@@ -515,11 +577,12 @@ export const OcearoContextProvider = ({ children }) => {
                 };
 
                 // Only push sample wind data if wind override is not active
-                if (!configService.get('debugWindOverride')) {
+                // and the server has no wind of its own
+                if (!configService.get('debugWindOverride') && !liveWind()) {
                     Object.assign(initialData, SAMPLE_DATA.wind);
                 }
 
-                updateSignalKData(initialData);
+                updateSignalKData(notLive(initialData));
 
                 // Create interval that only updates values that actually change
                 sampleDataIntervalRef.current = setInterval(() => {
@@ -534,14 +597,16 @@ export const OcearoContextProvider = ({ children }) => {
                         'steering.rudderAngle': MathUtils.degToRad(currentRudderAngle),
                     };
 
-                    // Skip wind angle updates when wind override is active
-                    if (!configService.get('debugWindOverride')) {
+                    // Skip wind angle updates when wind override is active, or
+                    // when the server sends its own wind
+                    if (!configService.get('debugWindOverride') && !liveWind()) {
                         currentWindAngle = (currentWindAngle + 5) % 360;
                         updates['environment.wind.angleTrueWater'] = MathUtils.degToRad(currentWindAngle);
                         updates['environment.wind.angleApparent'] = MathUtils.degToRad(currentWindAngle);
                     }
 
-                    updateSignalKData(updates);
+                    const fresh = notLive(updates);
+                    if (Object.keys(fresh).length) updateSignalKData(fresh);
                 }, SAMPLE_DATA_INTERVAL);
             };
 
@@ -591,6 +656,7 @@ export const OcearoContextProvider = ({ children }) => {
                     if (isReplaying()) return;
                     // Old value replayed from the server's model: not live
                     if (!staleTracker.seen(value.path, update.timestamp, now)) return;
+                    livePaths.add(value.path);
                     updateSignalKData({
                         [value.path]: value.value,
                     });
@@ -626,7 +692,7 @@ export const OcearoContextProvider = ({ children }) => {
 
                 // Set up interval for sample data if debugMode is enabled
                 if (debugMode) {
-                    setupDebugDataInterval();
+                    setupDebugDataInterval(true);
                 }
             } catch (error) {
                 let errorMessage;

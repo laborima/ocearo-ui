@@ -62,15 +62,16 @@
     "polarView": "Vue polaire",
     "laylines3D": "Laylines 3D",
     "aisRadar": "Radar AIS",
-    "oceanBlack": "Noir (sans océan)",
-    "oceanWater": "Océan (eau 3D)",
-    "oceanChart": "Carte et balisage",
-    "oceanMeteo": "Météo (vent)",
+    "oceanBlack": "Grille (sans mer)",
+    "oceanWater": "Mer",
     "themeAuto": "Thème : automatique ({{theme}})",
     "theme_day": "Thème jour",
     "theme_dark": "Thème sombre",
     "theme_night": "Thème nuit (rouge)",
-    "oceanDepth": "Bathymétrie (relief du fond)"
+    "oceanDepth": "Carte 3D (fond et carte)",
+    "layers": "Couches",
+    "layerWind": "Vent",
+    "layerSeamarks": "Bouées et balises"
   },
   "indicators": {
     "depth": "Profondeur",
