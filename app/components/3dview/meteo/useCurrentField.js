@@ -83,19 +83,23 @@ export const useCurrentField = () => {
  * @param {number} o.radius - metres around the origin
  * @param {number} o.z - height of the arrows in the frame (scene units)
  * @param {(x:number, y:number) => boolean} [o.isWater] - where the frame knows the seabed
+ * @param {(x:number, y:number, z:number) => boolean} [o.onScreen] - whether a point of the frame is in view
  */
-export const currentMarkers = ({ field, hour, top, mapName, refE, refN, cx, cy, heightM, scale, radius, z, isWater = () => true }) => {
+export const currentMarkers = ({ field, hour, top, mapName, refE, refN, cx, cy, heightM, scale, radius, z, isWater = () => true, onScreen = () => true }) => {
     const step = Math.min(400, Math.max(25, Math.round(heightM * 0.9 / 5) * 5));
     // Fewer on a Pi
     const max = getRenderProfile().id === 'pi' ? 20 : 40;
-    const nodes = markerLattice({ cx, cy, radius, step, near: step * 3, originE: refE, originN: refN, max });
+    // The closest nodes to the camera are mostly behind it: keep the ones on
+    // screen first, then the closest of those
+    const nodes = markerLattice({ cx, cy, radius, step, near: step * 3, originE: refE, originN: refN, max: 400 });
     const items = [];
     nodes.forEach(({ e, n }) => {
+        if (items.length >= max) return;
         // None on the boat itself
         if (Math.hypot(e - refE, n - refN) < 15) return;
         const x = (e - refE) * scale;
         const y = (n - refN) * scale;
-        if (!isWater(x, y)) return;
+        if (!onScreen(x, y, z) || !isWater(x, y)) return;
         const f = sampleWind(field, e, n, hour);
         const speed = Math.hypot(f.u, f.v);
         if (speed < NO_DATA) return;

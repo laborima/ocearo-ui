@@ -166,20 +166,21 @@ const BottomNavigation = ({ setRightView, toggleLayout, toggleAppMenu }) => {
   return (
     <div className="flex items-center justify-between w-full h-full bg-leftPaneBg px-1 sm:px-6 overflow-x-auto overflow-y-hidden scrollbar-hide">
       {/* Left Section */}
-      <div className="flex items-center space-x-0.5 sm:space-x-6 flex-shrink-0 sm:flex-1 min-w-0">
+      <div className="flex items-center space-x-0.5 sm:space-x-3 xl:space-x-6 flex-shrink-0 sm:flex-1 min-w-0">
         {renderSection('left')}
         <MobButton />
         <div className="hidden sm:block h-8 w-[1px] bg-hud-muted opacity-20 mx-1 sm:mx-2" />
-        <div className="flex min-w-0"><BottomTemperatureWidget /></div>
+        {/* Clipped rather than spilt over the buttons in the middle (phone on its side) */}
+        <div className="flex min-w-0 overflow-hidden"><BottomTemperatureWidget /></div>
       </div>
 
       {/* Center Section */}
-      <div className="flex flex-shrink-0 items-center justify-center space-x-0.5 sm:space-x-8 px-1 sm:px-0">
+      <div className="flex flex-shrink-0 items-center justify-center space-x-0.5 sm:space-x-3 xl:space-x-8 px-1 sm:px-0">
         {renderSection('center')}
       </div>
 
       {/* Right Section */}
-      <div className="hidden sm:flex items-center justify-end space-x-0.5 sm:space-x-6 flex-shrink-0 sm:flex-1 min-w-0">
+      <div className="hidden sm:flex items-center justify-end space-x-0.5 sm:space-x-3 xl:space-x-6 flex-shrink-0 sm:flex-1 min-w-0 overflow-hidden">
         <BottomEnvironmentalWidget />
       </div>
     </div>

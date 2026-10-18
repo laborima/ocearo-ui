@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import configService from '../../settings/ConfigService';
 import useOwnTrack from '../fsd/useOwnTrack';
 import FlowMarkers from './FlowMarkers';
-import { sameMarkers } from './markerLattice';
+import { sameMarkers, onScreenTest } from './markerLattice';
 import { useCurrentField, currentMarkers, DEFAULT_CURRENT_MAP, CURRENT_ARROW_WIDTH } from './useCurrentField';
 
 const R = 6371000;
@@ -26,7 +26,7 @@ const CurrentMarkers3D = ({ y = 0 }) => {
     const [markers, setMarkers] = useState([]);
     const tick = useRef(1);
 
-    useFrame(({ camera }, delta) => {
+    useFrame(({ camera, gl }, delta) => {
         tick.current += delta;
         const layer = layerRef.current;
         if (tick.current < 1 || !field || !layer || !Number.isFinite(lat)) return;
@@ -38,6 +38,7 @@ const CurrentMarkers3D = ({ y = 0 }) => {
         const camLocal = layer.worldToLocal(cam.copy(camera.position));
         const next = currentMarkers({
             field, hour, top, mapName, refE, refN, scale, radius: 1500, z: 0.3,
+            onScreen: onScreenTest(layer, camera, gl.domElement),
             cx: refE + camLocal.x / scale, cy: refN + camLocal.y / scale, heightM: Math.max(5, camLocal.z / scale),
         });
         setMarkers((prev) => (sameMarkers(prev, next) ? prev : next));

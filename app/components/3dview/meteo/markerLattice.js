@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 /**
  * Ground-anchored points for flow markers, about evenly spread on screen: a
  * lattice of `step` metres near the camera that keeps every 2nd, 4th, 8th…
@@ -42,3 +44,27 @@ export const sameMarkers = (a, b) => a.length === b.length && a.every((m, i) => 
     return m.key === o.key && Math.abs(m.speed - o.speed) < 0.005 && Math.sign(Math.round(m.trend * 20)) === Math.sign(Math.round(o.trend * 20))
         && Math.abs(m.len - o.len) < 1e-3 && m.x === o.x && m.y === o.y;
 });
+
+/**
+ * Test for points of a layer's frame: in front of the camera, inside the view
+ * away from its edges (margin, in normalised screen units), and clear of the
+ * HUD (anything marked data-hud-solid: values, bars, cards), `pad` pixels
+ * around it: an arrow drawn over the speed or the depth curve hid them.
+ */
+export const onScreenTest = (object, camera, canvas, margin = 0.9, pad = 60) => {
+    const v = new THREE.Vector3();
+    object.updateWorldMatrix(true, false);
+    const view = canvas.getBoundingClientRect();
+    const hud = typeof document === 'undefined' ? [] : [...document.querySelectorAll('[data-hud-solid]')]
+        .filter((el) => el.offsetParent !== null)
+        .map((el) => el.getBoundingClientRect())
+        .filter((r) => r.width > 0 && r.height > 0);
+    return (x, y, z) => {
+        v.set(x, y, z);
+        object.localToWorld(v).project(camera);
+        if (v.z >= 1 || Math.abs(v.x) > margin || Math.abs(v.y) > margin) return false;
+        const px = view.left + (v.x + 1) / 2 * view.width;
+        const py = view.top + (1 - v.y) / 2 * view.height;
+        return !hud.some((r) => px > r.left - pad && px < r.right + pad && py > r.top - pad && py < r.bottom + pad);
+    };
+};

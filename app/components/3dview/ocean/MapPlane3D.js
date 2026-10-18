@@ -24,6 +24,7 @@ export const NOAA_ENC_TEMPLATE = 'https://gis.charttools.noaa.gov/arcgis/rest/se
     + '?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=TRUE&STYLES=&LAYERS=0,1,2,3,4,5,6,7,8,9,10,11,12'
     + '&CRS=EPSG:3857&WIDTH=256&HEIGHT=256&BBOX={bbox}';
 const NOAA_ENC_MAX_ZOOM = 18;
+const OFFICIAL_CHART_OPACITY = 0.55;
 // Rough boxes of the US coasts and territories with ENC charts
 const US_WATERS = [
     [24, 50, -126, -66],     // contiguous states, Great Lakes
@@ -280,6 +281,11 @@ export default function MapPlane3D({ mode = 'chart', opacity = 1 }) {
     const hasPosition = skPosition?.latitude != null && skPosition?.longitude != null;
     // The chart layers change when the boat enters or leaves US waters
     const usWaters = hasPosition && inUsWaters(skPosition.latitude, skPosition.longitude);
+    // A real nautical chart (NOAA's, or one from the Signal K server) reads
+    // through more of the translucent overlay of the 3D chart than OSM does
+    const [serverChart, setServerChart] = useState(false);
+    const official = usWaters || serverChart;
+    const shownOpacity = opacity < 1 && official ? Math.max(opacity, OFFICIAL_CHART_OPACITY) : opacity;
 
     // ── Adaptive zoom from camera distance (checked ~4×/s) ───────────────────
     useFrame(({ camera }) => {
@@ -417,6 +423,8 @@ export default function MapPlane3D({ mode = 'chart', opacity = 1 }) {
                 const chart =
                     entries.find((c) => c.identifier !== 'openstreetmap' && c.tilemapUrl) ||
                     entries.find((c) => c.tilemapUrl);
+                // The server's own OpenStreetMap is not a nautical chart
+                setServerChart(Boolean(chart?.tilemapUrl) && chart.identifier !== 'openstreetmap');
                 if (chart?.tilemapUrl) {
                     const url = chart.tilemapUrl.includes('{z}')
                         ? chart.tilemapUrl
@@ -462,6 +470,7 @@ export default function MapPlane3D({ mode = 'chart', opacity = 1 }) {
         polygonOffsetFactor: 2,
         polygonOffsetUnits: 8,
     }), [opacity]);
+    useEffect(() => { material.opacity = shownOpacity; }, [material, shownOpacity]); // eslint-disable-line react-hooks/immutability
 
     useEffect(() => () => {
         geometry.dispose();
