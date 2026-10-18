@@ -56,17 +56,17 @@ const ThreeDBoatSpeedIndicator = () => {
     // If no speed data is available at all
     if (availableTypes.length === 0) {
         return (
-            <div className="mt-6 ml-2">
-                <div className="text-hero font-medium text-hud-dim tracking-tight">--</div>
+            <div className="mt-6 [@media(max-height:500px)]:mt-1.5 ml-2">
+                <div className="text-hero [@media(max-height:500px)]:text-[2.5rem] font-medium text-hud-dim tracking-tight">--</div>
                 <div className="text-caption font-semibold uppercase tracking-[0.2em] text-hud-muted ml-1">{t('common.na')}</div>
             </div>
         );
     }
 
     return (
-        <div className="mt-6 ml-2 select-none group">
+        <div className="mt-6 [@media(max-height:500px)]:mt-1.5 ml-2 select-none group">
             <div
-                className={`text-hero font-medium cursor-pointer tracking-tight drop-shadow-2xl transition-all duration-300 group-hover:scale-105 active:scale-95 ${speedTextColor}`}
+                className={`text-hero [@media(max-height:500px)]:text-[2.5rem] font-medium cursor-pointer tracking-tight drop-shadow-2xl transition-all duration-300 group-hover:scale-105 active:scale-95 ${speedTextColor}`}
                 onClick={toggleSpeedType}
                 role="button"
                 tabIndex={0}

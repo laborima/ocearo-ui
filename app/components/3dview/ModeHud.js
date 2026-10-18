@@ -116,7 +116,7 @@ const ModeHud = ({ omitDepth = false, maxItems = 4 }) => {
     const shown = (omitDepth ? items.filter(item => item.id !== 'depth') : items).slice(0, maxItems);
 
     return (
-        <div className="ml-3 mt-4 flex flex-col gap-3 select-none">
+        <div className="ml-3 mt-4 flex flex-col gap-3 select-none [@media(max-height:500px)]:mt-2 [@media(max-height:500px)]:gap-1.5">
             {shown.map((item) => (
                 <div key={item.label} className="leading-none">
                     <div className="text-caption font-semibold uppercase tracking-widest text-hud-muted">{item.label}</div>
