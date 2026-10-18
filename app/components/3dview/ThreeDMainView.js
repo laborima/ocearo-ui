@@ -133,7 +133,9 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
     return (
         <div className="w-full h-full relative overflow-hidden" data-scene={isLightScene ? 'light' : undefined}>
 
-            <div className="absolute top-2 left-2 right-2 z-20 flex items-center justify-between" data-hud-solid>
+            {/* Above the HUD (z-30): its menus (layers, APPS) open over the values,
+                the give-way banner and the vessel card */}
+            <div className="absolute top-2 left-2 right-2 z-40 flex items-center justify-between" data-hud-solid>
                 <ThreeDBoatToolbar />
                 {/* Phones: the toolbar takes the whole width */}
                 <div className="hidden sm:flex items-center space-x-4 min-w-0 shrink-0">
