@@ -2,7 +2,7 @@
 
 ### Added
 
-- **Currents layer.** The water column of the 3D chart, from the surface down to the seabed, coloured by the current (Grid Viewer's thermal colour map): light over the shallows, the full colour in the deep channels. Arrows at two levels of the water slide with the stream, longer and faster where it runs strong and shorter near the bottom where it slows; bubbles give the speed in knots. Forecast from the Open-Meteo marine API (Mercator Ocean's SMOC, 1/12°, tides included), 48 hours on the forecast bar; the colour scale spans the strongest current of the two days around. Offline, the current the instruments measure.
+- **Currents layer.** The water column of the 3D chart, from the surface down to the seabed, coloured by the current (Grid Viewer's thermal colour map): the deeper the water and the stronger the stream, the denser the colour; slack water and shallows stay light over the relief. Arrows at two levels of the water slide with the stream, longer and faster where it runs strong and shorter near the bottom where it slows; bubbles give the speed in knots. Forecast from the Open-Meteo marine API (Mercator Ocean's SMOC, 1/12°, tides included), 48 hours on the forecast bar; the colour scale spans the strongest current of the two days around. Offline, the current the instruments measure.
 - **Speed at the boat over the next two days** on the forecast bar, for the wind and the current: the turn of the tide or the arrival of a front at a glance, the value at the chosen hour beside it.
 
 ### Changed

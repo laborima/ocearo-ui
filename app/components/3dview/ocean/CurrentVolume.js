@@ -92,7 +92,8 @@ const fragmentShader = `
         float n = fbm(vec3(q, uTime * 0.04));
         float streak = mix(1.0, 0.6 + 0.8 * n, smoothstep(0.02, 0.25, t));
         col *= 0.85 + 0.3 * n * smoothstep(0.02, 0.25, t);
-        float alpha = uOpacity * (1.0 - exp(-L / uDepthScale)) * streak;
+        // Slack water stays light: the veil thickens with the speed too
+        float alpha = uOpacity * (1.0 - exp(-L / uDepthScale)) * streak * mix(0.3, 1.0, t);
         alpha *= fieldMask(vGround) * (1.0 - smoothstep(1500.0, 2100.0, length(vWorld.xz)));
         if (alpha < 0.004) discard;
         gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));
