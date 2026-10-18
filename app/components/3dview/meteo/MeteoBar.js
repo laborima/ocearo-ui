@@ -5,7 +5,7 @@ import { getForecastHour, setForecastHour, subscribeForecast, getSeries, subscri
 import { WINDY_SCALE } from './windField';
 import { cssGradient } from './colorMaps';
 import configService from '../../settings/ConfigService';
-import { DEFAULT_CURRENT_MAP } from '../ocean/CurrentVolume';
+import { DEFAULT_CURRENT_MAP } from './useCurrentField';
 import { WIND_MAP_TOP } from './WindLayer3D';
 import { getCurrentScale, subscribeCurrentScale } from './currentField';
 

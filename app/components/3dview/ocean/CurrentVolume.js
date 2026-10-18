@@ -1,23 +1,16 @@
-import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import configService from '../../settings/ConfigService';
-import { useSignalKPaths } from '../../hooks/useSignalK';
-import { fetchCurrentField, uniformCurrent, setCurrentScale } from '../meteo/currentField';
-import { getForecastHour, subscribeForecast, setSeries } from '../meteo/forecastStore';
-import { colorMapTexture, colorAt } from '../meteo/colorMaps';
-import { sampleWind } from '../meteo/windField';
+import { colorMapTexture } from '../meteo/colorMaps';
 import FlowMarkers from '../meteo/FlowMarkers';
-import { markerLattice } from '../meteo/markerLattice';
+import { sameMarkers } from '../meteo/markerLattice';
+import { useCurrentField, currentMarkers, DEFAULT_CURRENT_MAP, CURRENT_ARROW_WIDTH } from '../meteo/useCurrentField';
 import { useFieldTexture, NOISE_GLSL, FIELD_GLSL } from '../meteo/fieldVolume';
 
-const PATHS = ['navigation.position', 'environment.current'];
-export const DEFAULT_CURRENT_MAP = 'thermal';
+export { DEFAULT_CURRENT_MAP };
 const CURRENT_RANGE = 4; // m/s stored in the field texture
 const MIN_ARROW_DEPTH = 1.5; // metres of water
-// Arrow size on screen: shares of its distance to the camera
-const ARROW_LENGTH = 0.16;
-const ARROW_WIDTH = 0.028;
 
 /** Water depth (m) at a point of the seabed mesh (local x, y), bilinear; NaN outside */
 const depthAt = (geometry, x, y) => {
@@ -112,30 +105,9 @@ const fragmentShader = `
  * @param {THREE.BufferGeometry} geometry - the seabed mesh (aDepth, aGround)
  */
 const CurrentVolume = ({ geometry }) => {
-    const v = useSignalKPaths(PATHS);
-    const position = v['navigation.position'];
-    const measured = v['environment.current'];
-    const hour = useSyncExternalStore(subscribeForecast, getForecastHour, getForecastHour);
-    const [field, setField] = useState(null);
+    const { field, hour, top } = useCurrentField();
     const scale = configService.get('aisLengthScalingFactor') || 0.7;
     const mapName = configService.get('currentColorMap') || DEFAULT_CURRENT_MAP;
-    const lat = position?.latitude;
-    const lon = position?.longitude;
-    const roundedKey = Number.isFinite(lat) ? `${lat.toFixed(1)},${lon.toFixed(1)}` : null;
-
-    useEffect(() => {
-        if (!roundedKey) return undefined;
-        let cancelled = false;
-        const [la, lo] = roundedKey.split(',').map(Number);
-        fetchCurrentField(la, lo)
-            .then((f) => { if (!cancelled) setField(f); })
-            .catch(() => {
-                if (!cancelled && Number.isFinite(measured?.drift) && Number.isFinite(measured?.setTrue)) {
-                    setField(uniformCurrent(la, lo, measured.drift, measured.setTrue));
-                }
-            });
-        return () => { cancelled = true; };
-    }, [roundedKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const fieldTexture = useFieldTexture(field, hour, CURRENT_RANGE);
     const material = useMemo(() => new THREE.ShaderMaterial({
@@ -168,22 +140,8 @@ const CurrentVolume = ({ geometry }) => {
         u.uMap.value = mapTexture; // eslint-disable-line react-hooks/immutability
         u.uField.value = fieldTexture;
         u.uFieldHalf.value = field?.half ?? 1;
-        u.uMax.value = setCurrentScale(field) ?? 1;
-    }, [material, mapTexture, fieldTexture, field]);
-    useEffect(() => () => setCurrentScale(null), []);
-
-    // Speed at the boat over the forecast, for the curve of the forecast bar
-    useEffect(() => {
-        if (!field || !Number.isFinite(lat)) return undefined;
-        const east = (lon - field.origin.lon) * Math.PI / 180 * 6371000 * Math.cos(field.origin.lat * Math.PI / 180);
-        const north = (lat - field.origin.lat) * Math.PI / 180 * 6371000;
-        const values = Array.from({ length: field.hours }, (_, h) => {
-            const f = sampleWind(field, east, north, h);
-            return Math.hypot(f.u, f.v);
-        });
-        setSeries('current', { start: field.start, values, top: field.max });
-        return () => setSeries('current', null);
-    }, [field, Math.round(lat * 100), Math.round(lon * 100)]); // eslint-disable-line react-hooks/exhaustive-deps
+        u.uMax.value = top;
+    }, [material, mapTexture, fieldTexture, field, top]);
 
     const meshRef = useRef();
     const cam = useMemo(() => new THREE.Vector3(), []);
@@ -193,7 +151,8 @@ const CurrentVolume = ({ geometry }) => {
         const mesh = meshRef.current;
         if (!mesh) return;
         mesh.updateWorldMatrix(true, false);
-        material.uniforms.uCam.value.copy(mesh.worldToLocal(cam.copy(camera.position)));
+        const camLocal = mesh.worldToLocal(cam.copy(camera.position));
+        material.uniforms.uCam.value.copy(camLocal);
         material.uniforms.uTime.value = clock.elapsedTime;
 
         // Markers fixed to the ground, about evenly spread on screen,
@@ -201,37 +160,17 @@ const CurrentVolume = ({ geometry }) => {
         tick.current += delta;
         if (tick.current < 1 || !field) return;
         tick.current = 0;
-        const top = material.uniforms.uMax.value;
         const p = geometry.attributes.position;
         const g = geometry.attributes.aGround;
         // Ground metres of the mesh's origin (the boat when it was built)
         const refE = g.getX(0) - p.getX(0) / scale;
         const refN = g.getY(0) - p.getY(0) / scale;
-        // Camera over the ground, in the lattice frame (ground metres)
-        const camLocal = cam.copy(camera.position);
-        mesh.worldToLocal(camLocal);
-        const cx = refE + camLocal.x / scale;
-        const cy = refN + camLocal.y / scale;
-        const heightM = Math.max(5, camLocal.z / scale);
-        const step = THREE.MathUtils.clamp(Math.round(heightM * 0.9 / 5) * 5, 25, 400);
-        const nodes = markerLattice({ cx, cy, radius: 1450, step, near: step * 3, originE: refE, originN: refN, max: 40 });
-        const items = [];
-        nodes.forEach(({ e: ge, n: gn }) => {
-            const x = (ge - refE) * scale;
-            const y = (gn - refN) * scale;
-            // None on the boat itself
-            if (Math.hypot(ge - refE, gn - refN) < 15) return;
-            if (!(depthAt(geometry, x, y) > MIN_ARROW_DEPTH)) return;
-            const f = sampleWind(field, ge, gn, hour);
-            const later = sampleWind(field, ge, gn, hour + 1);
-            const speed = Math.hypot(f.u, f.v);
-            const t = Math.min(1, speed / top);
-            const [cr, cg, cb] = colorAt(mapName, 0.28 + 0.72 * t);
-            items.push({ key: `${ge},${gn}`, x, y, z: 0.3, u: f.u, v: f.v, speed,
-                trend: Math.hypot(later.u, later.v) - speed, color: [cr / 255, cg / 255, cb / 255],
-                len: ARROW_LENGTH * (0.4 + 0.6 * t) });
+        const next = currentMarkers({
+            field, hour, top, mapName, refE, refN, scale, radius: 1450, z: 0.3,
+            cx: refE + camLocal.x / scale, cy: refN + camLocal.y / scale, heightM: Math.max(5, camLocal.z / scale),
+            isWater: (x, y) => depthAt(geometry, x, y) > MIN_ARROW_DEPTH,
         });
-        setMarkers(items);
+        setMarkers((prev) => (sameMarkers(prev, next) ? prev : next));
     });
 
     if (!field) return null;
@@ -240,7 +179,7 @@ const CurrentVolume = ({ geometry }) => {
             <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} geometry={geometry} material={material} renderOrder={2} />
             {/* Same frame as the mesh: x east, y north, z up */}
             <group rotation={[-Math.PI / 2, 0, 0]}>
-                <FlowMarkers items={markers} width={ARROW_WIDTH} screen={1} />
+                <FlowMarkers items={markers} width={CURRENT_ARROW_WIDTH} screen={1} />
             </group>
         </>
     );

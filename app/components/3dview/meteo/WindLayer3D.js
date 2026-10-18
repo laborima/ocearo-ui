@@ -12,7 +12,7 @@ import { colorMapTexture, colorAt } from './colorMaps';
 import { useFieldTexture, NOISE_GLSL, FIELD_GLSL } from './fieldVolume';
 import { getForecastHour, subscribeForecast, setSeries } from './forecastStore';
 import FlowMarkers from './FlowMarkers';
-import { markerLattice } from './markerLattice';
+import { markerLattice, sameMarkers } from './markerLattice';
 import useTheme from '../../theme/useTheme';
 
 const PATHS = ['navigation.position', 'environment.wind.speedTrue', 'environment.wind.directionTrue'];
@@ -355,7 +355,7 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
         });
         // The closest ones first, few enough to stay readable
         next.sort((a, b) => a.d - b.d).splice(MAX_MARKERS);
-        setMarkers(next);
+        setMarkers((prev) => (sameMarkers(prev, next) ? prev : next));
     });
 
     if (!field) return null;
@@ -374,7 +374,7 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
                     </mesh>
                 )}
                 <primitive object={particles.object} />
-                <FlowMarkers items={markers} width={MARKER_WIDTH} screen={1} format={(kn) => String(Math.round(kn))} slackLabel="calm" />
+                <FlowMarkers items={markers} width={MARKER_WIDTH} screen={1} format={(kn) => String(Math.round(kn))} slackLabel="calm" maxLabels={6} />
             </group>
         </group>
     );

@@ -19,7 +19,7 @@ const PanelSwitcher = ({ side, panels, defaults, shown, onChange }) => {
     const ids = Object.keys(panels);
     const other = shown[side === 'left' ? 'right' : 'left'];
     const current = shown[side];
-    const Panel = panels[current] || panels[defaults[side]];
+    const shownId = panels[current] ? current : defaults[side];
     const nextId = (() => {
         const start = ids.indexOf(current);
         for (let k = 1; k <= ids.length; k++) {
@@ -31,10 +31,15 @@ const PanelSwitcher = ({ side, panels, defaults, shown, onChange }) => {
     return (
         <button type="button" onClick={() => onChange(side, nextId)} aria-label={t('hud.switchTo', { name: t(`hud.panel_${nextId}`) })}
             className={`flex flex-col gap-1 text-left cursor-pointer rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-oBlue ${side === 'right' ? 'items-end' : 'items-start'}`}>
-            <Panel />
+            {/* Every card stays mounted, hidden when not shown: each records its
+                last 10 minutes from the start, so a curve is full when tapped to */}
+            {ids.map((id) => {
+                const Panel = panels[id];
+                return <div key={id} hidden={id !== shownId}><Panel /></div>;
+            })}
             <span className="flex gap-1.5 px-1" aria-hidden="true">
                 {ids.map((id) => (
-                    <span key={id} className={`h-1.5 rounded-full transition-all ${id === current ? 'w-4 bg-hud-main' : id === other ? 'w-1.5 bg-hud-muted opacity-30' : 'w-1.5 bg-hud-muted opacity-60'}`} />
+                    <span key={id} className={`h-1.5 rounded-full transition-all ${id === shownId ? 'w-4 bg-hud-main' : id === other ? 'w-1.5 bg-hud-muted opacity-30' : 'w-1.5 bg-hud-muted opacity-60'}`} />
                 ))}
             </span>
         </button>

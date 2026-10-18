@@ -27,8 +27,9 @@ const EASING = [0.16, 0.48, 0.86];
  * @param {number} fadeNear - fade the arrows closer to the camera than this
  * @param {(kn:number) => string} format - the speed as written on the arrow
  * @param {'slack'|'calm'} slackLabel - the word for no flow
+ * @param {number} maxLabels - speeds written on the closest arrows only
  */
-const FlowMarkers = ({ items, width, screen = 0, fadeNear = 0, format = (kn) => kn.toFixed(1), slackLabel = 'slack', renderOrder = 3 }) => {
+const FlowMarkers = ({ items, width, screen = 0, fadeNear = 0, format = (kn) => kn.toFixed(1), slackLabel = 'slack', maxLabels = 12, renderOrder = 3 }) => {
     const { t } = useTranslation();
     const { borders, fills } = useMemo(() => {
         const moving = items.filter((it) => it.speed >= SLACK);
@@ -46,7 +47,9 @@ const FlowMarkers = ({ items, width, screen = 0, fadeNear = 0, format = (kn) => 
         <>
             <FlowArrows items={borders} width={width * 1.35} screen={screen} still fadeNear={fadeNear} opacity={0.95} renderOrder={renderOrder} />
             <FlowArrows items={fills} width={width} screen={screen} still fadeNear={fadeNear} opacity={0.95} renderOrder={renderOrder + 1} />
-            {items.map((it) => {
+            {/* Speeds on the closest arrows only (items come nearest first):
+                every label is a DOM element moved on each frame */}
+            {items.slice(0, maxLabels).map((it) => {
                 const slack = it.speed < SLACK;
                 return (
                     <Html key={it.key} position={[it.x, it.y, it.z]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}>
@@ -55,7 +58,9 @@ const FlowMarkers = ({ items, width, screen = 0, fadeNear = 0, format = (kn) => 
                                 {t(`meteo.${slackLabel}`)}
                             </div>
                         ) : (
-                            <div className="rounded px-1 bg-black/60 text-caption font-bold tabular-nums leading-tight text-white whitespace-nowrap">
+                            // Inline white: the light 3D scene turns .text-white dark
+                            <div className="rounded px-1 text-caption font-bold tabular-nums leading-tight whitespace-nowrap"
+                                style={{ color: '#fff', background: 'rgba(10, 16, 22, 0.72)' }}>
                                 {format(it.speed * KNOTS)}
                             </div>
                         )}

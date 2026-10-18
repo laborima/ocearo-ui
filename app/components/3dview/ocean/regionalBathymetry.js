@@ -97,7 +97,10 @@ const SOURCES = {
     },
 };
 
+// The last few squares in memory (~0.6 MB each); older ones come back from
+// the offline cache on disk
 const cache = new Map();
+const KEEP = 3;
 
 const fetchSource = async (name, b) => {
     const src = SOURCES[name];
@@ -146,7 +149,10 @@ export const loadRegionalSeabed = async (lat, lon) => {
         }
     }
     // Kept only when found: offline now, the next try may succeed
-    if (result) cache.set(key, result);
+    if (result) {
+        cache.set(key, result);
+        while (cache.size > KEEP) cache.delete(cache.keys().next().value);
+    }
     return result;
 };
 

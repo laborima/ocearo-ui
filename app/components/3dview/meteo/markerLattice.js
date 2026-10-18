@@ -31,3 +31,14 @@ export const markerLattice = ({ cx, cy, radius, step, near, originE = 0, originN
     }
     return out.sort((a, b) => a.d - b.d).slice(0, max);
 };
+
+/**
+ * True when two marker lists show the same thing (same places, speeds to the
+ * hundredth, same trend): the layer then keeps the old list and React skips
+ * a render.
+ */
+export const sameMarkers = (a, b) => a.length === b.length && a.every((m, i) => {
+    const o = b[i];
+    return m.key === o.key && Math.abs(m.speed - o.speed) < 0.005 && Math.sign(Math.round(m.trend * 20)) === Math.sign(Math.round(o.trend * 20))
+        && Math.abs(m.len - o.len) < 1e-3 && m.x === o.x && m.y === o.y;
+});
