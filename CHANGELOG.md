@@ -26,6 +26,8 @@
 
 ### Fixed
 
+- **Layers menu on phones.** It ran off the right edge of a phone held upright, was cut at the bottom on a phone on its side, and opened under the HUD values, the give-way banner and the vessel card: it now opens leftwards upright, in two columns on its side, over the HUD.
+
 - **Fuzzy text over the 3D chart.** The HUD's secondary text was translucent black, a dull blue-grey over the water, with a wide blurred halo: now opaque greys and a tight outline.
 
 - **True wind from the apparent wind** when the boat publishes none (many instruments, and the Signal K demo server): the polar, the sail plan and the laylines took 0 kn from dead ahead.

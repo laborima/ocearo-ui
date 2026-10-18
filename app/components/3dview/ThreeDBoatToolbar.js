@@ -41,11 +41,14 @@ const LayersMenu = ({ layers, onToggle, label }) => {
         <div ref={box} className="relative">
             <ToolbarButton onClick={() => setOpen((o) => !o)} icon={faLayerGroup} isActive={open || anyOn} activeClass="text-oBlue" label={label} />
             {open && (
+                // Opens leftwards from the button (the last of the row: on a phone
+                // a left-anchored menu ran off the screen); on a phone on its
+                // side, rightwards in two columns, never taller than the view
                 <div role="menu" aria-label={label}
-                    className="bg-hud-menu absolute left-0 top-full mt-2 z-50 min-w-[13rem] p-2 rounded-2xl border border-hud shadow-2xl flex flex-col gap-1">
+                    className="bg-hud-menu absolute right-0 [@media(max-height:500px)]:right-auto [@media(max-height:500px)]:left-0 top-full mt-2 z-50 w-[13rem] [@media(max-height:500px)]:w-[26rem] max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-8rem)] overflow-y-auto p-2 rounded-2xl border border-hud shadow-2xl grid grid-cols-1 [@media(max-height:500px)]:grid-cols-2 gap-1">
                     {layers.map((l) => (
                         <button key={l.key} role="menuitemcheckbox" aria-checked={l.on} onClick={() => onToggle(l.key)}
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-label tesla-hover ${l.on ? 'text-hud-main' : 'text-hud-muted'}`}>
+                            className={`flex items-center gap-3 px-3 py-2.5 [@media(max-height:500px)]:py-2 rounded-xl text-left text-label tesla-hover ${l.on ? 'text-hud-main' : 'text-hud-muted'}`}>
                             <FontAwesomeIcon icon={l.icon} className={`w-4 ${l.on ? l.color : ''}`} />
                             <span className="flex-1">{l.label}</span>
                             <FontAwesomeIcon icon={faCheck} className={`w-3 ${l.on ? 'text-oBlue' : 'opacity-0'}`} />
