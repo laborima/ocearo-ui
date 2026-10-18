@@ -11,7 +11,8 @@ import useOwnTrack from '../fsd/useOwnTrack';
 import { fetchWindField, uniformField, sampleWind, windColor, HALF_EXTENT_M } from './windField';
 import { colorMapTexture, colorAt } from './colorMaps';
 import { useFieldTexture, NOISE_GLSL, FIELD_GLSL } from './fieldVolume';
-import { getForecastHour, subscribeForecast } from './forecastStore';
+import { getForecastHour, subscribeForecast, setSeries } from './forecastStore';
+import FlowArrows from './FlowArrows';
 import useTheme from '../../theme/useTheme';
 
 const PATHS = ['navigation.position', 'environment.wind.speedTrue', 'environment.wind.directionTrue'];
@@ -38,7 +39,11 @@ const R = 6371000;
 const AIR_HEIGHT = 150;
 export const WIND_MAP_TOP = 20;
 // Streaks kept over the air volume: a few, for the direction at a glance
-const VOLUME_STREAKS = 220;
+const VOLUME_STREAKS = 150;
+// Wind arrows: heights above the water (m); 10 m is the forecast's own.
+// One level: higher ones crowd the sky in the cockpit view
+const ARROW_HEIGHTS = [10];
+const Z0 = 0.0002; // sea roughness length (m), log wind profile
 
 /** Colour of a wind speed (m/s) in the chosen scale: Windy's or a colour map */
 export const windColorIn = (mapName, speed) => (mapName && mapName !== 'windy'
@@ -225,7 +230,20 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
         particles.geo.instanceCount = (volume ? VOLUME_STREAKS : PARTICLES) * TRAIL; // eslint-disable-line react-hooks/immutability
     }, [particles, volume]);
     const [labels, setLabels] = useState([]);
+    const [arrows, setArrows] = useState({ items: [], step: 100 });
     const labelClock = useRef(0);
+
+    // Wind at the boat over the forecast, for the curve of the forecast bar
+    useEffect(() => {
+        if (!field || !Number.isFinite(lat)) return undefined;
+        const at = offsetM(field.origin, { latitude: lat, longitude: lon });
+        const values = Array.from({ length: field.hours }, (_, h) => {
+            const w = sampleWind(field, at.east, at.north, h);
+            return Math.hypot(w.u, w.v);
+        });
+        setSeries('wind', { start: field.start, values, top: Math.max(...values) });
+        return () => setSeries('wind', null);
+    }, [field, Math.round(lat * 100), Math.round(lon * 100)]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const boatRef = useRef({ east: 0, north: 0 });
     useEffect(() => {
@@ -330,6 +348,29 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
                 next.push({ key: `${e},${n}`, x: e - be, y: n - bn, kn: Math.round(kn), to: Math.round(to), d: Math.hypot(e - be, n - bn) });
             }
         }
+        // Arrows in the air, twice as dense as the bubbles, over the volume
+        if (volume) {
+            const step = spacing / 2;
+            const ae = Math.ceil((be - radiusM * 0.9) / step) * step;
+            const an = Math.ceil((bn - radiusM * 0.9) / step) * step;
+            const items = [];
+            for (let e = ae; e <= be + radiusM * 0.9; e += step) {
+                for (let n = an; n <= bn + radiusM * 0.9; n += step) {
+                    if (Math.hypot(e - be, n - bn) > radiusM * 0.9) continue;
+                    const wl = sampleWind(field, e, n, hour);
+                    const s10 = Math.hypot(wl.u, wl.v);
+                    if (s10 < 0.2) continue;
+                    ARROW_HEIGHTS.forEach((h) => {
+                        const speed = s10 * Math.log(h / Z0) / Math.log(10 / Z0);
+                        const [r, g, b] = windColorIn(mapName, speed);
+                        const c = [r, g, b].map((x) => (shade >= 0 ? (x / 255) * (1 - shade) + shade : (x / 255) * (1 + shade)));
+                        items.push({ x: (e - be) * scale, y: (n - bn) * scale, z: h * scale, u: wl.u, v: wl.v, speed, color: c,
+                            len: step * scale * 0.32 * Math.min(1, 0.3 + speed / 18) });
+                    });
+                }
+            }
+            setArrows({ items, step });
+        }
         // The closest ones first, few enough to stay readable
         next.sort((a, b) => a.d - b.d).splice(MAX_LABELS);
         setLabels((prev) => (prev.length === next.length && prev.every((l, i) => l.key === next[i].key && l.kn === next[i].kn && l.to === next[i].to
@@ -352,6 +393,10 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
                     </mesh>
                 )}
                 <primitive object={particles.object} />
+                {volume && (
+                    <FlowArrows items={arrows.items} width={arrows.step * scale * 0.045} travel={arrows.step * scale * 0.5}
+                        pace={arrows.step * scale * 0.04} opacity={0.7} fadeNear={arrows.step * scale * 2} />
+                )}
                 {labels.map((l) => {
                     const [r, g, b] = windColorIn(mapName, l.kn / KNOTS);
                     return (

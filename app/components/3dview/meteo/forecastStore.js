@@ -11,3 +11,17 @@ export const subscribeForecast = (listener) => {
     listeners.add(listener);
     return () => listeners.delete(listener);
 };
+
+// Speed at the boat over the forecast, per layer ('wind', 'current'):
+// { start (ms), values (m/s per hour), top (m/s) } or null
+let series = {};
+const seriesListeners = new Set();
+export const getSeries = () => series;
+export const setSeries = (kind, value) => {
+    series = { ...series, [kind]: value };
+    seriesListeners.forEach((l) => l(series));
+};
+export const subscribeSeries = (listener) => {
+    seriesListeners.add(listener);
+    return () => seriesListeners.delete(listener);
+};

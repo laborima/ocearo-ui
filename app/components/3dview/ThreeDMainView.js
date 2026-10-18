@@ -187,7 +187,7 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
 
             {/* Forecast hour and the wind / current legends */}
             {(states.showWind || states.showCurrent) && (
-                <div className="absolute left-1/2 -translate-x-1/2 top-14 z-30 max-w-[calc(100%-12rem)]">
+                <div className="absolute left-1/2 -translate-x-1/2 top-14 z-30 w-[30rem] max-w-[calc(100%-12rem)]">
                     <MeteoBar wind={!!states.showWind} current={!!states.showCurrent && states.oceanMode === 'depth'} />
                 </div>
             )}

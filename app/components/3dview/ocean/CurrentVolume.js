@@ -1,16 +1,40 @@
 import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import configService from '../../settings/ConfigService';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import { fetchCurrentField, uniformCurrent, setCurrentScale } from '../meteo/currentField';
-import { getForecastHour, subscribeForecast } from '../meteo/forecastStore';
-import { colorMapTexture } from '../meteo/colorMaps';
+import { getForecastHour, subscribeForecast, setSeries } from '../meteo/forecastStore';
+import { colorMapTexture, colorAt } from '../meteo/colorMaps';
+import { sampleWind } from '../meteo/windField';
+import FlowArrows from '../meteo/FlowArrows';
+import useOwnTrack from '../fsd/useOwnTrack';
 import { useFieldTexture, NOISE_GLSL, FIELD_GLSL } from '../meteo/fieldVolume';
 
 const PATHS = ['navigation.position', 'environment.current'];
-export const DEFAULT_CURRENT_MAP = 'speed';
+export const DEFAULT_CURRENT_MAP = 'thermal';
 const CURRENT_RANGE = 4; // m/s stored in the field texture
+const KNOTS = 1.943844;
+// Arrows: two levels in the water (share of the depth below the surface)
+const ARROW_LEVELS = [0.2, 0.75];
+const MIN_ARROW_DEPTH = 1.5; // metres of water
+const MAX_LABELS = 5;
+
+/** Water depth (m) at a point of the seabed mesh (local x, y), bilinear; NaN outside */
+const depthAt = (geometry, x, y) => {
+    const { width, widthSegments: n } = geometry.parameters;
+    const fx = (x + width / 2) / width * n;
+    const fy = (width / 2 - y) / width * n;
+    if (fx < 0 || fy < 0 || fx >= n || fy >= n) return NaN;
+    const i = Math.floor(fx);
+    const j = Math.floor(fy);
+    const a = fx - i;
+    const b = fy - j;
+    const d = geometry.attributes.aDepth.array;
+    const at = (ii, jj) => d[jj * (n + 1) + ii];
+    return (at(i, j) * (1 - a) + at(i + 1, j) * a) * (1 - b) + (at(i, j + 1) * (1 - a) + at(i + 1, j + 1) * a) * b;
+};
 
 const vertexShader = `
     attribute float aDepth;
@@ -81,8 +105,10 @@ const fragmentShader = `
  * current (Grid Viewer's colour maps): drawn on the seabed mesh, each pixel
  * is as opaque as the water the view ray crosses down to the bottom, so the
  * shallows stay light over the relief and the deep channels take the full
- * colour. A soft pattern drifts with the stream to show where it goes.
- * Over the translucent chart, so the colours keep their strength.
+ * colour. A soft pattern drifts with the stream, and arrows at two levels of
+ * the water (shorter near the bottom, where the current slows) slide with
+ * it, longer and faster where it runs strong; a few bubbles give the speed
+ * in knots. Over the translucent chart, so the colours keep their strength.
  *
  * @param {THREE.BufferGeometry} geometry - the seabed mesh (aDepth, aGround)
  */
@@ -147,18 +173,107 @@ const CurrentVolume = ({ geometry }) => {
     }, [material, mapTexture, fieldTexture, field]);
     useEffect(() => () => setCurrentScale(null), []);
 
+    // Speed at the boat over the forecast, for the curve of the forecast bar
+    useEffect(() => {
+        if (!field || !Number.isFinite(lat)) return undefined;
+        const east = (lon - field.origin.lon) * Math.PI / 180 * 6371000 * Math.cos(field.origin.lat * Math.PI / 180);
+        const north = (lat - field.origin.lat) * Math.PI / 180 * 6371000;
+        const values = Array.from({ length: field.hours }, (_, h) => {
+            const f = sampleWind(field, east, north, h);
+            return Math.hypot(f.u, f.v);
+        });
+        setSeries('current', { start: field.start, values, top: field.max });
+        return () => setSeries('current', null);
+    }, [field, Math.round(lat * 100), Math.round(lon * 100)]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    const { heading } = useOwnTrack();
     const meshRef = useRef();
     const cam = useMemo(() => new THREE.Vector3(), []);
-    useFrame(({ camera, clock }) => {
+    const [arrows, setArrows] = useState({ items: [], spacing: 100 });
+    const [labels, setLabels] = useState([]);
+    const tick = useRef(1);
+    useFrame(({ camera, clock }, delta) => {
         const mesh = meshRef.current;
         if (!mesh) return;
         mesh.updateWorldMatrix(true, false);
         material.uniforms.uCam.value.copy(mesh.worldToLocal(cam.copy(camera.position)));
         material.uniforms.uTime.value = clock.elapsedTime;
+
+        // Arrows and bubbles on a lattice fixed to the ground, sized to the
+        // view, refreshed once a second
+        tick.current += delta;
+        if (tick.current < 1 || !field) return;
+        tick.current = 0;
+        const top = material.uniforms.uMax.value;
+        const p = geometry.attributes.position;
+        const g = geometry.attributes.aGround;
+        // Ground metres of the mesh's origin (the boat when it was built)
+        const refE = g.getX(0) - p.getX(0) / scale;
+        const refN = g.getY(0) - p.getY(0) / scale;
+        const distM = camera.position.length() / scale;
+        const spacing = THREE.MathUtils.clamp(Math.round(distM / 3 / 25) * 25, 60, 400);
+        const radius = Math.min(1450, Math.max(300, distM * 2.2));
+        const items = [];
+        const spots = [];
+        const e0 = Math.ceil((refE - radius) / spacing) * spacing;
+        const n0 = Math.ceil((refN - radius) / spacing) * spacing;
+        for (let ge = e0; ge <= refE + radius; ge += spacing) {
+            for (let gn = n0; gn <= refN + radius; gn += spacing) {
+                const x = (ge - refE) * scale;
+                const y = (gn - refN) * scale;
+                const r = Math.hypot(ge - refE, gn - refN);
+                // None on the boat itself
+                if (r > radius || r < spacing * 0.7) continue;
+                const depth = depthAt(geometry, x, y);
+                if (!(depth > MIN_ARROW_DEPTH)) continue;
+                const f = sampleWind(field, ge, gn, hour);
+                const surface = Math.hypot(f.u, f.v);
+                if (surface < 0.02) continue;
+                ARROW_LEVELS.forEach((level) => {
+                    // 1/7 power law: slower towards the bottom
+                    const speed = surface * Math.pow(1 - level, 1 / 7);
+                    const t = Math.min(1, speed / top);
+                    const [cr, cg, cb] = colorAt(mapName, 0.28 + 0.72 * t);
+                    // Paler than the water of the same colour, to stand out in it
+                    const color = [cr, cg, cb].map((c) => (c / 255) * 0.45 + 0.55);
+                    items.push({ x, y, z: -level * depth * scale, u: f.u, v: f.v, speed, color,
+                        len: spacing * scale * 0.38 * (0.3 + 0.7 * t) });
+                });
+                spots.push({ key: `${ge},${gn}`, x, y, r, kn: surface * KNOTS, to: Math.atan2(f.u, f.v) * 180 / Math.PI, t: Math.min(1, surface / top) });
+            }
+        }
+        setArrows({ items, spacing });
+        // Bubbles: the closest points, every other lattice node
+        const next = spots.filter((sp) => Math.round(sp.x / scale / spacing) % 2 === 0 && Math.round(sp.y / scale / spacing) % 2 === 0)
+            .sort((a, b) => a.r - b.r).slice(1, MAX_LABELS + 1)
+            .map((sp) => ({ ...sp, kn: Math.round(sp.kn * 10) / 10, to: Math.round(sp.to) }));
+        setLabels((prev) => (prev.length === next.length && prev.every((l, i) => l.key === next[i].key && l.kn === next[i].kn && l.to === next[i].to) ? prev : next));
     });
 
     if (!field) return null;
-    return <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} geometry={geometry} material={material} renderOrder={2} />;
+    const cell = arrows.spacing * scale;
+    return (
+        <>
+            <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} geometry={geometry} material={material} renderOrder={2} />
+            {/* Same frame as the mesh: x east, y north, z up */}
+            <group rotation={[-Math.PI / 2, 0, 0]}>
+                <FlowArrows items={arrows.items} width={cell * 0.075} travel={cell * 0.5} pace={cell * 0.4} fadeNear={cell * 0.8} />
+                {labels.map((l) => {
+                    const [r, g, b] = colorAt(mapName, 0.28 + 0.72 * l.t);
+                    return (
+                        <Html key={l.key} position={[l.x, l.y, 0.5]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}>
+                            <div className="flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-caption font-semibold tabular-nums text-white shadow"
+                                style={{ background: `rgba(${Math.round(r * 0.75)},${Math.round(g * 0.75)},${Math.round(b * 0.75)},0.9)` }}>
+                                {/* Heading-up view: the arrow points where the current goes on screen */}
+                                <span style={{ display: 'inline-block', transform: `rotate(${l.to - heading * 180 / Math.PI}deg)` }}>↑</span>
+                                {l.kn.toFixed(1)} kn
+                            </div>
+                        </Html>
+                    );
+                })}
+            </group>
+        </>
+    );
 };
 
 export default CurrentVolume;
