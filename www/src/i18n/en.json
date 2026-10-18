@@ -59,8 +59,8 @@
         "text": "themes: day, dark, and red night to keep your night vision."
       },
       {
-        "value": "5",
-        "text": "ways to see the world around the boat: sea, chart, seabed, weather, racing ground."
+        "value": "3",
+        "text": "bases for the 3D view — sea, grid, 3D chart — and six layers: AIS, wind, currents, laylines, polar, buoys."
       },
       {
         "value": "6",
@@ -80,19 +80,19 @@
   "f3d": {
     "eyebrow": "The 3D view",
     "title": "Your boat, the sea and the seabed, live.",
-    "lead": "A real-time 3D scene centred on your boat, built from your own instruments. One button switches between five views of the world around it.",
+    "lead": "A real-time 3D scene centred on your boat, built from your own instruments. One button picks the base — the sea, a plain grid or the 3D chart — and a layers menu adds traffic, wind, currents, buoys and the polar on top.",
     "ticks": [
       {
         "b": "A sea built from the true wind.",
         "text": "Wind sea and swell, whitecaps from 7 knots, the sun where it really is and your own wake."
       },
       {
-        "b": "Live chart with buoyage.",
-        "text": "OpenStreetMap and OpenSeaMap lights and marks, true to scale with the AIS targets."
+        "b": "Official charts over the seabed.",
+        "text": "OpenStreetMap and OpenSeaMap lights and marks everywhere, NOAA nautical charts in US waters, true to scale with the AIS targets."
       },
       {
-        "b": "The seabed in 3D.",
-        "text": "SHOM 5–20 m surveys on the French coast, soundings at the current tide, shallow water against your draft hatched in orange."
+        "b": "The seabed in 3D, worldwide.",
+        "text": "SHOM 5–20 m surveys in France, EMODnet in Europe, NOAA grids elsewhere; soundings at the current tide, shallow water against your draft hatched in orange."
       },
       {
         "b": "Buoys, beacons and the night sky.",
@@ -100,10 +100,10 @@
       }
     ],
     "video_alt": "Bathymetry view: the seabed as a survey grid under the boat",
-    "alt_chart": "Live chart with buoyage and AIS targets in 3D",
-    "alt_bathy": "SHOM bathymetry as a survey grid with isobaths and soundings",
-    "tag_chart": "Chart and buoyage",
-    "tag_bathy": "SHOM bathymetry",
+    "alt_chart": "NOAA nautical chart laid over the seabed in 3D at the Narrows, New York",
+    "alt_bathy": "3D chart: the seabed in relief, coloured by depth, with the chart over it",
+    "tag_chart": "NOAA charts (US)",
+    "tag_bathy": "3D chart",
     "alt_night": "Night sky: the Moon, planets and named stars over lit buoys",
     "alt_marks": "Cardinal buoys in 3D at dusk, light flashing",
     "tag_night": "Night sky",
@@ -150,14 +150,14 @@
         "text": "where you will be in 5, 10 and 15 minutes on every heading, VMG advice and a polar ghost boat."
       },
       {
-        "b": "48-hour wind forecast",
-        "text": "around the boat in Windy colours, kept on board for offline use."
+        "b": "Wind and currents, 48 hours ahead:",
+        "text": "Windy colours for the wind, the water coloured by the current, chart-plotter arrows with the speed and whether it builds or eases, kept on board for offline use."
       }
     ],
     "video_alt": "Beating home on the laylines with isochrones",
-    "alt_weather": "Wind forecast around the boat in Windy colours",
+    "alt_weather": "Wind forecast in 3D: arrows with the speed in knots and the 48-hour curve at the boat",
     "alt_trim": "Sail trim stripes and telltales under spinnaker",
-    "tag_weather": "Wind forecast",
+    "tag_weather": "Wind and currents",
     "tag_trim": "Sail trim"
   },
   "safety": {

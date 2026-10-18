@@ -1130,12 +1130,12 @@
       }
     },
     "bathymetry": {
-      "title": "Bathymétrie",
-      "intro": "Le fond de la mer en relief autour de vous, coloré selon la profondeur, avec la carte en surimpression.",
+      "title": "Carte 3D",
+      "intro": "Les fonds en relief autour de vous, colorés selon la profondeur, avec la carte par-dessus : relevés SHOM en France, EMODnet en Europe, grilles NOAA ailleurs, et cartes marines de la NOAA dans les eaux américaines.",
       "spots": {
         "button": {
-          "title": "Mode mer",
-          "text": "Ce bouton fait défiler noir, eau 3D, carte, bathymétrie et météo."
+          "title": "Base",
+          "text": "Ce bouton fait défiler la base de la scène : la mer, une grille et la carte 3D."
         },
         "coast": {
           "title": "Côte",
@@ -1143,11 +1143,11 @@
         },
         "soundings": {
           "title": "Sondes",
-          "text": "Profondeurs en mètres issues des données du SHOM (France), téléchargées par ocearo-core."
+          "text": "Profondeurs en mètres à la marée du moment, d'après le relevé le plus fin de la zone (SHOM en France, téléchargé par ocearo-core)."
         },
         "seabed": {
           "title": "Fond",
-          "text": "Relief et couleur selon la profondeur : plus c'est clair, moins c'est profond."
+          "text": "Relief et couleur selon la profondeur : plus c'est clair, moins c'est profond. L'eau trop peu profonde pour votre tirant d'eau est hachurée en orange."
         },
         "keel": {
           "title": "Sous la quille",
@@ -1156,24 +1156,24 @@
       }
     },
     "weather": {
-      "title": "Météo",
-      "intro": "Le vent prévu sur la carte, façon Windy (prévisions Open-Meteo, connexion internet nécessaire).",
+      "title": "Vent et courants",
+      "intro": "La prévision sur 48 heures du vent (Open-Meteo, aux couleurs de Windy) et des courants (Mercator, marée comprise), sur n'importe quelle base. Téléchargée avec internet, gardée à bord.",
       "spots": {
         "button": {
-          "title": "Mode météo",
-          "text": "Le même bouton de mer, sur la position météo."
+          "title": "Couches",
+          "text": "Active le vent, les courants, le trafic AIS, les laylines, la polaire et le balisage, sur n'importe quelle base."
         },
         "slider": {
-          "title": "Heure de prévision",
-          "text": "Faites glisser pour voir le vent des prochaines heures ; l'échelle de couleur donne la force en nœuds."
-        },
-        "map": {
-          "title": "Carte",
-          "text": "La carte sous le vent, pour la côte et les ports."
+          "title": "Prévision",
+          "text": "Faites glisser sur les 48 prochaines heures. Les courbes donnent le vent (vert) et le courant (jaune) au bateau, avec leur valeur à l'heure choisie."
         },
         "wind": {
-          "title": "Vent",
-          "text": "Les traits montrent la direction, les couleurs la force."
+          "title": "Flèches de vent",
+          "text": "Où va le vent, sa force en nœuds sur la flèche. Liseré rouge : il forcit dans l'heure ; bleu : il faiblit."
+        },
+        "current": {
+          "title": "Courants",
+          "text": "L'eau est colorée par le courant, claire à l'étale ; ses flèches donnent la direction et la vitesse, et indiquent « Étale » quand il s'arrête."
         }
       }
     },

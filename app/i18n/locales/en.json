@@ -1130,12 +1130,12 @@
       }
     },
     "bathymetry": {
-      "title": "Bathymetry",
-      "intro": "The sea floor in relief around you, coloured by depth, with the chart laid over it.",
+      "title": "3D chart",
+      "intro": "The seabed in relief around you, coloured by depth, with the chart over it: SHOM surveys in France, EMODnet in Europe, NOAA grids elsewhere, and NOAA nautical charts in US waters.",
       "spots": {
         "button": {
-          "title": "Sea mode",
-          "text": "This button cycles through black, 3D water, chart, bathymetry and weather."
+          "title": "Base",
+          "text": "This button cycles the base of the scene: the sea, a plain grid and the 3D chart."
         },
         "coast": {
           "title": "Coast",
@@ -1143,11 +1143,11 @@
         },
         "soundings": {
           "title": "Soundings",
-          "text": "Depths in metres from the SHOM data (France), downloaded by ocearo-core."
+          "text": "Depths in metres at the current tide, from the finest survey of the area (SHOM in France, downloaded by ocearo-core)."
         },
         "seabed": {
           "title": "Seabed",
-          "text": "Relief and colour by depth: the lighter, the shallower."
+          "text": "Relief and colour by depth: the lighter, the shallower. Water too shallow for your draft is hatched in orange."
         },
         "keel": {
           "title": "Under the keel",
@@ -1156,24 +1156,24 @@
       }
     },
     "weather": {
-      "title": "Weather",
-      "intro": "The forecast wind over the chart, like Windy (Open-Meteo forecast, needs internet).",
+      "title": "Wind and currents",
+      "intro": "The 48-hour forecast of the wind (Open-Meteo, in Windy colours) and of the currents (Mercator, tides included), over any base. Downloaded with internet, kept on board.",
       "spots": {
         "button": {
-          "title": "Weather mode",
-          "text": "Same sea button, on the weather setting."
+          "title": "Layers",
+          "text": "Turns on the wind, the currents, AIS traffic, laylines, the polar and the buoys, over any base."
         },
         "slider": {
-          "title": "Forecast time",
-          "text": "Slide to see the wind in the coming hours; the colour scale gives the speed in knots."
-        },
-        "map": {
-          "title": "Chart",
-          "text": "The map under the wind, for the coast and the harbours."
+          "title": "Forecast",
+          "text": "Slide through the next 48 hours. The curves give the wind (green) and the current (yellow) at the boat, the values at the chosen hour beside them."
         },
         "wind": {
-          "title": "Wind",
-          "text": "Streaks show the direction, colours the strength."
+          "title": "Wind arrows",
+          "text": "Where the wind goes, its speed in knots on the arrow. A red border: it builds within the hour; blue: it eases."
+        },
+        "current": {
+          "title": "Currents",
+          "text": "The water is coloured by the current, light in slack water; its arrows give the direction and the speed, and say \"Slack\" when it stops."
         }
       }
     },
