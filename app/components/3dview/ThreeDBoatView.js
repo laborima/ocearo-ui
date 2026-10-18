@@ -16,6 +16,7 @@ import { useOcearoContext } from '../context/OcearoContext';
 import PolarProjection from './polar/Polar3D';
 import FsdOcean, { SkyDome } from './ocean/FsdOcean';
 import WindLayer3D from './meteo/WindLayer3D';
+import CurrentMarkers3D from './meteo/CurrentMarkers3D';
 import Seabed3D from './ocean/Seabed3D';
 import MobMarker3D from '../mob/MobMarker3D';
 import { useReplay } from '../replay/ReplayBar';
@@ -112,7 +113,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel, selection = null }) => {
                         <SkyDome />
                         <Ocean3D lite sky={false} horizon={scene.skyHorizon} liteColor={themeId === 'day' ? 0xb4cbd1 : scene.sea}
                             fogDensity={states.showWind ? 0.00003 : undefined} water={false} />
-                        <Seabed3D />
+                        <Seabed3D current={!!states.showCurrent} />
                         <MapPlane3D mode="chart" opacity={0.2} />
                     </>
                 )}
@@ -120,6 +121,12 @@ const ThreeDBoatView = ({ onUpdateInfoPanel, selection = null }) => {
                 {states.showWind && (
                     states.oceanMode === 'water' ? <WindLayer3D sheet={false} y={0.8} />
                         : <WindLayer3D y={states.oceanMode === 'black' ? -0.25 : 0.05} />
+                )}
+
+                {/* Current: the arrows alone over the sea and the grid (the 3D
+                    chart colours the water column too, in Seabed3D) */}
+                {states.showCurrent && states.oceanMode !== 'depth' && (
+                    <CurrentMarkers3D y={states.oceanMode === 'water' ? 0.6 : -0.25} />
                 )}
 
                 {/* FSD view: neutral ground with a sea-anchored grid */}

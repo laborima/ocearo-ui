@@ -49,13 +49,14 @@ const INITIAL_STATES = {
     showPolar: true,
     showLaylines3D: false,
     showWind: false,
+    showCurrent: false,
     showSeamarks: true,
     racing: false
 };
 
 // Display preferences restored across restarts. Transient/safety modes
 // (autopilot, anchor watch, parking, MOB, racing) always start from defaults.
-const PERSISTED_STATE_KEYS = ['oceanMode', 'ais', 'showPolar', 'showLaylines3D', 'showWind', 'showSeamarks'];
+const PERSISTED_STATE_KEYS = ['oceanMode', 'ais', 'showPolar', 'showLaylines3D', 'showWind', 'showCurrent', 'showSeamarks'];
 
 // True wind from the apparent wind and the boat's speed and heading, when the
 // server publishes none (TRUE_WIND_QUIET_MS without one)

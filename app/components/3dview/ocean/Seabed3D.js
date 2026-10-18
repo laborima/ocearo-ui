@@ -9,6 +9,8 @@ import useOwnTrack from '../fsd/useOwnTrack';
 import { cachedImage } from '../../utils/offlineCache';
 import { bathymetryTileTemplate } from '../../utils/OcearoCoreUtils';
 import { useTranslation } from 'react-i18next';
+import CurrentVolume from './CurrentVolume';
+import { loadRegionalSeabed, regionalHeightAt } from './regionalBathymetry';
 
 /**
  * 3D seabed for the bathymetry mode: the bottom as a deformed grid under the
@@ -407,7 +409,8 @@ export const waterLevel = ({ tideNow, tideHigh, tideLow, measured, surveyHere, g
 };
 
 // The seabed's sea level sits at the hull's waterline in the map modes
-const Seabed3D = ({ y = -0.1 }) => {
+// `current`: the water column coloured by the current (the current layer)
+const Seabed3D = ({ y = -0.1, current = false }) => {
     const v = useSignalKPaths(PATHS);
     const { t } = useTranslation();
     const { id: themeId } = useTheme();
@@ -449,17 +452,41 @@ const Seabed3D = ({ y = -0.1 }) => {
         return () => { cancelled = true; clearTimeout(retry); };
     }, [tileKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // A finer grid for the area (EMODnet in Europe, NOAA elsewhere), between
+    // the SHOM survey and the global relief; reloaded every ~4 km
+    const [regional, setRegional] = useState(null);
+    const regionKey = Number.isFinite(lat) ? `${Math.round(lat / 0.04)},${Math.round(lon / 0.04)}` : null;
+    useEffect(() => {
+        if (!regionKey) return undefined;
+        let cancelled = false;
+        let retry = null;
+        const load = () => loadRegionalSeabed(lat, lon).then((r) => {
+            if (cancelled) return;
+            if (r) setRegional(r);
+            else retry = setTimeout(load, SURVEY_RETRY_MS);
+        });
+        load();
+        return () => { cancelled = true; clearTimeout(retry); };
+    }, [regionKey]); // eslint-disable-line react-hooks/exhaustive-deps
+    /** Regional height (m) above its own datum, NaN where it has none */
+    const regionalAt = (pLat, pLon) => (regional ? regionalHeightAt(regional, pLat, pLon) : NaN);
+    // A grid finer than ~60 m deserves the survey's mesh and floating radius
+    const fineRegional = regional && regional.resolution < 60;
+
     // Chart elevation of the bottom under the boat, per dataset (survey: chart
     // datum, global: mean sea level), refreshed every ~20 m
     const latKey = Number.isFinite(lat) ? Math.round(lat * 5000) : null;
     const lonKey = Number.isFinite(lon) ? Math.round(lon * 5000) : null;
     const bottomHere = useMemo(() => {
-        if (!data || latKey === null) return {};
+        if ((!data && !regional) || latKey === null) return {};
+        const survey = data?.shom ? heightAt(data?.shom, lat, lon) : NaN;
+        const reg = regionalAt(lat, lon);
         return {
-            survey: data.shom ? heightAt(data.shom, lat, lon) : NaN,
-            global: data.global ? heightAt(data.global, lat, lon) : NaN,
+            // The regional grid stands in for the dataset of its own datum
+            survey: Number.isFinite(survey) ? survey : regional?.datum === 'cd' ? reg : NaN,
+            global: regional?.datum === 'msl' && Number.isFinite(reg) ? reg : data?.global ? heightAt(data?.global, lat, lon) : NaN,
         };
-    }, [data, latKey, lonKey]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [data, regional, latKey, lonKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // The sounder only sets the level when there is no tide
     const level = waterLevel({
@@ -484,29 +511,34 @@ const Seabed3D = ({ y = -0.1 }) => {
 
     /** Elevation (m) now, i.e. above the water surface (tide included), and whether it dries */
     const chartSample = useMemo(() => {
-        if (!data) return null;
+        if (!data && !regional) return null;
         return (pLat, pLon) => {
-            const survey = data.shom ? heightAt(data.shom, pLat, pLon) : NaN;
+            const survey = data?.shom ? heightAt(data?.shom, pLat, pLon) : NaN;
             if (Number.isFinite(survey)) return { h: survey - levelCd, drying: survey < DRYING_LIMIT_CD };
-            const global = data.global ? heightAt(data.global, pLat, pLon) : NaN;
+            const reg = regionalAt(pLat, pLon);
+            if (Number.isFinite(reg)) {
+                return regional.datum === 'cd' ? { h: reg - levelCd, drying: reg < DRYING_LIMIT_CD }
+                    : { h: reg - levelMsl, drying: reg < DRYING_LIMIT_CD - 3.5 };
+            }
+            const global = data?.global ? heightAt(data?.global, pLat, pLon) : NaN;
             if (Number.isFinite(global)) return { h: global - levelMsl, drying: global < DRYING_LIMIT_CD - 3.5 };
             return null;
         };
-    }, [data, levelCd, levelMsl]);
+    }, [data, regional, levelCd, levelMsl]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Same, with the ground under the boat lowered to the water it floats in
     const neededKey = Math.round((Number.isFinite(measured) ? measured : draft + SAFETY_MARGIN) * 2) / 2;
     const sample = useMemo(() => {
         if (!chartSample || !Number.isFinite(lat)) return chartSample;
-        const surveyHere = data.shom && Number.isFinite(heightAt(data.shom, lat, lon));
+        const surveyHere = (data?.shom && Number.isFinite(heightAt(data?.shom, lat, lon))) || (fineRegional && Number.isFinite(regionalAt(lat, lon)));
         return floatingSample(chartSample, lat, lon, neededKey, surveyHere ? FLOAT_RADIUS_SURVEY : FLOAT_RADIUS_GLOBAL);
     }, [chartSample, neededKey, latKey, lonKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Mesh around the boat: ±HALF metres, north-up local (x east, y north)
     const built = useMemo(() => {
         if (!sample || !Number.isFinite(lat)) return null;
-        const grid = data.shom ? GRID_SHOM : GRID;
-        const exaggeration = data.shom ? EXAGGERATION_SURVEY : EXAGGERATION_GLOBAL;
+        const grid = data?.shom || fineRegional ? GRID_SHOM : GRID;
+        const exaggeration = data?.shom ? EXAGGERATION_SURVEY : EXAGGERATION_GLOBAL;
         const g = new THREE.PlaneGeometry(HALF * 2 * scale, HALF * 2 * scale, grid, grid);
         const p = g.attributes.position;
         const depth = new Float32Array(p.count);
@@ -636,6 +668,7 @@ const Seabed3D = ({ y = -0.1 }) => {
     return (
         <group rotation={[0, heading, 0]} position={[0, y, 0]}>
             <mesh rotation={[-Math.PI / 2, 0, 0]} geometry={built.geometry} material={material} renderOrder={-2} />
+            {current && <CurrentVolume geometry={built.geometry} />}
             {/* Sea level now (tide, or the sounder without tide) */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} material={waterMaterial} renderOrder={1}>
                 <circleGeometry args={[HALF * scale, 96]} />

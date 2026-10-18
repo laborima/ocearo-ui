@@ -71,6 +71,7 @@
     "oceanDepth": "3D-kaart (zeebodem en kaart)",
     "layers": "Lagen",
     "layerWind": "Wind",
+    "layerCurrent": "Stroming",
     "layerSeamarks": "Boeien en bakens"
   },
   "indicators": {
@@ -772,7 +773,14 @@
     "sailDepth": "Bolling",
     "wind": "Wind",
     "windApparent": "Schijnbare wind",
-    "gust": "vlagen {{value}}"
+    "gust": "vlagen {{value}}",
+    "speed": "Snelheid",
+    "best": "max {{value}}",
+    "switchTo": "{{name}} tonen",
+    "panel_depth": "Diepte",
+    "panel_wind": "Wind",
+    "panel_speed": "Snelheid",
+    "panel_tide": "Getij"
   },
   "laylines": {
     "tack": "Overstag",
@@ -865,6 +873,8 @@
   },
   "meteo": {
     "forecast": "Verwachting",
+    "slack": "Kentering",
+    "calm": "Windstil",
     "now": "Nu"
   },
   "manual": {

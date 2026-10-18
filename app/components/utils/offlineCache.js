@@ -68,6 +68,23 @@ export const cachedImage = async (url) => {
     return createImageBitmap(blob);
 };
 
+/**
+ * URL of tile z/x/y from a template: {z}/{x}/{y} for tile servers, or
+ * {bbox} (the tile's bounds in Web Mercator metres, minx,miny,maxx,maxy) for
+ * a WMS asked for 256 px tiles in EPSG:3857.
+ */
+export const tileUrl = (template, z, x, y) => {
+    if (template.includes('{bbox}')) {
+        const half = 20037508.342789244;
+        const size = (2 * half) / 2 ** z;
+        const minx = -half + x * size;
+        const maxy = half - y * size;
+        const bbox = [minx, maxy - size, minx + size, maxy].map((v) => v.toFixed(2)).join(',');
+        return template.replace('{bbox}', bbox);
+    }
+    return template.replace('{z}', z).replace('{x}', x).replace('{y}', y);
+};
+
 /** Tiles covering a disc of `radiusM` metres around a position, at zoom z */
 export const tilesAround = (lat, lon, radiusM, z) => {
     const n = 2 ** z;
@@ -96,7 +113,7 @@ export const prefetchArea = async ({ lat, lon, radiusM, layers, urls = [], onPro
     for (const { template, zooms } of layers) {
         for (const z of zooms) {
             for (const t of tilesAround(lat, lon, radiusM, z)) {
-                jobs.push(template.replace('{z}', t.z).replace('{x}', t.x).replace('{y}', t.y));
+                jobs.push(tileUrl(template, t.z, t.x, t.y));
             }
         }
     }

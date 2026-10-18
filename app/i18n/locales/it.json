@@ -71,6 +71,7 @@
     "oceanDepth": "Carta 3D (fondale e carta)",
     "layers": "Livelli",
     "layerWind": "Vento",
+    "layerCurrent": "Correnti",
     "layerSeamarks": "Boe e mede"
   },
   "indicators": {
@@ -772,7 +773,14 @@
     "sailDepth": "Grasso",
     "wind": "Vento",
     "windApparent": "Vento apparente",
-    "gust": "raffiche {{value}}"
+    "gust": "raffiche {{value}}",
+    "speed": "Velocità",
+    "best": "max {{value}}",
+    "switchTo": "Mostra {{name}}",
+    "panel_depth": "Profondità",
+    "panel_wind": "Vento",
+    "panel_speed": "Velocità",
+    "panel_tide": "Marea"
   },
   "laylines": {
     "tack": "Virata",
@@ -865,6 +873,8 @@
   },
   "meteo": {
     "forecast": "Previsione",
+    "slack": "Stanca",
+    "calm": "Calma",
     "now": "Ora"
   },
   "manual": {

@@ -5,7 +5,7 @@ import { useSignalKPath } from '../../hooks/useSignalK';
 import signalKService from '../../services/SignalKService';
 import configService from '../../settings/ConfigService';
 import useOwnTrack from '../fsd/useOwnTrack';
-import { cachedImage } from '../../utils/offlineCache';
+import { cachedImage, tileUrl } from '../../utils/offlineCache';
 import useTheme from '../../theme/useTheme';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -16,6 +16,24 @@ const TILE_SIZE = 256;    // OSM tile pixel size
 export const OSM_TEMPLATE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 export const SEAMARK_TEMPLATE = 'https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png';
 const RAINVIEWER_INDEX = 'https://api.rainviewer.com/public/weather-maps.json';
+// US waters: NOAA's official nautical chart, drawn from its electronic charts
+// (ENC) by the NOAA Chart Display Service (WMS, public domain, open to the
+// browser). Buoys, lights, soundings and bridge clearances are on it, so no
+// OpenSeaMap overlay there; outside ENC coverage it is transparent over OSM.
+export const NOAA_ENC_TEMPLATE = 'https://gis.charttools.noaa.gov/arcgis/rest/services/MCS/NOAAChartDisplay/MapServer/exts/MaritimeChartService/WMSServer'
+    + '?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&FORMAT=image/png&TRANSPARENT=TRUE&STYLES=&LAYERS=0,1,2,3,4,5,6,7,8,9,10,11,12'
+    + '&CRS=EPSG:3857&WIDTH=256&HEIGHT=256&BBOX={bbox}';
+const NOAA_ENC_MAX_ZOOM = 18;
+// Rough boxes of the US coasts and territories with ENC charts
+const US_WATERS = [
+    [24, 50, -126, -66],     // contiguous states, Great Lakes
+    [51, 72, -180, -129],    // Alaska
+    [18, 23, -161, -154],    // Hawaii
+    [17, 19, -68, -64],      // Puerto Rico, US Virgin Islands
+    [13, 21, 144, 146.5],    // Guam, Northern Marianas
+    [-15, -14, -171, -169],  // American Samoa
+];
+export const inUsWaters = (lat, lon) => US_WATERS.some(([s, n, w, e]) => lat >= s && lat <= n && lon >= w && lon <= e);
 
 const OSM_MAX_ZOOM = 19;     // OSM serves up to z19 — pontoons/piers appear from z17
 const CUSTOM_MAX_ZOOM = 18;  // safe cap for SignalK-provided charts (unknown max)
@@ -58,9 +76,7 @@ function latToTileF(lat, zoom) {
     return ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * Math.pow(2, zoom);
 }
 
-function buildTileUrl(template, z, x, y) {
-    return template.replace('{z}', z).replace('{x}', x).replace('{y}', y);
-}
+const buildTileUrl = tileUrl;
 
 function metersPerPixel(lat, zoom) {
     return (156543.03 * Math.cos((lat * Math.PI) / 180)) / Math.pow(2, zoom);
@@ -77,10 +93,44 @@ function zoomForCoverage(coverageMeters, lat, maxZoom) {
 
 const tileCache = new Map();
 
+// A WMS draws every tile on request: a few at a time, or NOAA's server lets
+// some time out (and its timeouts carry no CORS header)
+const WMS_PARALLEL = 6;
+let wmsActive = 0;
+const wmsQueue = [];
+const throttled = (job) => new Promise((resolve) => {
+    const run = () => {
+        wmsActive++;
+        job().then(resolve, () => resolve(null)).finally(() => {
+            wmsActive--;
+            wmsQueue.shift()?.();
+        });
+    };
+    if (wmsActive < WMS_PARALLEL) run(); else wmsQueue.push(run);
+});
+
 function loadTile(url) {
     if (tileCache.has(url)) return tileCache.get(url);
     // Network or the offline cache (kept for sailing without internet)
-    const promise = cachedImage(url).catch(() => null);
+    const load = () => cachedImage(url).catch(() => null);
+    const wms = url.includes('WMSServer');
+    // A WMS time-out is retried twice, a little later each time
+    const loadRetried = async () => {
+        for (let attempt = 0; attempt < 3; attempt++) {
+            const img = await load(); // eslint-disable-line no-await-in-loop
+            if (img) return img;
+            await new Promise((r) => { setTimeout(r, 1500 * (attempt + 1)); }); // eslint-disable-line no-await-in-loop
+        }
+        return null;
+    };
+    const promise = wms
+        ? throttled(loadRetried).then((img) => {
+            // A WMS tile that failed (time-out) is asked again at the next
+            // redraw; a missing tile of a tile server stays missing
+            if (!img) tileCache.delete(url);
+            return img;
+        })
+        : load();
     tileCache.set(url, promise);
     return promise;
 }
@@ -228,6 +278,8 @@ export default function MapPlane3D({ mode = 'chart', opacity = 1 }) {
     useEffect(() => { positionRef.current = skPosition; }, [skPosition]);
 
     const hasPosition = skPosition?.latitude != null && skPosition?.longitude != null;
+    // The chart layers change when the boat enters or leaves US waters
+    const usWaters = hasPosition && inUsWaters(skPosition.latitude, skPosition.longitude);
 
     // ── Adaptive zoom from camera distance (checked ~4×/s) ───────────────────
     useFrame(({ camera }) => {
@@ -332,10 +384,11 @@ export default function MapPlane3D({ mode = 'chart', opacity = 1 }) {
         let cancelled = false;
         const redraw = () => { if (!cancelled) scheduleRedrawRef.current?.(true); };
         // OSM (and seamarks) in the theme's colours until a server chart is found
-        const defaults = [
-            { template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: baseFilter },
-            ...(mode === 'meteo' ? [] : [{ template: SEAMARK_TEMPLATE, maxZoom: SEAMARK_MAX_ZOOM, filter: SEAMARK_FILTERS[themeId] }]),
-        ];
+        // In US waters, NOAA's chart over OSM (it carries the buoyage itself)
+        const overlay = mode === 'meteo' ? []
+            : usWaters ? [{ template: NOAA_ENC_TEMPLATE, maxZoom: NOAA_ENC_MAX_ZOOM, filter: CHART_FILTERS[themeId] }]
+                : [{ template: SEAMARK_TEMPLATE, maxZoom: SEAMARK_MAX_ZOOM, filter: SEAMARK_FILTERS[themeId] }];
+        const defaults = [{ template: OSM_TEMPLATE, maxZoom: OSM_MAX_ZOOM, filter: baseFilter }, ...overlay];
         layersRef.current = defaults;
         if (mode === 'meteo') {
             redraw();
@@ -378,7 +431,7 @@ export default function MapPlane3D({ mode = 'chart', opacity = 1 }) {
                 redraw();
             });
         return () => { cancelled = true; };
-    }, [mode, themeId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [mode, themeId, usWaters]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Redraw when position moves past threshold or the LOD zoom changes
     useEffect(() => {

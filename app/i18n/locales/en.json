@@ -71,6 +71,7 @@
     "oceanDepth": "3D chart (seabed and chart)",
     "layers": "Layers",
     "layerWind": "Wind",
+    "layerCurrent": "Currents",
     "layerSeamarks": "Buoys and beacons"
   },
   "indicators": {
@@ -772,7 +773,14 @@
     "sailDepth": "Depth",
     "wind": "Wind",
     "windApparent": "Apparent wind",
-    "gust": "gusts {{value}}"
+    "gust": "gusts {{value}}",
+    "speed": "Speed",
+    "best": "best {{value}}",
+    "switchTo": "Show {{name}}",
+    "panel_depth": "Depth",
+    "panel_wind": "Wind",
+    "panel_speed": "Speed",
+    "panel_tide": "Tide"
   },
   "laylines": {
     "tack": "Tack",
@@ -866,6 +874,8 @@
   },
   "meteo": {
     "forecast": "Forecast",
+    "slack": "Slack",
+    "calm": "Calm",
     "now": "Now"
   },
   "manual": {

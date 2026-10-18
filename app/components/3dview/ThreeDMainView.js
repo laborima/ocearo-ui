@@ -10,6 +10,7 @@ import configService from '../settings/ConfigService';
 import ThreeDBoatToolbar from './ThreeDBoatToolbar';
 import ThreeDBoatThanksIndicator from './ThreeDBoatThanksIndicator';
 import SceneScaleControl, { DEFAULT_SCENE_SCALE } from './hud/SceneScaleControl';
+import PanelSwitcher, { useHudPanels } from './hud/PanelSwitcher';
 import ViewButtons from './hud/ViewButtons';
 
 // Heavy 3D components loaded dynamically
@@ -37,6 +38,7 @@ import useMediaQuery from '../hooks/useMediaQuery';
 const DepthPanel = dynamic(() => import('./hud/DepthPanel'));
 const TidePanel = dynamic(() => import('./hud/TidePanel'));
 const WindPanel = dynamic(() => import('./hud/WindPanel'));
+const SpeedPanel = dynamic(() => import('./hud/SpeedPanel'));
 const SkyClock = dynamic(() => import('./hud/SkyClock'));
 const SceneLegend = dynamic(() => import('./hud/SceneLegend'));
 
@@ -79,7 +81,12 @@ const FrameLimiter = ({ fps }) => {
   return null;
 };
 
+// The full-screen corner cards, in the order a tap goes through them
+const HUD_PANELS = { depth: DepthPanel, wind: WindPanel, speed: SpeedPanel, tide: TidePanel };
+const HUD_PANEL_DEFAULTS = { left: 'depth', right: 'tide' };
+
 const ThreeDMainView = ({ active = true, fullscreen = false }) => {
+    const [hudPanels, setHudPanel] = useHudPanels(HUD_PANEL_DEFAULTS);
     // Read once: changing it in settings takes effect on reload
     const [renderProfile] = useState(getRenderProfile);
     // CSS hook for the profile (globals.css drops the HUD backdrop blur on a Pi)
@@ -165,15 +172,15 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                 </div>
             )}
 
+            {/* One card per corner, changed with a tap: depth, wind, speed, tide */}
             {rich && (
-                <div className="absolute left-3 bottom-3 z-20 flex items-end gap-3" data-hud-solid>
-                    <DepthPanel />
-                    <WindPanel />
+                <div className="absolute left-3 bottom-3 z-20" data-hud-solid>
+                    <PanelSwitcher side="left" panels={HUD_PANELS} defaults={HUD_PANEL_DEFAULTS} shown={hudPanels} onChange={setHudPanel} />
                 </div>
             )}
             {rich && (
                 <div className="absolute right-3 bottom-3 z-20" data-hud-solid>
-                    <TidePanel />
+                    <PanelSwitcher side="right" panels={HUD_PANELS} defaults={HUD_PANEL_DEFAULTS} shown={hudPanels} onChange={setHudPanel} />
                 </div>
             )}
 
@@ -185,10 +192,10 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                 </div>
             )}
 
-            {/* Meteo: forecast hour and wind legend */}
-            {states.showWind && (
-                <div className="absolute left-1/2 -translate-x-1/2 top-14 z-30 max-w-[calc(100%-12rem)]">
-                    <MeteoBar />
+            {/* Forecast hour and the wind / current legends */}
+            {(states.showWind || states.showCurrent) && (
+                <div className="absolute left-1/2 -translate-x-1/2 top-14 z-30 w-[30rem] max-w-[calc(100%-12rem)]">
+                    <MeteoBar wind={!!states.showWind} current={!!states.showCurrent} />
                 </div>
             )}
 

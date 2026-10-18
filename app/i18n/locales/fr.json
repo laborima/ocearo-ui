@@ -71,6 +71,7 @@
     "oceanDepth": "Carte 3D (fond et carte)",
     "layers": "Couches",
     "layerWind": "Vent",
+    "layerCurrent": "Courants",
     "layerSeamarks": "Bouées et balises"
   },
   "indicators": {
@@ -772,7 +773,14 @@
     "sailDepth": "Creux",
     "wind": "Vent",
     "windApparent": "Vent apparent",
-    "gust": "rafales {{value}}"
+    "gust": "rafales {{value}}",
+    "speed": "Vitesse",
+    "best": "max {{value}}",
+    "switchTo": "Afficher {{name}}",
+    "panel_depth": "Fond",
+    "panel_wind": "Vent",
+    "panel_speed": "Vitesse",
+    "panel_tide": "Marée"
   },
   "laylines": {
     "tack": "Virer",
@@ -866,6 +874,8 @@
   },
   "meteo": {
     "forecast": "Prévision",
+    "slack": "Étale",
+    "calm": "Calme",
     "now": "Maintenant"
   },
   "manual": {

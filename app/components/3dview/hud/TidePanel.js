@@ -12,7 +12,9 @@ import Sparkline from './Sparkline';
 const TidePanel = ({ compact = false }) => {
     const { t } = useTranslation();
     const { hasData, level, high, low, timeHigh, timeLow, coefficient, isRising, chartData } = useTideCurve();
-    if (!hasData || chartData.length < 2) return null;
+    if (!hasData || chartData.length < 2) {
+        return compact ? null : <GlassPanel title={t('hud.tide')} className="w-[19rem]"><span className="text-value font-semibold text-hud-muted">--</span></GlassPanel>;
+    }
 
     const start = chartData[0].ms;
     const end = chartData[chartData.length - 1].ms;

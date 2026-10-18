@@ -56,10 +56,12 @@
     --hud-bg-elevated: rgba(0, 0, 0, 0.03);
     --hud-card-bg: rgba(255, 255, 255, 0.8);
     --hud-border: rgba(0, 0, 0, 0.06);
-    --hud-text-main: #1a1a1a;
-    --hud-text-secondary: rgba(0, 0, 0, 0.55);
-    --hud-text-muted: rgba(0, 0, 0, 0.4);
-    --hud-text-dim: rgba(0, 0, 0, 0.25);
+    /* Opaque greys: translucent black turned into a dull blue-grey over the
+       blue water of the 3D chart */
+    --hud-text-main: #10161c;
+    --hud-text-secondary: #26313b;
+    --hud-text-muted: #34404b;
+    --hud-text-dim: #55606a;
   }
 
 }
@@ -109,11 +111,13 @@
 
   /* Text and lines floating straight on the 3D scene (no panel behind):
      a soft halo of the background colour keeps them readable */
+  /* A tight outline rather than a wide glow: a 6 px blur read as fuzzy text
+     over the coloured water */
   .hud-halo {
-    text-shadow: 0 0 6px var(--background), 0 0 2px var(--background);
+    text-shadow: 0 0 1px var(--background), 0 0 2px var(--background), 0 0 3px var(--background);
   }
   .hud-halo svg {
-    filter: drop-shadow(0 0 2px var(--background)) drop-shadow(0 0 4px var(--background));
+    filter: drop-shadow(0 0 1px var(--background)) drop-shadow(0 0 2px var(--background));
   }
 
   /* Grid of tiles inside a card */

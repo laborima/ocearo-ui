@@ -71,6 +71,7 @@
     "oceanDepth": "Carta 3D (fondo y carta)",
     "layers": "Capas",
     "layerWind": "Viento",
+    "layerCurrent": "Corrientes",
     "layerSeamarks": "Boyas y balizas"
   },
   "indicators": {
@@ -772,7 +773,14 @@
     "sailDepth": "Bolsa",
     "wind": "Viento",
     "windApparent": "Viento aparente",
-    "gust": "rachas {{value}}"
+    "gust": "rachas {{value}}",
+    "speed": "Velocidad",
+    "best": "máx. {{value}}",
+    "switchTo": "Mostrar {{name}}",
+    "panel_depth": "Profundidad",
+    "panel_wind": "Viento",
+    "panel_speed": "Velocidad",
+    "panel_tide": "Marea"
   },
   "laylines": {
     "tack": "Virada",
@@ -865,6 +873,8 @@
   },
   "meteo": {
     "forecast": "Previsión",
+    "slack": "Repunte",
+    "calm": "Calma",
     "now": "Ahora"
   },
   "manual": {

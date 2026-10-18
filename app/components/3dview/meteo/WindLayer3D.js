@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
@@ -9,7 +8,11 @@ import configService from '../../settings/ConfigService';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import useOwnTrack from '../fsd/useOwnTrack';
 import { fetchWindField, uniformField, sampleWind, windColor, HALF_EXTENT_M } from './windField';
-import { getForecastHour, subscribeForecast } from './forecastStore';
+import { colorMapTexture, colorAt } from './colorMaps';
+import { useFieldTexture, NOISE_GLSL, FIELD_GLSL } from './fieldVolume';
+import { getForecastHour, subscribeForecast, setSeries } from './forecastStore';
+import FlowMarkers from './FlowMarkers';
+import { markerLattice, sameMarkers } from './markerLattice';
 import useTheme from '../../theme/useTheme';
 
 const PATHS = ['navigation.position', 'environment.wind.speedTrue', 'environment.wind.directionTrue'];
@@ -24,13 +27,91 @@ const SEGMENTS = PARTICLES * TRAIL;
 const SHADE_DAY = -0.6;
 const SHADE_NIGHT = 0.45;
 // Speed labels: on a ground-anchored lattice, the ones on screen only
-const LABELS_ACROSS = 6;
-const MAX_LABELS = 10;
+// Wind markers (arrows with the speed): at most, size on screen (shares of
+// the distance to the camera), height (m)
+const MAX_MARKERS = 10;
+const MARKER_LENGTH = 0.14;
+const MARKER_WIDTH = 0.025;
+const MARKER_HEIGHT = 10;
 // Streak width in pixels (WebGL draws plain lines one pixel wide, lost in the
 // grazing view of the cockpit camera)
 const STREAK_WIDTH = 3;
-const KNOTS = 1.943844;
 const R = 6371000;
+// Air volume: the layer of air drawn above the water, metres, and the top of
+// a colour map (m/s) when one replaces Windy's scale
+const AIR_HEIGHT = 150;
+export const WIND_MAP_TOP = 20;
+// Streaks kept over the air volume: a few, for the direction at a glance
+const VOLUME_STREAKS = 150;
+
+/** Colour of a wind speed (m/s) in the chosen scale: Windy's or a colour map */
+export const windColorIn = (mapName, speed) => (mapName && mapName !== 'windy'
+    ? colorAt(mapName, speed / WIND_MAP_TOP) : windColor(speed));
+
+/** Windy's scale as a 256×1 texture over 0..WIND_MAP_TOP m/s */
+const windyTexture = () => {
+    const data = new Uint8Array(256 * 4);
+    for (let i = 0; i < 256; i++) {
+        const [r, g, b] = windColor(i / 255 * WIND_MAP_TOP);
+        data.set([Math.round(r), Math.round(g), Math.round(b), 255], i * 4);
+    }
+    const t = new THREE.DataTexture(data, 256, 1, THREE.RGBAFormat);
+    t.magFilter = THREE.LinearFilter;
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.needsUpdate = true;
+    return t;
+};
+
+const airVertex = `
+    uniform float uScale;
+    varying vec2 vGround;
+    varying vec3 vWorld;
+    void main() {
+        vGround = position.xy / uScale;
+        vec4 w = modelMatrix * vec4(position, 1.0);
+        vWorld = w.xyz;
+        gl_Position = projectionMatrix * viewMatrix * w;
+    }
+`;
+
+const airFragment = `
+    uniform float uScale;
+    uniform float uTop;         // top of the air layer, world y
+    uniform float uTime;
+    uniform float uMaxSpeed;    // top of the colour scale, m/s
+    uniform float uOpacity;
+    uniform float uLength;      // metres of air for ~63 % of the opacity
+    uniform float uFlow;
+    uniform sampler2D uMap;
+    varying vec2 vGround;
+    varying vec3 vWorld;
+    ${NOISE_GLSL}
+    ${FIELD_GLSL}
+    void main() {
+        // Air the view ray crosses from the top of the layer down to the water
+        vec3 P = vWorld;
+        vec3 C = cameraPosition;
+        vec3 E = C.y > uTop ? C + (P - C) * ((C.y - uTop) / max(C.y - P.y, 1e-3)) : C;
+        float L = length(P - E) / uScale;
+        vec2 flow = flowAt(vGround);
+        float speed = length(flow);
+        float t = clamp(speed / uMaxSpeed, 0.0, 1.0);
+        vec3 col = texture2D(uMap, vec2(t, 0.5)).rgb;
+        // Gusty wisps carried by the wind, stretched along it
+        vec2 dir = speed > 1e-3 ? flow / speed : vec2(0.0, 1.0);
+        vec2 drift = vGround - flow * uTime * uFlow;
+        vec2 q = vec2(dot(drift, dir) / 1400.0, dot(drift, vec2(-dir.y, dir.x)) / 220.0);
+        float n = fbm(vec3(q, uTime * 0.05));
+        col *= 0.88 + 0.28 * n;
+        // A floor so the air right around the boat shows its colour, more
+        // with the depth of air crossed towards the horizon
+        float alpha = uOpacity * (0.3 + 0.7 * (1.0 - exp(-L / uLength))) * (0.25 + 1.5 * n * n);
+        alpha *= fieldMask(vGround);
+        if (alpha < 0.004) discard;
+        gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));
+        #include <colorspace_fragment>
+    }
+`;
 
 /** East / north metres of `p` from `origin` */
 const offsetM = (origin, p) => ({
@@ -46,6 +127,11 @@ const offsetM = (origin, p) => ({
  * the sea, where only the streaks are drawn, above the waves.
  */
 const WindLayer3D = ({ y = 0.05, sheet = true }) => {
+    // 'volume': the air coloured by the wind, a few streaks; 'sheet': the
+    // flat Windy sheet and its many streaks
+    const style = configService.get('windStyle') || 'volume';
+    const volume = sheet && style === 'volume';
+    const mapName = configService.get('windColorMap') || 'windy';
     const v = useSignalKPaths(PATHS);
     const position = v['navigation.position'];
     const { heading } = useOwnTrack();
@@ -92,7 +178,7 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
                 const east = (i / (TEX - 1) * 2 - 1) * HALF_EXTENT_M;
                 const north = (j / (TEX - 1) * 2 - 1) * HALF_EXTENT_M;
                 const w = sampleWind(field, east, north, hour);
-                const [r, g, b] = windColor(Math.hypot(w.u, w.v));
+                const [r, g, b] = windColorIn(mapName, Math.hypot(w.u, w.v));
                 const k = (j * TEX + i) * 4;
                 // Fade out at the grid's edge
                 const edge = Math.max(Math.abs(i / (TEX - 1) * 2 - 1), Math.abs(j / (TEX - 1) * 2 - 1));
@@ -119,8 +205,43 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
         return { geo, material, object, state };
     }, []);
     useEffect(() => () => { particles.geo.dispose(); particles.material.dispose(); }, [particles]);
-    const [labels, setLabels] = useState([]);
+    // Air volume material
+    const fieldTexture = useFieldTexture(volume ? field : null, hour);
+    const air = useMemo(() => new THREE.ShaderMaterial({
+        uniforms: {
+            uScale: { value: scale }, uTop: { value: 0 }, uTime: { value: 0 }, uMaxSpeed: { value: WIND_MAP_TOP },
+            uOpacity: { value: Number(configService.get('windOpacity')) || 0.7 }, uLength: { value: 600 }, uFlow: { value: 25 },
+            uMap: { value: null }, uField: { value: null }, uFieldHalf: { value: HALF_EXTENT_M }, uFieldRange: { value: 40 },
+        },
+        vertexShader: airVertex,
+        fragmentShader: airFragment,
+        transparent: true,
+        depthWrite: false,
+    }), [scale]);
+    const airMap = useMemo(() => (mapName === 'windy' ? windyTexture() : colorMapTexture(mapName)), [mapName]);
+    useEffect(() => {
+        air.uniforms.uMap.value = airMap; // eslint-disable-line react-hooks/immutability
+        air.uniforms.uField.value = fieldTexture;
+    }, [air, airMap, fieldTexture]);
+    useEffect(() => () => { air.dispose(); airMap.dispose(); }, [air, airMap]);
+    // Fewer streaks over the air volume
+    useEffect(() => {
+        particles.geo.instanceCount = (volume ? VOLUME_STREAKS : PARTICLES) * TRAIL; // eslint-disable-line react-hooks/immutability
+    }, [particles, volume]);
+    const [markers, setMarkers] = useState([]);
     const labelClock = useRef(0);
+
+    // Wind at the boat over the forecast, for the curve of the forecast bar
+    useEffect(() => {
+        if (!field || !Number.isFinite(lat)) return undefined;
+        const at = offsetM(field.origin, { latitude: lat, longitude: lon });
+        const values = Array.from({ length: field.hours }, (_, h) => {
+            const w = sampleWind(field, at.east, at.north, h);
+            return Math.hypot(w.u, w.v);
+        });
+        setSeries('wind', { start: field.start, values, top: Math.max(...values) });
+        return () => setSeries('wind', null);
+    }, [field, Math.round(lat * 100), Math.round(lon * 100)]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const boatRef = useRef({ east: 0, north: 0 });
     useEffect(() => {
@@ -129,8 +250,13 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
 
     // Close to the boat the chart matters more than the colours: lighter sheet
     const sheetRef = useRef();
-    useFrame(({ camera, size }, delta) => {
+    useFrame(({ camera, size, clock }, delta) => {
         if (!field) return;
+        if (volume) {
+            air.uniforms.uTime.value = clock.elapsedTime;
+            // World y of the layer's top: the sheet's height plus the air shown
+            air.uniforms.uTop.value = y + AIR_HEIGHT * scale;
+        }
         if (sheetRef.current) {
             const distM = camera.position.length() / scale;
             if (sheetRef.current) sheetRef.current.opacity = THREE.MathUtils.clamp(0.3 + (distM - 300) / 3000 * 0.3, 0.3, 0.6);
@@ -145,7 +271,9 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
         particles.material.resolution.set(size.width, size.height);
         const pos = particles.geo.attributes.instanceStart.data.array;
         const col = particles.geo.attributes.instanceColorStart.data.array;
+        const count = volume ? VOLUME_STREAKS : PARTICLES;
         particles.state.forEach((p, k) => {
+            if (k >= count) return;
             p.age += dt;
             if (p.age > p.life || Math.abs(p.x) > radiusM || Math.abs(p.y) > radiusM) {
                 p.x = (Math.random() * 2 - 1) * radiusM;
@@ -159,7 +287,7 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
             p.y += w.v * speedUp * dt / 10;
             // Fade in and out over the streak's life: no popping
             const life = Math.min(1, p.age / 0.5, (p.life - p.age) / 0.7);
-            const [r, g, b] = windColor(s);
+            const [r, g, b] = windColorIn(mapName, s);
             const toShade = (c) => (shade >= 0 ? (c / 255) * (1 - shade) + shade : (c / 255) * (1 + shade));
             const cr = toShade(r);
             const cg = toShade(g);
@@ -192,36 +320,42 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
         particles.geo.attributes.instanceStart.data.needsUpdate = true;
         particles.geo.attributes.instanceColorStart.data.needsUpdate = true;
 
-        // Speed labels, refreshed once a second on a lattice fixed to the
-        // ground (they do not swim with the boat) and sized to the view
+        // Wind markers at 10 m, refreshed once a second on a lattice fixed to
+        // the ground (they do not swim with the boat) and sized to the view
         labelClock.current += delta;
         if (labelClock.current < 1) return;
         labelClock.current = 0;
-        const spacing = Math.max(400, Math.round(radiusM * 2 / LABELS_ACROSS / 100) * 100);
-        const e0 = Math.ceil((be - radiusM * 0.8) / spacing) * spacing;
-        const n0 = Math.ceil((bn - radiusM * 0.8) / spacing) * spacing;
-        const next = [];
         const layer = layerRef.current;
+        if (!layer) return;
+        // Camera over the ground, metres in the field frame
+        const camLocal = layer.worldToLocal(new THREE.Vector3().copy(camera.position));
+        const cx = be + camLocal.x / scale;
+        const cy = bn + camLocal.y / scale;
+        const heightM = Math.max(5, camLocal.z / scale);
+        const markerStep = THREE.MathUtils.clamp(Math.round(heightM * 3 / 10) * 10, 60, 4000);
+        // Not too far: from the cockpit, 10 m up sits on the horizon beyond a
+        // few hundred metres, and the arrows would pile up there
+        const reach = Math.min(radiusM * 0.9, Math.max(800, heightM * 60));
+        const nodes = markerLattice({ cx, cy, radius: reach, step: markerStep, near: markerStep * 3, originE: cx, originN: cy, max: 80 });
+        const next = [];
         const ndc = new THREE.Vector3();
-        for (let e = e0; e <= be + radiusM * 0.8; e += spacing) {
-            for (let n = n0; n <= bn + radiusM * 0.8; n += spacing) {
-                // Keep the points the camera sees, away from the screen edges
-                if (layer) {
-                    ndc.set((e - be) * scale, (n - bn) * scale, 0.5);
-                    layer.localToWorld(ndc).project(camera);
-                    if (ndc.z > 1 || Math.abs(ndc.x) > 0.85 || ndc.y > 0.6 || ndc.y < -0.85) continue;
-                }
-                const wl = sampleWind(field, e, n, hour);
-                const kn = Math.hypot(wl.u, wl.v) * KNOTS;
-                // Direction the wind blows towards, degrees from north
-                const to = Math.atan2(wl.u, wl.v) * 180 / Math.PI;
-                next.push({ key: `${e},${n}`, x: e - be, y: n - bn, kn: Math.round(kn), to: Math.round(to), d: Math.hypot(e - be, n - bn) });
-            }
-        }
+        nodes.forEach(({ e, n, d }) => {
+            if (Math.hypot(e - be, n - bn) < 20) return; // none on the boat itself
+            // Keep the points the camera sees, away from the screen edges
+            ndc.set((e - be) * scale, (n - bn) * scale, MARKER_HEIGHT * scale);
+            layer.localToWorld(ndc).project(camera);
+            if (ndc.z > 1 || Math.abs(ndc.x) > 0.9 || Math.abs(ndc.y) > 0.9) return;
+            const wl = sampleWind(field, e, n, hour);
+            const later = sampleWind(field, e, n, hour + 1);
+            const speed = Math.hypot(wl.u, wl.v);
+            const [r, g, b] = windColorIn(mapName, speed);
+            next.push({ key: `${e},${n}`, x: (e - be) * scale, y: (n - bn) * scale, z: MARKER_HEIGHT * scale, u: wl.u, v: wl.v,
+                speed, trend: Math.hypot(later.u, later.v) - speed, color: [r / 255, g / 255, b / 255],
+                len: MARKER_LENGTH * (0.4 + 0.6 * Math.min(1, speed / 15)), d });
+        });
         // The closest ones first, few enough to stay readable
-        next.sort((a, b) => a.d - b.d).splice(MAX_LABELS);
-        setLabels((prev) => (prev.length === next.length && prev.every((l, i) => l.key === next[i].key && l.kn === next[i].kn && l.to === next[i].to
-            && Math.abs(l.x - next[i].x) < 20 && Math.abs(l.y - next[i].y) < 20) ? prev : next));
+        next.sort((a, b) => a.d - b.d).splice(MAX_MARKERS);
+        setMarkers((prev) => (sameMarkers(prev, next) ? prev : next));
     });
 
     if (!field) return null;
@@ -235,23 +369,12 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
                 {sheet && (
                     <mesh position={[-be * scale, -bn * scale, 0]} renderOrder={1}>
                         <planeGeometry args={[size, size]} />
-                        <meshBasicMaterial ref={sheetRef} map={texture} transparent opacity={0.6} depthWrite={false} toneMapped={false} />
+                        {volume ? <primitive object={air} attach="material" />
+                            : <meshBasicMaterial ref={sheetRef} map={texture} transparent opacity={0.6} depthWrite={false} toneMapped={false} />}
                     </mesh>
                 )}
                 <primitive object={particles.object} />
-                {labels.map((l) => {
-                    const [r, g, b] = windColor(l.kn / KNOTS);
-                    return (
-                        <Html key={l.key} position={[l.x * scale, l.y * scale, 0.5]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}>
-                            <div className="flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-caption font-semibold tabular-nums text-white shadow"
-                                style={{ background: `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},0.85)` }}>
-                                {/* Heading-up view: the arrow points where the wind goes on screen */}
-                                <span style={{ display: 'inline-block', transform: `rotate(${l.to - heading * 180 / Math.PI}deg)` }}>↑</span>
-                                {l.kn} kn
-                            </div>
-                        </Html>
-                    );
-                })}
+                <FlowMarkers items={markers} width={MARKER_WIDTH} screen={1} format={(kn) => String(Math.round(kn))} slackLabel="calm" maxLabels={6} />
             </group>
         </group>
     );
