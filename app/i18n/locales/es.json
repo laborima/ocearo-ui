@@ -71,6 +71,7 @@
     "oceanDepth": "Carta 3D (fondo y carta)",
     "layers": "Capas",
     "layerWind": "Viento",
+    "layerCurrent": "Corrientes",
     "layerSeamarks": "Boyas y balizas"
   },
   "indicators": {

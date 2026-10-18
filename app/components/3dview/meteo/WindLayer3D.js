@@ -9,6 +9,8 @@ import configService from '../../settings/ConfigService';
 import { useSignalKPaths } from '../../hooks/useSignalK';
 import useOwnTrack from '../fsd/useOwnTrack';
 import { fetchWindField, uniformField, sampleWind, windColor, HALF_EXTENT_M } from './windField';
+import { colorMapTexture, colorAt } from './colorMaps';
+import { useFieldTexture, NOISE_GLSL, FIELD_GLSL } from './fieldVolume';
 import { getForecastHour, subscribeForecast } from './forecastStore';
 import useTheme from '../../theme/useTheme';
 
@@ -31,6 +33,81 @@ const MAX_LABELS = 10;
 const STREAK_WIDTH = 3;
 const KNOTS = 1.943844;
 const R = 6371000;
+// Air volume: the layer of air drawn above the water, metres, and the top of
+// a colour map (m/s) when one replaces Windy's scale
+const AIR_HEIGHT = 150;
+export const WIND_MAP_TOP = 20;
+// Streaks kept over the air volume: a few, for the direction at a glance
+const VOLUME_STREAKS = 220;
+
+/** Colour of a wind speed (m/s) in the chosen scale: Windy's or a colour map */
+export const windColorIn = (mapName, speed) => (mapName && mapName !== 'windy'
+    ? colorAt(mapName, speed / WIND_MAP_TOP) : windColor(speed));
+
+/** Windy's scale as a 256×1 texture over 0..WIND_MAP_TOP m/s */
+const windyTexture = () => {
+    const data = new Uint8Array(256 * 4);
+    for (let i = 0; i < 256; i++) {
+        const [r, g, b] = windColor(i / 255 * WIND_MAP_TOP);
+        data.set([Math.round(r), Math.round(g), Math.round(b), 255], i * 4);
+    }
+    const t = new THREE.DataTexture(data, 256, 1, THREE.RGBAFormat);
+    t.magFilter = THREE.LinearFilter;
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.needsUpdate = true;
+    return t;
+};
+
+const airVertex = `
+    uniform float uScale;
+    varying vec2 vGround;
+    varying vec3 vWorld;
+    void main() {
+        vGround = position.xy / uScale;
+        vec4 w = modelMatrix * vec4(position, 1.0);
+        vWorld = w.xyz;
+        gl_Position = projectionMatrix * viewMatrix * w;
+    }
+`;
+
+const airFragment = `
+    uniform float uScale;
+    uniform float uTop;         // top of the air layer, world y
+    uniform float uTime;
+    uniform float uMaxSpeed;    // top of the colour scale, m/s
+    uniform float uOpacity;
+    uniform float uLength;      // metres of air for ~63 % of the opacity
+    uniform float uFlow;
+    uniform sampler2D uMap;
+    varying vec2 vGround;
+    varying vec3 vWorld;
+    ${NOISE_GLSL}
+    ${FIELD_GLSL}
+    void main() {
+        // Air the view ray crosses from the top of the layer down to the water
+        vec3 P = vWorld;
+        vec3 C = cameraPosition;
+        vec3 E = C.y > uTop ? C + (P - C) * ((C.y - uTop) / max(C.y - P.y, 1e-3)) : C;
+        float L = length(P - E) / uScale;
+        vec2 flow = flowAt(vGround);
+        float speed = length(flow);
+        float t = clamp(speed / uMaxSpeed, 0.0, 1.0);
+        vec3 col = texture2D(uMap, vec2(t, 0.5)).rgb;
+        // Gusty wisps carried by the wind, stretched along it
+        vec2 dir = speed > 1e-3 ? flow / speed : vec2(0.0, 1.0);
+        vec2 drift = vGround - flow * uTime * uFlow;
+        vec2 q = vec2(dot(drift, dir) / 1400.0, dot(drift, vec2(-dir.y, dir.x)) / 220.0);
+        float n = fbm(vec3(q, uTime * 0.05));
+        col *= 0.88 + 0.28 * n;
+        // A floor so the air right around the boat shows its colour, more
+        // with the depth of air crossed towards the horizon
+        float alpha = uOpacity * (0.3 + 0.7 * (1.0 - exp(-L / uLength))) * (0.25 + 1.5 * n * n);
+        alpha *= fieldMask(vGround);
+        if (alpha < 0.004) discard;
+        gl_FragColor = vec4(col, clamp(alpha, 0.0, 1.0));
+        #include <colorspace_fragment>
+    }
+`;
 
 /** East / north metres of `p` from `origin` */
 const offsetM = (origin, p) => ({
@@ -46,6 +123,11 @@ const offsetM = (origin, p) => ({
  * the sea, where only the streaks are drawn, above the waves.
  */
 const WindLayer3D = ({ y = 0.05, sheet = true }) => {
+    // 'volume': the air coloured by the wind, a few streaks; 'sheet': the
+    // flat Windy sheet and its many streaks
+    const style = configService.get('windStyle') || 'volume';
+    const volume = sheet && style === 'volume';
+    const mapName = configService.get('windColorMap') || 'windy';
     const v = useSignalKPaths(PATHS);
     const position = v['navigation.position'];
     const { heading } = useOwnTrack();
@@ -92,7 +174,7 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
                 const east = (i / (TEX - 1) * 2 - 1) * HALF_EXTENT_M;
                 const north = (j / (TEX - 1) * 2 - 1) * HALF_EXTENT_M;
                 const w = sampleWind(field, east, north, hour);
-                const [r, g, b] = windColor(Math.hypot(w.u, w.v));
+                const [r, g, b] = windColorIn(mapName, Math.hypot(w.u, w.v));
                 const k = (j * TEX + i) * 4;
                 // Fade out at the grid's edge
                 const edge = Math.max(Math.abs(i / (TEX - 1) * 2 - 1), Math.abs(j / (TEX - 1) * 2 - 1));
@@ -119,6 +201,29 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
         return { geo, material, object, state };
     }, []);
     useEffect(() => () => { particles.geo.dispose(); particles.material.dispose(); }, [particles]);
+    // Air volume material
+    const fieldTexture = useFieldTexture(volume ? field : null, hour);
+    const air = useMemo(() => new THREE.ShaderMaterial({
+        uniforms: {
+            uScale: { value: scale }, uTop: { value: 0 }, uTime: { value: 0 }, uMaxSpeed: { value: WIND_MAP_TOP },
+            uOpacity: { value: Number(configService.get('windOpacity')) || 0.7 }, uLength: { value: 600 }, uFlow: { value: 25 },
+            uMap: { value: null }, uField: { value: null }, uFieldHalf: { value: HALF_EXTENT_M }, uFieldRange: { value: 40 },
+        },
+        vertexShader: airVertex,
+        fragmentShader: airFragment,
+        transparent: true,
+        depthWrite: false,
+    }), [scale]);
+    const airMap = useMemo(() => (mapName === 'windy' ? windyTexture() : colorMapTexture(mapName)), [mapName]);
+    useEffect(() => {
+        air.uniforms.uMap.value = airMap; // eslint-disable-line react-hooks/immutability
+        air.uniforms.uField.value = fieldTexture;
+    }, [air, airMap, fieldTexture]);
+    useEffect(() => () => { air.dispose(); airMap.dispose(); }, [air, airMap]);
+    // Fewer streaks over the air volume
+    useEffect(() => {
+        particles.geo.instanceCount = (volume ? VOLUME_STREAKS : PARTICLES) * TRAIL; // eslint-disable-line react-hooks/immutability
+    }, [particles, volume]);
     const [labels, setLabels] = useState([]);
     const labelClock = useRef(0);
 
@@ -129,8 +234,13 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
 
     // Close to the boat the chart matters more than the colours: lighter sheet
     const sheetRef = useRef();
-    useFrame(({ camera, size }, delta) => {
+    useFrame(({ camera, size, clock }, delta) => {
         if (!field) return;
+        if (volume) {
+            air.uniforms.uTime.value = clock.elapsedTime;
+            // World y of the layer's top: the sheet's height plus the air shown
+            air.uniforms.uTop.value = y + AIR_HEIGHT * scale;
+        }
         if (sheetRef.current) {
             const distM = camera.position.length() / scale;
             if (sheetRef.current) sheetRef.current.opacity = THREE.MathUtils.clamp(0.3 + (distM - 300) / 3000 * 0.3, 0.3, 0.6);
@@ -145,7 +255,9 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
         particles.material.resolution.set(size.width, size.height);
         const pos = particles.geo.attributes.instanceStart.data.array;
         const col = particles.geo.attributes.instanceColorStart.data.array;
+        const count = volume ? VOLUME_STREAKS : PARTICLES;
         particles.state.forEach((p, k) => {
+            if (k >= count) return;
             p.age += dt;
             if (p.age > p.life || Math.abs(p.x) > radiusM || Math.abs(p.y) > radiusM) {
                 p.x = (Math.random() * 2 - 1) * radiusM;
@@ -159,7 +271,7 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
             p.y += w.v * speedUp * dt / 10;
             // Fade in and out over the streak's life: no popping
             const life = Math.min(1, p.age / 0.5, (p.life - p.age) / 0.7);
-            const [r, g, b] = windColor(s);
+            const [r, g, b] = windColorIn(mapName, s);
             const toShade = (c) => (shade >= 0 ? (c / 255) * (1 - shade) + shade : (c / 255) * (1 + shade));
             const cr = toShade(r);
             const cg = toShade(g);
@@ -235,12 +347,13 @@ const WindLayer3D = ({ y = 0.05, sheet = true }) => {
                 {sheet && (
                     <mesh position={[-be * scale, -bn * scale, 0]} renderOrder={1}>
                         <planeGeometry args={[size, size]} />
-                        <meshBasicMaterial ref={sheetRef} map={texture} transparent opacity={0.6} depthWrite={false} toneMapped={false} />
+                        {volume ? <primitive object={air} attach="material" />
+                            : <meshBasicMaterial ref={sheetRef} map={texture} transparent opacity={0.6} depthWrite={false} toneMapped={false} />}
                     </mesh>
                 )}
                 <primitive object={particles.object} />
                 {labels.map((l) => {
-                    const [r, g, b] = windColor(l.kn / KNOTS);
+                    const [r, g, b] = windColorIn(mapName, l.kn / KNOTS);
                     return (
                         <Html key={l.key} position={[l.x * scale, l.y * scale, 0.5]} center zIndexRange={[4, 0]} style={{ pointerEvents: 'none' }}>
                             <div className="flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-caption font-semibold tabular-nums text-white shadow"

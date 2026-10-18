@@ -112,7 +112,7 @@ const ThreeDBoatView = ({ onUpdateInfoPanel, selection = null }) => {
                         <SkyDome />
                         <Ocean3D lite sky={false} horizon={scene.skyHorizon} liteColor={themeId === 'day' ? 0xb4cbd1 : scene.sea}
                             fogDensity={states.showWind ? 0.00003 : undefined} water={false} />
-                        <Seabed3D />
+                        <Seabed3D current={!!states.showCurrent} />
                         <MapPlane3D mode="chart" opacity={0.2} />
                     </>
                 )}

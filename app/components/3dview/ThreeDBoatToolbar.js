@@ -95,6 +95,7 @@ const ThreeDBoatToolbar = () => {
     const layers = [
         { key: 'ais', on: !!states.ais, icon: faSatellite, color: 'text-oGreen', label: t('toolbar.aisRadar') },
         { key: 'showWind', on: !!states.showWind, icon: faWind, color: 'text-oYellow', label: t('toolbar.layerWind') },
+        { key: 'showCurrent', on: !!states.showCurrent, icon: faWater, color: 'text-oBlue', label: t('toolbar.layerCurrent') },
         { key: 'showLaylines3D', on: !!states.showLaylines3D, icon: faRulerCombined, color: 'text-oGreen', label: t('toolbar.laylines3D') },
         { key: 'showPolar', on: !!states.showPolar, icon: faCompass, color: 'text-oBlue', label: t('toolbar.polarView') },
         { key: 'showSeamarks', on: !!states.showSeamarks, icon: faLifeRing, color: 'text-oYellow', label: t('toolbar.layerSeamarks') },

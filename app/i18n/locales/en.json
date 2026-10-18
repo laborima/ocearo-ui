@@ -71,6 +71,7 @@
     "oceanDepth": "3D chart (seabed and chart)",
     "layers": "Layers",
     "layerWind": "Wind",
+    "layerCurrent": "Currents",
     "layerSeamarks": "Buoys and beacons"
   },
   "indicators": {

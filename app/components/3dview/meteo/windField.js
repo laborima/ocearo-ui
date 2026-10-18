@@ -10,6 +10,7 @@
 import { cachedFetch } from '../../utils/offlineCache';
 
 export const GRID = 9;
+const GRID_WIND = GRID;
 // Half-width of the grid, metres: wide enough to see the weather around the
 // route when the camera is pulled out
 export const HALF_EXTENT_M = 40000;
@@ -93,8 +94,11 @@ export const uniformField = (lat, lon, speed, directionFrom) => {
  * the grid the edge value is kept.
  */
 export const sampleWind = (field, east, north, hour = 0) => {
-    const fx = Math.min(GRID - 1.001, Math.max(0, (east / HALF_EXTENT_M + 1) / 2 * (GRID - 1)));
-    const fy = Math.min(GRID - 1.001, Math.max(0, (north / HALF_EXTENT_M + 1) / 2 * (GRID - 1)));
+    // Other fields (the currents) carry their own grid size and extent
+    const GRID = field.grid ?? GRID_WIND;
+    const half = field.half ?? HALF_EXTENT_M;
+    const fx = Math.min(GRID - 1.001, Math.max(0, (east / half + 1) / 2 * (GRID - 1)));
+    const fy = Math.min(GRID - 1.001, Math.max(0, (north / half + 1) / 2 * (GRID - 1)));
     const i = Math.floor(fx);
     const j = Math.floor(fy);
     const tx = fx - i;

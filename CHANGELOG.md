@@ -1,6 +1,12 @@
 ## [Unreleased]
 
+### Added
+
+- **Currents layer.** The water column of the 3D chart, from the surface down to the seabed, coloured by the current with Grid Viewer's colour maps (cmocean): light over the shallows, the full colour in the deep channels, and a soft pattern drifting with the stream instead of arrows. Forecast from the Open-Meteo marine API (Mercator Ocean's SMOC, 1/12°, tides included), 48 hours on the forecast bar; the colour scale spans the strongest current of the two days around (legend in knots). Offline, the current the instruments measure.
+
 ### Changed
+
+- **Wind layer as a volume of air.** The air above the water coloured by the wind, more with the depth of air towards the horizon, gusty wisps drifting with it, and some 200 streaks instead of 1 100. The flat sheet stays available (`windStyle: 'sheet'`), and Windy's colours can give way to a Grid Viewer colour map (`windColorMap`).
 
 - **Three bases and layers in the 3D view.** One button cycles the base: the sea, the plain grid, or the 3D chart (seabed relief with the chart over it); the flat chart and the meteo map are gone (a saved meteo view opens as the 3D chart with the wind). A layers button adds, on any base: other vessels (AIS), wind (Windy-style; streaks only over the sea), laylines, polar, buoys and beacons.
 - **Phones and split view: the vertical depth and tide gauges again**; the depth, wind and tide cards are for full screen when there is room.

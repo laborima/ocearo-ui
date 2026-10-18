@@ -71,6 +71,7 @@
     "oceanDepth": "3D-kaart (zeebodem en kaart)",
     "layers": "Lagen",
     "layerWind": "Wind",
+    "layerCurrent": "Stroming",
     "layerSeamarks": "Boeien en bakens"
   },
   "indicators": {

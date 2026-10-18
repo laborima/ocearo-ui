@@ -71,6 +71,7 @@
     "oceanDepth": "3D-kort (havbund og kort)",
     "layers": "Lag",
     "layerWind": "Vind",
+    "layerCurrent": "Strøm",
     "layerSeamarks": "Bøjer og sømærker"
   },
   "indicators": {

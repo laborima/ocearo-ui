@@ -71,6 +71,7 @@
     "oceanDepth": "3D-sjökort (botten och sjökort)",
     "layers": "Lager",
     "layerWind": "Vind",
+    "layerCurrent": "Ström",
     "layerSeamarks": "Bojar och sjömärken"
   },
   "indicators": {

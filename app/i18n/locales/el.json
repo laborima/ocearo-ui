@@ -71,6 +71,7 @@
     "oceanDepth": "Χάρτης 3D (βυθός και χάρτης)",
     "layers": "Επίπεδα",
     "layerWind": "Άνεμος",
+    "layerCurrent": "Ρεύματα",
     "layerSeamarks": "Σημαντήρες και φάροι"
   },
   "indicators": {

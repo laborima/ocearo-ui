@@ -71,6 +71,7 @@
     "oceanDepth": "Carta 3D (fondale e carta)",
     "layers": "Livelli",
     "layerWind": "Vento",
+    "layerCurrent": "Correnti",
     "layerSeamarks": "Boe e mede"
   },
   "indicators": {

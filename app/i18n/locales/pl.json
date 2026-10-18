@@ -71,6 +71,7 @@
     "oceanDepth": "Mapa 3D (dno i mapa)",
     "layers": "Warstwy",
     "layerWind": "Wiatr",
+    "layerCurrent": "Prądy",
     "layerSeamarks": "Boje i stawy"
   },
   "indicators": {

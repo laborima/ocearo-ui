@@ -71,6 +71,7 @@
     "oceanDepth": "3D-kartta (pohja ja kartta)",
     "layers": "Tasot",
     "layerWind": "Tuuli",
+    "layerCurrent": "Virtaukset",
     "layerSeamarks": "Poijut ja merimerkit"
   },
   "indicators": {

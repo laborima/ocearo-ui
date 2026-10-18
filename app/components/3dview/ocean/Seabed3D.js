@@ -9,6 +9,7 @@ import useOwnTrack from '../fsd/useOwnTrack';
 import { cachedImage } from '../../utils/offlineCache';
 import { bathymetryTileTemplate } from '../../utils/OcearoCoreUtils';
 import { useTranslation } from 'react-i18next';
+import CurrentVolume from './CurrentVolume';
 
 /**
  * 3D seabed for the bathymetry mode: the bottom as a deformed grid under the
@@ -407,7 +408,8 @@ export const waterLevel = ({ tideNow, tideHigh, tideLow, measured, surveyHere, g
 };
 
 // The seabed's sea level sits at the hull's waterline in the map modes
-const Seabed3D = ({ y = -0.1 }) => {
+// `current`: the water column coloured by the current (the current layer)
+const Seabed3D = ({ y = -0.1, current = false }) => {
     const v = useSignalKPaths(PATHS);
     const { t } = useTranslation();
     const { id: themeId } = useTheme();
@@ -636,6 +638,7 @@ const Seabed3D = ({ y = -0.1 }) => {
     return (
         <group rotation={[0, heading, 0]} position={[0, y, 0]}>
             <mesh rotation={[-Math.PI / 2, 0, 0]} geometry={built.geometry} material={material} renderOrder={-2} />
+            {current && <CurrentVolume geometry={built.geometry} />}
             {/* Sea level now (tide, or the sounder without tide) */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} material={waterMaterial} renderOrder={1}>
                 <circleGeometry args={[HALF * scale, 96]} />
