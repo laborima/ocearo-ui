@@ -6,6 +6,7 @@ import { faCloudArrowDown, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { useSignalKPath } from '../hooks/useSignalK';
 import { clearOfflineCache, offlineCacheSize, prefetchArea } from '../utils/offlineCache';
 import { TERRARIUM, BATHY_ZOOM } from '../3dview/ocean/Seabed3D';
+import { NOAA_ENC_TEMPLATE, inUsWaters } from '../3dview/ocean/MapPlane3D';
 import { windFieldUrl } from '../3dview/meteo/windField';
 import { currentFieldUrl } from '../3dview/meteo/currentField';
 import { regionalSeabedUrls } from '../3dview/ocean/regionalBathymetry';
@@ -61,12 +62,16 @@ const OfflineSection = () => {
         if (configService.get('showSeamarks3D') !== false && configService.get('seamarksOverpass') !== false) prefetchSeamarks(lat, lon, radiusM).catch(() => {});
         // Bathymetry (open data: global, EMODnet / NOAA for the area) and the
         // wind and current forecasts. The chart itself is not
-        // bulk-downloaded: the OpenStreetMap and OpenSeaMap tile servers forbid
+        // bulk-downloaded (except NOAA's in US waters): the OpenStreetMap and OpenSeaMap tile servers forbid
         // it. Chart tiles viewed are kept as you go; for full offline charts,
         // serve MBTiles through a Signal K chart provider (used automatically).
         const result = await prefetchArea({
             lat, lon, radiusM,
-            layers: [{ template: TERRARIUM, zooms: [BATHY_ZOOM - 1, BATHY_ZOOM] }],
+            layers: [
+                { template: TERRARIUM, zooms: [BATHY_ZOOM - 1, BATHY_ZOOM] },
+                // US waters: NOAA's chart is public domain, it may be downloaded ahead
+                ...(inUsWaters(lat, lon) ? [{ template: NOAA_ENC_TEMPLATE, zooms: [11, 12, 13, 14] }] : []),
+            ],
             urls: [windFieldUrl(Number(lat.toFixed(1)), Number(lon.toFixed(1))), currentFieldUrl(Number(lat.toFixed(1)), Number(lon.toFixed(1))),
                 ...regionalSeabedUrls(lat, lon)],
             onProgress: (done, total, failed) => setProgress({ done, total, failed }),
