@@ -10,9 +10,11 @@ import configService from '../settings/ConfigService';
 
 export const RENDER_QUALITIES = ['auto', 'high', 'pi'];
 
-// Embedded GPUs: Raspberry Pi (V3D / VideoCore), Mali, Adreno, PowerVR, and
-// software rendering
-const LOW_POWER_GPU = /v3d|videocore|mali|adreno|powervr|llvmpipe|swiftshader/i;
+// The Raspberry Pi's GPU (V3D / VideoCore) and software rendering. Not the
+// phone GPUs (Mali, Adreno, PowerVR, Apple): a phone draws the full profile
+// fine, and the reduced one looked blurry on it
+const LOW_POWER_GPU = /v3d|videocore|llvmpipe|swiftshader/i;
+const MOBILE = /android|iphone|ipad|ipod|mobile/i;
 
 let gpuName;
 /** WebGL renderer string ('V3D 7.1.7.0' on a Pi 5), read once */
@@ -37,8 +39,10 @@ const gpuRenderer = () => {
  */
 export const isLowPowerDevice = () => {
     if (typeof navigator === 'undefined') return false;
-    if (/aarch64|armv7|armv8|arm64|raspbian|raspberry/i.test(navigator.userAgent)) return true;
     if (LOW_POWER_GPU.test(gpuRenderer())) return true;
+    // Phones and tablets: full quality (their ARM user agent and 4 GB are not a Pi)
+    if (MOBILE.test(navigator.userAgent) || navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent)) return false;
+    if (/aarch64|armv7|armv8|arm64|raspbian|raspberry/i.test(navigator.userAgent)) return true;
     const cores = navigator.hardwareConcurrency || 8;
     const memory = navigator.deviceMemory || 8;
     return cores <= 4 && memory <= 4;
