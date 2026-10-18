@@ -195,9 +195,10 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
             {compact ? (
                 // One column from the bottom, between the depth and tide gauges:
                 // tapped vessel, replay / harbour / advice. On its side the
-                // phone keeps it on the right, clear of the HUD values.
+                // phone keeps it on the right, clear of the HUD values, left
+                // of the two gauges.
                 <div data-hud-solid className={`hud-stack absolute bottom-2 z-30 flex flex-col gap-2 min-h-0 max-h-[calc(100%-4.5rem)] pointer-events-none [&>*]:pointer-events-auto
-                    ${short ? 'right-16 w-[min(24rem,52%)]' : 'left-16 right-16 sm:left-auto sm:w-[26rem]'}`}>
+                    ${short ? 'right-40 w-[min(24rem,calc(100%-21rem))]' : 'left-16 right-16 sm:left-auto sm:w-[26rem]'}`}>
                     {selection && (
                         <div className="min-h-0 flex flex-col">
                             <InfoPanel content={selection} onClose={() => setSelection(null)} />
@@ -237,17 +238,24 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
             )}
 
             {/* The vertical depth and tide gauges: classic HUD, and wherever the
-                full-screen depth / wind / tide cards have no room (phones, split view) */}
-            {(classic || compact) && (
-                <div className="absolute left-2 bottom-2 z-20 flex flex-col items-center">
+                full-screen depth / wind / tide cards have no room (phones, split
+                view). On its side the phone has the HUD values down the left
+                edge: both gauges then stand side by side at the bottom right. */}
+            {(classic || compact) && (short && !classic ? (
+                <div className="absolute right-2 bottom-2 z-20 flex items-end">
                     <ThreeDBoatSeaLevelIndicator />
-                </div>
-            )}
-            {(classic || compact) && (
-                <div className="absolute right-2 bottom-2 z-20 flex flex-col items-center">
                     <ThreeDBoatTideLevelIndicator />
                 </div>
-            )}
+            ) : (
+                <>
+                    <div className="absolute left-2 bottom-2 z-20 flex flex-col items-center">
+                        <ThreeDBoatSeaLevelIndicator />
+                    </div>
+                    <div className="absolute right-2 bottom-2 z-20 flex flex-col items-center">
+                        <ThreeDBoatTideLevelIndicator />
+                    </div>
+                </>
+            ))}
 
             {/* Rudder Angle / Heel Indicator (bottom-center slider) */}
             {classic && !states.anchorWatch && (

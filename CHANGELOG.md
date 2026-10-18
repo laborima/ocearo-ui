@@ -4,6 +4,7 @@
 
 - **Three bases and layers in the 3D view.** One button cycles the base: the sea, the plain grid, or the 3D chart (seabed relief with the chart over it); the flat chart and the meteo map are gone (a saved meteo view opens as the 3D chart with the wind). A layers button adds, on any base: other vessels (AIS), wind (Windy-style; streaks only over the sea), laylines, polar, buoys and beacons.
 - **Phones and split view: the vertical depth and tide gauges again**; the depth, wind and tide cards are for full screen when there is room.
+- **Phone on its side: the depth and tide gauges side by side at the bottom right**, clear of the speed, heading and wind values down the left edge.
 - **Opaque menus** (APPS, layers): they read on a phone and on a Pi.
 - **Windsurf and wing foil let out their rig for the wind**, like the racer's boom, the hands staying on the wishbone or the handles.
 - **Sharper 3D on phones**: up to 2.5 pixels per CSS pixel instead of 1.5.
