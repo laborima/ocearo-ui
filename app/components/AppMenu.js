@@ -56,7 +56,7 @@ const AppMenu = ({
                 animate={{ y: 0, x: '-50%', opacity: 1, scale: 1 }}
                 exit={{ y: 20, x: '-50%', opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-1/2 bg-hud-bg backdrop-blur-xl p-3 sm:p-6 rounded-3xl shadow-2xl z-50 w-[95vw] sm:w-full max-w-lg border border-hud ocearo-appmenu-scroll"
+                className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] left-1/2 bg-hud-menu p-3 sm:p-6 rounded-3xl shadow-2xl z-50 w-[95vw] sm:w-full max-w-lg border border-hud ocearo-appmenu-scroll"
             >
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {/* Layouts are the VIEW button's job: settings come first here */}

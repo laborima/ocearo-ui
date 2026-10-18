@@ -28,7 +28,7 @@ const MAX_CPA_LINES = 5;
 const SMOOTHING_RATE = 4;
 // Height of the sea surface in the boat-view group: the water plane sits at
 // -0.3 and the chart/meteo map plane at -0.1 (see Ocean3D / MapPlane3D).
-const WATER_LEVEL = { chart: -0.1, meteo: -0.1 };
+const WATER_LEVEL = {};
 const DEFAULT_WATER_LEVEL = -0.3;
 
 const collectMeshes = (obj) => {

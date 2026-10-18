@@ -119,9 +119,9 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
         setShowAttitudeIndicator(config.showAttitudeIndicator !== false);
     }, []);
 
-    // Chart/meteo scenes are light by day only (the dark and night themes draw a
-    // dark chart): flip the HUD overlay text to the light-theme palette then
-    const isLightScene = theme === 'day' && (states.oceanMode === 'chart' || states.oceanMode === 'depth' || states.oceanMode === 'meteo');
+    // The 3D chart is light by day only (the dark and night themes draw a dark
+    // chart): flip the HUD overlay text to the light-theme palette then
+    const isLightScene = theme === 'day' && states.oceanMode === 'depth';
 
     return (
         <div className="w-full h-full relative overflow-hidden" data-scene={isLightScene ? 'light' : undefined}>
@@ -186,18 +186,18 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
             )}
 
             {/* Meteo: forecast hour and wind legend */}
-            {states.oceanMode === 'meteo' && (
+            {states.showWind && (
                 <div className="absolute left-1/2 -translate-x-1/2 top-14 z-30 max-w-[calc(100%-12rem)]">
                     <MeteoBar />
                 </div>
             )}
 
             {compact ? (
-                // One column from the bottom: tapped vessel, replay / harbour /
-                // advice, then the depth and tide cards side by side. On its
-                // side the phone keeps it on the right, clear of the HUD values.
+                // One column from the bottom, between the depth and tide gauges:
+                // tapped vessel, replay / harbour / advice. On its side the
+                // phone keeps it on the right, clear of the HUD values.
                 <div data-hud-solid className={`hud-stack absolute bottom-2 z-30 flex flex-col gap-2 min-h-0 max-h-[calc(100%-4.5rem)] pointer-events-none [&>*]:pointer-events-auto
-                    ${short ? 'right-2 w-[min(24rem,58%)]' : 'inset-x-2 sm:left-auto sm:w-[26rem]'}`}>
+                    ${short ? 'right-16 w-[min(24rem,52%)]' : 'left-16 right-16 sm:left-auto sm:w-[26rem]'}`}>
                     {selection && (
                         <div className="min-h-0 flex flex-col">
                             <InfoPanel content={selection} onClose={() => setSelection(null)} />
@@ -210,11 +210,6 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                             <div className="empty:hidden shrink-0 flex justify-center"><ReplayBar /></div>
                             {states.parkingMode && <div className="empty:hidden shrink-0 tesla-card !p-3 !rounded-2xl"><ParkingPanel /></div>}
                             {showAdvice && <div className="empty:hidden shrink-0 [&>*]:max-w-none"><AdvicePanel /></div>}
-                            <div className="shrink-0 flex gap-2">
-                                <div className="empty:hidden flex-1 min-w-0"><DepthPanel compact /></div>
-                                <div className="empty:hidden flex-1 min-w-0"><WindPanel compact /></div>
-                                <div className="empty:hidden flex-1 min-w-0"><TidePanel compact /></div>
-                            </div>
                         </>
                     )}
                 </div>
@@ -241,13 +236,14 @@ const ThreeDMainView = ({ active = true, fullscreen = false }) => {
                 </>
             )}
 
-            {/* Classic HUD: the vertical depth and tide gauges */}
-            {classic && (
+            {/* The vertical depth and tide gauges: classic HUD, and wherever the
+                full-screen depth / wind / tide cards have no room (phones, split view) */}
+            {(classic || compact) && (
                 <div className="absolute left-2 bottom-2 z-20 flex flex-col items-center">
                     <ThreeDBoatSeaLevelIndicator />
                 </div>
             )}
-            {classic && (
+            {(classic || compact) && (
                 <div className="absolute right-2 bottom-2 z-20 flex flex-col items-center">
                     <ThreeDBoatTideLevelIndicator />
                 </div>

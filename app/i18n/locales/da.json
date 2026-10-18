@@ -62,15 +62,16 @@
     "polarView": "Polarvisning",
     "laylines3D": "Laylines 3D",
     "aisRadar": "AIS-radar",
-    "oceanBlack": "Sort (intet hav)",
-    "oceanWater": "Hav (3D vand)",
-    "oceanChart": "Kort (freeboard-sk)",
-    "oceanMeteo": "Vejr (Windy)",
+    "oceanBlack": "Gitter (uden hav)",
+    "oceanWater": "Hav",
     "themeAuto": "Tema: automatisk ({{theme}})",
     "theme_day": "Dagtema",
     "theme_dark": "Mørkt tema",
     "theme_night": "Nattema (rødt)",
-    "oceanDepth": "Bathymetri (havbundens relief)"
+    "oceanDepth": "3D-kort (havbund og kort)",
+    "layers": "Lag",
+    "layerWind": "Vind",
+    "layerSeamarks": "Bøjer og sømærker"
   },
   "indicators": {
     "depth": "Dybde",

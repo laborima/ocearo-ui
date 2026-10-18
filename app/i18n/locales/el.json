@@ -62,15 +62,16 @@
     "polarView": "Πολική προβολή",
     "laylines3D": "Laylines 3D",
     "aisRadar": "Ραντάρ AIS",
-    "oceanBlack": "Μαύρο (χωρίς ωκεανό)",
-    "oceanWater": "Ωκεανός (3D νερό)",
-    "oceanChart": "Χάρτης (freeboard-sk)",
-    "oceanMeteo": "Μετεωρολογία (Windy)",
+    "oceanBlack": "Πλέγμα (χωρίς θάλασσα)",
+    "oceanWater": "Θάλασσα",
     "themeAuto": "Θέμα: αυτόματο ({{theme}})",
     "theme_day": "Θέμα ημέρας",
     "theme_dark": "Σκούρο θέμα",
     "theme_night": "Νυχτερινό θέμα (κόκκινο)",
-    "oceanDepth": "Βυθομετρία (ανάγλυφο βυθού)"
+    "oceanDepth": "Χάρτης 3D (βυθός και χάρτης)",
+    "layers": "Επίπεδα",
+    "layerWind": "Άνεμος",
+    "layerSeamarks": "Σημαντήρες και φάροι"
   },
   "indicators": {
     "depth": "Βάθος",

@@ -59,6 +59,8 @@ export const getRenderProfile = () => {
         // the Pi 5 (measured 9 -> 12 fps with the HUD and KIP running)
         return { id: 'pi', fps: 30, dpr: 0.75, antialias: false };
     }
-    const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 1.5) : 1;
+    // Up to 2.5 pixels per CSS pixel: a phone's screen is 3x, and 1.5 left the
+    // 3D blurry there; its GPU draws 2.5x at ease (a 4K desktop stays at 2.5)
+    const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2.5) : 1;
     return { id: 'high', fps: 60, dpr, antialias: true };
 };

@@ -216,3 +216,9 @@ html[data-render-profile="pi"] *::after {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
 }
+
+/* Menus over the scene (APPS, layers): an opaque background in every theme,
+   so the buttons read on a phone and on a Pi (where the blur is off) */
+.bg-hud-menu {
+  background-color: var(--background);
+}

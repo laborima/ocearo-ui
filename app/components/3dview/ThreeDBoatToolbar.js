@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAnchor, faShip, faMoon, faSun, faEye, faCircleHalfStroke, faWater, faParking, faSatellite, faCompass, faRulerCombined, faMap, faCloudSunRain, faLayerGroup } from '@fortawesome/free-solid-svg-icons';
+import React, { useEffect, useRef, useState } from 'react';
+import { faAnchor, faShip, faMoon, faSun, faEye, faCircleHalfStroke, faWater, faParking, faSatellite, faCompass, faRulerCombined, faCube, faBorderAll, faWind, faLayerGroup, faLifeRing, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { THEME_MODES } from '../theme/themes';
 import { useOcearoContext } from '../context/OcearoContext';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +21,42 @@ const ToolbarButton = ({ onClick, icon, isActive, activeClass, label }) => (
     </button>
 );
 
+/**
+ * The layers drawn over the base: a small opaque menu of switches, closed by a
+ * tap elsewhere or Escape.
+ */
+const LayersMenu = ({ layers, onToggle, label }) => {
+    const [open, setOpen] = useState(false);
+    const box = useRef(null);
+    useEffect(() => {
+        if (!open) return undefined;
+        const away = (e) => { if (box.current && !box.current.contains(e.target)) setOpen(false); };
+        const esc = (e) => { if (e.key === 'Escape') setOpen(false); };
+        document.addEventListener('pointerdown', away);
+        document.addEventListener('keydown', esc);
+        return () => { document.removeEventListener('pointerdown', away); document.removeEventListener('keydown', esc); };
+    }, [open]);
+    const anyOn = layers.some((l) => l.on);
+    return (
+        <div ref={box} className="relative">
+            <ToolbarButton onClick={() => setOpen((o) => !o)} icon={faLayerGroup} isActive={open || anyOn} activeClass="text-oBlue" label={label} />
+            {open && (
+                <div role="menu" aria-label={label}
+                    className="bg-hud-menu absolute left-0 top-full mt-2 z-50 min-w-[13rem] p-2 rounded-2xl border border-hud shadow-2xl flex flex-col gap-1">
+                    {layers.map((l) => (
+                        <button key={l.key} role="menuitemcheckbox" aria-checked={l.on} onClick={() => onToggle(l.key)}
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-label tesla-hover ${l.on ? 'text-hud-main' : 'text-hud-muted'}`}>
+                            <FontAwesomeIcon icon={l.icon} className={`w-4 ${l.on ? l.color : ''}`} />
+                            <span className="flex-1">{l.label}</span>
+                            <FontAwesomeIcon icon={faCheck} className={`w-3 ${l.on ? 'text-oBlue' : 'opacity-0'}`} />
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const ThreeDBoatToolbar = () => {
     const { t } = useTranslation();
     const { theme, themeMode, setTheme, states, toggleState, toggleExclusiveMode, cycleOceanMode } = useOcearoContext();
@@ -33,12 +70,11 @@ const ThreeDBoatToolbar = () => {
         ais: 'text-oGreen'
     };
 
+    // The base of the scene, cycled by one button: the sea, the plain grid, the 3D chart
     const OCEAN_MODE_CONFIG = {
-        black: { icon: faWater,        color: 'text-hud-muted',  label: t('toolbar.oceanBlack') },
-        water: { icon: faWater,        color: 'text-oBlue',      label: t('toolbar.oceanWater') },
-        chart: { icon: faMap,          color: 'text-oGreen',     label: t('toolbar.oceanChart') },
-        depth: { icon: faLayerGroup,   color: 'text-oBlue',      label: t('toolbar.oceanDepth') },
-        meteo: { icon: faCloudSunRain, color: 'text-oYellow',    label: t('toolbar.oceanMeteo') },
+        water: { icon: faWater,     color: 'text-oBlue',  label: t('toolbar.oceanWater') },
+        black: { icon: faBorderAll, color: 'text-hud-main', label: t('toolbar.oceanBlack') },
+        depth: { icon: faCube,      color: 'text-oGreen', label: t('toolbar.oceanDepth') },
     };
 
     // auto -> day -> dark -> night -> auto
@@ -54,8 +90,15 @@ const ThreeDBoatToolbar = () => {
         setTheme(next);
     };
 
-    const currentOceanMode = states.oceanMode || 'black';
+    const currentOceanMode = OCEAN_MODE_CONFIG[states.oceanMode] ? states.oceanMode : 'black';
     const oceanConfig = OCEAN_MODE_CONFIG[currentOceanMode];
+    const layers = [
+        { key: 'ais', on: !!states.ais, icon: faSatellite, color: 'text-oGreen', label: t('toolbar.aisRadar') },
+        { key: 'showWind', on: !!states.showWind, icon: faWind, color: 'text-oYellow', label: t('toolbar.layerWind') },
+        { key: 'showLaylines3D', on: !!states.showLaylines3D, icon: faRulerCombined, color: 'text-oGreen', label: t('toolbar.laylines3D') },
+        { key: 'showPolar', on: !!states.showPolar, icon: faCompass, color: 'text-oBlue', label: t('toolbar.polarView') },
+        { key: 'showSeamarks', on: !!states.showSeamarks, icon: faLifeRing, color: 'text-oYellow', label: t('toolbar.layerSeamarks') },
+    ];
 
 
     return (
@@ -97,39 +140,12 @@ const ThreeDBoatToolbar = () => {
             <ToolbarButton
                 onClick={cycleOceanMode}
                 icon={oceanConfig.icon}
-                isActive={currentOceanMode !== 'black'}
+                isActive
                 activeClass={oceanConfig.color}
                 label={oceanConfig.label}
             />
 
-            {states.autopilot && currentOceanMode === 'black' && (
-                <ToolbarButton
-                    onClick={() => toggleState('showPolar')}
-                    icon={faCompass}
-                    isActive={states.showPolar}
-                    activeClass={activeColor.polar}
-                    label={t('toolbar.polarView')}
-                />
-            )}
-
-            {states.autopilot && (
-                <ToolbarButton
-                    onClick={() => toggleState('showLaylines3D')}
-                    icon={faRulerCombined}
-                    isActive={states.showLaylines3D}
-                    activeClass={activeColor.laylines}
-                    label={t('toolbar.laylines3D')}
-                />
-            )}
-
-            {/* AIS matters at anchor and in the harbour too */}
-            <ToolbarButton
-                onClick={() => toggleState('ais')}
-                icon={faSatellite}
-                isActive={states.ais}
-                activeClass={activeColor.ais}
-                label={t('toolbar.aisRadar')}
-            />
+            <LayersMenu layers={layers} onToggle={(key) => toggleState(key)} label={t('toolbar.layers')} />
         </div>
     );
 };
