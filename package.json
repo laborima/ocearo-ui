@@ -2,7 +2,7 @@
   "name": "ocearo-ui",
   "version": "2.1.3",
   "private": false,
-  "description": "Ocean Robot UI: 3D visualization dashboard for signalk",
+  "description": "Open-source 3D sailing display for Signal K: the boat, the sea and the AIS traffic in real time, sail trim, rules of the road, man overboard, anchor watch, 3D bathymetry, tides and weather",
   "license": "Apache-2.0",
   "author": "Matthieu Laborie",
   "homepage": "https://ocearo.leslaborie.org/",
@@ -12,7 +12,21 @@
   },
   "keywords": [
     "signalk-webapp",
-    "boating"
+    "signalk-category-chart-plotters",
+    "signalk-category-instruments",
+    "signalk-category-ais",
+    "signalk-category-weather",
+    "boating",
+    "sailing",
+    "marine",
+    "navigation",
+    "3d",
+    "ais",
+    "colregs",
+    "bathymetry",
+    "tides",
+    "weather",
+    "raspberry-pi"
   ],
   "scripts": {
     "dev": "next dev",
@@ -52,6 +66,14 @@
   },
   "signalk": {
     "appIcon": "./icons/ocearo.webp",
-    "displayName": "Ocean Robot UI"
+    "displayName": "Ocean Robot UI",
+    "screenshots": [
+      "https://raw.githubusercontent.com/laborima/ocearo-ui/main/docs/screenshots/hero.jpg",
+      "https://raw.githubusercontent.com/laborima/ocearo-ui/main/docs/screenshots/bathymetry.jpg",
+      "https://raw.githubusercontent.com/laborima/ocearo-ui/main/docs/screenshots/traffic.jpg",
+      "https://raw.githubusercontent.com/laborima/ocearo-ui/main/docs/screenshots/weather.jpg",
+      "https://raw.githubusercontent.com/laborima/ocearo-ui/main/docs/screenshots/chart.jpg",
+      "https://raw.githubusercontent.com/laborima/ocearo-ui/main/docs/screenshots/dashboard.jpg"
+    ]
   }
 }

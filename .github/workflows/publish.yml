@@ -32,11 +32,10 @@ jobs:
           NODE_ENV: production
         run: npm run build
 
+      # READMEs for the Signal K App Store and npm: no raw HTML, images and
+      # links to GitHub (docs/ is not published)
       - name: Prepare package for publishing
-        run: |
-          cp package.json out/
-          cp README.md out/
-          cp README.fr.md out/
+        run: node scripts/prepare-npm-package.mjs
 
       # A push without a version bump must not stop the site from deploying
       - name: Publish to npm
@@ -50,6 +49,20 @@ jobs:
           else
             cd out
             npm publish --access public --provenance
+          fi
+
+      # The App Store's Changelog tab reads the GitHub releases: one per version,
+      # with its CHANGELOG.md section (a bare tag only gives its one-line message)
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if gh release view "${VERSION}" >/dev/null 2>&1; then
+            echo "Release ${VERSION} already exists"
+          else
+            node scripts/release-notes.mjs "${VERSION}" > release-notes.md
+            gh release create "${VERSION}" --target "${GITHUB_SHA}" --title "Ocearo UI ${VERSION}" --notes-file release-notes.md
           fi
 
       # The website at the root, the app (live demo) under app/. The app loads its
@@ -71,7 +84,7 @@ jobs:
           # /ocearo-ui/_next: at the site root on laborima.github.io/ocearo-ui/, in an
           # ocearo-ui/ folder on a custom domain
           if [ -f pages/CNAME ]; then mkdir -p pages/ocearo-ui && mv pages/app/_next pages/ocearo-ui/_next; else mv pages/app/_next pages/_next; fi
-          rm -f pages/app/package.json pages/app/README.md pages/app/README.fr.md
+          rm -f pages/app/package.json pages/app/README.md pages/app/README.fr.md pages/app/CHANGELOG.md
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
