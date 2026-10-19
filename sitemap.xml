@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://ocearo.leslaborie.org/</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://ocearo.leslaborie.org/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://ocearo.leslaborie.org/fr/"/>
@@ -11,7 +11,7 @@
   </url>
   <url>
     <loc>https://ocearo.leslaborie.org/fr/</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://ocearo.leslaborie.org/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://ocearo.leslaborie.org/fr/"/>
@@ -20,7 +20,7 @@
   </url>
   <url>
     <loc>https://ocearo.leslaborie.org/pt/</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://ocearo.leslaborie.org/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://ocearo.leslaborie.org/fr/"/>
@@ -29,7 +29,7 @@
   </url>
   <url>
     <loc>https://ocearo.leslaborie.org/demo/</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://ocearo.leslaborie.org/demo/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://ocearo.leslaborie.org/fr/demo/"/>
@@ -38,7 +38,7 @@
   </url>
   <url>
     <loc>https://ocearo.leslaborie.org/fr/demo/</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://ocearo.leslaborie.org/demo/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://ocearo.leslaborie.org/fr/demo/"/>
@@ -47,7 +47,7 @@
   </url>
   <url>
     <loc>https://ocearo.leslaborie.org/pt/demo/</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://ocearo.leslaborie.org/demo/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://ocearo.leslaborie.org/fr/demo/"/>
@@ -56,7 +56,7 @@
   </url>
   <url>
     <loc>https://ocearo.leslaborie.org/brand/</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://ocearo.leslaborie.org/brand/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://ocearo.leslaborie.org/fr/charte-graphique/"/>
@@ -65,7 +65,7 @@
   </url>
   <url>
     <loc>https://ocearo.leslaborie.org/fr/charte-graphique/</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://ocearo.leslaborie.org/brand/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://ocearo.leslaborie.org/fr/charte-graphique/"/>
@@ -74,7 +74,7 @@
   </url>
   <url>
     <loc>https://ocearo.leslaborie.org/pt/marca/</loc>
-    <lastmod>2026-10-18</lastmod>
+    <lastmod>2026-10-19</lastmod>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://ocearo.leslaborie.org/brand/"/>
     <xhtml:link rel="alternate" hreflang="fr" href="https://ocearo.leslaborie.org/fr/charte-graphique/"/>
