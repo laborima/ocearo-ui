@@ -912,5 +912,28 @@
     "mars": "Mars",
     "jupiter": "Jupiter",
     "saturn": "Saturn"
+  },
+  "bomea": {
+    "intro": "Bomea ist eine freie Enzyklopädie der Boote mit 3D-Modellen und ein Logbuch für Eigner. Zeigen Sie Ihr Bootsmodell in der 3D-Ansicht und bewahren Sie die an Bord aufgezeichneten Törns und Tankfüllungen im Logbuch Ihres Bootes auf.",
+    "findModel": "Ihr Bootsmodell finden",
+    "findPlaceholder": "Dufour 310, First 27, Lagoon 42…",
+    "search": "Suchen",
+    "noResult": "Kein Boot mit diesem Namen gefunden.",
+    "use": "Verwenden",
+    "no3d": "Noch kein 3D-Modell",
+    "imported": "{{name}} ist jetzt das Boot in der 3D-Ansicht.",
+    "myBoat": "Mein Boot auf Bomea",
+    "connectWhy": "Verbinden Sie sich, um die an Bord aufgezeichneten Törns, Tankfüllungen und Motorstunden in das Logbuch Ihres Bootes auf Bomea zu senden.",
+    "connect": "Mit Bomea verbinden",
+    "connected": "Mit Bomea verbunden",
+    "connectedAs": "Verbunden als {{name}}",
+    "whichBoat": "Welches Boot ist das?",
+    "syncNow": "Jetzt synchronisieren",
+    "synced": "Gesendet: {{trips}} Törns, {{fuel}} Tankfüllungen.",
+    "openLogbook": "Logbuch öffnen",
+    "useMyModel": "3D-Modell meines Bootes verwenden",
+    "disconnect": "Trennen",
+    "lastSync": "Letzte Synchronisierung: {{date}}",
+    "server": "Bomea-Server"
   }
 }

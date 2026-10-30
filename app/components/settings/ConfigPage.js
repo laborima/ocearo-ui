@@ -1,4 +1,5 @@
 import OfflineSection from './OfflineSection';
+import BomeaSection from './BomeaSection';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -307,6 +308,13 @@ const ConfigPage = ({ onSave }) => {
                                 )}
                             </div>
                         </section>
+
+                        {/* Bomea: boat models for the 3D view, the boat's logbook */}
+                        <BomeaSection onBoatImported={(boat) => {
+                            // The import saved the boat and selected it: reload, or the next auto-save would write the old values back
+                            setConfig(configService.getAll());
+                            setSelectedBoat(boat);
+                        }} />
 
                         {/* Advanced Settings */}
                         <section className="tesla-card space-y-6">

@@ -1312,5 +1312,28 @@
   },
   "viewButtons": {
     "recenter": "Recenter on the boat"
+  },
+  "bomea": {
+    "intro": "Bomea is a free encyclopedia of boats with 3D models, and a logbook for owners. Show your boat model in the 3D view, and keep the voyages and fuel recorded on board in your boat's logbook.",
+    "findModel": "Find your boat model",
+    "findPlaceholder": "Dufour 310, First 27, Lagoon 42…",
+    "search": "Search",
+    "noResult": "No boat found with this name.",
+    "use": "Use",
+    "no3d": "No 3D model yet",
+    "imported": "{{name}} is now the boat in the 3D view.",
+    "myBoat": "My boat on Bomea",
+    "connectWhy": "Connect to send the voyages, fuel fills and engine hours recorded on board to your boat's logbook on Bomea.",
+    "connect": "Connect to Bomea",
+    "connected": "Connected to Bomea",
+    "connectedAs": "Connected as {{name}}",
+    "whichBoat": "Which boat is this?",
+    "syncNow": "Sync now",
+    "synced": "Sent: {{trips}} voyages, {{fuel}} fuel fills.",
+    "openLogbook": "Open the logbook",
+    "useMyModel": "Use my boat's 3D model",
+    "disconnect": "Disconnect",
+    "lastSync": "Last sync: {{date}}",
+    "server": "Bomea server"
   }
 }

@@ -12,6 +12,7 @@ import I18nProvider from './i18n/I18nProvider';
 import VoyageRecorder from './components/replay/VoyageRecorder';
 import { subscribeReplay } from './components/replay/replayEngine';
 import configService from './components/settings/ConfigService';
+import { handleCallback as finishBomeaSignIn } from './components/services/BomeaService';
 
 // Dynamically import components for code splitting
 const RightPane = dynamic(() => import('./components/RightPane'), {
@@ -156,6 +157,13 @@ export default function Home() {
         setRightView(view);
         configService.setCurrentView(view);
     }, [currentViewMode, toggleViewMode, narrow]);
+
+    // Back from Bomea's approval page with a code: finish the sign-in and show its settings
+    useEffect(() => {
+        finishBomeaSignIn()
+            .then((done) => { if (done) { setRightView('settings'); configService.setCurrentView('settings'); } })
+            .catch((e) => console.error('Bomea sign-in:', e.message));
+    }, []);
 
     // A voyage replay plays in the 3D view: bring it on screen
     useEffect(() => subscribeReplay((replay) => {

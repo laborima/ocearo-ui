@@ -14,10 +14,12 @@ import useHeave from '../hooks/useHeave';
 import RacerBoat from './boats/racer/RacerBoat';
 import CatamaranBoat from './boats/catamaran/CatamaranBoat';
 import { WindsurfRider, WingRider } from './boats/rider/RiderBoat';
+import BomeaBoat from './boats/bomea/BomeaBoat';
 
 // Boats with their own component: generated in code, or an animated glTF
 // with its rider (windsurf, wing foil)
-const PROCEDURAL_BOATS = { racer: RacerBoat, catamaran: CatamaranBoat, windsurf: WindsurfRider, wingfoil: WingRider };
+// Boats imported from Bomea: their glTF (cached), with Ocearo's own sails on their rig
+const PROCEDURAL_BOATS = { racer: RacerBoat, catamaran: CatamaranBoat, windsurf: WindsurfRider, wingfoil: WingRider, bomea: BomeaBoat };
 
 
 const ASSET_PREFIX = process.env.ASSET_PREFIX || './';
@@ -183,6 +185,11 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
         const newSelectedBoat = configService.getSelectedBoat() || defaultBoat;
         setSelectedBoat(newSelectedBoat);
     }, [config.selectedBoat]);
+    useEffect(() => {
+        const on = () => setSelectedBoat(configService.getSelectedBoat() || defaultBoat);
+        window.addEventListener('ocearo-boat-changed', on);
+        return () => window.removeEventListener('ocearo-boat-changed', on);
+    }, []);
 
 
 
@@ -281,6 +288,7 @@ const SailBoat3D = ({ showSail = false, onUpdateInfoPanel, sailTrimData = null, 
                     windData: sailTrimData?.windData,
                     trim: sailTrimData,
                     showSail,
+                    boat: selectedBoat,
                 })
             ) : (
                 <GltfBoatMeshes modelPath={modelPath} selectedBoat={selectedBoat} materialProperties={materialProperties} rudderRef={rudderRef} boatRef={boatRef} />

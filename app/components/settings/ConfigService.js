@@ -138,8 +138,10 @@ class ConfigService {
 
 
    
+   // Built-in boats, then the ones imported from Bomea (Settings, Vessel, Find on Bomea)
    getBoatsData(){
-     return boatsData.boats;
+     const imported = Array.isArray(this.config?.bomeaBoats) ? this.config.bomeaBoats : [];
+     return [...boatsData.boats, ...imported];
    }
    
   /**

@@ -912,5 +912,28 @@
     "mars": "Marte",
     "jupiter": "Giove",
     "saturn": "Saturno"
+  },
+  "bomea": {
+    "intro": "Bomea è un'enciclopedia libera delle barche con modelli 3D e un giornale di bordo per gli armatori. Mostra il modello della tua barca nella vista 3D e conserva le navigazioni e i rifornimenti registrati a bordo nel giornale della tua barca.",
+    "findModel": "Trova il modello della tua barca",
+    "findPlaceholder": "Dufour 310, First 27, Lagoon 42…",
+    "search": "Cerca",
+    "noResult": "Nessuna barca trovata con questo nome.",
+    "use": "Usa",
+    "no3d": "Ancora nessun modello 3D",
+    "imported": "{{name}} è ora la barca della vista 3D.",
+    "myBoat": "La mia barca su Bomea",
+    "connectWhy": "Connettiti per inviare le navigazioni, i rifornimenti e le ore motore registrati a bordo al giornale della tua barca su Bomea.",
+    "connect": "Connetti a Bomea",
+    "connected": "Connesso a Bomea",
+    "connectedAs": "Connesso come {{name}}",
+    "whichBoat": "Quale barca è questa?",
+    "syncNow": "Sincronizza ora",
+    "synced": "Inviati: {{trips}} navigazioni, {{fuel}} rifornimenti.",
+    "openLogbook": "Apri il giornale",
+    "useMyModel": "Usa il modello 3D della mia barca",
+    "disconnect": "Disconnetti",
+    "lastSync": "Ultima sincronizzazione: {{date}}",
+    "server": "Server Bomea"
   }
 }

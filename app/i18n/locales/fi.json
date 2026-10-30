@@ -912,5 +912,28 @@
     "mars": "Mars",
     "jupiter": "Jupiter",
     "saturn": "Saturnus"
+  },
+  "bomea": {
+    "intro": "Bomea on vapaa venetietosanakirja 3D-malleineen ja lokikirja veneenomistajille. Näytä venemallisi 3D-näkymässä ja säilytä aluksella tallennetut matkat ja tankkaukset veneesi lokikirjassa.",
+    "findModel": "Etsi venemallisi",
+    "findPlaceholder": "Dufour 310, First 27, Lagoon 42…",
+    "search": "Hae",
+    "noResult": "Tällä nimellä ei löytynyt venettä.",
+    "use": "Käytä",
+    "no3d": "Ei vielä 3D-mallia",
+    "imported": "{{name}} on nyt 3D-näkymän vene.",
+    "myBoat": "Veneeni Bomeassa",
+    "connectWhy": "Yhdistä lähettääksesi aluksella tallennetut matkat, tankkaukset ja moottoritunnit veneesi lokikirjaan Bomeassa.",
+    "connect": "Yhdistä Bomeaan",
+    "connected": "Yhdistetty Bomeaan",
+    "connectedAs": "Yhdistetty käyttäjänä {{name}}",
+    "whichBoat": "Mikä vene tämä on?",
+    "syncNow": "Synkronoi nyt",
+    "synced": "Lähetetty: {{trips}} matkaa, {{fuel}} tankkausta.",
+    "openLogbook": "Avaa lokikirja",
+    "useMyModel": "Käytä veneeni 3D-mallia",
+    "disconnect": "Katkaise yhteys",
+    "lastSync": "Viimeisin synkronointi: {{date}}",
+    "server": "Bomea-palvelin"
   }
 }

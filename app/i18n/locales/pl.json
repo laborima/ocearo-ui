@@ -912,5 +912,28 @@
     "mars": "Mars",
     "jupiter": "Jowisz",
     "saturn": "Saturn"
+  },
+  "bomea": {
+    "intro": "Bomea to wolna encyklopedia łodzi z modelami 3D i dziennik pokładowy dla armatorów. Pokaż model swojej łodzi w widoku 3D i zachowaj rejsy oraz tankowania zapisane na pokładzie w dzienniku swojej łodzi.",
+    "findModel": "Znajdź model swojej łodzi",
+    "findPlaceholder": "Dufour 310, First 27, Lagoon 42…",
+    "search": "Szukaj",
+    "noResult": "Nie znaleziono łodzi o tej nazwie.",
+    "use": "Użyj",
+    "no3d": "Brak jeszcze modelu 3D",
+    "imported": "{{name}} jest teraz łodzią w widoku 3D.",
+    "myBoat": "Moja łódź w Bomea",
+    "connectWhy": "Połącz się, aby wysłać rejsy, tankowania i motogodziny zapisane na pokładzie do dziennika swojej łodzi w Bomea.",
+    "connect": "Połącz z Bomea",
+    "connected": "Połączono z Bomea",
+    "connectedAs": "Połączono jako {{name}}",
+    "whichBoat": "Która to łódź?",
+    "syncNow": "Synchronizuj teraz",
+    "synced": "Wysłano: rejsy {{trips}}, tankowania {{fuel}}.",
+    "openLogbook": "Otwórz dziennik",
+    "useMyModel": "Użyj modelu 3D mojej łodzi",
+    "disconnect": "Rozłącz",
+    "lastSync": "Ostatnia synchronizacja: {{date}}",
+    "server": "Serwer Bomea"
   }
 }
