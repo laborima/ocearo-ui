@@ -142,12 +142,12 @@ At sea there is rarely internet. Whenever there is (marina Wi-Fi, 4G), Ocearo ke
 
 ## On board
 
-The installation Ocearo is developed on: behind a panel of the chart table, a Raspberry Pi with a MacArthur HAT (NMEA 0183 and NMEA 2000 interface) runs Signal K, and a touchscreen set into the panel above the switchboard shows the 3D view. Tablets and phones connect to the same server over the boat's Wi-Fi.
+The installation Ocearo is developed on: behind a panel of the chart table, a Raspberry Pi with a MacArthur HAT (NMEA 0183 and NMEA 2000 interface) runs Signal K and drives two screens: a large one on the bulkhead shows the 3D view, and a small touchscreen set into the panel above the switchboard shows the KIP instruments. Tablets and phones connect to the same server over the boat's Wi-Fi.
 
 | | |
 |---|---|
-| ![The Raspberry Pi and its MacArthur HAT, wired behind the chart-table panel](docs/screenshots/onboard-1.jpg) | ![The touchscreen set into the panel above the switchboard and the VHF](docs/screenshots/onboard-2.jpg) |
-| **Behind the panel.** The Raspberry Pi, its MacArthur HAT and the wiring to the instruments, out of the way but easy to reach. | **At the chart table.** The screen sits flush in the panel, above the switchboard and the VHF. |
+| ![The Raspberry Pi and its MacArthur HAT, wired behind the chart-table panel](docs/screenshots/onboard-1.jpg) | ![The two screens at the chart table: KIP on the small one above the switchboard, Ocearo on the large one](docs/screenshots/onboard-2.jpg) |
+| **Behind the panel.** The Raspberry Pi, its MacArthur HAT and the wiring to the instruments, out of the way but easy to reach. | **At the chart table.** Ocearo on the large screen, KIP's instruments on the small one set into the panel above the switchboard and the VHF. |
 
 ![Ocearo on the chart-table screen](docs/screenshots/onboard-3.jpg)
 
