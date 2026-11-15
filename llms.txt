@@ -2,7 +2,7 @@
 
 > See your boat, the sea and the traffic in live 3D. Sail trim, COLREG advice, man overboard, anchor watch, bathymetry and weather on any screen on board. Open source, runs on a Raspberry Pi.
 
-Ocearo (Ocean Robot) is an open-source (Apache 2.0) sailing display for Signal K, version 2.1.3. Ocearo turns your boat’s data into a calm picture you read at a glance — sail trim, rules of the road, man overboard and anchor watch included. Open source, on any screen on board. Ocearo is a Signal K webapp. If your boat already runs Signal K, you are one click away.
+Ocearo (Ocean Robot) is an open-source (Apache 2.0) sailing display for Signal K, version 2.1.4. Ocearo turns your boat’s data into a calm picture you read at a glance — sail trim, rules of the road, man overboard and anchor watch included. Open source, on any screen on board. Ocearo is a Signal K webapp. If your boat already runs Signal K, you are one click away.
 
 Ocearo is an aid to the watch, not a certified navigation system.
 
