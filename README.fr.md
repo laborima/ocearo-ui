@@ -142,12 +142,12 @@ En mer, internet est rare. Dès qu’il y en a (Wi-Fi du port, 4G), Ocearo garde
 
 ## À bord
 
-L’installation sur laquelle Ocearo est développé : derrière un panneau de la table à cartes, un Raspberry Pi équipé d’une carte MacArthur HAT (interface NMEA 0183 et NMEA 2000) fait tourner Signal K, et un écran tactile encastré au-dessus du tableau électrique affiche la vue 3D. Tablettes et téléphones se connectent au même serveur par le Wi-Fi du bord.
+L’installation sur laquelle Ocearo est développé : derrière un panneau de la table à cartes, un Raspberry Pi équipé d’une carte MacArthur HAT (interface NMEA 0183 et NMEA 2000) fait tourner Signal K et pilote deux écrans : un grand sur la cloison affiche la vue 3D, un petit écran tactile encastré au-dessus du tableau électrique affiche les instruments KIP. Tablettes et téléphones se connectent au même serveur par le Wi-Fi du bord.
 
 | | |
 |---|---|
-| ![Le Raspberry Pi et sa carte MacArthur HAT, câblés derrière le panneau de la table à cartes](docs/screenshots/onboard-1.jpg) | ![L’écran tactile encastré au-dessus du tableau électrique et de la VHF](docs/screenshots/onboard-2.jpg) |
-| **Derrière le panneau.** Le Raspberry Pi, sa carte MacArthur HAT et le câblage vers les instruments, à l’abri mais facile d’accès. | **À la table à cartes.** L’écran est encastré dans le panneau, au-dessus du tableau électrique et de la VHF. |
+| ![Le Raspberry Pi et sa carte MacArthur HAT, câblés derrière le panneau de la table à cartes](docs/screenshots/onboard-1.jpg) | ![Les deux écrans de la table à cartes : KIP sur le petit, au-dessus du tableau électrique, Ocearo sur le grand](docs/screenshots/onboard-2.jpg) |
+| **Derrière le panneau.** Le Raspberry Pi, sa carte MacArthur HAT et le câblage vers les instruments, à l’abri mais facile d’accès. | **À la table à cartes.** Ocearo sur le grand écran, les instruments KIP sur le petit, encastré au-dessus du tableau électrique et de la VHF. |
 
 ![Ocearo sur l’écran de la table à cartes](docs/screenshots/onboard-3.jpg)
 
