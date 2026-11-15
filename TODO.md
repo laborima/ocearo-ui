@@ -185,3 +185,8 @@ Vue 3D recommandé ou actuel
 -> Conseil chariot et tension
 
 -> Stockage regardé le module sailsconfiguration
+
+## Idées pour plus tard (2026-11-15)
+
+- Dézoom de la vue 3D qui bascule en mode globe : au-delà d'une certaine altitude de caméra, la mer plane laisse la place à une Terre en 3D (traversées, météo à grande échelle).
+- Perf Raspberry Pi : le KIP de l'écran DSI prend 6 à 7 fps à la 3D (GPU V3D partagé : 11 → 17-18 fps quand KIP est en pause). Pistes : un tableau KIP sans widget graphique animé, un rendu 3D à la demande quand le bateau est amarré (mer et particules figées), une seule instance Chromium pour les deux écrans, passage de X11 à Wayland (labwc).
