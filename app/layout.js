@@ -57,8 +57,10 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
     return (
-        <html lang="en">
+        // The app is translated by itself: no browser translation offer (kiosks)
+        <html lang="en" translate="no">
             <head>
+                <meta name="google" content="notranslate" />
                 {/* Next emits mobile-web-app-capable only; iOS before 16.4 needs the Apple name
                     to open the home-screen app without the Safari bars */}
                 <meta name="apple-mobile-web-app-capable" content="yes" />

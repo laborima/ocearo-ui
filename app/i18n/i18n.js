@@ -85,4 +85,12 @@ i18n
         }
     });
 
+// The page says which language it is shown in: a browser that believes a
+// French page is English offers to translate it
+const setPageLanguage = (lng) => {
+    if (typeof document !== 'undefined' && lng) document.documentElement.lang = lng.split('-')[0];
+};
+i18n.on('languageChanged', setPageLanguage);
+setPageLanguage(i18n.language);
+
 export default i18n;
