@@ -886,7 +886,7 @@
   },
   "offline": {
     "title": "Offline data",
-    "explain": "With internet (marina, 4G), download the bathymetry and the wind forecast around the boat: the 3D view will use them at sea without a network. SHOM surveys (5 to 20 m) are kept by the boat's server for every display. Charts already viewed are kept as you go; for a full offline chart, add MBTiles charts to the Signal K server (used automatically).",
+    "explain": "With internet (marina, 4G), download the bathymetry and the wind and current forecasts around the boat: the 3D view will use them at sea without a network. SHOM surveys (5 to 20 m) are kept by the boat's server for every display. Charts already viewed are kept as you go; for a full offline chart, add MBTiles charts to the Signal K server (used automatically).",
     "download": "Download the area",
     "clear": "Clear",
     "used": "{{mb}} MB used",

@@ -1,3 +1,19 @@
+## [2.1.4] - 2026-11-15
+
+Fixes from a full test on board, on a Raspberry Pi 5 with Signal K server 2.37 and Chromium 156: every screen and every button. A faster 3D view on the Pi, no more translation offer on kiosks, and fewer errors in the browser console.
+
+### Fixed
+
+- **Faster 3D view on the Raspberry Pi.** The labels drawn over the 3D scene (vessel names, wind and current speeds, the polar's rings) each forced the browser to lay the page out again several times a second to stay clear of the HUD: they are now measured together, and only changed when they must. About one frame a second more with an app beside the boat.
+- **No more "Translate this page?"** on a kiosk or a phone: the page now says the language it is shown in (it claimed English whatever the language chosen), and the app, translated by itself, asks browsers not to translate it.
+- **Signal K charts no longer asked beyond their deepest zoom.** A chart from the server (an MBTiles file often stops at zoom 16) was asked down to zoom 18, and every tile came back as an error: the 3D chart now stops at the chart's own deepest level and enlarges it.
+- **The APPS menu closes** when another view is chosen from the bottom bar (it stayed open over the dashboard and the help).
+- **No course calculations asked without a destination**: the dashboard asked them every few seconds and got an error back each time.
+
+### Changed
+
+- The offline download text says the current forecast is kept too, with the bathymetry and the wind.
+
 ## [2.1.3] - 2026-10-18
 
 The 3D view becomes a base and layers: the sea, a grid or the 3D chart, with AIS, wind, currents, laylines, the polar and buoys on top. Currents arrive, the wind and the currents read like a chart plotter's tidal streams, the seabed is finer all over the world and NOAA's charts show in US waters. Full speed again on the Raspberry Pi, sharper on phones.

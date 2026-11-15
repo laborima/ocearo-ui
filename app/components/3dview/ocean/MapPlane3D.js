@@ -429,7 +429,12 @@ export default function MapPlane3D({ mode = 'chart', opacity = 1 }) {
                     const url = chart.tilemapUrl.includes('{z}')
                         ? chart.tilemapUrl
                         : `${chart.tilemapUrl}/{z}/{x}/{y}.png`;
-                    layersRef.current = [{ template: url, maxZoom: CUSTOM_MAX_ZOOM, filter: CHART_FILTERS[themeId] }];
+                    // The server knows the chart's deepest zoom (an MBTiles file often
+                    // stops at 16): asking deeper only gets 404s, the last level is scaled
+                    const serverMax = Number(chart.maxzoom ?? chart.maxZoom);
+                    const maxZoom = Number.isFinite(serverMax) && serverMax > 0
+                        ? Math.min(serverMax, CUSTOM_MAX_ZOOM) : CUSTOM_MAX_ZOOM;
+                    layersRef.current = [{ template: url, maxZoom, filter: CHART_FILTERS[themeId] }];
                 }
                 redraw();
             })

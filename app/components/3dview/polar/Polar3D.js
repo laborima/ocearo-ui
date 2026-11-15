@@ -171,14 +171,17 @@ function RingLabels({ rings }) {
     useFrame(() => {
         // Layout reads are cheap for three chips, but no need every frame
         if (frame.current++ % 6) return;
+        // All the reads first (a hidden label keeps its box), then only the
+        // styles that change: showing a label to measure it forced a layout
+        const els = refs.current.filter(Boolean);
+        const rects = els.map(el => el.getBoundingClientRect());
         const shown = [];
-        refs.current.forEach((el) => {
-            if (!el) return;
-            el.style.visibility = 'visible';
-            const r = el.getBoundingClientRect();
+        els.forEach((el, i) => {
+            const r = rects[i];
             const hit = shown.some(o => r.left < o.right + 4 && r.right > o.left - 4 && r.top < o.bottom + 2 && r.bottom > o.top - 2);
-            if (hit) el.style.visibility = 'hidden';
-            else shown.push(r);
+            if (!hit) shown.push(r);
+            const visibility = hit ? 'hidden' : 'visible';
+            if (el.style.visibility !== visibility) el.style.visibility = visibility;
         });
     });
 

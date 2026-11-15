@@ -5,6 +5,30 @@ const CHECK_MS = 250;
 
 const overlaps = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
 
+// Every label checked by one timer: the HUD zones are measured once per round,
+// all the reads come before any write, and a label's style is only written
+// when it changes. One timer per label, each writing its style before the
+// next one read the layout, forced a layout per label several times a second
+// (6.7 % of the Pi's main thread with the AIS and current labels on).
+const labels = new Set();
+let timer = null;
+
+const checkAll = () => {
+    const zones = [...document.querySelectorAll('[data-hud-solid]')]
+        .filter(zone => zone.offsetParent !== null)
+        .map(zone => zone.getBoundingClientRect());
+    const changes = [];
+    labels.forEach((ref) => {
+        const el = ref.current;
+        if (!el) return;
+        // A label hidden with visibility keeps its box: no need to show it to measure it
+        const rect = el.getBoundingClientRect();
+        const visibility = zones.some(zone => overlaps(rect, zone)) ? 'hidden' : 'visible';
+        if (el.style.visibility !== visibility) changes.push([el, visibility]);
+    });
+    changes.forEach(([el, visibility]) => { el.style.visibility = visibility; });
+};
+
 /**
  * Hides a label drawn over the 3D scene (drei <Html>) while it would sit on a
  * HUD element: anything marked `data-hud-solid` (values, banner, cards,
@@ -14,17 +38,16 @@ const overlaps = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bot
  */
 const useHudClearance = (ref) => {
     useEffect(() => {
-        const check = () => {
-            const el = ref.current;
-            if (!el) return;
-            const rect = el.getBoundingClientRect();
-            const hidden = [...document.querySelectorAll('[data-hud-solid]')]
-                .some(zone => zone.offsetParent !== null && overlaps(rect, zone.getBoundingClientRect()));
-            el.style.visibility = hidden ? 'hidden' : 'visible';
+        labels.add(ref);
+        if (!timer) timer = setInterval(checkAll, CHECK_MS);
+        checkAll();
+        return () => {
+            labels.delete(ref);
+            if (!labels.size) {
+                clearInterval(timer);
+                timer = null;
+            }
         };
-        check();
-        const timer = setInterval(check, CHECK_MS);
-        return () => clearInterval(timer);
     }, [ref]);
 };
 

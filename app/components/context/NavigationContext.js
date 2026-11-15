@@ -124,10 +124,12 @@ export const NavigationContextProvider = ({ children }) => {
      */
     const fetchCourse = useCallback(async () => {
         try {
-            const [courseData, calcData] = await Promise.all([
-                signalKService.getCourse().catch(() => null),
-                signalKService.getCourseCalculations().catch(() => null)
-            ]);
+            const courseData = await signalKService.getCourse().catch(() => null);
+            // Without a destination the server answers 400 "No active destination!"
+            const hasDestination = Boolean(courseData?.nextPoint || courseData?.activeRoute);
+            const calcData = hasDestination
+                ? await signalKService.getCourseCalculations().catch(() => null)
+                : null;
 
             setActiveCourse(courseData);
             setCourseCalculations(calcData);
