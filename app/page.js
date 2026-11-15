@@ -149,6 +149,8 @@ export default function Home() {
     }, []);
 
     const handleSetRightView = useCallback((view) => {
+        // Another view picked from the bottom bar: the app menu would stay on top of it
+        setShowAppMenu(false);
         // From the boat alone, an app opens beside it (phones: instead of it)
         if (currentViewMode === VIEW_MODES.BOAT) {
             toggleViewMode(narrow ? VIEW_MODES.APP : VIEW_MODES.SPLIT);
